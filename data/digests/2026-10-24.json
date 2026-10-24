@@ -1,9 +1,104 @@
 {
  "date": "2026-10-24",
- "generated": "2026-10-24T13:41+00:00",
+ "generated": "2026-10-24T16:34+00:00",
  "ai_used": true,
- "new_items": 789,
+ "new_items": 1499,
  "stories": [
+  {
+   "id": "adf97260a919897f",
+   "title": "Behavior of Square-Round Shaft Combination Helical Piles and Anchors",
+   "title_en": "",
+   "link": "https://news.google.com/rss/articles/CBMiowFBVV95cUxNbDZHMUZRd0NyUDliQlNXWEZ4bUdaWFJJbk1NRHZIdUlpRzFObmV2bzBkUVpKbzhuUmkxZHI1U0JENHktOGIxOGlvbEtwS3RScWJ0SWhGR0gtNU9lWWNSc1RoMmtsWjJIT3F2ZzByazhRVUViN2FLa3RqSGt5VkxKZUM3WjdrT2NGc2tYeWJWQmR2RmxEZzlYUmczNFBjMlpXVVNB?oc=5",
+   "source": "Geoengineer.org",
+   "region": "US",
+   "summary": "",
+   "published": "2026-10-23T07:30+00:00",
+   "theme": "Ground Improvement & Innovation",
+   "relevance": 5,
+   "use": "Academia-to-Industry topic",
+   "angle": "How do square-round shaft combination helical piles and anchors behave under load, and how can their capacity be predicted reliably?",
+   "keywords": [
+    "pile",
+    "shaft"
+   ],
+   "score": 7,
+   "rank": 507
+  },
+  {
+   "id": "c6d04bab794a0a40",
+   "title": "Floating wind needs grounded solutions",
+   "title_en": "",
+   "link": "https://www.geplus.co.uk/key-topics/sustainability/floating-wind-needs-grounded-solutions-23-10-2026/",
+   "source": "Ground Engineering",
+   "region": "",
+   "summary": "Floating offshore wind promises to unlock up to 80% of global marine power potential, but only if engineers can figure out how to anchor massive turbines in stormy waters and varied seabed conditions. The post Floating wind needs grounded solutions appeared first on Ground Engineering .",
+   "published": "2026-10-23T05:02+00:00",
+   "theme": "Offshore, Coasts & Water",
+   "relevance": 5,
+   "use": "Feature lead",
+   "angle": "What geotechnical challenges arise in anchoring floating offshore wind foundations in variable seabed soils under extreme loading?",
+   "keywords": [
+    "offshore wind"
+   ],
+   "score": 6,
+   "rank": 506
+  },
+  {
+   "id": "bbf26e28138bc4cc",
+   "title": "장종태, \"굴착 현장 싱크홀...지하안전평가 받고도 땅 꺼졌다\"",
+   "title_en": "Sinkhole at excavation site: ground sank even after underground safety assessment",
+   "link": "https://news.google.com/rss/articles/CBMibkFVX3lxTE9HOUMyWW5vRXVWOG5ZemlXOFFsQWYwVl9lRW53VTV1MVFFQUF4eGgwWTRKQ0p5RGlWLUgzdUNUSW9aQXRRMkduTGFBVmhOVWluT19OLXU5REgzMVdVOUwtTVRmY3Y5WGdwaE9RcG9B0gFuQVVfeXFMT0c5QzJZbm9FdVY4bll6aVc4UWxBZjBWX2VFbndVNXUxUUVBQXh4aDBZNEpDSnlEaVYtSDN1Q1RJb1pBdFEyR25MYUFWaE5VaW5PX04tdTlESDMxV1U5TC1NVGZjdjlYZ3BoT1Fwb0E?oc=5",
+   "source": "충청신문",
+   "region": "KR",
+   "summary": "",
+   "published": "2026-10-22T08:46+00:00",
+   "theme": "Infrastructure & the Underground City",
+   "relevance": 5,
+   "use": "Feature lead",
+   "angle": "Why did ground sink at an excavation despite a completed underground safety assessment, and what gaps exist in such assessments?",
+   "keywords": [
+    "sinkhole",
+    "excavation"
+   ],
+   "score": 6,
+   "rank": 506
+  },
+  {
+   "id": "b14ad4f93c679ac2",
+   "title": "En perçant 361 trous dans ses fondations en 1934 pour la redresser, les ingénieurs de Mussolini ont littéralement fait pencher la tour de Pise encore plus",
+   "title_en": "Mussolini's engineers drilled 361 holes under Pisa's foundations in 1934 to straighten it, making it lean more.",
+   "link": "https://news.google.com/rss/articles/CBMiiAJBVV95cUxPQkl0dnN1WVR0endSWTZuYVpjZTBnV2VWTnVTVjdyb1NJTlFKVjJWY21lS0dPZzFrSkdlSlI2VU5Cc1NMQ0VHNTlPWUFkSVRZWEhWbFRxaU91bXRRMTF6LW9kYWVKSHFBOUptTVZuTGdTX1lZYzBDQkZ5QTJGUmVXcVd3c3lmU01zM3Zjd1VmZ183aFkxOERqQWJHbVlqMU5EbzBRSWpHRjNMeFVHRXlVSURpZHFnRXZIX1Q0X3RSMW8zcVZKVFZoOWViVlYzVnNWZloxTW5LNThJTWV2bURLSjJ1eEZiRFhnd2phLVVjUV9mdHVjN0Q0dE93WE9wRVR1ZlFFTE8tNnk?oc=5",
+   "source": "Sciencepost",
+   "region": "SN",
+   "summary": "",
+   "published": "2026-10-24T12:18+00:00",
+   "theme": "Ground Improvement & Innovation",
+   "relevance": 5,
+   "use": "Feature lead",
+   "angle": "Why did drilling holes beneath Pisa's foundations to correct its tilt backfire, and what does this teach about controlled soil removal and differential settlement in stabilisation works?",
+   "keywords": [
+    "foundation"
+   ],
+   "score": 2,
+   "rank": 502
+  },
+  {
+   "id": "7afdd995dbb71bee",
+   "title": "Sụt trượt đất nghiêm trọng ở Nam Gia Nghĩa",
+   "title_en": "Serious landslides in South Gia Nghia",
+   "link": "https://news.google.com/rss/articles/CBMic0FVX3lxTE1zSGZTbjJtMlg2SGZxUUtTSjJMZVdlSUkxSjZBeEV1WExBUUh4ZjdOZWIzcGRHczE1dVZiOWgyQUxTdkZWOEJfM0Y1dk1mcGpKekl0dGR4VE1YRVhoYTFjV09IZGQ3dUNQcl9BSlN0QzhUSkE?oc=5",
+   "source": "Vietnam.vn",
+   "region": "VN",
+   "summary": "",
+   "published": "2026-10-22T10:34+00:00",
+   "theme": "Hazards & Resilience",
+   "relevance": 5,
+   "use": "Feature lead",
+   "angle": "What rainfall and slope geometry triggered this serious landslide in Nam Gia Nghia, and how should weathered residual soils on such slopes be investigated and stabilised?",
+   "keywords": [],
+   "score": 0,
+   "rank": 500
+  },
   {
    "id": "c361561c489ba8fe",
    "title": "标签稀缺条件下基于跨域迁移学习的无人机岩体裂隙网络自动分割方法",
@@ -20,6 +115,27 @@
    "keywords": [],
    "score": 0,
    "rank": 500
+  },
+  {
+   "id": "30d825ee727bf9d7",
+   "title": "M4 landslip work begins as part of wider repair programme",
+   "title_en": "",
+   "link": "https://www.geplus.co.uk/news/project-news/m4-landslip-work-begins-as-part-of-wider-repair-programme-23-10-2026/",
+   "source": "Ground Engineering",
+   "region": "",
+   "summary": "National Highways is starting work this autumn to stabilise 600m of embankment alongside the M4 in Wiltshire which will bring the hard shoulder back into use following a landslide. The post M4 landslip work begins as part of wider repair programme appeared first on Ground Engineering .",
+   "published": "2026-10-23T05:06+00:00",
+   "theme": "Hazards & Resilience",
+   "relevance": 4,
+   "use": "Feature lead",
+   "angle": "How should engineers diagnose and stabilise a landslipped motorway embankment, and what drainage and monitoring measures prevent recurrence?",
+   "keywords": [
+    "landslide",
+    "landslip",
+    "embankment"
+   ],
+   "score": 14,
+   "rank": 414
   },
   {
    "id": "88f86675941c5f34",
@@ -157,40 +273,306 @@
    "rank": 410
   },
   {
-   "id": "f49490ec91ffb7b6",
-   "title": "مصدر: لاضحايا في انهيار عقار طنطا وتحطم 4 سيارات - فيديو وصور",
-   "title_en": "Source: no casualties in Tanta building collapse and 4 cars destroyed - video and photos",
-   "link": "https://news.google.com/rss/articles/CBMitANBVV95cUxNUUlBdHRnYnNzb3ZOX1BlZ1VIbWl3ZzdvbEhqenMtbHpwbVd5VHoyTTdwWklBOUFGMWxtd1RLY2tMcnZ4TWZWSUVXZHJYOFVKV3dxcjcwSFJqeUtTbS0tMm1FSFpmWk16WkhMOGU4OGRyZ0kwY0Z4cl9PZ2s3blFCZHljWXdXVzJtUmprT2VmWDY2U2dndVpfcEJmTDc0SXlhd0hyLWU0VE1VeVMtalJ4cUFGTU1CdnhoYW5KeXE4bEh4R2prb1dmWHdpNmZJMm1TMk4zWmJxM1BUUFdXNHZYSDczTFk4cjZOTll3Si1kNVB6MzdqNkd6VEdSeUM0aDJHY05HRW9QR0htUS1pdHRTdmFnZC1kcV84eklxcHlZeTVJd3A4NEpvTU9DT19IQXVZUVhhTEE2OFIwMGttaEIxODJ0ZWhQR1UwcGVLNVg1TlVDaHUzaU5ZTmhsMkdTeGFORm9Hd3hDUlNESy1maG5ZY2g3T0NFOVgwRGxoTXJ4d2FEV3p6bm83cllHTV9QLW90VW14WlZOWkJvblJ2S0E4VlBrbUhLaVRJbnY3R1AzVzFDN2xy0gGEBEFVX3lxTFBBQTVYY2h4THQwaTRndVVTeE55dFdQd3Z6MG5PMzJOU3FSakNBM25YYzhQZGtfRkx5bnNzUWRRZFN5UkJqR2xaNXQ5RjFXWWtnMlAwdTBZVS1oTmxuWmt5TnRTX0YxbHVVWTlEMHNrRUNkNVNzejk1SGdOVm9rTjRUTXZuY0VsX1lzZENuXzB6UmRPOEczTHg4NmJfYUQzUTJVNXJTem1BWU1KUFZmMnl6eUVKT09HN05CcjBUQmFrOVRpZjNnLWU0WGM1Qll1a2pqdWx4VUVSaUdfMjJlNEh4dlgwMWZ2YXY0RW52ZE9WZWRKS1kwYXhyeTYydV9CQVRtVGhpeUtsTlVTeHAxSngtb0NhMVR3bkhKLVlVZ3N3VUk1QU1SWFFYcWdWNkJwcGg1bFBoVm5KYmc5NEdQX3I5QWM3OW9HbF85czRBUXd6eXpaTWpnZkY0RDBIVzVTbnV4QUItNXdNaW1DZXpDQTNtNG9Od3BveDNTMnB2RmpEN1ZQb2NUNmN1cC1mSW1sWWs1NEswWU5mUWV3LWI3a3hBRTVuYkJaaDdObDczd0ZfWUw1SXRRVXM4ZWs2bm9lNk5hYWNkU3F2bktWNUl1bXByUTRzMGVOa2VwdzVibE9Za2xvQmJqRUY0T09va2NmczZTTlZfMlN6eFZMN1owYUpVOFZrSw?oc=5",
-   "source": "Masrawy",
-   "region": "EG",
+   "id": "fba98b91772202dd",
+   "title": "Intensas lluvias provocan aluvión en sector rural de Concepción: Vecinos temen nuevos deslizamientos",
+   "title_en": "Intense rains cause alluvion in rural sector of Concepción: residents fear new landslides",
+   "link": "https://news.google.com/rss/articles/CBMi4wFBVV95cUxOV1p0dUF2OVZleURvUHhJbGxjNFdrR3hCalZqUEZ0SktHbHdzLTZEMmtBT3lWYXVkY0l3SDM0TjNwWTBtM0FjdlRoYzlfQTBQLVNaLUFtWDNrMU9KbXBzLVZWekN4bGFVSzA0R1RLOFBiMlBsSnNILVBuZ1hEemQtZm9FaE1URVdSREVoRzZDM0dPZkNwdzJfQ3pMRjZ0cFJmLXB6a3ZyZ2NjcjNMTllsVmV6X0M0OVhpcHA5a3RiU0lMdnhoeXJwVGp1SDRwYlFkd3M0emJTTEkwQjVmS0VxVDNqUdIB6AFBVV95cUxObTcwd3VqRWxyLWRxRWVkWEJubW50cjBiaFhrWHl0QTQteWxtUzYxZHo5NGgzdmtVdHprVVlPcWhZX25LQXBfbU5ZM3E4UmRMU3ZLYXl1UFNfOTFvSi1mam9sMTE4MVp1aWdTWmptM2ViUThUOFZsSTBFSHZ1azFQOUN4dWtid1RwQlQwRVVRV2p1OUFhaWh2Q3RuWThaNkh4NFhhckhac1ozQzR0bzAtbExmcU5RVm15WGNzd3RTcEY4QkhwTTBvZ1JBbU9zME9qeXRrM0c1OTRKUlBzYy1DUkJ2Y2RBaW9q?oc=5",
+   "source": "Meganoticias",
+   "region": "CL",
    "summary": "",
-   "published": "2026-10-24T08:53+00:00",
+   "published": "2026-10-22T13:53+00:00",
+   "theme": "Hazards & Resilience",
+   "relevance": 4,
+   "use": "Feature lead",
+   "angle": "What triggered the rain-induced debris flow and slope failure in this rural hillside, and how can residents' risk of further slides be assessed?",
+   "keywords": [
+    "landslide",
+    "debris flow"
+   ],
+   "score": 8,
+   "rank": 408
+  },
+  {
+   "id": "5c8964d4d9a76429",
+   "title": "Sạt lở đá xuống nhà dân tại xã Chi Lăng - Báo và Phát thanh, Truyền hình Lạng Sơn",
+   "title_en": "Rockfall onto houses in Chi Lang commune, Lang Son province",
+   "link": "https://news.google.com/rss/articles/CBMif0FVX3lxTE4zQm1aVUtwTUM2RWlZZXpKOEdDX0xZYk41cGNLaDNFNDNlQko2SGxxTmVtLVBBQm9VZkFIOFBmUE1PSE1KclNSUHNQMDhUTGRiWnE0R0ZPcDFFV3E4R3U4M19FZzI2akVUNFRvRkgwSkxuMkZpWmU4Tlh5WTNoQ2M?oc=5",
+   "source": "Baolangson.vn",
+   "region": "VN",
+   "summary": "",
+   "published": "2026-10-22T20:20+00:00",
    "theme": "Hazards & Resilience",
    "relevance": 4,
    "use": "News brief",
-   "angle": "What caused the collapse of this Tanta building, and what foundation or excavation failure lessons does it offer?",
+   "angle": "What mechanisms cause rockfall onto houses below steep slopes, and how should hazard mitigation be designed for rural settlements?",
    "keywords": [
-    "collapse"
+    "landslide",
+    "rockfall"
+   ],
+   "score": 8,
+   "rank": 408
+  },
+  {
+   "id": "61271454841b06e5",
+   "title": "Крупный план участка улицы длиной 500 метров в провинции Ламдонг, сильно пострадавшего от проседания грунта и оползней.",
+   "title_en": "Close-up of a 500-metre street section in Lam Dong province severely damaged by subsidence and landslides",
+   "link": "https://news.google.com/rss/articles/CBMimwFBVV95cUxPLTkyck5DaWR1VmtTV3hIeXVJaWNDUnNpR1AzZDlLbVdzdC1kSmJfTjM3T000WGlLSWt5S2hfSzItS3Y5MkFJZWRZaktBTlNVVFFyRjNHRndpczhWYkdvNFBFY1MxbXA4VTRWWlpCeVdqTWFNbG9HTldyRlRwQkdUYVV2SDNBOGFRUU9WM3pIMG16RUZBWGttYTRmVQ?oc=5",
+   "source": "Vietnam.vn",
+   "region": "RU",
+   "summary": "",
+   "published": "2026-10-22T06:22+00:00",
+   "theme": "Hazards & Resilience",
+   "relevance": 4,
+   "use": "Regional insight",
+   "angle": "What combination of subsidence and landslide processes damaged this 500 m road, and how should such ground be investigated and repaired?",
+   "keywords": [
+    "landslide",
+    "subsidence",
+    "soil"
+   ],
+   "score": 8,
+   "rank": 408
+  },
+  {
+   "id": "2b2d3c37d1700400",
+   "title": "Quang Tri: Severe coastal erosion threatens dikes, embankments, and people's lives.",
+   "title_en": "",
+   "link": "https://news.google.com/rss/articles/CBMingFBVV95cUxQS3doM1BoVjZsRlp4V0theDZtSFZUWEhySWJwSDIzUFpjV09lV201bzV0OFFuYVZrS1lJT3BXd2ZJNVpWbWpJbm5MSlpUb004MnlwRlJYMmV3bnpNWEZSc0pocTBxaWRHcHVYc3lPdmFESG85TUc5UkJ4YVljMWZPbmJzcWlXd25iTTRuQmNjNHg3U3BHalpHTUNTWE9nQQ?oc=5",
+   "source": "Vietnam.vn",
+   "region": "VN",
+   "summary": "",
+   "published": "2026-10-23T00:38+00:00",
+   "theme": "Offshore, Coasts & Water",
+   "relevance": 4,
+   "use": "Regional insight",
+   "angle": "What processes drive severe coastal erosion undermining dikes, and what protection measures suit such shorelines?",
+   "keywords": [
+    "embankment",
+    "dike",
+    "erosion"
    ],
    "score": 7,
    "rank": 407
   },
   {
-   "id": "38520834088cf81f",
-   "title": "25 Kecamatan di Kabupaten Bandung Masuk Kategori Potensi Gerakan Tanah Menengah-Tinggi",
-   "title_en": "25 subdistricts in Bandung Regency classified as medium-high landslide potential",
-   "link": "https://news.google.com/rss/articles/CBMi0gFBVV95cUxOVW5ENnJ6RnYwS3VyQ3dPQW9qS0NBcjZxeGNNcHBlVWttczllOUhhLVNuT2ljMkN3NFZodHJISlRZUG1GTTNaTVN6SF90ZE1kMl9teDFSWmsza2hpR1BLM3ZtbkV2cWg2NWk2TW9ac0JRNnl5WEFlWS1NWG5UNEVXMlVzNEdNaThBRVgtSlJVc0x5WDBHbmFqTW1LUFJTN3hDZXZIU3VKeFM4VV9faHd2cU1zUXFFdHJOaWhGdnZiel91TjBRMFFoc2FwSFZPMUJjbGfSAdcBQVVfeXFMT3BsOGJPRzNGNTBnZFJNbWVldVNXaGtQRG5oRlZEaHAzTUt2cml2TXRHdDUyWE5MMEdSdXdhdS05NWJlSXRhV3NXamRkcFk0WXR1TmxkNFNIWFlqUGRMWTY1Wm52QmUtU0lsVlF1aUt3NUtJNHJsRW9GSzNtTXN4d1BhdGQyWGh3WUVoWGJKYkhXejlCM2NQRWZkbFFmQ3EtSlZLYWI1dG45OXA1R3E5c0dtNTZBTVZVNjZLRDAwUEJQT3dpTDl5SDJObTYxbFBETVFFb1c4Z0E?oc=5",
-   "source": "Pikiran-Rakyat.com",
-   "region": "ID",
+   "id": "1abb508283bb7d24",
+   "title": "Нге Ан: Необходимы срочные меры для предотвращения оползня на насыпи вдоль прибрежной дороги.",
+   "title_en": "Nghe An: urgent measures needed to prevent landslide on embankment along coastal road",
+   "link": "https://news.google.com/rss/articles/CBMilwFBVV95cUxNcG13NlMtVlJSQ0ZDYTM0cGN0NmZzaEtGVDFnV2ZGNkIzM1p0MU0wdUFpbnNDdFFDa0l6M1F6NW5hX2pMNFViN2lfWE80dlJFUGpiOWRfSFhBRWN1d1g2b3o5a1kxNUhIVHRNUUJ6TG5EMXdxcnE2bG9TTWxIc2dDUjBLTlpmNjg5WFVtZE15SWhRY0sxSWtv?oc=5",
+   "source": "Vietnam.vn",
+   "region": "RU",
    "summary": "",
-   "published": "2026-10-24T06:30+00:00",
+   "published": "2026-10-23T00:46+00:00",
+   "theme": "Offshore, Coasts & Water",
+   "relevance": 4,
+   "use": "Regional insight",
+   "angle": "What urgent stabilisation options suit a failing embankment on a coastal road, and how should slope failure risk be assessed?",
+   "keywords": [
+    "landslide",
+    "embankment"
+   ],
+   "score": 7,
+   "rank": 407
+  },
+  {
+   "id": "480a8976be586a18",
+   "title": "Kè chống sạt lở hơn 57 tỉ đồng ở Thanh Hóa vừa làm xong đã sụt lún, đứt gãy",
+   "title_en": "57-billion-dong erosion revetment in Thanh Hoa subsides and cracks right after completion",
+   "link": "https://news.google.com/rss/articles/CBMiugFBVV95cUxPTWJZUVVOZ3hOTjliMDhtRWVCaFQyYnB3SzNtaDlrOGg4b1VzVnUzM3Rjc3l3T0ZrUFBXNWRWRnJNdGF4WVpJR29aS1VjSkFIZnFubFVCZnJFS3NQZW93VHlaQ2p6RUcxbFhlOUdzRmZGRDhkVHZFTkkwSk1rZm1vdWFXS0JDdkxsWDg4YzhHWVoyeEVSQnRocXlqcnRab1lSSS1GQXhNT24zSTlCTGhVU2c5NzUwaWctdXc?oc=5",
+   "source": "Báo Thanh Niên",
+   "region": "VN",
+   "summary": "",
+   "published": "2026-10-24T08:19+00:00",
+   "theme": "Hazards & Resilience",
+   "relevance": 4,
+   "use": "Feature lead",
+   "angle": "Why did a newly completed revetment subside and crack so soon, and what foundation or design checks could have prevented it?",
+   "keywords": [
+    "landslide",
+    "subsidence"
+   ],
+   "score": 7,
+   "rank": 407
+  },
+  {
+   "id": "278dd35b0ffe9c69",
+   "title": "Lâm Đồng: Cảnh báo sụt lún, sạt trượt nghiêm trọng đường phố",
+   "title_en": "Lam Dong warns of serious subsidence and sliding on city streets",
+   "link": "https://news.google.com/rss/articles/CBMiigFBVV95cUxPZWVidFMzVlYxMDdISl9EQ2U0U3hiaVU2NmFPN09jYzZUem1CaXB3N1I4S1l0VW9Ka1l1LU9kVnY2bDQzUnFKWUFiNnF3azVkeEZoUGpxREdXNExtd2ZwRWVtNmZPTUkxUnA5TmFsczUyX3hkLUpJYmtFVU5yeTRONV9nb2VfNjVPZnc?oc=5",
+   "source": "Báo và phát thanh, truyền hình Đồng Tháp",
+   "region": "VN",
+   "summary": "",
+   "published": "2026-10-23T07:51+00:00",
    "theme": "Hazards & Resilience",
    "relevance": 4,
    "use": "Regional insight",
-   "angle": "How are landslide susceptibility maps produced for districts, and how should medium-high hazard classes inform land-use planning?",
-   "keywords": [],
+   "angle": "What causes urban street subsidence and sliding in this highland city, and how should authorities monitor and warn residents?",
+   "keywords": [
+    "landslide",
+    "subsidence"
+   ],
+   "score": 7,
+   "rank": 407
+  },
+  {
+   "id": "ac5cec5306553fcc",
+   "title": "Xác định hố sụt lún “khủng” ở Vườn quốc gia Phong Nha-Kẻ Bàng Khám phá hang động Thiên Hà huyền ảo ở Ninh Bình",
+   "title_en": "Identifying a huge sinkhole in Phong Nha-Ke Bang National Park; exploring Thien Ha cave in Ninh Binh",
+   "link": "https://news.google.com/rss/articles/CBMi4wFBVV95cUxQSXAyb195dGp6RURzRWliZzhoYmI2S0RUbUJQZG10eHVNSDVFZDE0bW1naTNubEgxU1k5UWxOTV9QUjJiLXZxWlJjOVV5aTh5V1J3Tm11UFdsZ2dJMnYzWTdvekpSWXhoSG1QZGF2a2o3UXRkWjh6VTNqcS14cXBJSUd4NXplcUg1Ri1EN1IzN1dyblF3clU3ZE42YmNra1hhYVF5c1Azd2I0U3VoaFY0a1pDY1huU3NmUXhOQnAzeHVSY3BQTV9uV3hsckJxaUx1SHhPQ1VUU21kZWFVZGJVRGtzRQ?oc=5",
+   "source": "Kenh14.vn",
+   "region": "VN",
+   "summary": "",
+   "published": "2026-10-23T11:00+00:00",
+   "theme": "Hazards & Resilience",
+   "relevance": 4,
+   "use": "Feature lead",
+   "angle": "What karst processes produce giant sinkholes, and how can they be detected and assessed in limestone terrain?",
+   "keywords": [
+    "sinkhole",
+    "subsidence"
+   ],
+   "score": 7,
+   "rank": 407
+  },
+  {
+   "id": "96155283e15b0e7c",
+   "title": "Gros plan sur 500 mètres de rue dans la province de Lam Dong, gravement touchée par des affaissements et des glissements de terrain.",
+   "title_en": "Close-up of a 500-metre street in Lam Dong province, badly hit by subsidence and landslides",
+   "link": "https://news.google.com/rss/articles/CBMimwFBVV95cUxPMFBaWmJuQ3NGTklKMkNGckRqWFA0WW1sLXlvY1QxanR4YkN6YVVpejBld3ctZVREbkVPWnVab2FBOEZtTXoyeVRmTDE3TXF3ck5IRzNkNFJRZ0lmZmlqLTIwWGZhV0N0RFFiNGVPMnJBcHc4RXBBdjRqdmh5WnZSb1VkZ3B2Q3hva0JybF8tbVI0WjVQVFVsNHUxTQ?oc=5",
+   "source": "Vietnam.vn",
+   "region": "VN",
+   "summary": "",
+   "published": "2026-10-22T06:38+00:00",
+   "theme": "Hazards & Resilience",
+   "relevance": 4,
+   "use": "Regional insight",
+   "angle": "What combination of subsidence and landslide processes damaged this 500 m road, and how should such ground be investigated and repaired?",
+   "keywords": [
+    "landslide",
+    "subsidence"
+   ],
+   "score": 7,
+   "rank": 407
+  },
+  {
+   "id": "6db87d7c983b6dee",
+   "title": "산사태 방지 제방이 주거 지역을 위협하고 있다.",
+   "title_en": "Anti-landslide embankment threatens residential area",
+   "link": "https://news.google.com/rss/articles/CBMia0FVX3lxTE5yN3NxbVRJdUpIaWRZaHJQMGx1MktYUTdSRHlXd0xCR0tiSkhtNEotVmltaFRvVzFvY3Qxcm1JOFVCb1RBWXVtMTZRVWRtdC1DMERha1RoblFxTjhBT01GR1hWQ1JLTlRFMW1V?oc=5",
+   "source": "Vietnam.vn",
+   "region": "KR",
+   "summary": "",
+   "published": "2026-10-24T07:07+00:00",
+   "theme": "Hazards & Resilience",
+   "relevance": 4,
+   "use": "Regional insight",
+   "angle": "Why does this anti-landslide embankment threaten housing, and what stability checks should apply to embankments near settlements?",
+   "keywords": [
+    "landslide",
+    "embankment"
+   ],
+   "score": 7,
+   "rank": 407
+  },
+  {
+   "id": "9bf494164f947bf9",
+   "title": "Nghệ An: Cần sớm xử lý sạt lở taluy dương trên tuyến đường ven biển",
+   "title_en": "Nghe An: early treatment needed for slope failure on coastal road cut",
+   "link": "https://news.google.com/rss/articles/CBMikwFBVV95cUxOUmJPNnl3dVdQRml6UUt3S1Joa05VaE9sdjdhNWZZeVN6QUdqdnFIS2NiMWdGMl9KN093Wm1naTRFcDRoek1UTVQxNGJkZ2lkajUyVnhRRFF4ZTV1UlhsS3NodG80YlpGdlpuOHRaaGFnaXJ5cDN4eTd0VFZJdldPMlczVVZ1NmZZdExSemVKM3lXWUk?oc=5",
+   "source": "Vietnam.vn",
+   "region": "VN",
+   "summary": "",
+   "published": "2026-10-23T00:37+00:00",
+   "theme": "Offshore, Coasts & Water",
+   "relevance": 4,
+   "use": "Regional insight",
+   "angle": "What causes slope failure in coastal road cuts, and which stabilisation methods are most suitable for weathered coastal soils?",
+   "keywords": [
+    "landslide",
+    "slope"
+   ],
    "score": 6,
    "rank": 406
+  },
+  {
+   "id": "bb921de398f0bba4",
+   "title": "[강대웅의 정문일침(頂門一鍼)] 조용호 시장의 오산시 서부로 옹벽 복구...무너진 도로 넘어 시민 신뢰 회복",
+   "title_en": "Osan: Jo Yong-ho's restoration of Seobu-ro retaining wall after road collapse, aiming to restore public trust",
+   "link": "https://news.google.com/rss/articles/CBMiWEFVX3lxTE1USkR5eG9yOEoxdF9oR1JuMU4tOUdCNkREX0dNUFFvWWd5UXZaT0ZkQk54eUhVbFg4QlI5SF8yTHlGZFZldTBsdnpFRDY5X290bkt0YzBXOTbSAVhBVV95cUxNVEpEeXhvcjhKMXRfaEdSbjFOLTlHQjZERF9HTVBRb1lneVF2Wk9GZEJOeHlIVWxYOEJSOUhfMkx5RmRWZXUwbHZ6RUQ2OV9vdG5LdGMwVzk2?oc=5",
+   "source": "아주경제",
+   "region": "KR",
+   "summary": "",
+   "published": "2026-10-24T07:38+00:00",
+   "theme": "Infrastructure & the Underground City",
+   "relevance": 4,
+   "use": "Feature lead",
+   "angle": "What caused the road collapse behind this retaining wall, and how should wall reconstruction address backfill and drainage?",
+   "keywords": [
+    "retaining wall",
+    "collapse"
+   ],
+   "score": 5,
+   "rank": 405
+  },
+  {
+   "id": "dc6993a660a7f64f",
+   "title": "반주영 의원 “인명피해로 이어지면 큰 사고”…황성석 의원도 고촌 옹벽 안전대책 촉구 | 아파트 인접 옹벽 반복 붕괴 우려…상부 배수로·사유지 문제에 시의 적극적인 협의 주문",
+   "title_en": "Lawmakers warn of major accidents as retaining wall near apartments repeatedly collapses; drainage and private land issues",
+   "link": "https://news.google.com/rss/articles/CBMikgFBVV95cUxPcTFMNDFOcFc5MjJHLWgxTldJbW9TT3doRG10TDRuSzlYNGNSSU5DOU1Razc0dkRYY0IyeVN1OHoyT3U2WG9wNUh5VW81UEd6anIwMDF1Ym1yQ3VlVk4wZ05saEh2VFFBMnZqOV9nbkFud0NMbWZ6NW9UU0pha0E3enQxdHQtU3JaNktBMlNxWTg2Zw?oc=5",
+   "source": "Naver Blog",
+   "region": "KR",
+   "summary": "",
+   "published": "2026-10-23T01:00+00:00",
+   "theme": "Infrastructure & the Underground City",
+   "relevance": 4,
+   "use": "Regional insight",
+   "angle": "Why do retaining walls beside apartments collapse repeatedly, and how do drainage and private land ownership complicate remediation?",
+   "keywords": [
+    "retaining wall",
+    "collapse"
+   ],
+   "score": 5,
+   "rank": 405
+  },
+  {
+   "id": "d802f826f8703dbb",
+   "title": "После ливней у Пионерского парка в Ялте обрушилась часть подпорной стены",
+   "title_en": "Part of a retaining wall collapsed near Pioneer Park in Yalta after rains",
+   "link": "https://news.google.com/rss/articles/CBMiUkFVX3lxTFBBaDhzbmpCUVV6Y1lGN3hyYllJRGRHNkUta1M3SVpkamJ5MGktVWZHdDJqLWloWW40SmVzTldUSWc0UXliVXJOVWR2VmJoWUtGc0E?oc=5",
+   "source": "Крыминформ",
+   "region": "RU",
+   "summary": "",
+   "published": "2026-10-22T07:04+00:00",
+   "theme": "Infrastructure & the Underground City",
+   "relevance": 4,
+   "use": "Regional insight",
+   "angle": "Why did this retaining wall fail after heavy rain, and what drainage and wall design checks should coastal slopes receive?",
+   "keywords": [
+    "retaining wall",
+    "collapse"
+   ],
+   "score": 5,
+   "rank": 405
+  },
+  {
+   "id": "ca872ff740158226",
+   "title": "Hai căn nhà đổ sập do sạt lở bờ sông Tiền",
+   "title_en": "Two houses collapse due to Tien River bank erosion",
+   "link": "https://news.google.com/rss/articles/CBMihgFBVV95cUxNZlBjUzdTUHFfNm9fQnZtclVPRG1ZdWtERFVpMHRYYzRrTGV1alZYeU4yR240ZnM4bFZEMkhFMEtJbk1fakR3dzgyRm12YkZZdkpnTjE4UGNBR2otMlpsbkVpdDdGbXBPbUdYaU5ldjBqUnA1c1hwcFF4Yjl3NXVFcHRacHlTZw?oc=5",
+   "source": "VTV.vn",
+   "region": "VN",
+   "summary": "",
+   "published": "2026-10-23T02:33+00:00",
+   "theme": "Offshore, Coasts & Water",
+   "relevance": 4,
+   "use": "News brief",
+   "angle": "What riverbank erosion processes undermined these houses, and how can bank stability be assessed near settlements?",
+   "keywords": [
+    "landslide",
+    "collapse"
+   ],
+   "score": 5,
+   "rank": 405
   },
   {
    "id": "b069823c9885a6f9",
@@ -212,6 +594,63 @@
    "rank": 405
   },
   {
+   "id": "bbf522b6d48b357e",
+   "title": "Se ha descubierto un socavón del tamaño de casi tres campos de fútbol en Phong Nha Ke Bang.",
+   "title_en": "",
+   "link": "https://news.google.com/rss/articles/CBMilgFBVV95cUxPaWJCQW9La1Z3UklqdWVaNWVLV3l0TFplUEg0R3h5ZzBSNlJtZnpNb2FONml5V3FqbnJGTnZvQ2JZSllHZGRoX3NWR0l6Q0oyWE02RXlncnRfREVCa0xBRnVMTDNhcWRxLURrVTNJUEl5UkdlU0RtdU9UcUpVdVFzblQ0UmdOVlR0YTBfTVpDbjZud2p5d1E?oc=5",
+   "source": "Vietnam.vn",
+   "region": "CO",
+   "summary": "",
+   "published": "2026-10-23T03:27+00:00",
+   "theme": "Characterisation & Modelling",
+   "relevance": 4,
+   "use": "Feature lead",
+   "angle": "How do karst dissolution and roof collapse produce giant dolines like the one in Phong Nha Ke Bang, and how can such cavities be characterised?",
+   "keywords": [
+    "sinkhole"
+   ],
+   "score": 4,
+   "rank": 404
+  },
+  {
+   "id": "df071e4607216998",
+   "title": "CEDH acredita negligencia del Ayuntamiento de Guasave por muerte de profesor que cayó en socavón",
+   "title_en": "CEDH finds negligence by Guasave municipality in death of teacher who fell into sinkhole",
+   "link": "https://news.google.com/rss/articles/CBMi4gFBVV95cUxObEFsSlpBN09veGl1WXBBcWNHZFplTFFzQlIzSVZJUFVYdGdwcV9OZVY5TTBSM2JZbTdOd2liZFJyX3lscDU5VU1iVmZwaVU0bnZTSnk3ektFWm9QNEF4Y2ZMRldYdWVabGdKaW5yc21qQWxGNWcxOVZFNkRCLS14ZHpLc29Mel9vZENjazdLRWdMRm5uUEhob0pUS09pSVJEWXNjSlV4SE9ESFZyUVdEaENkUFpRTkt2SUZWb1FDRXAyMEd2LVhHTXhiODEwa3dwV1BvVXpQc2E3aUJXc1ZtQ3d30gHiAUFVX3lxTE5sQWxKWkE3T294aXVZcEFxY0dkWmVMUXNCUjNJVklQVVh0Z3BxX05lVjlNMFIzYlltN053aWJkUnJfeWxwNTlVTWJWZnBpVTRudlNKeTd6S0Vab1A0QXhjZkxGV1h1ZVpsZ0ppbnJzbWpBbEY1ZzE5VkU2REItLXhkektzb0x6X29kQ2NrN0tFZ0xGbm5QSGhvSlRLT2lJUkRZc2NKVXhIT0RIVnJRV0RoQ2RQWlFOS3ZJRlZvUUNFcDIwR3YtWEdNeGI4MTBrd3BXUG9VelBzYTdpQldzVm1Dd3c?oc=5",
+   "source": "www.noroeste.com.mx",
+   "region": "CO",
+   "summary": "",
+   "published": "2026-10-22T16:54+00:00",
+   "theme": "Geotechnics & Society",
+   "relevance": 4,
+   "use": "Feature lead",
+   "angle": "What duty of care should municipalities meet in managing known ground-collapse hazards in urban areas, as the Guasave case suggests?",
+   "keywords": [
+    "sinkhole"
+   ],
+   "score": 4,
+   "rank": 404
+  },
+  {
+   "id": "22d29077c5c41394",
+   "title": "Vista de cerca del gigantesco socavón de 120 metros de profundidad descubierto recientemente en Vietnam.",
+   "title_en": "",
+   "link": "https://news.google.com/rss/articles/CBMijgFBVV95cUxORHhvYWNuVVRGRXIybWtsektBWDRYYkhhLWlYd2FwS0pBV2wzWklDdzN3UGxXLWZpa1ZLT0lWM0RZa1RXY0ZDRS1HYUdDV1RJU2dWWFpWalZ3cEhkaGJsYjk2WUZrWXQ3M2hXTWFVSGxSYjFhUzBOVlNnSUYxdVhtMGNBellTcmV4Q295SDJ3?oc=5",
+   "source": "Vietnam.vn",
+   "region": "CO",
+   "summary": "",
+   "published": "2026-10-23T12:57+00:00",
+   "theme": "Characterisation & Modelling",
+   "relevance": 4,
+   "use": "Feature lead",
+   "angle": "Which geomorphological and hydrogeological processes produced a 120 m deep collapse, and how can the stability of its steep walls be assessed?",
+   "keywords": [
+    "sinkhole"
+   ],
+   "score": 4,
+   "rank": 404
+  },
+  {
    "id": "d4302596028488f8",
    "title": "Primeval forest grows at bottom of 120-meter-deep sinkhole in central Vietnam",
    "title_en": "",
@@ -231,18 +670,37 @@
    "rank": 404
   },
   {
-   "id": "790e588e0a4ad2ad",
+   "id": "f9e9042d63521738",
+   "title": "Misterio en El Bosque: socavón aparece en medio de la lluvia y se traga un auto",
+   "title_en": "Mystery in El Bosque: sinkhole appears amid rain and swallows a car",
+   "link": "https://news.google.com/rss/articles/CBMi8wFBVV95cUxNNlBCakVVSHBHTXI5UXNfdFF4SmtBTHZaWWhZaF9TYklINTZFZVpuNHlSbE5HNHBIUmJyd1BQSlJtamZ1ZGxBU1lxVmVib2RHRVFPRmszbmFtWVNxenlGeVk2TGRpaXJRNUdPbklLUXRCY1E1ZGhhQVB2Q0pHSU9VMTZJMkVfRnh2ZHJ3V3JJTmtqUDhUX1lMMk1GX3IxVGRDY0VNbHpmY0pWcmJVN1p6eWFzLWQ5ZmdoOEZrRXBNRHNaRDFlYkpXdDZORU5iek80RHBwUzdBb1A3OF9DTExya013WnpwYTRuWjJLeFhXc3ZCUlk?oc=5",
+   "source": "BioBioChile",
+   "region": "CO",
+   "summary": "",
+   "published": "2026-10-22T17:08+00:00",
+   "theme": "Infrastructure & the Underground City",
+   "relevance": 4,
+   "use": "News brief",
+   "angle": "How do rainfall, leaking pipes and soil erosion combine to create sudden road sinkholes that swallow vehicles, as in El Bosque?",
+   "keywords": [
+    "sinkhole"
+   ],
+   "score": 4,
+   "rank": 404
+  },
+  {
+   "id": "095cc04132237431",
    "title": "Más de 300 barrios en riesgo por las lluvias, socavón en la Eloy Alfaro pone en duda la infraestructura subterránea de Quito",
-   "title_en": "More than 300 neighbourhoods at risk from rains; sinkhole on Eloy Alfaro casts doubt on Quito's underground infrastructure",
-   "link": "https://news.google.com/rss/articles/CBMi_AJBVV95cUxQQ3p2THhYWmNjejMwUW5mdmI0RzhkWWxJQ2F6aEIxd0pCLUNsSExLWDB3MHBlMGMwT1l2MlpfYWEzQmZxbHkyc0Mwc2xkLWJMMGRuZ2NkeEtmNlpJUF9YZllSZU42elZTRG5wYzhrSUo2NWxZV3J3UEkwbWZ2bmVEczJTeWFNbzhqbnZ5UlMyM3NnZ25MalJwY3Q2UDRCR0FXWFNXcTRaWURzXzZhcTVjWW85SERYeE1RelFwdF9sa1dkUVF5dldKcTVncy1VZzZhc19PQlYtbU5KRFphYmt1a2JFT0lFTURCNTBxM1J6bWhsY2hwdjJXaktBWGVsYkFkMzVEbHZSQ0lVRjRVX2NHVUFlS0Y4SzU5V05DNWRlTWxhVThGSnFKQ2l1SnJ5LXRCZmJfTHBJSzZTQUV3QkVyRjVISUpkSm0weHBSSUo3RjB6QUJOSkUtdG5mMGZQWlhzekZZVC0wb25qOHA5eVQ3b3lCWU5oT21rN1JsR9IB_AJBVV95cUxQQ3p2THhYWmNjejMwUW5mdmI0RzhkWWxJQ2F6aEIxd0pCLUNsSExLWDB3MHBlMGMwT1l2MlpfYWEzQmZxbHkyc0Mwc2xkLWJMMGRuZ2NkeEtmNlpJUF9YZllSZU42elZTRG5wYzhrSUo2NWxZV3J3UEkwbWZ2bmVEczJTeWFNbzhqbnZ5UlMyM3NnZ25MalJwY3Q2UDRCR0FXWFNXcTRaWURzXzZhcTVjWW85SERYeE1RelFwdF9sa1dkUVF5dldKcTVncy1VZzZhc19PQlYtbU5KRFphYmt1a2JFT0lFTURCNTBxM1J6bWhsY2hwdjJXaktBWGVsYkFkMzVEbHZSQ0lVRjRVX2NHVUFlS0Y4SzU5V05DNWRlTWxhVThGSnFKQ2l1SnJ5LXRCZmJfTHBJSzZTQUV3QkVyRjVISUpkSm0weHBSSUo3RjB6QUJOSkUtdG5mMGZQWlhzekZZVC0wb25qOHA5eVQ3b3lCWU5oT21rN1JsRw?oc=5",
+   "title_en": "More than 300 neighbourhoods at risk from rain; Eloy Alfaro sinkhole casts doubt on Quito's underground infrastructure",
+   "link": "https://news.google.com/rss/articles/CBMi6AJBVV95cUxPTTNxbUF2ODR0d0dfM2ZBb3B0Y0lvRElsVjNPbk1aV0JSMF9SeHFfbGk1cFNVTTZ2TjhlTW5ldEVCcmVmdHNSM0xxN0hIbjFveHdxdVBJSl9FLUNDOUJ6a0tWcy1SQTltUWJuUHl3SDNmbzlEc2NSWW5JemxmOVJidVZBUjhwYUV2NTc1cnBKUkw4Zlg4bzJlbkJaTzA3Y1Rvel9zbVFEZ1lRVUdsaTNRLU9YZG9RbXZLcXZTQ3BaUXJLcV9BMlYxRU9DZl91YVV6OExlSnU4bnh5V0wxVWVvV29jWVdlQ2x5dTVXT202T1JTek5nbEhkdkZlMHFPd3UxZ0hUdXl0cVUxYXBybmNNcmFkS0VmeGhhNDc1V3dMRGpQelpZSDZGaFZIRnpFVGRKZTV3VURCTkNaMW5WZnpGcUd2VjlsZzd0VjJRa1BCUE1IWXNCSHZ5VHNrQlhUZUlFWjYxWHpmbzPSAfwCQVVfeXFMUEN6dkx4WFpjY3ozMFFuZnZiNEc4ZFlsSUNhemhCMXdKQi1DbEhMS1gwdzBwZTBjME9ZdjJaX2FhM0JmcWx5MnNDMHNsZC1iTDBkbmdjZHhLZjZaSVBfWGZZUmVONnpWU0RucGM4a0lKNjVsWVdyd1BJMG1mdm5lRHMyU3lhTW84am52eVJTMjNzZ2duTGpScGN0NlA0QkdBV1hTV3E0WllEc182YXE1Y1lvOUhEWHhNUXpRcHRfbGtXZFFReXZXSnE1Z3MtVWc2YXNfT0JWLW1OSkRaYWJrdWtiRU9JRU1EQjUwcTNSem1obGNocHYyV2pLQVhlbGJBZDM1RGx2UkNJVUY0VV9jR1VBZUtGOEs1OVdOQzVkZU1sYVU4RkpxSkNpdUpyeS10QmZiX0xwSUs2U0FFd0JFckY1SElKZEptMHhwUklKN0YwekFCTkpFLXRuZjBmUFpYc3pGWVQtMG9uajhwOXlUN295QllOaE9tazdSbEc?oc=5",
    "source": "El Universo",
-   "region": "MX",
+   "region": "CO",
    "summary": "",
    "published": "2026-10-23T11:15+00:00",
    "theme": "Infrastructure & the Underground City",
    "relevance": 4,
    "use": "Feature lead",
-   "angle": "How can cities detect and prevent sinkholes caused by leaking pipes and eroded soils in urban ground, and what does Quito's case reveal about underground infrastructure monitoring?",
+   "angle": "What does the Eloy Alfaro sinkhole reveal about the condition of Quito's buried infrastructure and the ground beneath rain-affected neighbourhoods?",
    "keywords": [
     "sinkhole"
    ],
@@ -250,18 +708,18 @@
    "rank": 404
   },
   {
-   "id": "2cff2e47ef5dc000",
-   "title": "Giant sinkhole discovered in Phong Nha-Ke Bang National Park",
-   "title_en": "Giant sinkhole discovered in Phong Nha-Ke Bang National Park",
-   "link": "https://news.google.com/rss/articles/CBMinwFBVV95cUxQbmljanByeFhpYlNScnE2RHN0UUVIMy1oenIwbzdmbFBTeHUxMXZjT2xhY3dnbm5UdW42ZTNhTk5LMWNWTlg0eFBvTnE2Q1ZqY2JlNElKTVdqd0x1M0liaTlFRzVBUkFiUXdfY29PUUJsU2M3TEVaVHpkeUtiSkdqV0lPN3Y1dV9ZR1B5bk5OalNJNGZPMVlRZUd5RHJtOUU?oc=5",
-   "source": "Baolangson.vn",
-   "region": "GB",
+   "id": "65ea5f0f58149f53",
+   "title": "Delegado presidencial y el socavón en Arauco: \"Aquí se construyó en un terreno que no era óptimo\"",
+   "title_en": "Presidential delegate on Arauco sinkhole: 'It was built on land that was not optimal'",
+   "link": "https://news.google.com/rss/articles/CBMi5AFBVV95cUxQN2dkNUMtV1kwNUFwMFA0VWRsUmN6Q3RhTDhyTWtHODFmSHhEWWdtT0Jwazg3Nk54S0ZnRF82OHpybVI2OVhIbkp0c1dQX3N1Ny1OTkZhR2hHQUMzYXJfT3BzX3I2Y3d6WndQNno2QTloWDFESzVxUTRMZDZOSDNQUzJYVTBsTks2Mll4SjZRYkZxbWxjOHByeGVkUkg5d1d3UWxmQUtBTG1lWDRTMGNOQWZnRGRtR3c4a2xiRUFHY3laMDJzX0VYUk9GZkR2akQ3bkNKeGU1aVYwb1F0WE14WVVVQ0bSAYwBQVVfeXFMT2I5Zk9zQW9sMnMteVFacFllV19JRWVQT0JfUGNTSTJ0R2FLYmpjTEhkQ3EzWTVmRDRWUWxJcTF3WmxDNnJIaUV2amNuNm5sSTJJV08wb184aWR0czBDRm5qdnN5WEM3ak5zQl9mendjUDhHaU0tbzVjQTNwY1dzNUUxT3pVU3kxeVpXa2k?oc=5",
+   "source": "Cooperativa",
+   "region": "CO",
    "summary": "",
-   "published": "2026-10-24T01:02+00:00",
-   "theme": "Characterisation & Modelling",
+   "published": "2026-10-24T14:50+00:00",
+   "theme": "Infrastructure & the Underground City",
    "relevance": 4,
    "use": "Feature lead",
-   "angle": "How are giant karst sinkholes detected and characterised in limestone terrain, and what hazards do they pose to park access and infrastructure?",
+   "angle": "What ground investigation and foundation decisions should be scrutinised when a structure is built on unsuitable terrain, as officials claim in Arauco?",
    "keywords": [
     "sinkhole"
    ],
@@ -269,94 +727,18 @@
    "rank": 404
   },
   {
-   "id": "df7d39b01de54205",
-   "title": "【特集】台風25号で土砂崩れ多発 千葉・房総半島の地形に潜む危険 「谷密度が高い」（チバテレ）",
-   "title_en": "Special feature: Typhoon No. 25 triggers many landslides; dangers hidden in Chiba's Boso Peninsula terrain, 'high valley density'.",
-   "link": "https://news.google.com/rss/articles/CBMif0FVX3lxTE9paXItcTdLR3g0R0hhZGZwQVFjNHJEOWJJRF84Rzdfa0tRQ0taaTVxd19rWFBLOHNuUkU2N081UDJIWVZNQ09NUDJBQ0p2V0FwS1lNV213UnNvV0xvcU1zTUpWWG1iTnFMclFRVjh4SUNoREdra2loMWh0ZGVIN0E?oc=5",
-   "source": "Yahoo!ニュース",
-   "region": "JP",
+   "id": "2737d799f1f32a11",
+   "title": "JUMAPAM y Pemex evalúan red subterránea tras socavón en la avenida Emilio Barragán en Mazatlán",
+   "title_en": "JUMAPAM and Pemex evaluate underground network after sinkhole on Emilio Barragán avenue in Mazatlán",
+   "link": "https://news.google.com/rss/articles/CBMi7AFBVV95cUxON0hLN3oxMFdMX0dlRUtVNHhVQ2Y2Nk00NHlEUUVSb1N0bmRXakNHcUNOcFcyVWl1UXp1Wm5ObjE1X0RDdThWSWJZazE2WVA5MTR0ckM0OV9BeHVOUFoySjUyRFdrN1FiVDVzd253R0JKSE9yN3ZzN0NHS1hJSGwxNmVQUzVyZlNsbURWQ3ZBdktrTkdYWElFcVBpVm5FU3pFeGZpNkl4V08zMkpGOTM2R0czXzJVS1NTcXBGcnViOXZmTmJJRFJkNXpSUTNEanFWeWpDdU9xbE9mVXFndU1zNVh2TC0zcHpuWEcwcg?oc=5",
+   "source": "Debate",
+   "region": "CO",
    "summary": "",
-   "published": "2026-10-23T11:29+00:00",
-   "theme": "Hazards & Resilience",
+   "published": "2026-10-22T20:05+00:00",
+   "theme": "Infrastructure & the Underground City",
    "relevance": 4,
    "use": "Feature lead",
-   "angle": "Why does high valley density amplify landslide susceptibility in the Boso Peninsula, and how do weathered sedimentary slopes respond to intense typhoon rainfall?",
-   "keywords": [
-    "landslide"
-   ],
-   "score": 4,
-   "rank": 404
-  },
-  {
-   "id": "680b3d28aa0d9747",
-   "title": "M4 to be shut and speed limits put in place after landslide",
-   "title_en": "",
-   "link": "https://news.google.com/rss/articles/CBMikwFBVV95cUxOYkdTUURQN0hOX2VUcUZ1Rk5ZS1R4alNNVkRLOFJoMHpqUlFxLS1HQ3U5clQtcG9UeWNmd3dYRHFNYnJmSjBHR25QWlZjRUM0Z0RVWnMwbUdsTmZKRE5iZ3NzNGgxbkY5cnFzam9Ub05aYlRKb292ODJEX284ZmdsLXFIVzNZcTdIakNIVjJUR1ZvMEE?oc=5",
-   "source": "South West Farmer",
-   "region": "GB",
-   "summary": "",
-   "published": "2026-10-22T11:04+00:00",
-   "theme": "Hazards & Resilience",
-   "relevance": 4,
-   "use": "News brief",
-   "angle": "What likely caused the M4 landslide, and how should highway embankments and cuttings be assessed for failure after heavy rainfall?",
-   "keywords": [
-    "landslide"
-   ],
-   "score": 4,
-   "rank": 404
-  },
-  {
-   "id": "6d20330351fd9461",
-   "title": "Nilgiris Landslides: bus driver killed, Schoolchildren among 300 rescued",
-   "title_en": "",
-   "link": "https://news.google.com/rss/articles/CBMivwFBVV95cUxOdTlOSzlWSmNZWUlrbUJCNEsxMzNVOFd2NWFGRThtXzZjRHR1V2gxZDFvREd5ckoyQ0NZVzdYWldycGN2SUhDYVZfRHF0UjdWaU9wdUZRbTJMdVhWektCZl9HTHMxdF9rcTdTSk1PMnhJcmFGZ0t1SFFlZzlFdVFXejVkZ3ppbnN5cEJtMldLUjZNOTRHVUtzUW1jb3pTWmtLa0dNS1daaXBRRnRKajlObjZtUGVzSlAwTkhId0Y3RdIBxgFBVV95cUxNYXR2aFZPcUlLdkRSRE9pLU1TdW9IbTFXZklLRVBjTWJjMURUTFNCVERtSXdrLUNnRnBBNXJpNEFiQ3l3bFZfNm96d3N3TW56eUVscDZ1S2NTdmFqWWdxN0ZxSVBwSUk1OFI5TEx4MjB5ZWVfQnNvZ1FWbDFZa3lDck5FVW9nZ1QtZ2RTTGtNZ21pUWxyYjd3c3RUVnhwRUhncnp3cGhMaS02RzBNeUJtQWtaWng4UUQ0cG1pbkFGclZEMW5IU1E?oc=5",
-   "source": "The Hindu",
-   "region": "GB",
-   "summary": "",
-   "published": "2026-10-24T13:15+00:00",
-   "theme": "Hazards & Resilience",
-   "relevance": 4,
-   "use": "News brief",
-   "angle": "What triggered the Nilgiris landslides, and what early-warning and slope-stability measures could reduce fatalities on hill-region roads?",
-   "keywords": [
-    "landslide"
-   ],
-   "score": 4,
-   "rank": 404
-  },
-  {
-   "id": "ef93c1560457b8e8",
-   "title": "Tamil Nadu landslide kills government bus driver after 50 passengers evacuated near Parliyar",
-   "title_en": "",
-   "link": "https://news.google.com/rss/articles/CBMiuwFBVV95cUxQbU93M0hrSW4zTW1qTEQtSGtzZmRYcEJVMlc1UDQ1ZVRrRGhCYXcxaEpuTFNRLXZHdlozOXFvUzJzdzBWNVZFQW1xdXpOcThIVGN3T204N1JrOTcxOGQyT1VRRHBPSlZsWUREOXZXbTRJV29wWmtZUFhlZFFtWkRhRHRnYmRnMDQ2RTJ5VDVWUG9DaW04b0xoOGxhQTVnV2kwVkQyckVuYlVsaGdNenM0OHdGN2N6Tkw2azRR?oc=5",
-   "source": "Telangana Today",
-   "region": "US",
-   "summary": "",
-   "published": "2026-10-24T09:59+00:00",
-   "theme": "Hazards & Resilience",
-   "relevance": 4,
-   "use": "News brief",
-   "angle": "What ground and rainfall conditions caused the Parliyar landslide that hit a bus, and how can hill-road slopes be screened for similar risk?",
-   "keywords": [
-    "landslide"
-   ],
-   "score": 4,
-   "rank": 404
-  },
-  {
-   "id": "eb98b844f19a109b",
-   "title": "In Massachusetts, sinkhole questions linger as mill demolition clears way for housing units",
-   "title_en": "",
-   "link": "https://news.google.com/rss/articles/CBMimwFBVV95cUxOd3VEcWZ4d01oX25TMUhmNDFtX1QtRktKMmhoOWM5Z3BQVGV3TFE5elhLYkhPaWtCUkJTU3paUkRqQjNGdnFYbW1sNWRzRzAyaVFiYlJEWWRaZjY4ckppMTBSTWFlVUpaMHpHLVdMRU11NnFNQUp4Ymtac3UtYk03RndxbVp6V3Exc3p3RFRyTWxyYlkyTDVhcUxWSQ?oc=5",
-   "source": "Yahoo",
-   "region": "GB",
-   "summary": "",
-   "published": "2026-10-23T15:23+00:00",
-   "theme": "Hazards & Resilience",
-   "relevance": 4,
-   "use": "Feature lead",
-   "angle": "How should sinkhole origin be investigated beneath a former mill site before redevelopment for housing, and what ground remediation is needed?",
+   "angle": "How can utilities mapping and leak detection clarify whether pipe defects caused the Emilio Barragán sinkhole in Mazatlán?",
    "keywords": [
     "sinkhole"
    ],
@@ -364,38 +746,18 @@
    "rank": 404
   },
   {
-   "id": "1fbbab138452209f",
-   "title": "西藏那曲市巴青縣7級地震 部分房屋裂縫倒塌",
-   "title_en": "Magnitude 7 earthquake in Biru County, Nagqu, Tibet; some houses cracked and collapsed.",
-   "link": "https://news.google.com/rss/articles/CBMiYEFVX3lxTE9wT0pNRFh5RUpiWk5oQnFGVUlNaGRvbE00QWtoWnQyd2RnWmxDX1JfcTFDRGdZV3R4NV8wM3JnQlhqQlpBdXZOVkQ1SkN1cGpCbEdxQWlyTGVEU3FtOWgzLdIBZkFVX3lxTE43YnlEYmJuNUtFaV9Wblc4S1VBbE5vbFRXSGNlaXhIcjlxYTRtYllySjdLSVUxNk1RTGVmZXRSbXkzUWxsWHR5djNic00yTWw1cVBUQXc2bG9PcUJ3NVlOMGFGQkI0UQ?oc=5",
-   "source": "新唐人電視台",
-   "region": "CN",
-   "summary": "",
-   "published": "2026-10-23T12:40+00:00",
-   "theme": "Hazards & Resilience",
-   "relevance": 4,
-   "use": "Feature lead",
-   "angle": "How do high-altitude site conditions and local soils influence seismic damage to rural houses, and what design measures suit such regions?",
-   "keywords": [
-    "earthquake",
-    "collapse"
-   ],
-   "score": 3,
-   "rank": 403
-  },
-  {
-   "id": "1836280fcdd42ab9",
-   "title": "تم اكتشاف حفرة عملاقة في منتزه فونغ نها-كي بانغ الوطني",
-   "title_en": "Giant hole discovered in Phong Nha-Ke Bang National Park.",
-   "link": "https://news.google.com/rss/articles/CBMijgFBVV95cUxOUnpVR19vMWtXdWRZRlhOcXE4MTNMakhRWnhFZTVUd3lPYWh6NFJjejFkcS1mbENUSDQtMmdxaVlDNDlLdjBrNktTOEJLR3ZyWXBCbFhjVzk5NVA3b2puWXozVWhYWHlkQXZIYkdkanZYanZ6aVNNSXFiZUR6SnZKcFVGT0ZrbjFLMkt3a3F3?oc=5",
+   "id": "9ccfd8d6d618e86e",
+   "title": "ما الذي يوجد داخل الحفرة التي تزيد مساحتها عن هكتارين في وسط غابة فونغ نها - كي بانغ؟",
+   "title_en": "What lies inside the hole over two hectares wide in the middle of Phong Nha-Ke Bang forest?",
+   "link": "https://news.google.com/rss/articles/CBMijAFBVV95cUxOLWcwOXFBTWY2NnVDYW5EVi1yMldxeWpKd3NNTjB6SjMtS2FFRjBYQUd6ek1FYkVnVndOX0J3YXk1a3dVZW9KRWFCaV9KaHc4a25tdDBTWmFXc2hnU09sWEtNb2gxVjFhQ3RJaEJpVWhURWowRjNwVlV6ZG9RWVRlb1lpYXBrUV9YU0dDOQ?oc=5",
    "source": "Vietnam.vn",
    "region": "EG",
    "summary": "",
-   "published": "2026-10-23T11:52+00:00",
+   "published": "2026-10-24T09:44+00:00",
    "theme": "Characterisation & Modelling",
    "relevance": 4,
    "use": "Feature lead",
-   "angle": "What geological processes produced this giant hole in karst terrain, and how should such features be investigated and mapped within protected national parks?",
+   "angle": "What karst processes, such as collapse or dissolution, could create a large sinkhole of over two hectares in a tropical forest, and how should it be investigated and monitored?",
    "keywords": [],
    "score": 0,
    "rank": 400
@@ -418,42 +780,97 @@
    "rank": 400
   },
   {
-   "id": "c76694b36522f8bb",
-   "title": "Frana tra via Gentile e via Genova: scatta il senso unico alternato con il semaforo",
-   "title_en": "",
-   "link": "https://news.google.com/rss/articles/CBMi7gFBVV95cUxPTThpMkFRUmE3cEhvQ3NuWmhJRnd5UTJ2eFpxUDN1NTJUTmQ0RWhOTlc5M2MyNzVJeUd4TUtzb1BaaUdmdVpRYjN6LXBtdUxubGx4WHVTQ1NQNzU0QVI3N29nNkdWRGdtWTFGYjg2LWU2M0pXY3phYktYM3JVVm9fbjlTdGZRV0I3ZE40eVAxMkJMVlYxRlQzVnpVdFlETlh6a1NKSXNocTU0ZE0zX09tSHhwbXZGa3VZdzJDMTBNMHhoWGwwM2JNbk1BbE94QjhNQW5oY2QwY3RudmhSX2FlcWlxWURMNk04TVNFMU5R0gHuAUFVX3lxTE9NOGkyQVFSYTdwSG9Dc25aaElGd3lRMnZ4WnFQM3U1MlROZDRFaE5OVzkzYzI3NUl5R3hNS3NvUFppR2Z1WlFiM3otcG11TG5sbHhYdVNDU1A3NTRBUjc3b2c2R1ZEZ21ZMUZiODYtZTYzSldjemFiS1gzclVWb19uOVN0ZlFXQjdkTjR5UDEyQkxWVjFGVDNWelV0WUROWHprU0pJc2hxNTRkTTNfT21IeHBtdkZrdVl3MkMxME0weGhYbDAzYk1uTUFsT3hCOE1BbmhjZDBjdG52aFJfYWVxaXFZREw2TThNU0UxTlE?oc=5",
-   "source": "Savona News",
-   "region": "IT",
+   "id": "e5790790955e1562",
+   "title": "مخاوف بشأن تآكل ضفاف الأنهار مما يؤدي إلى فقدان الأراضي الزراعية.",
+   "title_en": "Concerns over riverbank erosion leading to loss of farmland",
+   "link": "https://news.google.com/rss/articles/CBMic0FVX3lxTE85MmNnNDd2QkUzaFV4QTZmTmJXNTAzbUZfMjdpdlNaSjEyODN0eW51ZUp0RzE3SHY2NzRuQlZtOHdtcnFQLWlBOGQ5eVQ3QTU1REJMWTRvZm1qTFZHZWZ0ZU9WTGRiYkhJNGVEaEliZW9GZWc?oc=5",
+   "source": "Vietnam.vn",
+   "region": "EG",
    "summary": "",
-   "published": "2026-10-24T10:09+00:00",
-   "theme": "Hazards & Resilience",
+   "published": "2026-10-23T01:23+00:00",
+   "theme": "Offshore, Coasts & Water",
+   "relevance": 4,
+   "use": "Feature lead",
+   "angle": "What bank erosion mechanisms and protection measures are effective for riverbanks threatening farmland, and how can they be monitored over time?",
+   "keywords": [],
+   "score": 0,
+   "rank": 400
+  },
+  {
+   "id": "90a138492a21952e",
+   "title": "Quảng Trị: Biển xâm thực nghiêm trọng đe dọa đê kè và đời sống người dân",
+   "title_en": "Quang Tri: Severe sea erosion threatens dykes and residents' livelihoods",
+   "link": "https://news.google.com/rss/articles/CBMivgFBVV95cUxOeUJHRExHRm0xT2ZMLXFqWWFjaXRUWDFrY2FpaDdYc3dlVy1tYy1GQ1hZSDk1OFZFVElOOU5NMVVia21KM2xPSUhWdnk3ZHRkTWV1emJBZkhQclp3aUtiUzRiX0dVZUZhaGRpUWlJUE8tUmhha1ZLUS1TRGM2dGlxRWJ2UWFkNGNsakZ6S1NTMWw0NGp0V0Zlc0xXTzBTRkJKaGZPT2tNcExKRHBaZXN2U3pIMkVKNTRVdy1mUkxB?oc=5",
+   "source": "Người Đưa Tin",
+   "region": "VN",
+   "summary": "",
+   "published": "2026-10-23T00:00+00:00",
+   "theme": "Offshore, Coasts & Water",
+   "relevance": 4,
+   "use": "Feature lead",
+   "angle": "How do sea-level-driven erosion and scour undermine sea dyke foundations in Quang Tri, and which revetment and foundation designs suit eroding sandy coastal soils?",
+   "keywords": [],
+   "score": 0,
+   "rank": 400
+  },
+  {
+   "id": "5214f05ec4eed2f8",
+   "title": "Metro Bến Thành - Tham Lương cuối năm 2026 làm cả 11 nhà ga",
+   "title_en": "Ben Thanh - Tham Luong metro to have all 11 stations completed by end of 2026",
+   "link": "https://news.google.com/rss/articles/CBMioAFBVV95cUxQdGo5XzZaLXUtaGVxUE5qb0ltRENoMjhVWlN4b0dqZFpPREJTNGw4Rld2bmtEX2VnSlB4TkJYVkxPUjdzZXYxZ2tWOG5kaWpUSFF1UGRjaUNKY3NOTkpVeFZpOFhMOW1QYkZIQXZ0ZTV4NjBseUVBYzdBdDNPTGNtc0pMRXFSWWM0SmVhS05Ld2hVemp5bHdkX290ZFltU3NC?oc=5",
+   "source": "VOH",
+   "region": "VN",
+   "summary": "",
+   "published": "2026-10-23T01:53+00:00",
+   "theme": "Infrastructure & the Underground City",
+   "relevance": 4,
+   "use": "Feature lead",
+   "angle": "What ground conditions and deep excavation and tunnelling methods are used for metro stations in soft Ho Chi Minh City clays with high groundwater, and what risks follow?",
+   "keywords": [],
+   "score": 0,
+   "rank": 400
+  },
+  {
+   "id": "69dcb6026ae4bcfb",
+   "title": "Snowy 2.0 cost and completion date revised",
+   "title_en": "",
+   "link": "https://www.tunnelsandtunnelling.com/news/snowy-2-0-cost-and-completion-date-revised/",
+   "source": "Tunnels & Tunnelling",
+   "region": "",
+   "summary": "Snowy 2.0 cost and completion date revised TBM-driven tunnelling is 65% complete and cavern excavation 90% complete. The post Snowy 2.0 cost and completion date revised appeared first on Tunnels and Tunnelling .",
+   "published": "2026-10-23T06:38+00:00",
+   "theme": "Sustainability & the Energy Transition",
    "relevance": 3,
-   "use": "Watch only",
-   "angle": "Does a landslide on an urban road indicate ground instability requiring geotechnical investigation before reopening?",
+   "use": "News brief",
+   "angle": "What ground-related risks drive cost and schedule overruns in large pumped hydro cavern and tunnel excavations?",
    "keywords": [
-    "landslide"
+    "excavation",
+    "tbm",
+    "tunnelling",
+    "tunnel"
    ],
    "score": 10,
    "rank": 310
   },
   {
-   "id": "43c3cc93c08924ee",
-   "title": "暴雨来袭隐患藏 山洪滑坡需严防｜公益广告",
-   "title_en": "Torrential rain brings hidden hazards: mountain floods and landslides must be strictly prevented; public service advertisement",
-   "link": "https://news.google.com/rss/articles/CBMiTEFVX3lxTE5jQUtRMEZxbjBPU3kxaVdvdjhRc09sV2NnalVMYklmVHFZQmwybkFHUjRLMVYtdzlvS3laVGlFMGw4aXhtdTduc1o4c3U?oc=5",
-   "source": "凤凰网",
-   "region": "CN",
-   "summary": "",
-   "published": "2026-10-23T01:59+00:00",
-   "theme": "Hazards & Resilience",
+   "id": "791758896d249952",
+   "title": "Mobile shield deployed for A14 Vinci Tunnel reconstruction",
+   "title_en": "",
+   "link": "https://tunnellingjournal.com/mobile-shield-deployed-for-a14-vinci-tunnel-reconstruction/",
+   "source": "Tunnelling Journal",
+   "region": "",
+   "summary": "An 83-tonne mobile shield has entered service inside the Vinci Tunnel on Italy’s A14 motorway, allowing reconstruction of the tunnel... The post Mobile shield deployed for A14 Vinci Tunnel reconstruction appeared first on The Tunnelling Journal .",
+   "published": "2026-10-22T11:02+00:00",
+   "theme": "Infrastructure & the Underground City",
    "relevance": 3,
-   "use": "Watch only",
-   "angle": "How do mountain flood and landslide hazards during intense rainfall get prevented through early warning and slope management?",
+   "use": "News brief",
+   "angle": "How does a mobile shield enable tunnel reconstruction within an operating motorway tunnel, and what ground support issues arise?",
    "keywords": [
-    "landslide"
+    "tunnelling",
+    "tunnel"
    ],
-   "score": 10,
-   "rank": 310
+   "score": 7,
+   "rank": 307
   },
   {
    "id": "28717aa79ce46d7d",
@@ -473,35 +890,77 @@
    "rank": 306
   },
   {
-   "id": "2d43058abac39bda",
-   "title": "Au col de Khanh Le, les véhicules sont arrêtés par groupes pour faire face au risque de chutes de pierres.",
-   "title_en": "At Khanh Le pass, vehicles are stopped in groups to face rockfall risk",
-   "link": "https://news.google.com/rss/articles/CBMihgFBVV95cUxPWEJjZzVNcHVub2RyNTNCN3huS0djNHpyQnA4YVJGdEtQSG9jTzdtMkRoR2lveGlsSmlZcmE0UGZsMVdnYThVT2phYU0zdjBoeDM1VkJlUUlGOUNQSmVoOFYyLVBRSF9manVQWW5jdUZsQThDUm5fU0J0NDBHT3VfV0lYNEwwdw?oc=5",
-   "source": "Vietnam.vn",
-   "region": "FR",
-   "summary": "",
-   "published": "2026-10-22T11:48+00:00",
-   "theme": "Hazards & Resilience",
+   "id": "7d6bfe02d4224620",
+   "title": "Abergeldie awarded patent for underground hydrogen storage solution",
+   "title_en": "",
+   "link": "https://www.tunnelsandtunnelling.com/news/abergeldie-awarded-patent-for-underground-hydrogen-storage-solution/",
+   "source": "Tunnels & Tunnelling",
+   "region": "",
+   "summary": "Abergeldie awarded patent for underground hydrogen storage solution The system draws on Abergeldie’s blind boring expertise. The post Abergeldie awarded patent for underground hydrogen storage solution appeared first on Tunnels and Tunnelling .",
+   "published": "2026-10-23T06:38+00:00",
+   "theme": "Sustainability & the Energy Transition",
    "relevance": 3,
-   "use": "Regional insight",
-   "angle": "How should rockfall risk on mountain roads be assessed and mitigated, and when is traffic control sufficient versus slope engineering?",
-   "keywords": [],
-   "score": 6,
-   "rank": 306
+   "use": "Academia-to-Industry topic",
+   "angle": "What ground conditions and geomechanical criteria govern underground hydrogen storage, and how does blind boring apply?",
+   "keywords": [
+    "tunnelling",
+    "tunnel"
+   ],
+   "score": 5,
+   "rank": 305
   },
   {
-   "id": "e349d6a1b6dbfde4",
-   "title": "Benjamin Banneker Middle School open following water main break, sinkhole repairs",
+   "id": "6886e43c8d78cc08",
+   "title": "Snowy 2.0 cost rises to A$22.2bn",
    "title_en": "",
-   "link": "https://news.google.com/rss/articles/CBMihwFBVV95cUxQTm9rZVd2Tm9uUHpadkRIeXVwdkhhLTIyVjNESDJYOFBRWS1oUVlQaHRVVkE2cDJ6ekVwQ2pNRVZma25ySjJHQjU5ZHJMT0UtOHVCMnN5dlpJR2p2dUpzVXY5R2hkdFhFX2xBUlhQb1VCN3BxUEozeVJlek1pcWpDbkpheUxxcm8?oc=5",
-   "source": "AOL.com",
-   "region": "GB",
-   "summary": "",
-   "published": "2026-10-22T12:45+00:00",
-   "theme": "Infrastructure & the Underground City",
+   "link": "https://tunnellingjournal.com/snowy-2-0-cost-rises-to-a22-2bn-as-tunnelling-reaches-65-completion/",
+   "source": "Tunnelling Journal",
+   "region": "",
+   "summary": "Australia’s Snowy 2.0 pumped hydro project has undergone another major cost revision, with its target budget increasing to A$22.2bn (US$15.8bn... The post Snowy 2.0 cost rises to A$22.2bn appeared first on The Tunnelling Journal .",
+   "published": "2026-10-23T08:57+00:00",
+   "theme": "Sustainability & the Energy Transition",
    "relevance": 3,
    "use": "News brief",
-   "angle": "How do water main breaks undermine shallow soils and cause sinkholes, and what ground investigation would prevent school-site reopening delays?",
+   "angle": "What ground-related factors drive repeated cost increases in large underground pumped hydro projects?",
+   "keywords": [
+    "tunnelling"
+   ],
+   "score": 5,
+   "rank": 305
+  },
+  {
+   "id": "961d462f6c8f1600",
+   "title": "Minvu avanza en 121 casos de apoyo habitacional en la Villa El Mirador de Arauco y prepara estudio de suelos",
+   "title_en": "Minvu advances 121 housing support cases in Villa El Mirador, Arauco, and prepares soil study",
+   "link": "https://news.google.com/rss/articles/CBMiygFBVV95cUxNYnltUmU0VEdCNDdXUG4xWjNBYXRMUEdlU2dIanhJeHFBalFBOG9DaWx0Tk5KVnZqeGZSMkxZQTNNSkdzWTJHZl9oSDRRWXZOb2YwNFVLNWw5ZjBUY0ZZdTNpOWg5RlQ3M2xDMkt6bkRvMFhXc1k3bTZmVmpVLU9zdTEtQ1R6U1hvWmlPVHA3WjFwc1IwNldOSHV6UGI5VldtdS01bjQ4ZXl4d0N2bjBtWVFqRktLUkZtMFhtVmhrUUVkSEhBbmtJMjJ3?oc=5",
+   "source": "Trade-news.cl",
+   "region": "PE",
+   "summary": "",
+   "published": "2026-10-23T11:03+00:00",
+   "theme": "Characterisation & Modelling",
+   "relevance": 3,
+   "use": "News brief",
+   "angle": "What soil investigation is needed before housing support works on this site, and how should ground conditions shape foundation choice?",
+   "keywords": [
+    "site investigation",
+    "soil"
+   ],
+   "score": 5,
+   "rank": 305
+  },
+  {
+   "id": "db215d359f53e718",
+   "title": "Rescatan el cuerpo sin vida del minero que había quedado atrapado en un socavón en Gámeza",
+   "title_en": "Body of miner trapped in a tunnel collapse in Gámeza recovered",
+   "link": "https://news.google.com/rss/articles/CBMixwFBVV95cUxPZGJXSXRVamN6M3Z6Ymc2NnU0ODdaRThOc2tqRWNRQ0VLeklmMTViYzh1RVZESzNZOUlwVkZBUS0zcDB5UFFXdlB1TUM0N0NSU1BJZFNSRERhdnBSeS1jU1B3aVFUQmh6bkxCbUFROEJ1NS0wUDVuMUhFeGNleWtCVUxBendKR0dFekxHQVFNejlTN0hOcGZadDZmWGRiZHdGZ0xNZVRuc21BYnpUWHg3LWx4UzJPbHNxVUJpWWxLdUtWVEhBcnBr?oc=5",
+   "source": "Boyacá 7 Días",
+   "region": "CO",
+   "summary": "",
+   "published": "2026-10-22T22:03+00:00",
+   "theme": "Geotechnics & Society",
+   "relevance": 3,
+   "use": "News brief",
+   "angle": "What ground and support conditions lead to tunnel collapses in small mines, and how can rescue operations account for ground instability?",
    "keywords": [
     "sinkhole"
    ],
@@ -509,20 +968,115 @@
    "rank": 304
   },
   {
-   "id": "10aee2944dffd45a",
-   "title": "Landslide Derails Locomotive in Keralam, Train Services Restored",
-   "title_en": "",
-   "link": "https://news.google.com/rss/articles/CBMiygFBVV95cUxPanNzOTkybjgybXo3ZDZ4R2psV2Zkd0VaTi05MWJOSFRkU1BQc29aZEpPQmtEMWUxNUgyUUlfbUt1XzZqa2swd2dESjVuU2lXUG1IVnk3VGIyM05LMzZHTjRyZmdlT0pYb3NGRDVLUXEyMkFrSF8ydWkwZG13ZlV6TGYzSFl4ZUZwQnVqajFPc3Rtc3VRYm1MUHhUUWVtUEJpOFFRVm1XeVV2bVlGMDBVTy1hNVlPTTRjQzd1bnJKUld3QVJRQlRwWVBn0gHKAUFVX3lxTE9qc3M5OTJuODJtejdkNnhHamxXZmR3RVpOLTkxYk5IVGRTUFBzb1pkSk9Ca0QxZTE1SDJRSV9tS3VfNmprazB3Z0RKNW5TaVdQbUhWeTdUYjIzTkszNkdONHJmZ2VPSlhvc0ZENUtRcTIyQWtIXzJ1aTBkbXdmVXpMZjNIWXhlRnBCdWpqMU9zdG1zdVFibUxQeFRRZW1QQmk4UVFWbVd5VXZtWUYwMFVPLWE1WU9NNGNDN3VuckpSV3dBUlFCVHBZUGc?oc=5",
-   "source": "Deccan Chronicle",
-   "region": "SG",
+   "id": "f1da9c6b12d8a2e5",
+   "title": "Fuerte oleaje en playas de Mazatlán forma socavón en monumento",
+   "title_en": "Strong waves on Mazatlán beaches form sinkhole in monument",
+   "link": "https://news.google.com/rss/articles/CBMi0gFBVV95cUxNcGZlMTE5MjVLdXpRZjFKNzcxQnZ5YmFUQ0xkeGljcmdESFNjZE1xai1JR196X3BEcTl6eWZmWjlPU3ZpQktHM3hWSmJvVEtUaGlSb2hNUWtmcjNpbV9hZXhRdVR1UEdMeC1fMTducHM4bElIOGFLZFhvZnZIMXM5OHRYdEJ4N2NVNGhGa181Qm8zTTd6d2dTQjVkSUZrRHdwcE5LVUxxY3JhSnN2di15NFVXWXJDU011NW5uejZQVmNtcHpvOU9NOXFzbVJNVU9TdnfSAeYBQVVfeXFMTXdwTjRSMVRXVjFOUGJEU1dkVDB2c1dCc0c0MnZIN1hZVHl4Z24taWFocko0SldESnk3LWltclY2TU94d0liMXM3YkxiVndZQVhCWFc5ZEROYjdCNFRCVmlEaTl0X2ZOXzRJQmtKSTFPWTVsNjZncVBudnBmckRjX1M3OEUwSVNYT2RtUF9SYzgxQlJHMWgxYVRkcUYwck9IOXBzeUE2Yi01QXRVeG1IQTFvOUxsaU9TNlVobzJROUhFVmV3bng5NFZnSlV3SFNiQXFkTGFMVFBwZUp2dUhIV1Z1RU5rNFE?oc=5",
+   "source": "El Universal",
+   "region": "CO",
    "summary": "",
-   "published": "2026-10-22T06:21+00:00",
+   "published": "2026-10-24T00:04+00:00",
+   "theme": "Offshore, Coasts & Water",
+   "relevance": 3,
+   "use": "News brief",
+   "angle": "How do wave action and beach sand erosion undermine coastal monuments and promenade ground in Mazatlán?",
+   "keywords": [
+    "sinkhole"
+   ],
+   "score": 4,
+   "rank": 304
+  },
+  {
+   "id": "4d46294f1736118a",
+   "title": "Иван Носков анонсировал восстановление подпорной стены на Владимирской в Самаре",
+   "title_en": "Ivan Noskov announced restoration of a retaining wall on Vladimirskaya Street in Samara",
+   "link": "https://news.google.com/rss/articles/CBMiREFVX3lxTE9KcGh5bWlxWEhKT3FXdU5qVjNOd3c3clQ1bGw1YWFmaHljV0U3ckZYcndLVTgtakJFSHZZQ3ViYXg2QnV4?oc=5",
+   "source": "Самарская газета",
+   "region": "RU",
+   "summary": "",
+   "published": "2026-10-23T11:07+00:00",
    "theme": "Infrastructure & the Underground City",
    "relevance": 3,
    "use": "News brief",
-   "angle": "What slope or embankment failure caused the locomotive derailment, and how should rail corridors be assessed for landslide risk?",
+   "angle": "What causes retaining-wall deterioration on urban slopes like Samara's, and how should restoration design address overall slope stability?",
    "keywords": [
-    "landslide"
+    "retaining wall"
+   ],
+   "score": 4,
+   "rank": 304
+  },
+  {
+   "id": "cfd402f4b2c84fed",
+   "title": "Inicia Escobedo reparación de socavón",
+   "title_en": "Escobedo begins repair of sinkhole",
+   "link": "https://news.google.com/rss/articles/CBMijAFBVV95cUxQdDFPZ1hLdVRrLUxWRTkyRWtWTjdrMTlTMi1EdW5meVA1dG5ZUWxNZ09MRThFeTk0OThLTDg4QkhBRlQwMzZkTnRBWnh2ZjdTWkhVWTcxX0QxYnNrMW9XOHNyVFZxeHpJMkthZDJRbGtsV0VuTjkwLXFTN0JSS2k2NU85em9uLWgtTjBjUQ?oc=5",
+   "source": "Detona, Real News",
+   "region": "CO",
+   "summary": "",
+   "published": "2026-10-24T03:48+00:00",
+   "theme": "Infrastructure & the Underground City",
+   "relevance": 3,
+   "use": "News brief",
+   "angle": "What investigation and grouting methods are used to repair urban sinkholes like the one in Escobedo?",
+   "keywords": [
+    "sinkhole"
+   ],
+   "score": 4,
+   "rank": 304
+  },
+  {
+   "id": "ca105ab6c8b1c87d",
+   "title": "Centro atiende socavón en Casa Blanca",
+   "title_en": "Center attends sinkhole in Casa Blanca",
+   "link": "https://news.google.com/rss/articles/CBMic0FVX3lxTE56eFFxMjNpU2dPWkppM1RsMEJJbThwdXcyYk1id0t2V1RCYUFMQTJzVGRGMFBxODZlSi1IVERlM29jWGtJRUtkb1M5em1ISlMwd1hBVnkwNEVOb1hiWlkzNU9JZUJJbWZXNUFZWTh5YkE5SE0?oc=5",
+   "source": "Tabasco HOY",
+   "region": "CO",
+   "summary": "",
+   "published": "2026-10-24T15:30+00:00",
+   "theme": "Infrastructure & the Underground City",
+   "relevance": 3,
+   "use": "News brief",
+   "angle": "What subsurface causes are likely behind the Casa Blanca sinkhole, and how should emergency response proceed?",
+   "keywords": [
+    "sinkhole"
+   ],
+   "score": 4,
+   "rank": 304
+  },
+  {
+   "id": "af18accf4f37a498",
+   "title": "Se origina socavón en la parte superior del paso a desnivel en Francisco I. Madero",
+   "title_en": "Sinkhole forms at top of underpass in Francisco I. Madero",
+   "link": "https://news.google.com/rss/articles/CBMi0AFBVV95cUxNZm5rakRuTlVuWjFiMGV5Z2p4SmRJUTlTc3E4S0g0WnVzaEcwRTVTWjdrVVlBRl84ckNvRUpXQjh2bTY2R2RnNFZGOG5uVnpDZnBpSUM1S3JVd05lQUd0cVNNaG4zYUdNSjUyVmZ5TnZfM2RZN0UxUFFMeUJxSEgxSC16bFBlcG52cEN4RVh3dC1EM3g5R1ZTS2tuNVczZEJNRDdfaTZrMXRXb0cwS1NrdS1lb0VITjU5ajZfeXpINS1PVjNNeTNkNkJlX0o3R3NO?oc=5",
+   "source": "El Siglo de Torreón",
+   "region": "CO",
+   "summary": "",
+   "published": "2026-10-23T23:24+00:00",
+   "theme": "Infrastructure & the Underground City",
+   "relevance": 3,
+   "use": "News brief",
+   "angle": "What ground movements and drainage failures beneath an underpass cause sinkholes at its top surface?",
+   "keywords": [
+    "sinkhole"
+   ],
+   "score": 4,
+   "rank": 304
+  },
+  {
+   "id": "a429d3e4cd718a0b",
+   "title": "Rescatan ambulancia que quedó colgada en un socavón en Aucapán",
+   "title_en": "Ambulance left hanging in a sinkhole in Aucapán rescued",
+   "link": "https://news.google.com/rss/articles/CBMieEFVX3lxTE5YeFpJbnV5Wkk5VGczTmxUT3Vod1U2UWltZHhMQmtKclRjcURMSGpiSjRHSWNNMjJUWmM2Z1JlUkNHNlgwU09XZXFaNEpKWEoyRG5pdzVvMFQ0aGc4VjdfZG1uWl9FWlVpNnJPTGZRam11WUtBaHdwVNIBfkFVX3lxTFBVV01qejl4ci1ZT3FCdDUtc1ppR3Y3UDM2Y0FjZFpYUEN4UUltSWgwd0Y4Y0lJY1UwTkI0Tm9YeFN2N19qMmhKaGpyQXNKN2hvOFpkZ2VWdno5NmFyOVY3WE9PdXNfTGJpVm9xUThadkdmV0xLNGZhTjFjdkFEQQ?oc=5",
+   "source": "Realidad Sanmartinense",
+   "region": "CO",
+   "summary": "",
+   "published": "2026-10-23T18:35+00:00",
+   "theme": "Infrastructure & the Underground City",
+   "relevance": 3,
+   "use": "News brief",
+   "angle": "How do soil loss and void formation under a road lead to vehicles hanging over sinkholes, and what rescue precautions apply?",
+   "keywords": [
+    "sinkhole"
    ],
    "score": 4,
    "rank": 304
@@ -560,81 +1114,364 @@
    "keywords": [],
    "score": 0,
    "rank": 300
+  },
+  {
+   "id": "67c28a64e2e067dd",
+   "title": "Cerraron un sector de la costanera de una ciudad correntina por hundimiento",
+   "title_en": "",
+   "link": "https://news.google.com/rss/articles/CBMizAFBVV95cUxOX3FrTEZHRzR0dFNpaDRjdm9hSlZqREtnQ0Nhak51bmpSbTdqOWtyeDNxV0RmekhHR1JNRjlOSXNzb295b0ZjdVJRb29aaUJLbE9JbDJlLUFkMHg4MnZpVkVnVE9pMW1pM3U5YlBjVmZGTVBxVlBtTkJOeHNleHBoQldIRGdNQXo5UExaQ2tqYmZ5Rnd1aEtuakUxalItUnk3ak83Nm5YNDFVZXo4bFBETEZ6czd4N2I1aE1jZnB3OE80Ym1EM2prQkZXMTc?oc=5",
+   "source": "El Litoral | Novedades de Corrientes",
+   "region": "AR",
+   "summary": "",
+   "published": "2026-10-22T22:26+00:00",
+   "theme": "Offshore, Coasts & Water",
+   "relevance": 3,
+   "use": "News brief",
+   "angle": "What causes subsidence along a riverfront promenade in Corrientes, and how should ground investigation guide repair of the costanera?",
+   "keywords": [],
+   "score": 0,
+   "rank": 300
+  },
+  {
+   "id": "0fa2dd592e8dd555",
+   "title": "Inician rehabilitación tras hundimiento de losa en el Malecón Costero de Coatzacoalcos",
+   "title_en": "",
+   "link": "https://news.google.com/rss/articles/CBMixgFBVV95cUxOVi1Wa2xtWXg5NW1rUUJDa2xWblVjTVpQY3QwdFdWVzJnQzBFcVJKSUtIdFdlMXZmdVhTX2FETTJOREZwVVJ0Yk5TdHVPdjhfX2tvV08yMVhBYVROS0hlalBzMWtuSHBmTWRNcTJhNTN4a0w3b1BIdnVxajVyOER5OGo4dmthTS1nM2ZqOG5Ja1ZkRTR1MFVvWXNhQ3ctX3FfZF9wdjJ6cEppVmc5OXRlWEp6NmRaWllSdGRDQmF6N2RWR3VVZnc?oc=5",
+   "source": ":: Foro Coatza ::",
+   "region": "AR",
+   "summary": "",
+   "published": "2026-10-23T22:06+00:00",
+   "theme": "Offshore, Coasts & Water",
+   "relevance": 3,
+   "use": "News brief",
+   "angle": "What causes slab sinking on a coastal promenade exposed to waves, and what foundation and drainage remedies are appropriate?",
+   "keywords": [],
+   "score": 0,
+   "rank": 300
   }
  ],
- "failures": [
-  [
-   "GeoEngineer",
-   "403 Client Error: Forbidden for url: https://www.geoengineer.org/"
-  ],
-  [
-   "Geosynthetica",
-   "HTTPSConnectionPool(host='www.geosynthetica.com', port=443): Max retries exceeded with url: /feed/ (Caused by SSLError(SSLCertVerificationEr"
-  ],
-  [
-   "ISSMGE",
-   "no RSS/Atom feed found at this address"
-  ],
-  [
-   "ASCE Geo-Institute",
-   "no RSS/Atom feed found at this address"
-  ],
-  [
-   "ICE (Institution of Civil Engineers)",
-   "no RSS/Atom feed found at this address"
-  ],
-  [
-   "FHWA Infrastructure R&D",
-   "403 Client Error: Forbidden for url: https://highways.dot.gov/newsroom"
-  ],
-  [
-   "GEER Association",
-   "no RSS/Atom feed found at this address"
-  ],
-  [
-   "USGS Landslide Hazards",
-   "no RSS/Atom feed found at this address"
-  ],
-  [
-   "USGS Natural Hazards news",
-   "no RSS/Atom feed found at this address"
-  ],
-  [
-   "ReliefWeb disasters",
-   "no RSS/Atom feed found at this address"
-  ],
-  [
-   "Tunnels & Tunnelling",
-   "no RSS/Atom feed found at this address"
-  ],
-  [
-   "TunnelTalk",
-   "HTTPSConnectionPool(host='www.tunneltalk.com', port=443): Max retries exceeded with url: / (Caused by ConnectTimeoutError(<HTTPSConnection(h"
-  ],
-  [
-   "Rail Business UK",
-   "403 Client Error: Forbidden for url: https://www.railbusinessuk.com/feed/"
-  ],
-  [
-   "Railway Gazette",
-   "403 Client Error: Forbidden for url: https://www.railwaygazette.com/"
-  ],
-  [
-   "Rail Technology Magazine",
-   "no RSS/Atom feed found at this address"
-  ],
-  [
-   "International Construction",
-   "404 Client Error: Not Found for url: https://www.khl.com/international-construction"
-  ],
-  [
-   "Engineering News-Record",
-   "no RSS/Atom feed found at this address"
-  ],
-  [
-   "Construction Week (Middle East)",
-   "405 Client Error: Not Allowed for url: https://www.constructionweekonline.com/"
-  ]
- ],
- "notes": []
+ "failures": [],
+ "notes": [],
+ "papers": [
+  {
+   "id": "2b89ea725cb029f9",
+   "title": "Secondary Compression of Deep Foundations in Carbonate Soils: An InSAR Study of Sunny Isles, Florida",
+   "link": "https://doi.org/10.1061/jggefk.gteng-15394",
+   "journal": "Journal of Geotechnical and Geoenvironmental Engineering",
+   "authors": "Bardet JP",
+   "published": "2026-10-24",
+   "abstract": "Six-year interferometric synthetic aperture radar (InSAR) measurements of over 20 high-rise buildings in Sunny Isles, Florida, reveal persistent postconstruction settlements up to 5 cm. Supported by auger cast-in-place (ACIP) piles in a heterogeneous carbonate profile, these building-specific deformations cannot be attributed to regional subsidence or primary consolidation of the predominantly free-draining granular strata. Log-time and power-law models both reproduce the 6-year observations well and produce comparable 100-year extrapolations, with the power-law model yielding slightly more conservative estimates at long time horizons. Because both models fit the observational data equally well, the 100-year estimates are interpreted as scenario-based serviceability extrapolations rather…",
+   "theme": "Infrastructure & the Underground City",
+   "relevance": 4,
+   "angle": "Six years of InSAR data show building-specific settlements in carbonate soils that continue after construction, so engineers should plan for long-term deformation and monitoring of deep foundations.",
+   "keywords": [
+    "subsidence",
+    "settlement",
+    "deep foundation",
+    "foundation",
+    "pile",
+    "soil"
+   ]
+  },
+  {
+   "id": "668cb61e2a44e5a1",
+   "title": "Probabilistic State Parameter–Based Liquefaction Triggering Model",
+   "link": "https://doi.org/10.1061/jggefk.gteng-15418",
+   "journal": "Journal of Geotechnical and Geoenvironmental Engineering",
+   "authors": "Reyes P, Montalva G et al.",
+   "published": "2026-10-20",
+   "abstract": "Soil liquefaction is a central concern in geotechnical engineering because of its potential to damage infrastructure. Current liquefaction triggering practice relies on semiempirical procedures calibrated from earthquake case histories and surface manifestation labels, which can be biased and unevenly distributed across seismologic, geologic, and geomorphic settings. This paper develops an alternative probabilistic triggering framework anchored in laboratory testing, formulated in the state parameter space, and evaluated using independent piezocone penetration test (CPTu) case-history databases. Cyclic resistance is calibrated across 20 sands using cyclic and monotonic triaxial test data through a hierarchical Bayesian regression that separates within-material dispersion from…",
+   "theme": "Hazards & Resilience",
+   "relevance": 4,
+   "angle": "A lab-anchored, state-parameter liquefaction triggering model offers an alternative to case-history procedures that can be biased, and it is validated against CPTu data practitioners already use.",
+   "keywords": [
+    "geotechnical",
+    "liquefaction",
+    "earthquake",
+    "soil"
+   ]
+  },
+  {
+   "id": "31368eb08c9a98c6",
+   "title": "Experimental investigation on deformation behavior of pile-supported embankments with geogrid-tire cells reinforcement",
+   "link": "https://doi.org/10.1016/j.trgeo.2026.102499",
+   "journal": "Transportation Geotechnics",
+   "authors": "Zhang H, Jia Y et al.",
+   "published": "2026-10-23",
+   "abstract": "",
+   "theme": "Ground Improvement & Innovation",
+   "relevance": 4,
+   "angle": "Experimental results on pile-supported embankments with geogrid-tire cells give practical guidance on deformation behaviour and load transfer for low-cost reinforced embankment design.",
+   "keywords": [
+    "pile",
+    "embankment",
+    "geogrid"
+   ]
+  },
+  {
+   "id": "3f6a7178ef33457c",
+   "title": "From rockfall to landslide: early warning based on video monitoring in open-pit mines",
+   "link": "https://doi.org/10.1007/s10346-026-02861-3",
+   "journal": "Landslides",
+   "authors": "Liu F, Deng W et al.",
+   "published": "2026-10-20",
+   "abstract": "",
+   "theme": "Hazards & Resilience",
+   "relevance": 4,
+   "angle": "Video monitoring workflows that link rockfall events to developing landslides give open-pit mine operators a practical early-warning approach they could deploy now.",
+   "keywords": [
+    "landslide",
+    "rockfall"
+   ]
+  },
+  {
+   "id": "c20aad924de93cbf",
+   "title": "Stiffness compatibility in geosynthetic-reinforced column-supported embankment widening over soft ground: numerical insights and a design framework",
+   "link": "https://doi.org/10.1016/j.sandf.2026.101892",
+   "journal": "Soils and Foundations",
+   "authors": "Pham TA",
+   "published": "2026-10-22",
+   "abstract": "",
+   "theme": "Ground Improvement & Innovation",
+   "relevance": 4,
+   "angle": "A stiffness-compatibility design framework for geosynthetic-reinforced column-supported embankment widening addresses differential settlement issues that practitioners face when widening existing embankments.",
+   "keywords": [
+    "embankment",
+    "geosynthetic"
+   ]
+  },
+  {
+   "id": "43b747d16b369a13",
+   "title": "Extended soil-arching analysis for piled embankments with rectangular pile layouts",
+   "link": "https://doi.org/10.1680/jgeen.26.00025",
+   "journal": "Proceedings of the Institution of Civil Engineers - Geotechnical Engineering",
+   "authors": "He X, Li G et al.",
+   "published": "2026-10-21",
+   "abstract": "Soil arching governs the performance of unreinforced piled embankments, yet studies largely focus on square grids, leaving rectangular layouts underexplored. This study derives analytical soil-arching solutions for rectangular pile arrangements by extending the Hewlett and Randolph soil-arching model and quantifies the error introduced by the common equivalent-square simplification. Centrifuge tests provide validation of the proposed model’s underlying load-transfer mechanisms under simplified conditions; subsequently, finite-element simulations extend the validation to broader parametric ranges and real fill properties, confirming the model’s applicability across various configurations. Parametric analyses show that the pile load-sharing ratio is governed primarily by the internal…",
+   "theme": "Ground Improvement & Innovation",
+   "relevance": 4,
+   "angle": "Extended soil-arching solutions for rectangular pile layouts, with error quantified against the equivalent-square simplification, give designers a more accurate load-transfer method for piled embankments.",
+   "keywords": [
+    "pile",
+    "embankment",
+    "soil"
+   ]
+  },
+  {
+   "id": "e28d3a4962ea2513",
+   "title": "Stability analysis of geotextile tube tailings dams under inclined stacking: composite failure mechanism and oblique horizontal slice method",
+   "link": "https://doi.org/10.1007/s11440-026-03261-6",
+   "journal": "Acta Geotechnica",
+   "authors": "Wu Z, Liu X et al.",
+   "published": "2026-10-20",
+   "abstract": "",
+   "theme": "Sustainability & the Energy Transition",
+   "relevance": 4,
+   "angle": "A composite failure mechanism and slice method for geotextile tube tailings dams under inclined stacking provide a stability check that practitioners can use for tailings management.",
+   "keywords": [
+    "tailings",
+    "dam"
+   ]
+  },
+  {
+   "id": "f2b5c59fd1e83794",
+   "title": "A unified experimental-numerical assessment of Cable, Pile, and Zone solid rockbolt models in FLAC3D: bond-slip, load transfer, and model selection",
+   "link": "https://doi.org/10.1016/j.compgeo.2026.108759",
+   "journal": "Computers and Geotechnics",
+   "authors": "Chen J, Ma S, Yuan L",
+   "published": "2026-10-20",
+   "abstract": "",
+   "theme": "Digital Geotechnics",
+   "relevance": 4,
+   "angle": "A combined experimental and numerical comparison of FLAC3D rockbolt models helps engineers select the appropriate bolt model and calibrate bond-slip parameters for support design.",
+   "keywords": [
+    "pile"
+   ]
+  },
+  {
+   "id": "6fc40441ebcee11e",
+   "title": "Development and properties of thixotropic cementitious slurry for ultra-long horizontal directional pre-grouting",
+   "link": "https://doi.org/10.1016/j.tust.2026.108244",
+   "journal": "Tunnelling and Underground Space Technology",
+   "authors": "Gong J, Xi F et al.",
+   "published": "2026-10-21",
+   "abstract": "",
+   "theme": "Infrastructure & the Underground City",
+   "relevance": 4,
+   "angle": "A thixotropic cementitious slurry for ultra-long horizontal directional pre-grouting offers a practical grout formulation with properties engineers can specify for long drilled crossings.",
+   "keywords": [
+    "grouting"
+   ]
+  },
+  {
+   "id": "330a8526f952975b",
+   "title": "Integrated seismic and electrical imaging with clustering for the hydro-mechanical screening of a high-altitude earthfill dam",
+   "link": "https://doi.org/10.1016/j.enggeo.2026.109161",
+   "journal": "Engineering Geology",
+   "authors": "Strallo V, Colombero C, Godio A",
+   "published": "2026-10-20",
+   "abstract": "",
+   "theme": "Characterisation & Modelling",
+   "relevance": 4,
+   "angle": "Integrated seismic and electrical imaging with clustering offers a practical screening approach for assessing hydro-mechanical condition in earthfill dams.",
+   "keywords": [
+    "dam"
+   ]
+  },
+  {
+   "id": "94b9020adb5aea19",
+   "title": "Geophysical site characterization and scenario-based seismic hazard mapping with slope-based topographic amplification factors: case study of the hilltop Trakošćan castle, Croatia",
+   "link": "https://doi.org/10.1016/j.enggeo.2026.109162",
+   "journal": "Engineering Geology",
+   "authors": "Stanko D, Korbar T, Markušić S",
+   "published": "2026-10-20",
+   "abstract": "",
+   "theme": "Hazards & Resilience",
+   "relevance": 4,
+   "angle": "A case study combining geophysical characterisation with slope-based topographic amplification factors shows a practical workflow for seismic hazard mapping at hilltop sites.",
+   "keywords": [
+    "slope"
+   ]
+  },
+  {
+   "id": "b705deafad092b05",
+   "title": "Evaluation of cyclic response of local subgrade materials in Thailand conforming to Chinese high-speed rail standard",
+   "link": "https://doi.org/10.1016/j.soildyn.2026.110756",
+   "journal": "Soil Dynamics and Earthquake Engineering",
+   "authors": "Kaewdee N, Suddeepong A et al.",
+   "published": "2026-10-20",
+   "abstract": "",
+   "theme": "Infrastructure & the Underground City",
+   "relevance": 4,
+   "angle": "Cyclic testing of Thai subgrade materials against Chinese high-speed rail standards gives engineers local performance data for railway subgrade design.",
+   "keywords": []
+  },
+  {
+   "id": "81790842f6a08bd7",
+   "title": "Impact of spatial soil variability on landslide susceptibility using 3D probabilistic slope stability analysis",
+   "link": "https://doi.org/10.1080/17499518.2026.2750358",
+   "journal": "Georisk: Assessment and Management of Risk for Engineered Systems and Geohazards",
+   "authors": "Oguz EA, Lacasse S",
+   "published": "2026-10-22",
+   "abstract": "",
+   "theme": "Hazards & Resilience",
+   "relevance": 3,
+   "angle": "3D probabilistic slope analysis shows how spatial soil variability changes landslide susceptibility, helping engineers judge when simple deterministic factors of safety are misleading.",
+   "keywords": [
+    "landslide",
+    "slope stability",
+    "slope",
+    "soil"
+   ]
+  },
+  {
+   "id": "378dabc1f9013a97",
+   "title": "Probabilistic stability and progressive failure of pile-supported embankments under borehole-constrained stratigraphic uncertainty",
+   "link": "https://doi.org/10.1016/j.trgeo.2026.102482",
+   "journal": "Transportation Geotechnics",
+   "authors": "Lv L, Zheng G et al.",
+   "published": "2026-10-20",
+   "abstract": "",
+   "theme": "Characterisation & Modelling",
+   "relevance": 3,
+   "angle": "Probabilistic progressive-failure analysis shows how borehole-limited stratigraphic uncertainty affects pile-supported embankment stability, supporting reliability-based site investigation decisions.",
+   "keywords": [
+    "pile",
+    "embankment",
+    "borehole"
+   ]
+  },
+  {
+   "id": "0f0be56efd15ea52",
+   "title": "Large-Scale Flume Investigation of Pore Water Pressure Evolution under Wave–Soil–Structure Interaction",
+   "link": "https://doi.org/10.1061/jggefk.gteng-15428",
+   "journal": "Journal of Geotechnical and Geoenvironmental Engineering",
+   "authors": "Klait A, Mirghafouri S et al.",
+   "published": "2026-10-20",
+   "abstract": "This study presents results from large-scale wave flume experiments investigating pore water pressure response under solitary wave impact for both free-field (without structure) and soil–foundation (with structure) conditions. Tests were conducted under varying wave heights and foundation embedment depths. Pore pressure sensors were embedded in sandy soil at varying depths and lateral locations. The study evaluates the evolution of excess pore pressure and seepage gradients relative to established seepage and liquefaction criteria. Under both testing conditions, neither excess pore pressure nor vertical seepage pressures exceeded the critical threshold. When testing the soil–foundation case, increasing wave height at constant embedment depth caused downward seepage at shallower depths…",
+   "theme": "Offshore, Coasts & Water",
+   "relevance": 3,
+   "angle": "Flume tests show how solitary wave impact generates excess pore pressure and seepage gradients around foundations, informing scour and liquefaction checks for coastal structures.",
+   "keywords": [
+    "liquefaction",
+    "foundation",
+    "soil"
+   ]
+  },
+  {
+   "id": "23440578fc15cb7c",
+   "title": "Progressive soil collapse and tunnel-system response in an underground complex under varying excavation configurations",
+   "link": "https://doi.org/10.1016/j.tust.2026.108241",
+   "journal": "Tunnelling and Underground Space Technology",
+   "authors": "Xiong H, Huang J et al.",
+   "published": "2026-10-22",
+   "abstract": "",
+   "theme": "Infrastructure & the Underground City",
+   "relevance": 3,
+   "angle": "Numerical results on progressive soil collapse and tunnel-system response under different excavation sequences help designers of underground complexes assess staging risks.",
+   "keywords": [
+    "excavation",
+    "tunnel",
+    "collapse",
+    "soil"
+   ]
+  },
+  {
+   "id": "4e1b8142e933fbaf",
+   "title": "Defining the chalk–shale boundary in intact rock samples for engineering geology practice",
+   "link": "https://doi.org/10.1016/j.enggeo.2026.109168",
+   "journal": "Engineering Geology",
+   "authors": "Gilad R, Hatzor YH",
+   "published": "2026-10-22",
+   "abstract": "",
+   "theme": "Characterisation & Modelling",
+   "relevance": 3,
+   "angle": "A method for defining the chalk–shale boundary in intact samples gives engineering geologists a clearer classification basis for site characterisation.",
+   "keywords": [
+    "engineering geology"
+   ]
+  },
+  {
+   "id": "e22011f56866885a",
+   "title": "Influence of Fabric and Drying Shrinkage on Heat Transfer in Unsaturated Soils: Experimental and Microscale Numerical Study",
+   "link": "https://doi.org/10.1061/jggefk.gteng-15142",
+   "journal": "Journal of Geotechnical and Geoenvironmental Engineering",
+   "authors": "Chen K, Liu K et al.",
+   "published": "2026-10-23",
+   "abstract": "The thermal conductivity of unsaturated soils is critical for thermal management in shallow energy infrastructures. Despite growing recognition that soil fabric and drying shrinkage can substantially affect thermal behavior, the underlying physical mechanisms remain poorly understood. This study combines laboratory experiments and numerical simulations to investigate these effects. Experiments were conducted on completely decomposed granite (CDG) and Nanyang clay (NYC), using reconstituted specimens (RS) and compacted specimens (CS) to represent different initial fabric conditions. Results show that RS consistently exhibits higher thermal conductivity than CS at the same saturation and void ratio. Along the drying path, CDG displays a monotonic decrease in thermal conductivity with…",
+   "theme": "Sustainability & the Energy Transition",
+   "relevance": 3,
+   "angle": "Findings on how fabric and drying shrinkage alter thermal conductivity help engineers of energy geostructures better estimate heat transfer in unsaturated soils.",
+   "keywords": [
+    "clay",
+    "soil"
+   ]
+  },
+  {
+   "id": "9f5fe1595bbd4d96",
+   "title": "Digital technology and AI for climate-resilient underground infrastructure: Current advances and future directions",
+   "link": "https://doi.org/10.1016/j.undsp.2026.09.005",
+   "journal": "Underground Space",
+   "authors": "Heo S, Loy-Benitez J et al.",
+   "published": "2026-10-20",
+   "abstract": "",
+   "theme": "Digital Geotechnics",
+   "relevance": 3,
+   "angle": "This review of digital and AI tools for climate-resilient underground infrastructure highlights practical technologies and gaps that owners and designers should track.",
+   "keywords": []
+  },
+  {
+   "id": "b7edc4f12f6bbe67",
+   "title": "A nonlinear elastoplastic subloading surface model for rock under cyclic loading-unloading with application to compressed air energy storage cavern operation",
+   "link": "https://doi.org/10.1016/j.compgeo.2026.108765",
+   "journal": "Computers and Geotechnics",
+   "authors": "Zhang H, Li G et al.",
+   "published": "2026-10-21",
+   "abstract": "",
+   "theme": "Sustainability & the Energy Transition",
+   "relevance": 3,
+   "angle": "A subloading surface model for rock under cyclic loading supports compressed air energy storage cavern design by capturing the behaviour under repeated pressure cycles.",
+   "keywords": []
+  }
+ ]
 }
