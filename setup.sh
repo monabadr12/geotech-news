@@ -106,7 +106,7 @@ cat <<EOF
         https://$OWNER.github.io/$REPO/
     (the very first Pages build can take a few extra minutes)
 
-  * It will then run by itself every day at 05:00 UTC.
+  * It will then run by itself every day at 05:00 Cairo time.
     To change that, edit .github/workflows/scan.yml
 
   * Check "Sources that failed" at the bottom of the digest and fix

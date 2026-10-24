@@ -9,6 +9,7 @@ docs/ (GitHub Pages). Optionally e-mails the digest.
 import calendar
 import datetime as dt
 import difflib
+import functools
 import hashlib
 import html
 import json
@@ -107,24 +108,47 @@ def term_regex(term):
     return re.compile(r"(?<![a-z0-9])" + re.escape(term.lower()) + r"(?:s|es)?(?![a-z0-9])")
 
 
+def compile_keywords(cfg):
+    """English concept -> [(pattern, weight)]. Terms in other languages are
+    filed under the English concept they translate."""
+    compiled = {}
+    for term, weight in cfg["keywords"].items():
+        compiled.setdefault(term, []).append((term_regex(term), weight))
+    for concept, spec in (cfg.get("multilingual_keywords") or {}).items():
+        for term in spec.get("terms", []):
+            compiled.setdefault(concept, []).append((term_regex(str(term)), spec.get("weight", 1)))
+    return compiled
+
+
 def keyword_score(text, cfg, compiled):
     low = text.lower()
     score, hits = 0, []
-    for term, (rx, weight) in compiled.items():
-        if rx.search(low):
-            score += weight
-            hits.append(term)
+    for concept, patterns in compiled.items():
+        weights = [w for rx, w in patterns if rx.search(low)]
+        if weights:
+            score += max(weights)
+            hits.append(concept)
     for bad in cfg.get("exclude", []):
         if bad.lower() in low:
             score -= 5
     return score, hits
 
 
-def guess_theme(text, themes):
-    low = text.lower()
+@functools.lru_cache(maxsize=None)
+def theme_regex(word):
+    """Words of 6+ letters are stems (sustainab -> sustainable); shorter ones
+    must match whole, with an optional plural (dam, dams, but not damage)."""
+    w = re.escape(word.lower())
+    return re.compile(r"(?<![a-z])" + w + ("" if len(word) >= 6 else r"(?:s|es)?(?![a-z])"))
+
+
+def guess_theme(text, themes, hits=()):
+    """Theme with the most matching words, counting the English concepts found
+    by the keyword lists (so non-English stories are themed too)."""
+    low = (text + " | " + " | ".join(hits)).lower()
     best, best_n = "General", 0
     for theme, words in themes.items():
-        n = sum(1 for w in words if re.search(r"(?<![a-z])" + re.escape(w.lower()), low))
+        n = sum(1 for w in words if theme_regex(w).search(low))
         if n > best_n:
             best, best_n = theme, n
     return best
@@ -255,7 +279,7 @@ def main():
     now = dt.datetime.now(dt.timezone.utc)
     cutoff = now - dt.timedelta(hours=cfg.get("lookback_hours", 60))
     seen = json.loads(SEEN_FILE.read_text()) if SEEN_FILE.exists() else {}
-    compiled = {t: (term_regex(t), w) for t, w in cfg["keywords"].items()}
+    compiled = compile_keywords(cfg)
 
     sources = [dict(s) for s in cfg.get("feeds", [])]
     sources += google_sources(cfg.get("google_news") or {})
@@ -295,7 +319,8 @@ def main():
             score += src.get("bonus", 0)
             items.append(dict(id=uid, title=title, link=link, source=source, summary=summary,
                               time=when, region=src.get("region", ""), score=score, hits=hits,
-                              theme=guess_theme(text, cfg["themes"]),
+                              bonus=src.get("bonus", 0),
+                              theme=guess_theme(text, cfg["themes"], hits),
                               relevance=0, use="", angle="", title_en=""))
         time.sleep(0.3)
 
@@ -315,6 +340,12 @@ def main():
     if ai_used:
         minrel = cfg["claude"].get("min_relevance", 3)
         candidates = [i for i in candidates if i["relevance"] >= minrel or i["relevance"] == 0]
+    else:
+        # the language bonus only exists to get foreign headlines in front of
+        # Claude; without Claude, rank everything on its keywords alone
+        for i in candidates:
+            i["score"] -= i["bonus"]
+        candidates = [i for i in candidates if i["score"] >= cfg.get("min_keyword_score", 3)]
     for i in candidates:
         i["rank"] = i["relevance"] * 100 + i["score"]
     selected = sorted(candidates, key=lambda i: -i["rank"])[: cfg.get("max_items", 40)]
@@ -348,5 +379,28 @@ def main():
         print(f"  failed: {n}: {e}")
 
 
+def reclassify():
+    """Re-tag and re-theme archived stories that Claude did not triage, using
+    the current keyword and theme lists, then rebuild the site."""
+    cfg = yaml.safe_load(CONFIG.read_text(encoding="utf-8"))
+    compiled = compile_keywords(cfg)
+    for path in sorted(site_builder.DIGESTS.glob("*.json")):
+        digest = json.loads(path.read_text(encoding="utf-8"))
+        changed = 0
+        for s in digest["stories"]:
+            if s.get("relevance"):
+                continue  # Claude's theme stands
+            text = f"{s['title']} {s.get('summary', '')}"
+            _, hits = keyword_score(text, cfg, compiled)
+            theme = guess_theme(text, cfg["themes"], hits)
+            if theme != s["theme"] or hits[:6] != s.get("keywords"):
+                s["theme"], s["keywords"] = theme, hits[:6]
+                changed += 1
+        if changed:
+            path.write_text(json.dumps(digest, ensure_ascii=False, indent=1), encoding="utf-8")
+            print(f"{path.name}: {changed} stories re-classified")
+    site_builder.build(cfg)
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(reclassify() if "--reclassify" in sys.argv else main())

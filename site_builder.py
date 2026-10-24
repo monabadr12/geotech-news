@@ -18,14 +18,17 @@ from urllib.parse import urlparse
 
 import yaml
 
+import exports
+import report
+
 ROOT = Path(__file__).resolve().parent
 DIGESTS = ROOT / "data" / "digests"
+CHANGELOG = ROOT / "data" / "changelog.yaml"
 DOCS = ROOT / "docs"
 ASSETS = ROOT / "assets"
 esc = html.escape
 
 USES = ["News brief", "Feature lead", "Academia-to-Industry topic", "Regional insight", "Watch only"]
-BADGE = "<span class='badge'>In progress</span>"
 MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 COUNTRIES = {
     "GB": "United Kingdom", "US": "United States", "IN": "India", "AU": "Australia",
@@ -37,6 +40,43 @@ COUNTRIES = {
 CSV_FIELDS = ["Digest date", "Issue window", "Theme", "Relevance (1-5)", "Suggested use",
               "Headline (English)", "Original headline", "Magazine angle", "Source",
               "Google News edition", "Published", "Link", "Keywords"]
+
+# Colour and icon for each magazine theme (themes added later in config.yaml
+# take the spare colours in turn).
+THEME_STYLE = {
+    "Sustainability & the Energy Transition": ("#1f9d63", "leaf"),
+    "Digital Geotechnics": ("#6b4fd6", "chip"),
+    "Hazards & Resilience": ("#e04f2c", "alert"),
+    "Ground Improvement & Innovation": ("#d38b00", "layers"),
+    "Infrastructure & the Underground City": ("#2563d6", "tunnel"),
+    "Offshore, Coasts & Water": ("#0b97a5", "wave"),
+    "Characterisation & Modelling": ("#c23d7b", "chart"),
+    "Geotechnics & Society": ("#8a5a2b", "people"),
+    "General": ("#64748b", "dot"),
+}
+SPARE_COLORS = ["#0f766e", "#b45309", "#7c3aed", "#be123c", "#15803d", "#1d4ed8"]
+ICONS = {
+    "leaf": "<path d='M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10Z'/><path d='M2 21c0-3 1.9-5.4 5.1-6C9.5 14.5 12 13 13 12'/>",
+    "chip": "<rect x='5' y='5' width='14' height='14' rx='2'/><rect x='9' y='9' width='6' height='6'/><path d='M9 2v3M15 2v3M9 19v3M15 19v3M19 9h3M19 15h3M2 9h3M2 15h3'/>",
+    "alert": "<path d='M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z'/><path d='M12 9v4M12 17h.01'/>",
+    "layers": "<path d='m12 2 10 5-10 5L2 7l10-5z'/><path d='m2 17 10 5 10-5'/><path d='m2 12 10 5 10-5'/>",
+    "tunnel": "<path d='M3 21V11a9 9 0 0 1 18 0v10'/><path d='M8 21v-8a4 4 0 0 1 8 0v8'/><path d='M1 21h22'/>",
+    "wave": "<path d='M2 7c2 0 2 2 4 2s2-2 4-2 2 2 4 2 2-2 4-2 2 2 4 2'/><path d='M2 13c2 0 2 2 4 2s2-2 4-2 2 2 4 2 2-2 4-2 2 2 4 2'/><path d='M2 19c2 0 2 2 4 2s2-2 4-2 2 2 4 2 2-2 4-2 2 2 4 2'/>",
+    "chart": "<path d='M3 3v18h18'/><path d='m7 15 4-4 3 3 6-7'/>",
+    "people": "<circle cx='9' cy='7' r='4'/><path d='M2 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2'/><path d='M16 3.1a4 4 0 0 1 0 7.8M22 21v-2a4 4 0 0 0-3-3.9'/>",
+    "dot": "<circle cx='12' cy='12' r='5'/>",
+    "scan": "<path d='M21 12a9 9 0 1 1-2.6-6.4L21 8'/><path d='M21 3v5h-5'/>",
+    "gear": "<circle cx='12' cy='12' r='3'/><path d='M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z'/>",
+    "download": "<path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/><path d='m7 10 5 5 5-5M12 15V3'/>",
+    "sheet": "<rect x='3' y='3' width='18' height='18' rx='2'/><path d='M3 9h18M3 15h18M9 3v18'/>",
+    "doc": "<path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/><path d='M14 2v6h6M8 13h8M8 17h6'/>",
+    "spark": "<path d='M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z'/><path d='M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z'/>",
+    "clip": "<path d='m21.4 11.1-9.2 9.2a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5'/>",
+    "send": "<path d='m22 2-7 20-4-9-9-4z'/><path d='M22 2 11 13'/>",
+    "print": "<path d='M6 9V2h12v7'/><rect x='6' y='14' width='12' height='8'/><path d='M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2'/>",
+    "search": "<circle cx='11' cy='11' r='7'/><path d='m21 21-4.3-4.3'/>",
+}
+FAVICON = (ASSETS / "favicon.svg").read_text(encoding="utf-8") if (ASSETS / "favicon.svg").exists() else ""
 
 
 # ------------------------------------------------------------------ data
@@ -68,17 +108,43 @@ def nice_date(iso, weekday=False):
 
 def site_url(cfg):
     url = os.environ.get("SITE_URL") or (cfg.get("magazine") or {}).get("site_url", "")
-    if not url and "/" in os.environ.get("GITHUB_REPOSITORY", ""):
-        owner, repo = os.environ["GITHUB_REPOSITORY"].split("/", 1)
+    owner_repo = repository(cfg)
+    if not url and "/" in owner_repo:
+        owner, repo = owner_repo.split("/", 1)
         url = f"https://{owner.lower()}.github.io/{repo}/"
     return url.rstrip("/") + "/" if url else ""
+
+
+def repository(cfg):
+    return os.environ.get("GITHUB_REPOSITORY") or (cfg.get("magazine") or {}).get("repository", "")
+
+
+_theme_colors = {}
+
+
+def theme_color(theme):
+    if theme in THEME_STYLE:
+        return THEME_STYLE[theme][0]
+    if theme not in _theme_colors:
+        _theme_colors[theme] = SPARE_COLORS[len(_theme_colors) % len(SPARE_COLORS)]
+    return _theme_colors[theme]
+
+
+def icon(name, cls="ico"):
+    return (f"<svg class='{cls}' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' "
+            f"stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'>{ICONS[name]}</svg>")
+
+
+def theme_icon(theme):
+    return icon(THEME_STYLE.get(theme, ("", "dot"))[1])
 
 
 # ------------------------------------------------------------------ page parts
 def page(cfg, title, body, root, active, description=""):
     mag = (cfg.get("magazine") or {}).get("name", "ISSMGE Magazine")
     nav = [("index.html", "Latest", "latest"), ("archive.html", "Archive", "archive"),
-           ("search.html", "Search", "search"), ("about.html", "Method & sources", "about")]
+           ("search.html", "Search", "search"), ("assistant.html", "AI assistant", "assistant"),
+           ("about.html", "Method & sources", "about")]
     current = " class='active' aria-current='page'"
     links = "".join(f"<a href='{root}{href}'{current if key == active else ''}>{label}</a>"
                     for href, label, key in nav)
@@ -87,27 +153,57 @@ def page(cfg, title, body, root, active, description=""):
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{esc(title)} · Geotechnical News Desk</title>
 <meta name="description" content="{esc(description or 'Geotechnical news digest for the ' + mag)}">
+<meta name="theme-color" content="#16324f">
+<link rel="icon" href="{root}assets/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="{root}assets/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="{root}assets/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{root}assets/style.css">
-</head><body data-root="{root}">
+</head><body data-root="{root}" data-repo="{esc(repository(cfg))}">
 <header class="masthead"><div class="wrap masthead-inner">
-<a class="brand" href="{root}index.html"><span class="brand-mark" aria-hidden="true"></span>
+<a class="brand" href="{root}index.html"><span class="brand-mark" aria-hidden="true">{FAVICON}</span>
 <span><span class="brand-name">Geotechnical News Desk</span><span class="brand-sub">{esc(mag)} · editorial monitoring</span></span></a>
-<nav class="nav">{links}</nav></div></header>
+<nav class="nav">{links}</nav>
+<div class="mast-actions"><button type="button" class="scan-btn" id="scan-btn" title="Run a new scan now">{icon('scan')}<span>Scan now</span></button>
+<button type="button" class="icon-btn" id="settings-btn" title="Settings" aria-label="Settings">{icon('gear')}</button></div>
+</div></header>
 <main class="wrap">{body}</main>
-<footer class="foot"><div class="wrap">Headlines link to the original publishers. Treat every story as a lead and verify with the primary source before publishing.
-Ratings, themes and angles are machine-assisted suggestions for the editorial team.</div></footer>
+<footer class="foot"><div class="wrap foot-inner"><span>Headlines link to the original publishers. Treat every story as a lead and verify with the primary source before publishing.
+Ratings, themes and angles are machine-assisted suggestions for the editorial team.</span>
+<a href="{root}reports/site-report.docx" download>{icon('doc')} Website report (Word)</a></div></footer>
+{settings_dialog()}
+<div id="toast" class="toast" role="status" hidden></div>
 <script src="{root}assets/app.js"></script>
 </body></html>"""
+
+
+def settings_dialog():
+    return f"""<dialog id="settings" class="modal"><form method="dialog" class="modal-body">
+<h2>{icon('gear')} Settings</h2>
+<p class="hint">These are stored only in this browser, on this device. They are never saved to the website or the repository, so other visitors cannot use them.</p>
+<label class="field"><span>GitHub token — for the <b>Scan now</b> button</span><input type="password" id="set-gh" autocomplete="off" spellcheck="false" placeholder="github_pat_…"></label>
+<details class="help"><summary>How to create the token (2 minutes)</summary><ol>
+<li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com → Settings → Developer settings → Fine-grained tokens → Generate new token</a>.</li>
+<li>Name it <i>news scan button</i>, choose an expiry date, and under <b>Repository access</b> pick <b>Only select repositories</b> → <code>geotech-news</code>.</li>
+<li>Under <b>Permissions → Repository permissions</b> set <b>Actions</b> to <b>Read and write</b>. Nothing else is needed.</li>
+<li>Press <b>Generate token</b>, copy it and paste it above.</li></ol></details>
+<label class="field"><span>Anthropic API key — for the <b>AI assistant</b></span><input type="password" id="set-ak" autocomplete="off" spellcheck="false" placeholder="sk-ant-…"></label>
+<details class="help"><summary>About the key</summary><p>Create a key at <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a> → API Keys. A separate key for the website, with a monthly spend limit, is a sensible safeguard. The key is sent only to Anthropic, directly from this browser.</p></details>
+<label class="field"><span>Assistant model</span><select id="set-model">
+<option value="claude-opus-5-5">Claude Opus 5.5 — best answers</option>
+<option value="claude-sonnet-5-5">Claude Sonnet 5.5 — balanced speed and cost</option>
+<option value="claude-haiku-5-5">Claude Haiku 5.5 — fastest, lowest cost</option></select></label>
+<div class="actions modal-actions"><button type="button" class="btn ghost" id="set-clear">Clear all</button><span class="spacer"></span>
+<button value="cancel" class="btn">Cancel</button><button value="save" id="set-save" class="btn primary">Save</button></div>
+</form></dialog>"""
 
 
 def rating(s):
     rel = s.get("relevance") or 0
     if not rel:
-        return f"<span class='rel rel-kw' title='Not AI-rated; ranked by keyword score'>Keyword score {s.get('score', 0)}</span>"
-    bars = "<i></i>" * 5
-    return f"<span class='rel rel-{rel}' title='Geotechnical relevance: {rel} of 5'>{bars}<b>{rel}/5</b></span>"
+        return f"<span class='rel rel-kw' title='Not AI-rated; ranked by keyword score'>Score {s.get('score', 0)}</span>"
+    return f"<span class='rel rel-{rel}' title='Geotechnical relevance: {rel} of 5'>{'<i></i>' * 5}<b>{rel}/5</b></span>"
 
 
 def story_card(s, show_theme=False):
@@ -121,10 +217,10 @@ def story_card(s, show_theme=False):
         meta.append(f"<time>{esc(when)}</time>")
     if region:
         meta.append(f"<span>{esc(region)} edition</span>")
-    parts = [f"<article class='story' data-rel='{s.get('relevance') or 0}' data-use='{esc(s.get('use', ''))}' "
-             f"data-text='{esc(search_text)}'>",
+    parts = [f"<article class='story' style='--tc:{theme_color(s['theme'])}' data-rel='{s.get('relevance') or 0}' "
+             f"data-use='{esc(s.get('use', ''))}' data-text='{esc(search_text)}'>",
              "<div class='story-top'>",
-             f"<a class='story-title' href='{esc(s['link'])}' target='_blank' rel='noopener'>{esc(shown)}</a>",
+             f"<a class='story-title' href='{esc(s['link'])}' target='_blank' rel='noopener' dir='auto'>{esc(shown)}</a>",
              rating(s), "</div>"]
     if s.get("title_en"):
         parts.append(f"<div class='orig' dir='auto'>Original: {esc(s['title'])}</div>")
@@ -134,10 +230,10 @@ def story_card(s, show_theme=False):
         parts.append(f"<p class='summary'>{esc(s['summary'][:260])}…</p>")
     parts.append("<div class='story-meta'>")
     if s.get("use"):
-        slug = s["use"].split()[0].lower().strip("-")
-        parts.append(f"<span class='use use-{esc(slug)}'>{esc(s['use'])}</span>")
+        slug_ = s["use"].split()[0].lower().strip("-")
+        parts.append(f"<span class='use use-{esc(slug_)}'>{esc(s['use'])}</span>")
     if show_theme:
-        parts.append(f"<span class='theme-tag'>{esc(s['theme'])}</span>")
+        parts.append(f"<span class='theme-tag'>{theme_icon(s['theme'])}{esc(s['theme'])}</span>")
     parts.append(" · ".join(meta) + "</div>")
     if s.get("keywords"):
         parts.append("<div class='kw'>" + "".join(f"<span>{esc(k)}</span>" for k in s["keywords"][:5]) + "</div>")
@@ -160,13 +256,15 @@ def theme_sections(stories, order=None, show_theme=False):
         by_theme.setdefault(s["theme"], []).append(s)
     if order is None:  # strongest theme first
         order = sorted(by_theme, key=lambda t: (-max(i["rank"] for i in by_theme[t]), t))
-    toc = "".join(f"<a href='#{slug(t)}'>{esc(t)} <b>{len(by_theme[t])}</b></a>" for t in order if t in by_theme)
+    toc = "".join(f"<a href='#{slug(t)}' style='--tc:{theme_color(t)}'>{theme_icon(t)}{esc(t)} <b>{len(by_theme[t])}</b></a>"
+                  for t in order if t in by_theme)
     out = [f"<nav class='theme-toc' aria-label='Themes'>{toc}</nav>"]
     for t in order:
         if t not in by_theme:
             continue
         items = sorted(by_theme[t], key=lambda s: (-(s.get("relevance") or 0), -s["rank"]))
-        out.append(f"<section class='theme-section' id='{slug(t)}'><h2>{esc(t)} <span class='count'>{len(items)}</span></h2>")
+        out.append(f"<section class='theme-section' id='{slug(t)}' style='--tc:{theme_color(t)}'>"
+                   f"<h2><span class='ticon'>{theme_icon(t)}</span>{esc(t)} <span class='count'>{len(items)}</span></h2>")
         out += [story_card(s, show_theme) for s in items]
         out.append("</section>")
     return "".join(out)
@@ -180,20 +278,39 @@ def stat(value, label):
     return f"<div class='stat'><b>{value}</b><span>{esc(label)}</span></div>"
 
 
+def hero(eyebrow, title, lede="", stats="", extra="", small=False):
+    return (f"<section class='hero{' hero-sm' if small else ''}'><div class='hero-inner'>"
+            f"<p class='eyebrow'>{eyebrow}</p><h1>{title}</h1>"
+            + (f"<p class='lede'>{lede}</p>" if lede else "")
+            + (f"<div class='stats'>{stats}</div>" if stats else "") + extra + "</div></section>")
+
+
+def theme_strip(stories, order):
+    """Horizontal stacked bar of stories per theme."""
+    n = len(stories) or 1
+    counts = {}
+    for s in stories:
+        counts[s["theme"]] = counts.get(s["theme"], 0) + 1
+    segs = "".join(f"<i style='--tc:{theme_color(t)};flex:{counts[t]}' title='{esc(t)}: {counts[t]}'></i>"
+                   for t in order if t in counts)
+    return f"<div class='strip' aria-hidden='true'>{segs}</div>" if stories else ""
+
+
 # ------------------------------------------------------------------ pages
 def digest_body(d, cfg, root, uses, prev_d=None, next_d=None, latest=False):
     win = issue_window(d["date"], start_month(cfg))
     stories = d["stories"]
     themes = len({s["theme"] for s in stories})
-    head = [f"<div class='page-head'><p class='eyebrow'>{'Latest digest' if latest else 'Daily digest'} · "
-            f"<a href='{root}issues/{win['key']}.html'>{win['label']} issue window</a></p>",
-            f"<h1>{esc(nice_date(d['date'], weekday=True))}</h1>",
-            "<div class='stats'>", stat(len(stories), "stories selected"),
-            stat(d.get("new_items", 0), "new items scanned"), stat(themes, "themes"),
-            stat("AI" if d.get("ai_used") else "Keywords", "triage method"), "</div></div>"]
+    eyebrow = (f"{'Latest digest' if latest else 'Daily digest'} · "
+               f"<a href='{root}issues/{win['key']}.html'>{win['label']} issue window</a>")
+    stats = (stat(len(stories), "stories selected") + stat(d.get("new_items", 0), "new items scanned")
+             + stat(themes, "themes") + stat("AI" if d.get("ai_used") else "Keywords", "triage method"))
+    extra = theme_strip(stories, theme_order(cfg))
+    head = [hero(eyebrow, esc(nice_date(d["date"], weekday=True)), stats=stats, extra=extra)]
     if latest:
-        head.append(f"<a class='callout' href='{root}issues/{win['key']}.html'><b>Building the {win['label']} issue?</b> "
-                    f"Every story found {win['span']} is collected in one place, by theme, with a spreadsheet export →</a>")
+        head.append(f"<a class='callout' href='{root}issues/{win['key']}.html'>{icon('sheet')}<span><b>Building the "
+                    f"{win['label']} issue?</b> Every story found {win['span']} is collected in one place, by theme, "
+                    f"with an Excel workbook →</span></a>")
     if not stories:
         head.append("<p class='empty'>No new geotechnical stories met the threshold in this period.</p>")
     else:
@@ -241,24 +358,28 @@ def issue_body(win, stories, digests, cfg, uses, current):
         c["r4"] += s.get("relevance") == 4
         c["fl"] += s.get("use") == "Feature lead"
         c["a2i"] += s.get("use") == "Academia-to-Industry topic"
+    peak = max((c["n"] for c in counts.values()), default=1)
     rows = "".join(
-        f"<tr><th scope='row'><a href='#{slug(t)}'>{esc(t)}</a></th><td>{c['n']}</td><td>{c['r5']}</td>"
+        f"<tr style='--tc:{theme_color(t)}'><th scope='row'><a href='#{slug(t)}'><span class='ticon sm'>{theme_icon(t)}</span>{esc(t)}</a></th>"
+        f"<td><span class='cellbar'><i style='width:{c['n'] / peak * 100:.0f}%'></i></span><b>{c['n']}</b></td><td>{c['r5']}</td>"
         f"<td>{c['r4']}</td><td>{c['fl']}</td><td>{c['a2i']}</td></tr>"
         for t in order if (c := counts.get(t)))
     best = sorted((s for s in stories if s.get("relevance") == 5 or s.get("use") == "Feature lead"),
                   key=lambda s: -s["rank"])[:12]
     dlist = "".join(f"<li><a href='{root}digests/{d['date']}.html'>{esc(nice_date(d['date']))}</a>"
                     f"<span>{len(d['stories'])} stories</span></li>" for d in digests)
-    body = [f"<div class='page-head'><p class='eyebrow'><a href='{root}archive.html'>Archive</a> · Issue window"
-            f"{' · ' + BADGE if current else ''}</p>",
-            f"<h1>{win['label']} <span class='h1-sub'>{esc(win['span'])}</span></h1>",
-            "<p class='lede'>Every story selected by the daily scans in this three-month window, "
-            "grouped by the magazine's cross-cutting themes and ordered by geotechnical relevance.</p>",
-            "<div class='stats'>", stat(summ["stories"], "stories"), stat(len(digests), "daily digests"),
-            stat(summ["top"], "rated 5 / 5"), stat(summ["features"], "feature leads"), "</div>",
-            f"<div class='actions'><a class='btn primary' href='{root}exports/{win['key']}.csv' download>Download spreadsheet (CSV)</a>"
-            f"<a class='btn' href='{root}search.html?q_window={win['key']}'>Search this window</a>"
-            f"<button class='btn' type='button' onclick='window.print()'>Print / save as PDF</button></div></div>"]
+    eyebrow = (f"<a href='{root}archive.html'>Archive</a> · Issue window"
+               + (" · <span class='badge'>In progress</span>" if current else ""))
+    stats = (stat(summ["stories"], "stories") + stat(len(digests), "daily digests")
+             + stat(summ["top"], "rated 5 / 5") + stat(summ["features"], "feature leads"))
+    actions = (f"<div class='actions'><a class='btn primary' href='{root}exports/{win['key']}.xlsx' download>{icon('sheet')}Excel workbook</a>"
+               f"<a class='btn light' href='{root}exports/{win['key']}.csv' download>{icon('download')}CSV</a>"
+               f"<a class='btn light' href='{root}search.html?q_window={win['key']}'>{icon('search')}Search this window</a>"
+               f"<button class='btn light' type='button' onclick='window.print()'>{icon('print')}Print / PDF</button></div>")
+    body = [hero(eyebrow, f"{win['label']} <span class='h1-sub'>{esc(win['span'])}</span>",
+                 "Every story selected by the daily scans in this three-month window, grouped by the magazine's "
+                 "cross-cutting themes and ordered by geotechnical relevance.",
+                 stats, theme_strip(stories, order) + actions)]
     if not stories:
         body.append("<p class='empty'>No stories yet in this window.</p>")
         return "".join(body)
@@ -280,15 +401,17 @@ def archive_body(windows, cfg, current_key):
     root = ""
     order = theme_order(cfg)
     if not windows:
-        return ("<div class='page-head'><h1>Archive</h1></div><p class='empty'>The archive is empty. "
-                "It fills automatically after the first scan.</p>")
+        return hero("Archive", "All digests") + "<p class='empty'>The archive is empty. It fills automatically after the first scan.</p>"
     total = sum(len(w["stories"]) for w in windows)
-    out = ["<div class='page-head'><p class='eyebrow'>Archive</p><h1>All digests</h1>",
-           "<p class='lede'>Every daily digest is kept permanently. They are grouped into three-month "
-           "issue windows that follow the magazine's publication cycle, so each issue can be planned "
-           "from one page and one spreadsheet.</p><div class='stats'>",
-           stat(len(windows), "issue windows"), stat(sum(len(w["digests"]) for w in windows), "daily digests"),
-           stat(total, "stories archived"), "</div></div>"]
+    stats = (stat(len(windows), "issue windows") + stat(sum(len(w["digests"]) for w in windows), "daily digests")
+             + stat(total, "stories archived"))
+    actions = (f"<div class='actions'><a class='btn primary' href='{root}exports/geotech-news-archive.xlsx' download>"
+               f"{icon('sheet')}Whole archive (Excel)</a><a class='btn light' href='{root}reports/site-report.docx' download>"
+               f"{icon('doc')}Website report (Word)</a></div>")
+    out = [hero("Archive", "All digests",
+                "Every daily digest is kept permanently. They are grouped into three-month issue windows that follow "
+                "the magazine's publication cycle, so each issue can be planned from one page and one workbook.",
+                stats, actions)]
     for w in windows:
         win, stories, digests = w["win"], w["stories"], w["digests"]
         summ = window_summary(stories)
@@ -297,17 +420,18 @@ def archive_body(windows, cfg, current_key):
             counts[s["theme"]] = counts.get(s["theme"], 0) + 1
         peak = max(counts.values(), default=1)
         bars = "".join(
-            f"<li><span>{esc(t)}</span><i style='--w:{counts[t] / peak * 100:.0f}%'></i><b>{counts[t]}</b></li>"
+            f"<li style='--tc:{theme_color(t)}'><span>{theme_icon(t)}{esc(t)}</span><i style='--w:{counts[t] / peak * 100:.0f}%'></i><b>{counts[t]}</b></li>"
             for t in order if t in counts)
         days = "".join(f"<a href='digests/{d['date']}.html'>{dt.date.fromisoformat(d['date']).day} "
                        f"{MONTHS[int(d['date'][5:7]) - 1]}<span>{len(d['stories'])}</span></a>" for d in digests)
         out.append(
             f"<section class='window'><div class='window-head'><div><h2>{win['label']}"
-            f"{' ' + BADGE if win['key'] == current_key else ''}</h2>"
+            f"{' <span class=badge>In progress</span>' if win['key'] == current_key else ''}</h2>"
             f"<p>{esc(win['span'])} · {summ['stories']} stories · {len(digests)} digests · "
             f"{summ['top']} rated 5 / 5 · {summ['features']} feature leads</p></div>"
             f"<div class='actions'><a class='btn primary' href='{root}issues/{win['key']}.html'>Open issue collection</a>"
-            f"<a class='btn' href='{root}exports/{win['key']}.csv' download>CSV</a></div></div>"
+            f"<a class='btn' href='{root}exports/{win['key']}.xlsx' download>{icon('sheet')}Excel</a></div></div>"
+            f"{theme_strip(stories, order)}"
             f"<div class='window-body'><ul class='bars'>{bars}</ul>"
             f"<div class='days'><h3>Daily digests</h3><div class='day-grid'>{days}</div></div></div></section>")
     return "".join(out)
@@ -317,8 +441,8 @@ def search_body(cfg, uses, windows):
     themes = "".join(f"<option>{esc(t)}</option>" for t in theme_order(cfg))
     uopts = "".join(f"<option>{esc(u)}</option>" for u in uses)
     wopts = "".join(f"<option value='{w['win']['key']}'>{w['win']['label']} ({esc(w['win']['span'])})</option>" for w in windows)
-    return f"""<div class="page-head"><p class="eyebrow">Archive search</p><h1>Search every story</h1>
-<p class="lede">Search across all archived digests. Combine filters, then export the result as a spreadsheet.</p></div>
+    return hero("Archive search", "Search every story",
+                "Search across all archived digests. Combine filters, then export the result as a spreadsheet.", small=True) + f"""
 <div id="search-app" class="toolbar search-tools">
 <label class="field grow"><span>Search</span><input type="search" id="q" placeholder="e.g. liquefaction, Riyadh, monopile, TBM…" autofocus></label>
 <label class="field"><span>Issue window</span><select id="q_window"><option value="">All windows</option>{wopts}</select></label>
@@ -328,8 +452,33 @@ def search_body(cfg, uses, windows):
 <label class="field"><span>Sort</span><select id="q_sort"><option value="rel">Relevance</option><option value="new">Newest first</option></select></label>
 </div>
 <div class="result-bar"><span id="result-count" aria-live="polite">Loading archive…</span>
-<button class="btn" type="button" id="export">Export results (CSV)</button></div>
+<button class="btn" type="button" id="export">{icon('download')}Export results (CSV)</button></div>
 <div id="results"></div><div class="more-wrap"><button class="btn" type="button" id="more" hidden>Show more</button></div>"""
+
+
+def assistant_body(cfg):
+    suggestions = ["What are the strongest feature leads in the current issue window?",
+                   "Find stories about liquefaction or ground improvement in Asia",
+                   "Suggest a line-up of 6 stories for the next issue, one per theme",
+                   "Which regions are under-represented this quarter?"]
+    chips = "".join(f"<button type='button' class='chip-btn' data-q='{esc(q)}'>{esc(q)}</button>" for q in suggestions)
+    return hero(f"{icon('spark')} AI assistant", "Ask the news desk",
+                "Ask questions about the archive, get story recommendations for an issue, or attach a PDF or Word "
+                "document to discuss it alongside the news.", small=True) + f"""
+<div class="chat" id="chat-app">
+<div class="chat-log" id="chat-log" aria-live="polite">
+<div class="msg bot welcome"><div class="bubble"><p><b>Hello!</b> I can search every archived story, compare themes and quarters,
+recommend stories and angles for the magazine, and read PDF or Word files you attach — for example a call for papers or an article draft.</p>
+<div class="chips">{chips}</div></div></div>
+</div>
+<div class="chat-files" id="chat-files"></div>
+<form class="chat-input" id="chat-form">
+<label class="attach" title="Attach PDF or Word documents">{icon('clip')}<input type="file" id="chat-file" accept=".pdf,.docx,.txt,.md" multiple hidden></label>
+<textarea id="chat-text" rows="1" placeholder="Ask about the news, or attach a PDF / Word document…" aria-label="Message"></textarea>
+<button class="btn primary send" type="submit">{icon('send')}<span>Send</span></button>
+</form>
+<div class="chat-foot"><span id="chat-status"></span><button type="button" id="chat-new" class="linkbtn">New conversation</button></div>
+</div>"""
 
 
 def about_body(cfg, latest):
@@ -338,8 +487,11 @@ def about_body(cfg, latest):
     editions = len(g.get("editions") or [1])
     n_core, n_extra = len(g.get("core_queries", [])), len(g.get("extra_queries", []))
     n_foreign = sum(1 for q in g.get("extra_queries", []) if isinstance(q, dict) and q.get("language", "en") != "en")
+    ml = cfg.get("multilingual_keywords") or {}
+    n_ml = sum(len(v.get("terms", [])) for v in ml.values())
     ccfg = cfg.get("claude", {})
-    themes = "".join(f"<li><b>{esc(t)}</b><span>{esc(', '.join(w))}</span></li>" for t, w in cfg["themes"].items())
+    themes = "".join(f"<li style='--tc:{theme_color(t)}'><b><span class='ticon sm'>{theme_icon(t)}</span>{esc(t)}</b>"
+                     f"<span>{esc(', '.join(w))}</span></li>" for t, w in cfg["themes"].items())
     rows = "".join(
         f"<tr><td>{esc(f['name'])}</td><td>{esc(urlparse(f['url']).netloc.replace('www.', ''))}</td>"
         f"<td>{'+' + str(f['boost']) if f.get('boost') else '—'}</td></tr>" for f in feeds)
@@ -347,18 +499,21 @@ def about_body(cfg, latest):
     if latest and latest.get("failures"):
         failed = ("<h2 class='section-h'>Sources that failed on the latest run</h2><ul class='plain'>"
                   + "".join(f"<li><b>{esc(n)}</b>: {esc(e)}</li>" for n, e in latest["failures"]) + "</ul>")
-    return f"""<div class="page-head"><p class="eyebrow">Method & sources</p><h1>How the digest is made</h1>
-<p class="lede">A scheduled scan reads specialist, institutional and trade sources plus worldwide news searches,
-filters them for geotechnical substance, and files the result under the magazine's eight themes.</p>
-<div class="stats">{stat(len(feeds), 'websites read directly')}{stat(n_core * editions + n_extra, 'news searches')}
-{stat(n_foreign, 'non-English searches')}{stat(len(cfg['keywords']), 'weighted keywords')}</div></div>
+    stats = (stat(len(feeds), "websites read directly") + stat(n_core * editions + n_extra, "news searches")
+             + stat(n_foreign, "non-English searches") + stat(len(cfg["keywords"]) + n_ml, "weighted keywords"))
+    actions = (f"<div class='actions'><a class='btn primary' href='reports/site-report.docx' download>{icon('doc')}"
+               "Website report (Word)</a></div>")
+    return hero("Method & sources", "How the digest is made",
+                "A scheduled scan reads specialist, institutional and trade sources plus worldwide news searches, "
+                "filters them for geotechnical substance, and files the result under the magazine's eight themes.",
+                stats, actions) + f"""
 <div class="prose">
 <h2 class="section-h">Each run</h2><ol class="steps">
-<li><b>Collect.</b> {len(feeds)} websites and {n_core * editions + n_extra} Google News searches ({n_core} core searches in {editions} English editions, plus {n_extra} further searches including {n_foreign} in other languages). Each run looks back {cfg.get('lookback_hours', 60)} hours; stories already shown are remembered for 45 days and never repeated.</li>
-<li><b>Score.</b> Headlines and summaries are scored against {len(cfg['keywords'])} weighted geotechnical keywords; specialist and society sources earn bonus points, noise terms lose points, near-identical headlines are merged. A story needs {cfg.get('min_keyword_score', 3)} points to go forward.</li>
-<li><b>Triage.</b> Up to {ccfg.get('max_candidates', 80)} candidates go to Claude, which rates each 1–5 for geotechnical substance (below {ccfg.get('min_relevance', 3)} is dropped), assigns a theme and a suggested use, writes a one-sentence magazine angle, and translates non-English headlines.</li>
-<li><b>Publish & archive.</b> Up to {cfg.get('max_items', 40)} stories per digest. Every digest is stored permanently and grouped into three-month issue windows.</li></ol>
-<h2 class="section-h">Magazine themes</h2><p class="hint">Words that suggest each theme when stories are keyword-ranked.</p><ul class="theme-list">{themes}</ul>
+<li><b>Collect.</b> {len(feeds)} websites and {n_core * editions + n_extra} Google News searches ({n_core} core searches in {editions} English editions, plus {n_extra} further searches including {n_foreign} in other languages). The scan runs every day at 05:00 Cairo time, and on demand with the <b>Scan now</b> button. Each run looks back {cfg.get('lookback_hours', 60)} hours; stories already shown are remembered for 45 days and never repeated.</li>
+<li><b>Score and categorise.</b> Headlines and summaries are scored against {len(cfg['keywords'])} English keywords and {n_ml} terms in 11 other languages. Each foreign term counts as its English equivalent (for example <i>glissement de terrain</i>, <i>deslizamiento</i>, <i>longsor</i> and <i>انهيار أرضي</i> all count as “landslide”), so every story is filed under an English theme. Specialist sources earn bonus points, noise terms lose points, near-identical headlines are merged. A story needs {cfg.get('min_keyword_score', 3)} points to go forward.</li>
+<li><b>Triage.</b> Up to {ccfg.get('max_candidates', 80)} candidates go to Claude, which rates each 1–5 for geotechnical substance (below {ccfg.get('min_relevance', 3)} is dropped), confirms the theme, suggests a use, writes a one-sentence magazine angle, and translates non-English headlines.</li>
+<li><b>Publish & archive.</b> Up to {cfg.get('max_items', 40)} stories per digest. Every digest is stored permanently, grouped into three-month issue windows, and exported to Excel.</li></ol>
+<h2 class="section-h">Magazine themes</h2><p class="hint">Words that suggest each theme (English keywords found in any language count too).</p><ul class="theme-list">{themes}</ul>
 <h2 class="section-h">Websites read directly</h2><div class="table-wrap"><table class="overview"><thead><tr><th>Source</th><th>Site</th><th>Bonus</th></tr></thead><tbody>{rows}</tbody></table></div>
 {failed}
 <h2 class="section-h">Known limits</h2><p>Coverage of a country depends on what its press publishes online in a language covered here. Google News favours recency and mainstream outlets, so a major landslide is picked up readily while a quiet technical advance may not be — which is why society and institutional feeds are read directly.</p>
@@ -373,7 +528,7 @@ def render_email(d, cfg):
     for s in d["stories"]:
         by_theme.setdefault(s["theme"], []).append(s)
     for t in sorted(by_theme, key=lambda t: -max(i["rank"] for i in by_theme[t])):
-        rows.append(f"<h2 style='font:600 15px Arial,sans-serif;color:#16324f;border-bottom:2px solid #c9a227;"
+        rows.append(f"<h2 style='font:600 15px Arial,sans-serif;color:{theme_color(t)};border-bottom:2px solid {theme_color(t)};"
                     f"padding-bottom:4px;margin:26px 0 8px'>{esc(t)}</h2>")
         for s in sorted(by_theme[t], key=lambda s: -s["rank"]):
             rel = f"{s['relevance']}/5 · " if s.get("relevance") else ""
@@ -415,8 +570,7 @@ def export_rows(stories):
             "Headline (English)": s.get("title_en") or s["title"],
             "Original headline": s["title"] if s.get("title_en") else "",
             "Magazine angle": s.get("angle", ""), "Source": s["source"],
-            "Google News edition": COUNTRIES.get(s.get("region", ""), s.get("region", "")),
-            "Published": (s.get("published") or "")[:10], "Link": s["link"],
+            "Google News edition": s["_region"], "Published": (s.get("published") or "")[:10], "Link": s["link"],
             "Keywords": ", ".join(s.get("keywords", [])),
         }
 
@@ -426,6 +580,7 @@ def build(cfg):
     digests = load_digests()
     sm = start_month(cfg)
     today_key = issue_window(dt.date.today().isoformat(), sm)["key"]
+    order = theme_order(cfg)
 
     # group digests into issue windows (newest first)
     windows, by_key = [], {}
@@ -437,13 +592,15 @@ def build(cfg):
         w = by_key[win["key"]]
         w["digests"].append(d)
         for s in d["stories"]:
-            w["stories"].append(dict(s, _digest=d["date"], _window=win["key"]))
+            w["stories"].append(dict(s, _digest=d["date"], _window=win["key"],
+                                     _region=COUNTRIES.get(s.get("region", ""), s.get("region", ""))))
 
     # fresh output folder (the archive itself lives in data/digests/)
-    for sub in ("digests", "issues", "exports", "assets"):
+    for sub in ("digests", "issues", "exports", "assets", "reports"):
         shutil.rmtree(DOCS / sub, ignore_errors=True)
     shutil.copytree(ASSETS, DOCS / "assets")
     (DOCS / "exports").mkdir()
+    (DOCS / "reports").mkdir()
     write(DOCS / ".nojekyll", "")
 
     dates = [d["date"] for d in digests]
@@ -459,10 +616,9 @@ def build(cfg):
         body = digest_body(latest, cfg, "", use_list, dates[1] if len(dates) > 1 else None, None, latest=True)
     else:
         latest = None
-        body = ("<div class='page-head'><p class='eyebrow'>Latest digest</p><h1>Welcome</h1>"
-                "<p class='lede'>The first digest will appear here after the first scan. Scans run automatically "
-                "every morning; to run one now open the repository's <b>Actions</b> tab, choose "
-                "<b>Geotechnical news scan</b> and press <b>Run workflow</b>.</p></div>")
+        body = hero("Latest digest", "Welcome",
+                    "The first digest will appear here after the first scan. Scans run automatically every morning "
+                    "at 05:00 Cairo time; press <b>Scan now</b> at the top of the page to run one immediately.")
     write(DOCS / "index.html", page(cfg, "Latest digest", body, "", "latest"))
 
     for w in windows:
@@ -470,22 +626,34 @@ def build(cfg):
         write(DOCS / "issues" / f"{key}.html",
               page(cfg, f"{w['win']['label']} issue window",
                    issue_body(w["win"], w["stories"], w["digests"], cfg, use_list, key == today_key), "../", "archive"))
+        ordered = sorted(w["stories"], key=lambda s: (s["theme"], -s["rank"]))
         with open(DOCS / "exports" / f"{key}.csv", "w", newline="", encoding="utf-8-sig") as f:
             writer = csv.DictWriter(f, fieldnames=CSV_FIELDS)
             writer.writeheader()
-            writer.writerows(export_rows(sorted(w["stories"], key=lambda s: (s["theme"], -s["rank"]))))
+            writer.writerows(export_rows(ordered))
+        exports.write_workbook(
+            DOCS / "exports" / f"{key}.xlsx", f"Geotechnical News · {w['win']['label']}",
+            f"Issue window {w['win']['span']}", w["stories"], order, theme_color,
+            [(nice_date(d["date"]), len(d["stories"])) for d in reversed(w["digests"])], "daily digest")
         compact = [{"d": s["_digest"], "w": key, "t": s["title"], "te": s.get("title_en", ""), "l": s["link"],
-                    "s": s["source"], "c": COUNTRIES.get(s.get("region", ""), s.get("region", "")),
-                    "p": (s.get("published") or "")[:10], "th": s["theme"], "r": s.get("relevance") or 0,
-                    "u": s.get("use", ""), "a": s.get("angle", ""), "k": s.get("keywords", []),
-                    "x": s.get("summary", "")[:200] if not s.get("angle") else "", "rk": s["rank"]}
+                    "s": s["source"], "c": s["_region"], "p": (s.get("published") or "")[:10], "th": s["theme"],
+                    "r": s.get("relevance") or 0, "u": s.get("use", ""), "a": s.get("angle", ""),
+                    "k": s.get("keywords", []), "x": s.get("summary", "")[:200] if not s.get("angle") else "",
+                    "rk": s["rank"]}
                    for s in w["stories"]]
         write(DOCS / "exports" / f"{key}.json", json.dumps(compact, ensure_ascii=False, separators=(",", ":")))
     write(DOCS / "exports" / "index.json",
           json.dumps([w["win"] | {"stories": len(w["stories"])} for w in windows], ensure_ascii=False))
+    exports.write_workbook(
+        DOCS / "exports" / "geotech-news-archive.xlsx", "Geotechnical News · Whole archive",
+        f"All {len(windows)} issue windows", [s for w in windows for s in w["stories"]], order, theme_color,
+        [(w["win"]["label"], len(w["stories"])) for w in reversed(windows)], "issue window")
+    report.write_report(DOCS / "reports" / "site-report.docx", cfg, digests, windows, theme_color,
+                        site_url(cfg), CHANGELOG)
 
     write(DOCS / "archive.html", page(cfg, "Archive", archive_body(windows, cfg, today_key), "", "archive"))
     write(DOCS / "search.html", page(cfg, "Search the archive", search_body(cfg, use_list, windows), "", "search"))
+    write(DOCS / "assistant.html", page(cfg, "AI assistant", assistant_body(cfg), "", "assistant"))
     write(DOCS / "about.html", page(cfg, "Method & sources", about_body(cfg, latest), "", "about"))
 
 

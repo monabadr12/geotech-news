@@ -1,0 +1,33 @@
+# Change log and open items for the website report (docs/reports/site-report.docx).
+# Newest first. The report is rebuilt from this file after every scan.
+
+changes:
+  - date: 2026-10-24
+    title: Multilingual categorisation, Scan button, Excel workbooks, AI assistant and new design
+    items:
+      - Non-English stories are now tagged and themed through 452 terms in 11 languages, each mapped to an English concept (for example glissement de terrain, deslizamiento, longsor and انهيار أرضي all count as "landslide").
+      - Theme matching no longer confuses short words (dam no longer matches damage, ai no longer matches airport).
+      - The 24 October digest was re-classified with the new lists.
+      - A Scan now button on every page starts a scan from the website; the daily scan also still runs automatically.
+      - The daily scan now runs at 05:00 Cairo time all year, following Egypt's summer and winter clocks.
+      - Each issue window now has a formatted Excel workbook with a colour-coded dashboard, charts, a theme × use heat map, a filterable story table and a sources sheet. A workbook for the whole archive is also produced.
+      - This Word report was added; it is regenerated after every scan.
+      - The site has a favicon and a livelier design with a colour and icon for each magazine theme.
+      - An AI assistant page answers questions about the archive, recommends stories and reads attached PDF and Word documents.
+  - date: 2026-10-24
+    title: Keyword ranking fix
+    items:
+      - When Claude triage is unavailable, stories are ranked on their keywords alone, so untranslated foreign headlines no longer crowd the top of the digest.
+  - date: 2026-10-24
+    title: Archive website launched
+    items:
+      - The scan workflow was moved to .github/workflows so GitHub runs it.
+      - Every digest is stored permanently and grouped into three-month issue windows matching the magazine's cycle.
+      - New pages - latest digest, archive, issue collections, search and method & sources.
+      - Claude triage switched to the official Anthropic library with structured output.
+      - First scan ran on 24 October 2026 - 704 new items, 60 stories selected.
+
+open_items:
+  - Replace the addresses of failing websites with their RSS feeds (see Source health).
+  - Check that the ANTHROPIC_API_KEY secret is accepted (the first scan reported it as rejected).
+  - To use the Scan now button and the AI assistant, add a GitHub token and an Anthropic key under Settings (gear icon) on the website, on each device you use.

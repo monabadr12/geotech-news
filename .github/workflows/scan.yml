@@ -2,10 +2,16 @@ name: Geotechnical news scan
 
 on:
   schedule:
-    # Every day at 05:00 UTC (about 07:00-08:00 Cairo time).
-    # For every two days instead, change the line below to:  - cron: "0 5 */2 * *"
-    - cron: "0 5 * * *"
-  workflow_dispatch:   # adds a "Run workflow" button for a manual scan
+    # 05:00 Cairo time every day. GitHub schedules run in UTC and Egypt
+    # changes its clocks in summer, so both candidate times are scheduled
+    # and the "Check the time" step lets through only the one that is 05:00
+    # in Cairo: 02:00 UTC in summer (UTC+3), 03:00 UTC in winter (UTC+2).
+    - cron: "0 2 * * *"
+    - cron: "0 3 * * *"
+  workflow_dispatch:   # "Run workflow" button on GitHub and the website's "Scan now" button
+  push:                # rebuild the website (no scan) when its design or settings change
+    branches: [main]
+    paths: [site_builder.py, exports.py, report.py, assets/**, config.yaml, data/changelog.yaml]
 
 permissions:
   contents: write
@@ -16,12 +22,27 @@ jobs:
   scan:
     runs-on: ubuntu-latest
     steps:
+      - name: Check the time
+        id: gate
+        run: |
+          offset=$(TZ=Africa/Cairo date +%z)
+          run=true
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            if [ "${{ github.event.schedule }}" = "0 2 * * *" ] && [ "$offset" != "+0300" ]; then run=false; fi
+            if [ "${{ github.event.schedule }}" = "0 3 * * *" ] && [ "$offset" != "+0200" ]; then run=false; fi
+          fi
+          echo "Cairo UTC offset $offset, run=$run"
+          echo "run=$run" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v4
+        if: steps.gate.outputs.run == 'true'
       - uses: actions/setup-python@v5
+        if: steps.gate.outputs.run == 'true'
         with:
           python-version: "3.12"
       - run: pip install -r requirements.txt
+        if: steps.gate.outputs.run == 'true'
       - name: Scan sources and build digest
+        if: steps.gate.outputs.run == 'true' && github.event_name != 'push'
         run: python scanner.py
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -30,7 +51,11 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           MAIL_TO: ${{ secrets.MAIL_TO }}
+      - name: Rebuild website only
+        if: steps.gate.outputs.run == 'true' && github.event_name == 'push'
+        run: python site_builder.py
       - name: Save digest and memory
+        if: steps.gate.outputs.run == 'true'
         run: |
           git config user.name "news-scanner"
           git config user.email "news-scanner@users.noreply.github.com"
