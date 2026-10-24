@@ -708,6 +708,13 @@
   /* ---------- start ---------- */
   compute();
   renderLegend();
+  function syncMenus() {  // a browser may bring back the last choices (reload, Back): show what the menus say
+    var p = Math.max(0, D.periods.map(function (x) { return x.k; }).indexOf(periodSel.value));
+    var t = themeSel.value === "" || isNaN(+themeSel.value) ? -1 : +themeSel.value;
+    if (p !== state.p || t !== state.t) { state.p = p; state.t = t; renderAll(); }
+  }
+  window.addEventListener("pageshow", syncMenus);
+  window.addEventListener("load", syncMenus);
   fetch(root + "assets/world.json").then(function (r) {
     if (!r.ok) throw new Error("status " + r.status);
     return r.json();
