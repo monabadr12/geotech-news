@@ -69,4 +69,3 @@ changes:
 
 open_items:
   - Check the Source health section after the next scans; any site still failing can be tested with the Check feeds workflow.
-  - Check that the ANTHROPIC_API_KEY secret is accepted (the first scan reported it as rejected).
