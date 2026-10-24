@@ -11,7 +11,7 @@ on:
   workflow_dispatch:   # "Run workflow" button on GitHub and the website's "Scan now" button
   push:                # rebuild the website (no scan) when its design or settings change
     branches: [main]
-    paths: [site_builder.py, exports.py, report.py, assets/**, config.yaml, data/changelog.yaml, sync_data.py]
+    paths: [site_builder.py, exports.py, report.py, brief.py, assets/**, config.yaml, data/changelog.yaml, data/briefs/**, sync_data.py]
 
 permissions:
   contents: write
@@ -53,6 +53,15 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           MAIL_TO: ${{ secrets.MAIL_TO }}
+      - name: Issue brief (when one is due)
+        # The final brief of a quarter that has just closed, and a draft in the last weeks of
+        # the current one. A brief that fails is a note in the log, never a failed scan.
+        if: steps.gate.outputs.run == 'true' && github.event_name != 'push'
+        continue-on-error: true
+        timeout-minutes: 30
+        run: python brief.py --auto || echo "::warning::The issue brief could not be written; see this step's log."
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       - name: Save digest and memory
         if: steps.gate.outputs.run == 'true'
         run: |

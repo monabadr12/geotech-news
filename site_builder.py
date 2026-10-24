@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Builds the website in docs/ from the saved digests in data/digests/.
+Builds the website in docs/ from the saved digests in data/digests/ (and the
+issue briefs in data/briefs/, written by brief.py).
 
 The digests (one JSON file per day) are the permanent archive; everything in
 docs/ is regenerated from them on every run, so the design can be changed and
@@ -10,11 +11,12 @@ import csv
 import datetime as dt
 import html
 import json
+import math
 import os
 import re
 import shutil
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 import yaml
 
@@ -23,6 +25,7 @@ import report
 
 ROOT = Path(__file__).resolve().parent
 DIGESTS = ROOT / "data" / "digests"
+BRIEFS = ROOT / "data" / "briefs"
 CHANGELOG = ROOT / "data" / "changelog.yaml"
 DOCS = ROOT / "docs"
 ASSETS = ROOT / "assets"
@@ -35,7 +38,8 @@ COUNTRIES = {
     "ZA": "South Africa", "SG": "Singapore", "AE": "United Arab Emirates", "FR": "France",
     "SN": "Senegal", "EG": "Egypt", "ES": "Spain", "MX": "Mexico", "BR": "Brazil",
     "DE": "Germany", "IT": "Italy", "TR": "Türkiye", "ID": "Indonesia", "CN": "China",
-    "JP": "Japan",
+    "JP": "Japan", "VN": "Vietnam", "IR": "Iran", "KR": "South Korea", "RU": "Russia",
+    "PL": "Poland", "CO": "Colombia", "CL": "Chile", "PE": "Peru", "AR": "Argentina",
 }
 CSV_FIELDS = ["Digest date", "Issue window", "Theme", "Relevance (1-5)", "Suggested use",
               "Headline (English)", "Original headline", "Magazine angle", "Source",
@@ -75,6 +79,7 @@ ICONS = {
     "send": "<path d='m22 2-7 20-4-9-9-4z'/><path d='M22 2 11 13'/>",
     "print": "<path d='M6 9V2h12v7'/><rect x='6' y='14' width='12' height='8'/><path d='M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2'/>",
     "search": "<circle cx='11' cy='11' r='7'/><path d='m21 21-4.3-4.3'/>",
+    "book": "<path d='M4 19.5A2.5 2.5 0 0 1 6.5 17H20'/><path d='M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'/>",
 }
 FAVICON = (ASSETS / "favicon.svg").read_text(encoding="utf-8") if (ASSETS / "favicon.svg").exists() else ""
 
@@ -105,7 +110,39 @@ def load_digests():
     out = [json.loads(p.read_text(encoding="utf-8")) for p in DIGESTS.glob("*.json")]
     for d in out:
         d["stories"] = [tidy(s) for s in d.get("stories", [])]
+        d["papers"] = [tidy(p) for p in d.get("papers", [])]
     return sorted(out, key=lambda d: d["date"], reverse=True)
+
+
+WINDOW_KEY = re.compile(r"^\d{4}-Q[1-4]$")
+
+
+def tidy_all(value, key=""):
+    """tidy() for nested data: every string cleaned, every "link" a web link or '#'."""
+    if isinstance(value, dict):
+        return {k: tidy_all(v, k) for k, v in value.items()}
+    if isinstance(value, list):
+        return [tidy_all(v) for v in value]
+    if isinstance(value, str):
+        return safe_url(value) if key == "link" else CONTROL_CHARS.sub("", value)
+    return value
+
+
+def load_briefs():
+    """Issue briefs written by brief.py (data/briefs/<window key>.json), by window key.
+    A file that cannot be read is reported and left out, so a hand edit gone wrong
+    never stops the site from being built."""
+    out = {}
+    for p in sorted(BRIEFS.glob("*.json")):
+        if not WINDOW_KEY.match(p.stem):
+            continue
+        try:
+            b = tidy_all(json.loads(p.read_text(encoding="utf-8")))
+            dt.datetime.fromisoformat(b["generated"])  # every page that shows the brief gives this date
+            out[p.stem] = b
+        except (ValueError, KeyError, TypeError) as ex:
+            print(f"Issue brief {p.name} left out: it is not a readable brief ({type(ex).__name__}: {ex}).")
+    return out
 
 
 def issue_window(date_str, start_month=1):
@@ -121,6 +158,15 @@ def issue_window(date_str, start_month=1):
     span = (f"{MONTHS[first - 1]} – {MONTHS[last - 1]} {year}" if last_year == year
             else f"{MONTHS[first - 1]} {year} – {MONTHS[last - 1]} {last_year}")
     return {"key": f"{cycle}-Q{n}", "label": f"Q{n} {cycle}", "span": span}
+
+
+def window_range(key, start_month=1):
+    """First and last day of the issue window with this key (e.g. 2026-Q4)."""
+    cycle, n = int(key[:4]), int(key[-1])
+    month = (start_month - 1 + (n - 1) * 3) % 12 + 1
+    year = cycle if month >= start_month else cycle + 1
+    after = dt.date(year + (month + 2) // 12, (month + 2) % 12 + 1, 1)  # first day of the next window
+    return dt.date(year, month, 1), after - dt.timedelta(days=1)
 
 
 def nice_date(iso, weekday=False):
@@ -169,10 +215,11 @@ def theme_icon(theme):
 
 
 # ------------------------------------------------------------------ page parts
-def page(cfg, title, body, root, active, description=""):
+def page(cfg, title, body, root, active, description="", head=""):
     mag = (cfg.get("magazine") or {}).get("name", "ISSMGE Magazine")
     nav = [("index.html", "Latest", "latest"), ("archive.html", "Archive", "archive"),
-           ("search.html", "Search", "search"), ("assistant.html", "AI assistant", "assistant"),
+           ("search.html", "Search", "search"), ("trends.html", "Trends", "trends"),
+           ("assistant.html", "AI assistant", "assistant"),
            ("about.html", "Method & sources", "about")]
     current = " class='active' aria-current='page'"
     links = "".join(f"<a href='{root}{href}'{current if key == active else ''}>{label}</a>"
@@ -188,7 +235,7 @@ def page(cfg, title, body, root, active, description=""):
 <link rel="apple-touch-icon" href="{root}assets/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{root}assets/style.css">
+<link rel="stylesheet" href="{root}assets/style.css">{head}
 </head><body data-root="{root}" data-repo="{esc(repository(cfg))}" data-assistant="{esc(assistant_endpoint(cfg))}">
 <header class="masthead"><div class="wrap masthead-inner">
 <a class="brand" href="{root}index.html"><span class="brand-mark" aria-hidden="true">{FAVICON}</span>
@@ -256,6 +303,12 @@ def filter_bar(uses):
 <span class="f-count" aria-live="polite"></span></div>"""
 
 
+def filtered(uses, sections):
+    """The filter bar and the story sections it filters, in one box: the sticky bar ends with the stories,
+    so it does not cover New research or the rest of the page."""
+    return f"<div class='filter-scope'>{filter_bar(uses)}{sections}</div>"
+
+
 def theme_sections(stories, order=None, show_theme=False):
     by_theme = {}
     for s in stories:
@@ -274,6 +327,60 @@ def theme_sections(stories, order=None, show_theme=False):
         out += [story_card(s, show_theme) for s in items]
         out.append("</section>")
     return "".join(out)
+
+
+A2I = "Academia-to-Industry topic"
+
+
+def doi_of(link):
+    """The DOI in a https://doi.org/... link ('' for other links)."""
+    return unquote(link.split("doi.org/", 1)[1]) if "doi.org/" in link else ""
+
+
+def paper_rank(p):
+    """Claude's rating for practice first, then the number of keyword concepts."""
+    return (p.get("relevance") or 0) * 100 + len(p.get("keywords", []))
+
+
+def paper_card(p):
+    rel = p.get("relevance") or 0
+    rating_ = (f"<span class='rel rel-{rel}' title='Use in practice: {rel} of 5'>{'<i></i>' * 5}<b>{rel}/5</b></span>"
+               if rel else "<span class='rel rel-kw' title='Not AI-rated; ranked by keyword score'>Not rated</span>")
+    parts = [f"<article class='story paper' style='--tc:{theme_color(p['theme'])}'>",
+             "<div class='story-top'>",
+             f"<a class='story-title' href='{esc(p['link'])}' target='_blank' rel='noopener' dir='auto'>{esc(p['title'])}</a>",
+             rating_, "</div>"]
+    if p.get("authors"):
+        parts.append(f"<div class='orig' dir='auto'>{esc(p['authors'])}</div>")
+    if p.get("angle"):
+        parts.append(f"<p class='angle'><span>Why it matters in practice</span>{esc(p['angle'])}</p>")
+    elif p.get("abstract"):
+        parts.append(f"<p class='summary'>{esc(p['abstract'][:300])}…</p>")
+    meta = [f"<span class='src'>{esc(p.get('journal', ''))}</span>"]
+    if p.get("published"):
+        meta.append(f"<time>{esc(nice_date(p['published']))}</time>")
+    doi = doi_of(p["link"])
+    if doi:
+        meta.append(f"<a href='{esc(p['link'])}' target='_blank' rel='noopener'>doi:{esc(doi)}</a>")
+    parts.append(f"<div class='story-meta'><span class='use use-academia'>Academia-to-Industry</span>"
+                 f"<span class='theme-tag'>{theme_icon(p['theme'])}{esc(p['theme'])}</span>" + " · ".join(meta) + "</div>")
+    if p.get("keywords"):
+        parts.append("<div class='kw'>" + "".join(f"<span>{esc(k)}</span>" for k in p["keywords"][:5]) + "</div>")
+    parts.append("</article>")
+    return "".join(parts)
+
+
+def research_section(papers, hint, limit=None):
+    """'New research': papers best rated for practice first, then newest. Kept
+    outside the theme sections, so the story filters leave it alone."""
+    if not papers:
+        return ""
+    ordered = sorted(papers, key=lambda p: p.get("published") or "", reverse=True)
+    ordered.sort(key=lambda p: -(p.get("relevance") or 0))
+    shown = ordered[:limit] if limit else ordered
+    return (f"<section class='research' id='research'><h2 class='section-h'>New research "
+            f"<span class='h1-sub'>{len(papers)} {'paper' if len(papers) == 1 else 'papers'}</span></h2>"
+            f"<p class='hint'>{hint}</p>" + "".join(paper_card(p) for p in shown) + "</section>")
 
 
 def slug(text):
@@ -303,25 +410,31 @@ def theme_strip(stories, order):
 
 
 # ------------------------------------------------------------------ pages
-def digest_body(d, cfg, root, uses, prev_d=None, next_d=None, latest=False):
+def digest_body(d, cfg, root, uses, prev_d=None, next_d=None, latest=False, brief=None):
     win = issue_window(d["date"], start_month(cfg))
-    stories = d["stories"]
+    stories, papers = d["stories"], d.get("papers", [])
     themes = len({s["theme"] for s in stories})
     eyebrow = (f"{'Latest digest' if latest else 'Daily digest'} · "
                f"<a href='{root}issues/{win['key']}.html'>{win['label']} issue window</a>")
     stats = (stat(len(stories), "stories selected") + stat(d.get("new_items", 0), "new items scanned")
              + stat(themes, "themes") + stat("AI" if d.get("ai_used") else "Keywords", "triage method"))
+    if papers:
+        stats += stat(len(papers), "new research papers")
     extra = theme_strip(stories, theme_order(cfg))
     head = [hero(eyebrow, esc(nice_date(d["date"], weekday=True)), stats=stats, extra=extra)]
     if latest:
         head.append(f"<a class='callout' href='{root}issues/{win['key']}.html'>{icon('sheet')}<span><b>Building the "
                     f"{win['label']} issue?</b> Every story found {win['span']} is collected in one place, by theme, "
-                    f"with an Excel workbook →</span></a>")
+                    f"with an Excel workbook"
+                    + (f" and the {'final' if brief.get('status') == 'final' else 'draft'} issue brief" if brief else "")
+                    + " →</span></a>")
     if not stories:
         head.append("<p class='empty'>No new geotechnical stories met the threshold in this period.</p>")
     else:
-        head.append(filter_bar(uses))
-        head.append(theme_sections(stories))
+        head.append(filtered(uses, theme_sections(stories)))
+    head.append(research_section(
+        papers, "Papers that geotechnical journals published in the last few days, for the Academia-to-Industry "
+                "pages, best rated for use in practice first. Titles open the paper through its DOI."))
     pager = ["<nav class='pager'>"]
     pager.append(f"<a href='{root}digests/{prev_d}.html'>← {esc(nice_date(prev_d))}</a>" if prev_d else "<span></span>")
     pager.append(f"<a href='{root}archive.html'>All digests</a>")
@@ -352,23 +465,85 @@ def window_summary(stories):
     }
 
 
-def issue_body(win, stories, digests, cfg, uses, current):
+def count(n, one, many=None):
+    return f"{n} {one if n == 1 else (many or one + 's')}"
+
+
+def brief_file(key):
+    return f"briefs/{key}-issue-brief.docx"
+
+
+def brief_card(win, b, cfg, current, root, opts):
+    """Issue page card: the brief's overview and line-up headlines, its Word file and
+    a button that starts the brief workflow on GitHub. opts come from brief.settings()."""
+    key = win["key"]
+    gen = (f"<button type='button' class='btn brief-btn' id='brief-btn' data-window='{key}' "
+           f"data-current='{'1' if current else ''}'>{icon('spark')}<span>Generate / update brief</span></button>")
+    if not b:
+        if current:
+            start = window_range(key, start_month(cfg))[1] - dt.timedelta(days=opts["days_before_end"] - 1)
+            then = (f"refreshes the draft every {count(opts['refresh_days'], 'day')} "
+                    "and writes the final brief the day after the quarter closes.")
+            text = (f"Claude drafts it automatically in the last {opts['days_before_end']} days of the quarter "
+                    f"(from {nice_date(start.isoformat())}), {then} You can also generate a draft now."
+                    if dt.date.today() < start else
+                    f"The draft is due: it appears with the next daily scan, or you can generate it now. Claude then {then}")
+        else:
+            text = ("The final brief is written by the first daily scan after a quarter closes. To write one for this "
+                    f"window, press <b>Generate / update brief</b> and enter <code>{key}</code> on the GitHub page.")
+        return (f"<section class='brief brief-none' id='brief'><div class='brief-head'><span class='brief-mark'>{icon('doc')}</span>"
+                f"<div><p class='eyebrow'>Issue brief</p><h2>No brief yet for {win['label']}</h2><p class='brief-meta'>{text}</p>"
+                f"</div></div><div class='actions'>{gen}</div></section>")
+    final = b.get("status") == "final"
+    papers = b.get("papers_considered") or 0
+    meta = (f"Drafted by Claude on {esc(nice_date(b['generated']))} from "
+            f"{count(b.get('stories_considered') or 0, 'story', 'stories')}"
+            + (f" and {count(papers, 'paper')}" if papers else "") + " · check every story at its source before publishing")
+    picks = []
+    for entry in b.get("lineup") or []:
+        chosen = [p for p in entry.get("picks") or [] if p.get("story")]
+        if not chosen:
+            continue
+        s, t = chosen[0]["story"], entry.get("theme", "General")
+        more = f" · +{len(chosen) - 1} more in the brief" if len(chosen) > 1 else ""
+        picks.append(f"<li style='--tc:{theme_color(t)}'><span class='lt'>{theme_icon(t)}{esc(t)}</span>"
+                     f"<a href='{esc(s.get('link', '#'))}' target='_blank' rel='noopener' dir='auto'>"
+                     f"{esc(s.get('title_en') or s.get('title', ''))}</a>"
+                     f"<span class='lf'>{esc(chosen[0].get('format', ''))} · {esc(s.get('source', ''))}{more}</span></li>")
+    also = ", ".join(count(len(b.get(k) or []), one) for k, one in
+                     (("feature_leads", "feature lead"), ("a2i_topics", "Academia-to-Industry topic"), ("gaps", "gap")))
+    status = "final" if final else "draft"
+    return (f"<section class='brief {status}' id='brief'><div class='brief-head'><span class='brief-mark'>{icon('doc')}</span>"
+            f"<div><p class='eyebrow'>Issue brief <span class='badge {status}'>{status.title()}</span></p>"
+            f"<h2>Proposed line-up for {win['label']}</h2><p class='brief-meta'>{meta}</p></div></div>"
+            f"<p class='brief-overview'>{esc(b.get('overview', ''))}</p>"
+            + (f"<ul class='lineup'>{''.join(picks)}</ul>" if picks else "")
+            + f"<p class='brief-also'>Also in the Word file: {also}, a regional-balance check and a watch list.</p>"
+            f"<div class='actions'><a class='btn primary' href='{root}{brief_file(key)}' download>{icon('download')}"
+            f"Issue brief (Word)</a>{gen}</div></section>")
+
+
+def issue_body(win, stories, digests, cfg, uses, current, brief=None, brief_opts=None, papers=()):
     root = "../"
     order = theme_order(cfg)
     summ = window_summary(stories)
     counts = {}
     for s in stories:
-        c = counts.setdefault(s["theme"], {"n": 0, "r5": 0, "r4": 0, "fl": 0, "a2i": 0})
+        c = counts.setdefault(s["theme"], {"n": 0, "r5": 0, "r4": 0, "fl": 0, "a2i": 0, "papers": 0})
         c["n"] += 1
         c["r5"] += s.get("relevance") == 5
         c["r4"] += s.get("relevance") == 4
         c["fl"] += s.get("use") == "Feature lead"
         c["a2i"] += s.get("use") == "Academia-to-Industry topic"
-    peak = max((c["n"] for c in counts.values()), default=1)
+    for p in papers:
+        counts.setdefault(p["theme"], {"n": 0, "r5": 0, "r4": 0, "fl": 0, "a2i": 0, "papers": 0})["papers"] += 1
+    peak = max((c["n"] for c in counts.values()), default=1) or 1
+    name = {t: f"<span class='ticon sm'>{theme_icon(t)}</span>{esc(t)}" for t in counts}
     rows = "".join(
-        f"<tr style='--tc:{theme_color(t)}'><th scope='row'><a href='#{slug(t)}'><span class='ticon sm'>{theme_icon(t)}</span>{esc(t)}</a></th>"
-        f"<td><span class='cellbar'><i style='width:{c['n'] / peak * 100:.0f}%'></i></span><b>{c['n']}</b></td><td>{c['r5']}</td>"
-        f"<td>{c['r4']}</td><td>{c['fl']}</td><td>{c['a2i']}</td></tr>"
+        f"<tr style='--tc:{theme_color(t)}'><th scope='row'>"
+        + (f"<a href='#{slug(t)}'>{name[t]}</a>" if c["n"] else f"<span class='th-name'>{name[t]}</span>")  # papers only: no section
+        + f"</th><td><span class='cellbar'><i style='width:{c['n'] / peak * 100:.0f}%'></i></span><b>{c['n']}</b></td><td>{c['r5']}</td>"
+        f"<td>{c['r4']}</td><td>{c['fl']}</td><td>{c['a2i']}</td>" + (f"<td>{c['papers']}</td>" if papers else "") + "</tr>"
         for t in order if (c := counts.get(t)))
     best = sorted((s for s in stories if s.get("relevance") == 5 or s.get("use") == "Feature lead"),
                   key=lambda s: -s["rank"])[:12]
@@ -378,6 +553,14 @@ def issue_body(win, stories, digests, cfg, uses, current):
                + (" · <span class='badge'>In progress</span>" if current else ""))
     stats = (stat(summ["stories"], "stories") + stat(len(digests), "daily digests")
              + stat(summ["top"], "rated 5 / 5") + stat(summ["features"], "feature leads"))
+    if papers:
+        stats += stat(len(papers), "research papers")
+    journals = len({p.get("journal") for p in papers})
+    research = research_section(
+        papers, f"{len(papers)} {'paper' if len(papers) == 1 else 'papers'} from {journals} "
+                f"{'journal' if journals == 1 else 'journals'} in this window, for the Academia-to-Industry pages. "
+                f"{'The 24 best rated for use in practice are shown; all' if len(papers) > 24 else 'All'} of them are "
+                "in the Excel workbook (Research sheet) and on the Search page.", limit=24)
     actions = (f"<div class='actions'><a class='btn primary' href='{root}exports/{win['key']}.xlsx' download>{icon('sheet')}Excel workbook</a>"
                f"<a class='btn light' href='{root}exports/{win['key']}.csv' download>{icon('download')}CSV</a>"
                f"<a class='btn light' href='{root}search.html?q_window={win['key']}'>{icon('search')}Search this window</a>"
@@ -388,23 +571,27 @@ def issue_body(win, stories, digests, cfg, uses, current):
                  stats, theme_strip(stories, order) + actions)]
     if not stories:
         body.append("<p class='empty'>No stories yet in this window.</p>")
-        return "".join(body)
+        return "".join(body) + research
+    if brief_opts:
+        body.append(brief_card(win, brief, cfg, current, root, brief_opts))
     body.append("<h2 class='section-h'>Theme overview</h2><div class='table-wrap'><table class='overview'>"
                 "<thead><tr><th scope='col'>Theme</th><th scope='col'>Stories</th><th scope='col'>Rated 5</th>"
-                "<th scope='col'>Rated 4</th><th scope='col'>Feature leads</th><th scope='col'>Academia-to-Industry</th></tr></thead>"
+                "<th scope='col'>Rated 4</th><th scope='col'>Feature leads</th><th scope='col'>Academia-to-Industry</th>"
+                + ("<th scope='col'>Research papers</th>" if papers else "") + "</tr></thead>"
                 f"<tbody>{rows}</tbody></table></div>")
     if best:
         body.append("<h2 class='section-h'>Strongest leads</h2><p class='hint'>Stories rated 5 / 5 or suggested as feature leads.</p>"
                     "<div class='shortlist'>" + "".join(story_card(s, show_theme=True) for s in best) + "</div>")
     body.append("<h2 class='section-h'>All stories by theme</h2>")
-    body.append(filter_bar(uses))
-    body.append(theme_sections(stories, order=order))
+    body.append(filtered(uses, theme_sections(stories, order=order)))
+    body.append(research)
     body.append(f"<h2 class='section-h'>Daily digests in this window</h2><ul class='digest-list'>{dlist}</ul>")
     return "".join(body)
 
 
-def archive_body(windows, cfg, current_key):
+def archive_body(windows, cfg, current_key, briefs=None):
     root = ""
+    briefs = briefs or {}
     order = theme_order(cfg)
     if not windows:
         return hero("Archive", "All digests") + "<p class='empty'>The archive is empty. It fills automatically after the first scan.</p>"
@@ -430,13 +617,21 @@ def archive_body(windows, cfg, current_key):
             for t in order if t in counts)
         days = "".join(f"<a href='digests/{d['date']}.html'>{dt.date.fromisoformat(d['date']).day} "
                        f"{MONTHS[int(d['date'][5:7]) - 1]}<span>{len(d['stories'])}</span></a>" for d in digests)
+        b = briefs.get(win["key"])
+        if b:
+            brief_link = (f"<a class='btn' href='{root}{brief_file(win['key'])}' download>{icon('doc')}Issue brief"
+                          f"{'' if b.get('status') == 'final' else ' (draft)'}</a>")
+        else:
+            brief_link = (f"<a class='btn ghost' href='{root}issues/{win['key']}.html#brief' title='No brief yet: "
+                          f"generate one on the issue page'>{icon('doc')}Issue brief</a>")
         out.append(
             f"<section class='window'><div class='window-head'><div><h2>{win['label']}"
             f"{' <span class=badge>In progress</span>' if win['key'] == current_key else ''}</h2>"
             f"<p>{esc(win['span'])} · {summ['stories']} stories · {len(digests)} digests · "
-            f"{summ['top']} rated 5 / 5 · {summ['features']} feature leads</p></div>"
+            f"{summ['top']} rated 5 / 5 · {summ['features']} feature leads"
+            + (f" · {len(w['papers'])} research papers" if w.get("papers") else "") + "</p></div>"
             f"<div class='actions'><a class='btn primary' href='{root}issues/{win['key']}.html'>Open issue collection</a>"
-            f"<a class='btn' href='{root}exports/{win['key']}.xlsx' download>{icon('sheet')}Excel</a></div></div>"
+            f"<a class='btn' href='{root}exports/{win['key']}.xlsx' download>{icon('sheet')}Excel</a>{brief_link}</div></div>"
             f"{theme_strip(stories, order)}"
             f"<div class='window-body'><ul class='bars'>{bars}</ul>"
             f"<div class='days'><h3>Daily digests</h3><div class='day-grid'>{days}</div></div></div></section>")
@@ -491,15 +686,30 @@ recommend stories and angles for the magazine, and read PDF or Word files you at
 </div>"""
 
 
-def about_body(cfg, latest):
+def about_body(cfg, latest, brief_opts):
     feeds = cfg.get("feeds", [])
     g = cfg.get("google_news") or {}
     editions = len(g.get("editions") or [1])
     n_core, n_extra = len(g.get("core_queries", [])), len(g.get("extra_queries", []))
     n_foreign = sum(1 for q in g.get("extra_queries", []) if isinstance(q, dict) and q.get("language", "en") != "en")
+    # languages other than English: of the searches and of the websites that name one (es-419 is Spanish)
+    languages = {str(q.get("language")).split("-")[0] for q in [*g.get("extra_queries", []), *feeds]
+                 if isinstance(q, dict) and q.get("language")} - {"en"}
     ml = cfg.get("multilingual_keywords") or {}
     n_ml = sum(len(v.get("terms", [])) for v in ml.values())
     ccfg = cfg.get("claude", {})
+    rcfg = cfg.get("research") or {}
+    journals = (rcfg.get("journals") or []) if rcfg.get("enabled") is not False else []
+    jrows = "".join(f"<tr><td>{esc(j['name'])}</td><td>{esc(str(j['issn']))}</td></tr>" for j in journals)
+    research_step = (f"<li><b>Research.</b> New papers from {len(journals)} geotechnical journals, read from Crossref's "
+                     f"free index (papers registered in the last {rcfg.get('lookback_days', 4)} days, each shown once). "
+                     f"They are scored and themed with the same keywords; Claude rates each 1–5 for its use in practice "
+                     f"and writes one sentence on why it matters to practitioners. Up to {rcfg.get('max_papers', 20)} "
+                     "papers per digest appear under <b>New research</b>, for the Academia-to-Industry pages.</li>"
+                     if journals else "")
+    jtable = (f"<h2 class='section-h'>Journals read for new research</h2><div class='table-wrap'><table class='overview'>"
+              f"<thead><tr><th>Journal</th><th>ISSN</th></tr></thead><tbody>{jrows}</tbody></table></div>"
+              if journals else "")
     themes = "".join(f"<li style='--tc:{theme_color(t)}'><b><span class='ticon sm'>{theme_icon(t)}</span>{esc(t)}</b>"
                      f"<span>{esc(', '.join(w))}</span></li>" for t, w in cfg["themes"].items() if w)
     rows = "".join(
@@ -520,14 +730,687 @@ def about_body(cfg, latest):
 <div class="prose">
 <h2 class="section-h">Each run</h2><ol class="steps">
 <li><b>Collect.</b> {len(feeds)} websites and {n_core * editions + n_extra} Google News searches ({n_core} core searches in {editions} English editions, plus {n_extra} further searches including {n_foreign} in other languages). The scan runs every day at 05:00 Cairo time, and on demand: <b>Scan now</b> opens the scan's page on GitHub, where you press <b>Run workflow</b>; the website then follows the scan and tells you when the new digest is ready. Each run looks back {cfg.get('lookback_hours', 60)} hours; stories already shown are remembered for 45 days and never repeated.</li>
-<li><b>Score and categorise.</b> Headlines and summaries are scored against {len(cfg['keywords'])} English keywords and {n_ml} terms in 11 other languages. Each foreign term counts as its English equivalent (for example <i>glissement de terrain</i>, <i>deslizamiento</i>, <i>longsor</i> and <i>انهيار أرضي</i> all count as “landslide”), so every story is filed under an English theme. Specialist sources earn bonus points, noise terms lose points, near-identical headlines are merged. A story needs {cfg.get('min_keyword_score', 3)} points to go forward.</li>
+<li><b>Score and categorise.</b> Headlines and summaries are scored against {len(cfg['keywords'])} English keywords and {n_ml} terms in {len(languages)} other languages. Each foreign term counts as its English equivalent (for example <i>glissement de terrain</i>, <i>deslizamiento</i>, <i>longsor</i> and <i>انهيار أرضي</i> all count as “landslide”), so every story is filed under an English theme. Specialist sources earn bonus points, noise terms lose points, near-identical headlines are merged. A story needs {cfg.get('min_keyword_score', 3)} points to go forward.</li>
 <li><b>Triage.</b> Up to {ccfg.get('max_candidates', 80)} candidates go to Claude, which rates each 1–5 for geotechnical substance (below {ccfg.get('min_relevance', 3)} is dropped), confirms the theme, suggests a use, writes a one-sentence magazine angle, and translates non-English headlines.</li>
-<li><b>Publish & archive.</b> Up to {cfg.get('max_items', 40)} stories per digest. Every digest is stored permanently, grouped into three-month issue windows, and exported to Excel.</li></ol>
+{research_step}
+<li><b>Publish & archive.</b> Up to {cfg.get('max_items', 40)} stories per digest. Every digest is stored permanently, grouped into three-month issue windows, and exported to Excel.</li>
+<li><b>Issue brief.</b> In the last {brief_opts['days_before_end']} days of each quarter Claude reads the quarter's stories rated {brief_opts['min_relevance']} / 5 or higher (at most {brief_opts['max_per_theme']} per theme) and any research papers, and drafts the brief for the editorial meeting as a Word document: an overview, a proposed line-up per theme, feature leads with the kinds of experts to approach, Academia-to-Industry topics, a regional-balance check, gaps worth covering and a watch list. The draft is refreshed every {count(brief_opts['refresh_days'], 'day')} and the final brief is written the day after the quarter closes. <b>Generate / update brief</b> on an issue page starts one on GitHub at any time.</li></ol>
 <h2 class="section-h">Magazine themes</h2><p class="hint">Words that suggest each theme (English keywords found in any language count too).</p><ul class="theme-list">{themes}</ul>
-<h2 class="section-h">Websites read directly</h2><div class="table-wrap"><table class="overview"><thead><tr><th>Source</th><th>Site</th><th>Bonus</th></tr></thead><tbody>{rows}</tbody></table></div>
+<h2 class="section-h">Websites read directly</h2><p class="hint">Sites that block feed readers or publish no feed (among them ISSMGE, ICE, GEER, USGS and GeoEngineer) are read through Google News searches limited to the site.</p><div class="table-wrap"><table class="overview"><thead><tr><th>Source</th><th>Site</th><th>Bonus</th></tr></thead><tbody>{rows}</tbody></table></div>
+{jtable}
 {failed}
 <h2 class="section-h">Known limits</h2><p>Coverage of a country depends on what its press publishes online in a language covered here. Google News favours recency and mainstream outlets, so a major landslide is picked up readily while a quiet technical advance may not be — which is why society and institutional feeds are read directly.</p>
 </div>"""
+
+
+# ------------------------------------------------------------------ trends page
+# Chart shades (light mode, dark mode) for each theme: the THEME_STYLE hues, stepped so that neighbouring
+# segments of a stacked column stay distinct for colour-blind readers (CVD ΔE ≥ 9.6, normal vision ≥ 15.9)
+# and every mark clears 3:1 on the card surface in both modes (checked with the dataviz palette validator).
+# Themes added later in config.yaml fall back to theme_color(); themes found only in old digests (no longer
+# in config.yaml) take the General grey rather than an unvalidated spare hue.
+CHART_SHADES = {
+    "Sustainability & the Energy Transition": ("#1f9d63", "#1f9d63"),
+    "Digital Geotechnics": ("#6b4fd6", "#7860e2"),
+    "Hazards & Resilience": ("#c4361a", "#c4361a"),
+    "Ground Improvement & Innovation": ("#c58000", "#c48517"),
+    "Infrastructure & the Underground City": ("#2563d6", "#3370e2"),
+    "Offshore, Coasts & Water": ("#0b97a5", "#18a6b5"),
+    "Characterisation & Modelling": ("#b02e6d", "#c23d7b"),
+    "Geotechnics & Society": ("#935a1c", "#a3682d"),
+    "General": ("#7b8798", "#8592a3"),
+}
+# Suggested uses in order of editorial weight, as one ordinal ramp (light, dark): the darker the
+# segment, the stronger the material; in dark mode the ramp flips so feature leads are the lightest.
+USE_RAMP = [("Feature lead", "#013966", "#bedbfc"), ("Academia-to-Industry topic", "#16558c", "#94c6f9"),
+            ("Regional insight", "#3772ac", "#79a9db"), ("News brief", "#5590cc", "#5e8dbe"),
+            ("Watch only", "#73b0ee", "#4472a1")]
+TREND_PERIODS = 24  # months shown in the monthly charts (the table and CSV keep them all)
+# Heat-table cells mix the sequential blue into the card surface in OKLab (style.css: --viz-heat, --surface,
+# --ink; keep these in step). Each cell's text colour is worked out here from the mixed shade, per mode.
+HEAT = {"light": ("#16558c", "#ffffff", "#142033"), "dark": ("#94c6f9", "#171e27", "#e8ecf1")}
+HEAT_TOP = 88  # the largest share of a column is shaded with 88% of the blue
+
+
+def _linear(hex_):
+    return [((c / 255 + 0.055) / 1.055) ** 2.4 if c / 255 > 0.04045 else c / 255 / 12.92
+            for c in bytes.fromhex(hex_.lstrip("#"))]
+
+
+def _oklab(hex_):
+    r, g, b = _linear(hex_)
+    lms = [(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b), (0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b),
+           (0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b)]
+    l_, m_, s_ = (math.copysign(abs(v) ** (1 / 3), v) for v in lms)
+    return (0.2104542553 * l_ + 0.7936177850 * m_ - 0.0040720468 * s_, 1.9779984951 * l_ - 2.4285922050 * m_ + 0.4505937099 * s_,
+            0.0259040371 * l_ + 0.7827717662 * m_ - 0.8086757660 * s_)
+
+
+def _luminance_oklab(lab):
+    """WCAG relative luminance of an OKLab colour (clipped to sRGB, as the browser shows it)."""
+    L, a, b = lab
+    l_, m_, s_ = L + 0.3963377774 * a + 0.2158037573 * b, L - 0.1055613458 * a - 0.0638541728 * b, L - 0.0894841775 * a - 1.2914855480 * b
+    l, m, s = l_ ** 3, m_ ** 3, s_ ** 3
+    rgb = (4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+           -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s)
+    r, g, b = (min(1.0, max(0.0, v)) for v in rgb)
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def _contrast(y1, y2):
+    return (max(y1, y2) + 0.05) / (min(y1, y2) + 0.05)
+
+
+def heat_text(p):
+    """Text classes for a cell shaded p%: the ink while it keeps 4.6:1 on the shade (WCAG AA's 4.5 plus a margin for
+    the browser's rounding), otherwise white or black, whichever contrasts more (one of them always reaches 4.58:1).
+    l…/d… = light/dark mode, …w/…k = white/black."""
+    out = []
+    for mode, (heat, surface, ink) in HEAT.items():
+        h, s = _oklab(heat), _oklab(surface)
+        y = _luminance_oklab(tuple(s[i] + (h[i] - s[i]) * p / 100 for i in range(3)))
+        if _contrast(y, _luminance_oklab(_oklab(ink))) < 4.6:
+            out.append(mode[0] + ("w" if _contrast(y, 1.0) >= _contrast(y, 0.0) else "k"))
+    return " ".join(out)
+
+
+def viz_style(order, legacy=()):
+    """Per-theme and per-use chart colours as CSS classes (vt-0…, vu-0…), light and dark."""
+    light, dark = [], []
+    for i, t in enumerate(order):
+        lo, hi = CHART_SHADES["General"] if t in legacy else CHART_SHADES.get(t, (theme_color(t), theme_color(t)))
+        light.append(f".vt-{i}{{--c:{lo}}}")
+        dark.append(f".vt-{i}{{--c:{hi}}}")
+    for i, (_, lo, hi) in enumerate(USE_RAMP):
+        light.append(f".vu-{i}{{--c:{lo}}}")
+        dark.append(f".vu-{i}{{--c:{hi}}}")
+    return f"<style>{''.join(light)}@media (prefers-color-scheme: dark){{{''.join(dark)}}}</style>"
+
+
+def _count(d, key, n=1):
+    d[key] = d.get(key, 0) + n
+
+
+def _period(**kw):
+    return dict(kw, digests=0, stories=0, themes={}, uses={}, rated=0, rel=0, r5=0, regions={}, papers=0, journals={})
+
+
+def _tally(p, d):
+    p["digests"] += 1
+    for s in d["stories"]:
+        p["stories"] += 1
+        _count(p["themes"], s["theme"])
+        _count(p["regions"], s.get("region") or "")
+        if s.get("use"):
+            _count(p["uses"], s["use"])
+        if s.get("relevance"):
+            p["rated"] += 1
+            p["rel"] += s["relevance"]
+            p["r5"] += s["relevance"] == 5
+    for x in d.get("papers") or []:
+        p["papers"] += 1
+        _count(p["journals"], str(x.get("journal") or "Unknown journal"))
+
+
+def next_month(d):
+    """The 1st of the month after date d."""
+    return (d.replace(day=28) + dt.timedelta(days=4)).replace(day=1)
+
+
+def window_start(d, start_month=1):
+    """First day of the three-month issue window containing date d (same rule as issue_window)."""
+    offset = (d.month - start_month) % 12
+    first = (start_month - 1 + offset // 3 * 3) % 12 + 1
+    return dt.date(d.year if first <= d.month else d.year - 1, first, 1)
+
+
+def edition_name(code):
+    return COUNTRIES.get(code, code) if code else "Direct feeds"
+
+
+def trend_stats(digests, cfg):
+    """Everything the trends page and its CSV show, counted by the date of the digest that found each story."""
+    sm = start_month(cfg)
+    days = sorted(digests, key=lambda d: d["date"])
+    dates = [dt.date.fromisoformat(d["date"][:10]) for d in days]
+    first, asof = dates[0], dates[-1]
+    months, quarters = {}, {}
+    y, m = first.year, first.month
+    while (y, m) <= (asof.year, asof.month):
+        key = f"{y}-{m:02d}"
+        months[key] = _period(key=key, label=f"{MONTHS[m - 1]} {y}", mon=MONTHS[m - 1], year=y)
+        win = issue_window(key + "-01", sm)
+        quarters.setdefault(win["key"], _period(key=win["key"], label=win["label"], span=win["span"]))
+        y, m = (y + 1, 1) if m == 12 else (y, m + 1)
+    for d in days:
+        _tally(months[d["date"][:7]], d)
+        _tally(quarters[issue_window(d["date"], sm)["key"]], d)
+    first_key, last_key = f"{first:%Y-%m}", f"{asof:%Y-%m}"
+    if first.day > 1:
+        months[first_key]["note"] = f"archive began {first.day} {MONTHS[first.month - 1]}"
+    months[last_key]["note"] = f"to {asof.day} {MONTHS[asof.month - 1]}"
+    quarters[issue_window(asof.isoformat(), sm)["key"]]["note"] = "in progress"
+
+    def stories(a, b):
+        return sum(len(d["stories"]) for d, x in zip(days, dates) if a <= x <= b)
+
+    # this month and quarter so far, against the same stretch of the previous one
+    m0 = asof.replace(day=1)
+    p_end = m0 - dt.timedelta(days=1)
+    p0 = p_end.replace(day=1)
+    q0 = window_start(asof, sm)
+    pq0 = window_start(q0 - dt.timedelta(days=1), sm)
+    pq_same = min(pq0 + (asof - q0), q0 - dt.timedelta(days=1))
+    rated = [s["relevance"] for d in days for s in d["stories"] if s.get("relevance")]
+    rated30 = [s["relevance"] for d, x in zip(days, dates) if (asof - x).days < 30
+               for s in d["stories"] if s.get("relevance")]
+    kpi = {
+        "month": stories(m0, asof), "prev_month": stories(p0, p0.replace(day=min(asof.day, p_end.day))),
+        "prev_month_ok": first <= p0, "prev_label": f"1–{min(asof.day, p_end.day)} {MONTHS[p0.month - 1]}",
+        "quarter": stories(q0, asof), "prev_quarter": stories(pq0, pq_same), "prev_quarter_ok": first <= pq0,
+        "prev_q_label": issue_window(pq0.isoformat(), sm)["label"], "q_label": issue_window(asof.isoformat(), sm)["label"],
+        "rel": sum(rated) / len(rated) if rated else 0, "rel30": sum(rated30) / len(rated30) if rated30 else 0,
+    }
+
+    # keywords: the last 30 days against the 90 days before them, and keywords never seen before
+    a0, b0 = asof - dt.timedelta(days=29), asof - dt.timedelta(days=119)
+    c_a, c_b, seen = {}, {}, {}
+    n_a = n_b = 0
+    for d, x in zip(days, dates):
+        for s in d["stories"]:
+            kws = {k.strip().lower() for k in s.get("keywords") or [] if isinstance(k, str) and k.strip()}
+            for k in kws:
+                seen.setdefault(k, x)
+            if x >= a0:
+                n_a += 1
+                for k in kws:
+                    _count(c_a, k)
+            elif x >= b0:
+                n_b += 1
+                for k in kws:
+                    _count(c_b, k)
+    b_days = (a0 - max(first, b0)).days  # days of digests the comparison window really covers
+    rising = []
+    if b_days >= 28 and n_a and n_b:
+        for k, a in c_a.items():
+            ra, rb = 100 * a / n_a, 100 * c_b.get(k, 0) / n_b
+            ratio = (ra + 1) / (rb + 1)  # smoothed, so a keyword going from 0 to 1 story does not top the list
+            if a >= 3 and ra - rb >= 0.5 and ratio >= 1.2 and seen[k] < a0:
+                rising.append({"k": k, "a": a, "b": c_b.get(k, 0), "ra": ra, "rb": rb, "x": ratio})
+        rising.sort(key=lambda r: (-r["x"], -r["a"], r["k"]))
+    new = (sorted(((k, a) for k, a in c_a.items() if seen[k] >= a0), key=lambda x: (-x[1], x[0]))
+           if (a0 - first).days >= 30 else None)
+    src, src90 = {}, {}
+    for d, x in zip(days, dates):
+        for s in d["stories"]:
+            _count(src, s["source"])
+            if (asof - x).days < 90:
+                _count(src90, s["source"])
+    return {"first": first, "asof": asof, "digests": len(days), "stories": sum(len(d["stories"]) for d in days),
+            "months": list(months.values()), "quarters": list(quarters.values()), "kpi": kpi,
+            "n_a": n_a, "n_b": n_b, "b_days": b_days, "rising": rising[:10], "new": new,
+            "top_kw": sorted(c_a.items(), key=lambda x: (-x[1], x[0]))[:10],
+            "sources": sorted(src.items(), key=lambda x: (-x[1], x[0]))[:12], "sources90": src90,
+            "papers": sum(p["papers"] for p in months.values())}
+
+
+def nice_ticks(top, n=4):
+    """Round axis steps (1, 2, 2.5 or 5 times a power of ten, whole numbers) from 0 up to at least top."""
+    top = max(top, 1)
+    mag = 10 ** math.floor(math.log10(top / n))
+    step = max(1, next(f * mag for f in (1, 2, 2.5, 5, 10) if f * mag >= top / n and (f * mag) % 1 == 0))
+    return [int(i * step) for i in range(math.ceil(top / step - 1e-9) + 1)]
+
+
+def compact(v):
+    return f"{v / 1000:.1f}".rstrip("0").rstrip(".") + "K" if v >= 1000 else f"{v:g}"
+
+
+def tip_data(head, rows, foot=""):
+    """Tooltip content; rows are [colour class, value, label, series index]. trends.js builds it with textContent."""
+    return {"h": head, "r": rows, "f": foot}
+
+
+def tip(head, rows, foot=""):
+    return esc(json.dumps(tip_data(head, rows, foot), ensure_ascii=False))
+
+
+def change(now, before):
+    if not before:
+        return ""
+    pct = round((now - before) / before * 100)
+    return f"▲ {pct}%" if pct > 0 else f"▼ {-pct}%" if pct < 0 else "No change"
+
+
+def kpi(value, label, note=""):
+    return (f"<div class='stat'><b>{value}</b><span>{esc(label)}</span>"
+            + (f"<small>{esc(note)}</small>" if note else "") + "</div>")
+
+
+def legend(items):
+    return "<ul class='viz-legend'>" + "".join(f"<li><i class='{c}'></i>{esc(n)}</li>" for c, n in items) + "</ul>"
+
+
+def viz_table(head, rows):
+    """Table view of a chart: head is a list of column names, rows lists of cells (first cell is the row name)."""
+    th = "".join(f"<th scope='col'>{esc(h)}</th>" for h in head)
+    body = "".join("<tr>" + f"<th scope='row'>{esc(str(r[0]))}</th>" + "".join(f"<td>{esc(str(c))}</td>" for c in r[1:])
+                   + "</tr>" for r in rows)
+    return f"<div class='table-wrap'><table class='overview viz-tbl'><thead><tr>{th}</tr></thead><tbody>{body}</tbody></table></div>"
+
+
+def figure(title, sub, chart, table="", extra=""):
+    toggle = ("<div class='viz-toggle' role='group' aria-label='View'><button type='button' aria-pressed='true' "
+              "data-view='chart'>Chart</button><button type='button' aria-pressed='false' data-view='table'>Table</button></div>"
+              if table else "")
+    return (f"<figure class='viz'><div class='viz-head'><div><h3>{esc(title)}</h3>"
+            + (f"<p>{sub}</p>" if sub else "") + f"</div>{toggle}</div><div class='viz-chart'>{extra}{chart}</div>"
+            + (f"<div class='viz-table' hidden>{table}</div>" if table else "") + "</figure>")
+
+
+def x_labels(cols, xs, vw):
+    """Month labels under a time axis; fewer are shown on narrow screens (classes xd / xp), the newest always."""
+    n = len(cols)
+    d_step = 1 if n <= 16 else 2 if n <= 32 else 3
+    p_step = 1 if n <= 6 else 2 if n <= 12 else 3 if n <= 18 else 6
+    years = {"yd": set(), "yp": set()}  # the year is written under the first label shown in each year
+    out = []
+    for i, (c, x) in enumerate(zip(cols, xs)):
+        shown = {"yd": (n - 1 - i) % d_step == 0, "yp": (n - 1 - i) % p_step == 0}
+        cls = ("xd " if shown["yd"] else "") + ("xp" if shown["yp"] else "")
+        ycls = []
+        for k in ("yd", "yp"):
+            if shown[k] and c.get("year") not in years[k]:
+                years[k].add(c.get("year"))
+                ycls.append(k)
+        ycls = " ".join(ycls)
+        year = f"<em class='{ycls}'>{c['year']}</em>" if ycls and c.get("year") else ""
+        out.append(f"<span class='{cls.strip()}' style='left:{x / vw * 100:.2f}%'>{esc(c.get('mon') or c['label'])}{year}</span>")
+    return f"<div class='viz-x'>{''.join(out)}</div>"
+
+
+def y_labels(ticks, k, fmt=compact):
+    return "<div class='viz-y'>" + "".join(f"<span style='bottom:{t * k:.1f}px'>{fmt(t)}</span>" for t in ticks) + "</div>"
+
+
+def column_chart(cols, series, height=230, share=False, vw=1000, label="Stories"):
+    """Stacked columns; cols carry 'values' {series index: count}. The SVG stretches across the card while
+    labels stay HTML, so text keeps its size from phone to desktop."""
+    n = len(cols)
+    totals = [sum(c["values"].values()) for c in cols]
+    ticks = [0, 25, 50, 75, 100] if share else nice_ticks(max(totals, default=0))
+    k = height / ticks[-1]
+    slot = vw / n
+    w = min(24, slot * 0.62)
+    xs = [slot * (i + 0.5) for i in range(n)]
+    svg = [f"<line class='grid' x1='0' x2='{vw}' y1='{height - t * k:.1f}' y2='{height - t * k:.1f}' vector-effect='non-scaling-stroke'/>"
+           for t in ticks[1:]]
+    for i, c in enumerate(cols):
+        tot, x = totals[i], xs[i] - w / 2
+        vals = [c["values"].get(j, 0) * (100 / tot if share and tot else 1) for j in range(len(series))]
+        hs = [v * k for v in vals]
+        vis = [j for j, h in enumerate(hs) if h >= 3]
+        segs, base = [], height
+        for j, h in enumerate(hs):
+            if j in vis:
+                top_seg = j == vis[-1]
+                dh, y = (h if top_seg else h - 2), base - h
+                if top_seg:
+                    r = min(4, w / 2, dh)
+                    segs.append(f"<path class='seg {series[j][1]}' data-s='{j}' d='M{x:.1f},{y + dh:.1f}V{y + r:.1f}"
+                                f"Q{x:.1f},{y:.1f} {x + r:.1f},{y:.1f}H{x + w - r:.1f}Q{x + w:.1f},{y:.1f} {x + w:.1f},{y + r:.1f}"
+                                f"V{y + dh:.1f}Z'/>")
+                else:
+                    segs.append(f"<rect class='seg {series[j][1]}' data-s='{j}' x='{x:.1f}' y='{y + 2:.1f}' width='{w:.1f}' height='{dh:.1f}'/>")
+            base -= h
+        rows = [[series[j][1], (f"{round(vals[j])}%" if share else f"{c['values'][j]:,}"), series[j][0], j]
+                for j in reversed(range(len(series))) if c["values"].get(j)]
+        head = c["label"] + (f" ({c['note']})" if c.get("note") else "")
+        foot = (f"{tot:,} {label.lower()}" if tot else ("No digests" if not c.get("digests") else f"No {label.lower()}"))
+        svg.append(f"<g class='col' data-tip='{tip(head, rows, foot)}'><rect class='hit' x='{slot * i:.1f}' y='0' "
+                   f"width='{slot:.1f}' height='{height}'/>{''.join(segs)}</g>")
+    caps = ""
+    if not share and n:
+        last, peak = n - 1, max(range(n), key=lambda i: (totals[i], i))
+        show = [last] + ([peak] if peak != last and totals[peak] and abs(peak - last) * slot >= 56 else [])
+        caps = "".join(f"<span class='viz-cap{' np' if i != last and n > 8 else ''}' style='left:{xs[i] / vw * 100:.2f}%;"
+                       f"bottom:{totals[i] * k + 4:.1f}px'>{totals[i]:,}</span>" for i in show if totals[i])
+    return (f"<div class='viz-plot' tabindex='0' role='img' aria-label='{esc(label)} per period, stacked by category. "
+            f"The Table button shows every number.' style='--h:{height}px'>"
+            f"{y_labels(ticks, k, (lambda t: f'{t}%') if share else compact)}<div class='viz-area'>"
+            f"<svg viewBox='0 0 {vw} {height}' preserveAspectRatio='none' aria-hidden='true'>{''.join(svg)}"
+            f"<line class='base' x1='0' x2='{vw}' y1='{height}' y2='{height}' vector-effect='non-scaling-stroke'/></svg>"
+            f"{caps}</div>{x_labels(cols, xs, vw)}</div>")
+
+
+def line_xs(n, vw, pad=16):
+    return [vw / 2] if n == 1 else [pad + i * (vw - 2 * pad) / (n - 1) for i in range(n)]
+
+
+def line_path(xs, ys):
+    """Path through the points, broken where a value is missing (None)."""
+    out, pen = [], "M"
+    for x, y in zip(xs, ys):
+        if y is None:
+            pen = "M"
+            continue
+        out.append(f"{pen}{x:.1f},{y:.1f}")
+        pen = "L"
+    return "".join(out)
+
+
+def bar_rows(rows, top, cls="one", tips=None):
+    """Horizontal bars (HTML): rows are (label html, segments [(class, value, series index)], total text)."""
+    out = []
+    for i, (lab, segs, total) in enumerate(rows):
+        tot = sum(v for _, v, _ in segs)
+        pct = tot / top * 100 if top else 0
+        inner = "".join(f"<i class='{c}' data-s='{s}' style='width:{v / tot * 100:.3f}%'></i>" for c, v, s in segs if v) if tot else ""
+        data = f" data-tip='{tips[i]}'" if tips else ""
+        out.append(f"<div class='hb'{data}><span class='hb-l'>{lab}</span><span class='hb-track'>"
+                   f"<span class='hb-bar {cls}' style='width:{pct:.2f}%'>{inner}</span>"
+                   f"<b class='hb-v' style='left:{pct:.2f}%'>{esc(total)}</b></span></div>")
+    return f"<div class='hbars' tabindex='0'>{''.join(out)}</div>"
+
+
+def heat_table(row_names, cols, cells, label, units, folded=False):
+    """Shaded table (one-hue sequential) of counts, shaded by each cell's share of its column so that an issue
+    window still in progress reads like a full one. A folded 'Other' last row is listed but not shaded."""
+    col_tot = [sum(r[j] for r in cells) for j in range(len(cols))]
+    shades = cells[:-1] if folded else cells
+    peak = max((v / col_tot[j] for r in shades for j, v in enumerate(r) if col_tot[j]), default=0) or 1
+    head = "".join(f"<th scope='col'>{esc(c['label'])}{'<small>' + esc(c['note']) + '</small>' if c.get('note') else ''}</th>"
+                   for c in cols)
+    body = []
+    for i, (name, r) in enumerate(zip(row_names, cells)):
+        tds, other = [], folded and i == len(cells) - 1
+        for j, v in enumerate(r):
+            share = v / col_tot[j] if col_tot[j] else 0
+            p = 0 if other else round(share / peak * HEAT_TOP)
+            t = tip(f"{name} · {cols[j]['label']}",
+                    [["", f"{v:,}", units[v != 1]], ["", f"{share * 100:.0f}%", f"of the window's {col_tot[j]:,}"]]
+                    if v else [["", "0", units[1]]])
+            tds.append(f"<td class='{heat_text(p)}' style='--p:{p}' data-tip='{t}'>{v:,}</td>" if v
+                       else f"<td class='zero' data-tip='{t}'>–</td>")
+        body.append(f"<tr{' class=other' if other else ''}><th scope='row'>{esc(name)}</th>{''.join(tds)}"
+                    f"<td class='tot'>{sum(r):,}</td></tr>")
+    return (f"<div class='table-wrap'><table class='overview heat' tabindex='0'><thead><tr><th scope='col'>{esc(label)}</th>"
+            f"{head}<th scope='col'>Total</th></tr></thead><tbody>{''.join(body)}</tbody></table></div>")
+
+
+def heat_rows(periods, field, names, limit=15):
+    """Rows for a heat table: the busiest names first, the rest folded into 'Other' (returned flag)."""
+    totals = {}
+    for p in periods:
+        for key, v in p[field].items():
+            _count(totals, key, v)
+    keys = sorted(totals, key=lambda k: (-totals[k], names(k)))
+    shown, rest = keys[:limit], keys[limit:]
+    if len(rest) == 1:
+        shown, rest = keys, []
+    rows = [names(k) for k in shown] + ([f"Other ({len(rest)})"] if rest else [])
+    cells = [[p[field].get(k, 0) for p in periods] for k in shown]
+    if rest:
+        cells.append([sum(p[field].get(k, 0) for k in rest) for p in periods])
+    return rows, cells, bool(rest)
+
+
+NO_STORIES = "<p class='viz-empty'>No stories in the archive yet: the digests so far found none.</p>"
+
+
+def trends_body(T, cfg, legacy=()):
+    root = ""
+    if not T:
+        return (hero("Trends", "Trends", "Themes, keywords and regions month by month and quarter by quarter.")
+                + "<p class='empty'>The archive is empty. Trends appear after the first scan.</p>")
+    order = theme_order(cfg)
+    series = [(t, f"vt-{i}") for i, t in enumerate(order)]
+    idx = {t: i for i, t in enumerate(order)}
+    K, asof, first = T["kpi"], T["asof"], T["first"]
+    months, quarters = T["months"][-TREND_PERIODS:], T["quarters"][-8:]
+    span_days = (asof - first).days + 1
+
+    # key figures
+    mon = MONTHS[asof.month - 1]
+    if not K["prev_month_ok"]:
+        m_note = ("First month in the archive" if first >= asof.replace(day=1)
+                  else f"Archive began {nice_date(first.isoformat())}")
+    else:
+        m_note = (f"{change(K['month'], K['prev_month'])} vs {K['prev_label']} ({K['prev_month']:,})" if K["prev_month"]
+                  else f"None in {K['prev_label']}")
+    if not K["prev_quarter_ok"]:
+        q_note = "First issue window in the archive" if first >= window_start(asof, start_month(cfg)) else "Previous window incomplete"
+    else:
+        q_note = (f"{change(K['quarter'], K['prev_quarter'])} vs {K['prev_q_label']} by the same day ({K['prev_quarter']:,})"
+                  if K["prev_quarter"] else f"None in {K['prev_q_label']} by the same day")
+    stats = (kpi(f"{K['month']:,}", f"Stories in {mon} so far", m_note)
+             + kpi(f"{K['quarter']:,}", f"Stories in {K['q_label']} so far", q_note)
+             + kpi(f"{T['stories']:,}", "Stories archived",
+                   f"{T['digests']:,} daily digest{'s' if T['digests'] != 1 else ''} since {nice_date(first.isoformat())}")
+             + kpi(f"{K['rel']:.1f}" if K["rel"] else "–", "Average relevance",
+                   f"Out of 5 · last 30 days {K['rel30']:.1f}" if K["rel30"] else "No AI-rated stories yet"))
+    actions = (f"<div class='actions'><a class='btn primary' href='{root}exports/trends.csv' download>{icon('download')}"
+               f"Monthly and quarterly numbers (CSV)</a><a class='btn light' href='{root}archive.html'>{icon('sheet')}Archive and workbooks</a></div>")
+    out = [viz_style(order, legacy), hero(f"Trends · as of {esc(nice_date(asof.isoformat()))}", "Trends",
+                                          "Themes, rising keywords and regions month by month and issue window by issue "
+                                          "window — for editorials and the magazine's year-in-review.", stats, actions)]
+    if span_days < 42:
+        # the key figure compares a month with the one before once that one is in the archive from its 1st
+        whole = first if first.day == 1 else next_month(first)
+        mom = next_month(whole)
+        out.append(f"<div class='trend-note'>{icon('chart')}<p><b>Trends fill in after a few weeks.</b> The archive holds "
+                   f"{T['digests']} daily digest{'s' if T['digests'] != 1 else ''} so far ({esc(nice_date(first.isoformat()))}"
+                   f"{' – ' + esc(nice_date(asof.isoformat())) if first != asof else ''}). Every chart below already works and grows "
+                   "with each morning's scan: "
+                   + (f"month-on-month comparisons start in {MONTHS[mom.month - 1]} {mom.year}, and " if asof < mom else "")
+                   + "rising keywords appear once there are about two months of digests (the last 30 days against up to "
+                   "90 days before them).</p></div>")
+
+    # stories by theme, per month and per issue window
+    cols = [dict(m, values={idx[t]: v for t, v in m["themes"].items() if t in idx}) for m in months]
+    m_table = viz_table(["Month"] + order + ["Total"],
+                        [[m["label"] + (f" ({m['note']})" if m.get("note") else "")] + [m["themes"].get(t, 0) for t in order]
+                         + [m["stories"]] for m in reversed(T["months"])])
+    out.append("<h2 class='section-h'>Stories by theme</h2><p class='hint'>Counted by the date of the daily digest that found "
+               "each story. Hover a column or bar for its numbers, or switch any chart to a table.</p>")
+    out.append(legend([(c, n) for n, c in series if any(m["themes"].get(n) for m in T["months"])]))
+    out.append(figure("Per month", f"Latest {len(months)} month{'s' if len(months) != 1 else ''} · stacked by theme",
+                      column_chart(cols, series), m_table) if any(m["stories"] for m in months)
+               else figure("Per month", "", NO_STORIES))
+    q_top = max((q["stories"] for q in quarters), default=0)
+    q_rows = [(f"{esc(q['label'])}<small>{esc(q.get('note') or q['span'])}</small>",
+               [(f"vt-{idx[t]}", q["themes"].get(t, 0), idx[t]) for t in order], f"{q['stories']:,}") for q in reversed(quarters)]
+    q_tips = [tip(q["label"] + (f" ({q['note']})" if q.get("note") else ""),
+                  [[f"vt-{idx[t]}", f"{q['themes'][t]:,}", t, idx[t]] for t in order if q["themes"].get(t)],
+                  f"{q['stories']:,} stories · {q['digests']} digests") for q in reversed(quarters)]
+    q_table = viz_table(["Issue window"] + order + ["Total"],
+                        [[q["label"]] + [q["themes"].get(t, 0) for t in order] + [q["stories"]] for q in reversed(T["quarters"])])
+    out.append(figure("Per issue window", "Three-month windows that follow the magazine's cycle, newest first",
+                      bar_rows(q_rows, q_top, "", q_tips), q_table) if q_top else figure("Per issue window", "", NO_STORIES))
+
+    # theme share over time (small multiples on one shared scale)
+    def n_stories(ms):
+        return sum(m["stories"] for m in ms)
+
+    last3, prev3 = T["months"][-3:], T["months"][-6:-3]
+    shares = {t: [(m["themes"].get(t, 0) / m["stories"] * 100 if m["stories"] else None) for m in months] for t in order}
+    present = [t for t in order if any(m["themes"].get(t) for m in T["months"])]
+    s_ticks = nice_ticks(max((v for t in present for v in shares[t] if v is not None), default=0), 2)
+    vw, hh = 300, 64
+    xs = line_xs(len(months), vw, 6)
+    month_tips = [{"x": x / vw * 100, "t": tip_data(
+        m["label"] + (f" ({m['note']})" if m.get("note") else ""),
+        [[f"vt-{idx[t]}", f"{shares[t][i]:.0f}%" if shares[t][i] is not None else "–", t, idx[t]] for t in present],
+        f"{m['stories']:,} stories")} for i, (m, x) in enumerate(zip(months, xs))]
+    panels = []
+    for t in present:
+        ys = [None if v is None else hh - v / s_ticks[-1] * hh for v in shares[t]]
+        now = sum(m["themes"].get(t, 0) for m in last3) / (n_stories(last3) or 1) * 100
+        before = sum(m["themes"].get(t, 0) for m in prev3) / n_stories(prev3) * 100 if n_stories(prev3) >= 20 else None
+        delta = ("No comparison yet" if before is None else f"▲ {now - before:.1f} pts" if now - before >= 0.5
+                 else f"▼ {before - now:.1f} pts" if before - now >= 0.5 else "Steady")
+        pts = [(x, y) for x, y in zip(xs, ys) if y is not None]
+        area = (f"<path class='wash' d='{line_path(xs, ys)}V{hh}H{pts[0][0]:.1f}Z'/>" if len(pts) > 1 and None not in ys else "")
+        end = (f"<i class='sm-dot' style='left:{pts[-1][0] / vw * 100:.2f}%;top:{pts[-1][1]:.1f}px'></i>" if pts else "")
+        panels.append(
+            f"<div class='smp vt-{idx[t]}' data-ys='{json.dumps([None if y is None else round(y, 1) for y in ys])}'>"
+            f"<div class='sm-head'><span class='ticon sm'>{theme_icon(t)}</span><b>{esc(t)}</b></div>"
+            f"<div class='sm-fig'><b>{now:.0f}%</b><span>{esc(delta)}</span></div>"
+            f"<div class='sm-plot' style='--h:{hh}px'><span class='sm-top'>{s_ticks[-1]}%</span>"
+            f"<svg viewBox='0 0 {vw} {hh}' preserveAspectRatio='none' aria-hidden='true'>"
+            f"<line class='grid' x1='0' x2='{vw}' y1='0.5' y2='0.5' vector-effect='non-scaling-stroke'/>{area}"
+            f"<line class='base' x1='0' x2='{vw}' y1='{hh}' y2='{hh}' vector-effect='non-scaling-stroke'/>"
+            f"<path class='ln' d='{line_path(xs, ys)}' vector-effect='non-scaling-stroke'/></svg>{end}"
+            "<i class='xh' hidden></i><i class='hd' hidden></i></div></div>")
+    s_table = viz_table(["Month"] + present,
+                        [[m["label"]] + [f"{m['themes'].get(t, 0) / m['stories'] * 100:.1f}%" if m["stories"] else "–" for t in present]
+                         for m in reversed(T["months"])])
+    span_lbl = f"{months[0]['label']} – {months[-1]['label']}" if len(months) > 1 else months[0]["label"]
+    out.append("<h2 class='section-h'>Which themes are growing</h2><p class='hint'>Each theme's share of the month's stories, "
+               f"on one shared scale ({esc(span_lbl)}). The large figure is the share over the last three months; the change "
+               "compares it with the three months before"
+               + (" and appears once the archive covers them." if len(T["months"]) < 6 else ".") + "</p>")
+    out.append(figure("Theme share over time", "", f"<div class='sm-grid viz-line' tabindex='0' data-tips='{esc(json.dumps(month_tips, ensure_ascii=False))}'>"
+                      f"{''.join(panels)}</div>", s_table) if panels else figure("Theme share over time", "", NO_STORIES))
+
+    # keywords
+    out.append("<h2 class='section-h'>Keywords</h2><p class='hint'>English keyword concepts found in the stories "
+               "(foreign-language terms count as their English equivalent).</p>")
+    kw_cards = []
+    b_win = f"{T['b_days']} days"  # the comparison window: up to 90 days, fewer while the archive is young
+    if T["rising"]:
+        top = nice_ticks(max(max(r["ra"], r["rb"]) for r in T["rising"]), 2)[-1]
+        rows = []
+        for r in T["rising"]:
+            t = tip(r["k"], [["db-b", f"{r['ra']:.1f}%", f"last 30 days · {r['a']:,} stories"],
+                             ["db-a", f"{r['rb']:.1f}%", f"previous {b_win} · {r['b']:,} stories"]],
+                    f"Share of stories ×{r['ra'] / r['rb']:.1f}" if r["rb"] else f"Not seen in the previous {b_win}")
+            a, b = r["rb"] / top * 100, r["ra"] / top * 100
+            rows.append(f"<div class='db' data-tip='{t}'><span class='db-k'>{esc(r['k'])}</span><span class='db-track'>"
+                        f"<i class='db-line' style='left:{a:.2f}%;width:{b - a:.2f}%'></i><i class='db-a' style='left:{a:.2f}%'></i>"
+                        f"<i class='db-b' style='left:{b:.2f}%'></i></span><span class='db-v'><b>{r['a']:,}</b> · {r['ra']:.1f}%"
+                        f"<small>was {r['rb']:.1f}%</small></span></div>")
+        axis = (f"<div class='db db-axis' aria-hidden='true'><span></span><span class='db-track'><em style='left:0'>0%</em>"
+                f"<em style='left:50%'>{top / 2:g}%</em><em style='left:100%'>{top:g}%</em></span><span></span></div>")
+        r_table = viz_table(["Keyword", "Last 30 days", "Share", f"Previous {b_win}", "Share", "Change"],
+                            [[r["k"], r["a"], f"{r['ra']:.1f}%", r["b"], f"{r['rb']:.1f}%",
+                              f"×{r['ra'] / r['rb']:.1f}" if r["rb"] else f"new in {b_win}"] for r in T["rising"]])
+        kw_cards.append(figure("Rising keywords", f"Share of stories mentioning each keyword: the last 30 days "
+                               f"({T['n_a']:,} stories) against the {b_win} before ({T['n_b']:,})",
+                               f"<div class='dbs' tabindex='0'>{''.join(rows)}{axis}</div>", r_table,
+                               legend([("db-a", f"Previous {b_win}"), ("db-b", "Last 30 days")])))
+    else:
+        why = ("Rising keywords need about two months of digests: the last 30 days are compared with up to 90 days "
+               "before them. Until then, the most frequent keywords of the last 30 days:" if T["b_days"] < 28 else
+               "No keyword rose clearly in the last 30 days. The most frequent keywords of the last 30 days:")
+        tk = T["top_kw"]
+        top = nice_ticks(max((v for _, v in tk), default=0))[-1]
+        body = (bar_rows([(esc(k), [("one", v, 0)], f"{v:,}") for k, v in tk], top, "one",
+                         [tip(k, [["one", f"{v:,}", "stories in the last 30 days"]]) for k, v in tk]) if tk
+                else "<p class='viz-empty'>No keywords yet.</p>")
+        kw_cards.append(figure("Most mentioned keywords", esc(why),
+                               body, viz_table(["Keyword", "Stories in the last 30 days"], tk) if tk else ""))
+    if T["new"] is None:
+        new_body = ("<p class='viz-empty'>Shown once the archive is older than two months, so that “new” means "
+                    "not seen in at least the previous 30 days.</p>")
+    elif not T["new"]:
+        new_body = "<p class='viz-empty'>No keyword appeared for the first time in the last 30 days.</p>"
+    else:
+        new_body = "<ul class='kw-new'>" + "".join(f"<li><span>{esc(k)}</span><b>{v:,}</b></li>" for k, v in T["new"][:16]) + "</ul>"
+    kw_cards.append(figure("New this month", "Keywords first seen in the last 30 days, with the number of stories", new_body))
+    out.append(f"<div class='viz-grid kwgrid'>{''.join(kw_cards)}</div>")
+
+    # regions (and research papers by journal, when the digests carry them)
+    rows, cells, folded = heat_rows(quarters, "regions", edition_name)
+    out.append("<h2 class='section-h'>Regions</h2><p class='hint'>Stories by Google News edition (the country edition a "
+               "search ran in) per issue window. Stories read directly from society, institutional and trade websites are "
+               "listed as direct feeds. The stronger the shading, the larger that edition's share of the window — a quick "
+               "regional-balance check.</p>")
+    out.append(figure("Stories by edition and issue window", "",
+                      heat_table(rows, quarters, cells, "Edition", ("story", "stories"), folded) if rows else NO_STORIES))
+    if T["papers"]:
+        pq = quarters[next(i for i, q in enumerate(quarters) if q["papers"]):] if any(q["papers"] for q in quarters) else quarters
+        rows, cells, folded = heat_rows(pq, "journals", str)
+        out.append(figure("Research papers by journal", "New papers for Academia-to-Industry, per issue window",
+                          heat_table(rows, pq, cells, "Journal", ("paper", "papers"), folded)))
+
+    # editorial mix: suggested uses and average relevance
+    uses = [u for u, *_ in USE_RAMP]
+    u_series = [(u, f"vu-{i}") for i, u in enumerate(uses)]
+    u_cols = [dict(m, values={uses.index(u): v for u, v in m["uses"].items() if u in uses}) for m in months]
+    u_table = viz_table(["Month"] + uses + ["Rated stories"],
+                        [[m["label"]] + [f"{m['uses'].get(u, 0)} ({m['uses'].get(u, 0) / m['rated'] * 100:.0f}%)" if m["rated"] else "–"
+                                         for u in uses] + [m["rated"]] for m in reversed(T["months"])])
+    rv, rhh = 480, 160
+    rel = [m["rel"] / m["rated"] if m["rated"] else None for m in months]
+    lo = min(3, math.floor(min((v for v in rel if v is not None), default=3)))
+    rk = rhh / (5 - lo)
+    rxs = line_xs(len(months), rv, 18)
+    rys = [None if v is None else rhh - (v - lo) * rk for v in rel]
+    rel_tips = [{"x": x / rv * 100, "y": y, "t": tip_data(
+        m["label"] + (f" ({m['note']})" if m.get("note") else ""),
+        [["one", f"{rel[i]:.2f}" if rel[i] is not None else "–", "average relevance"],
+         ["", f"{m['rated']:,}", "AI-rated stories"], ["", f"{m['r5']:,}", "rated 5 / 5"]])}
+        for i, (m, x, y) in enumerate(zip(months, rxs, rys))]
+    pts = [(x, y, v) for x, y, v in zip(rxs, rys, rel) if y is not None]
+    end = (f"<i class='ln-dot' style='left:{pts[-1][0] / rv * 100:.2f}%;top:{pts[-1][1]:.1f}px'></i>"
+           f"<span class='ln-end' style='left:{pts[-1][0] / rv * 100:.2f}%;top:{pts[-1][1]:.1f}px'>{pts[-1][2]:.2f}</span>") if pts else ""
+    r_grid = "".join(f"<line class='grid' x1='0' x2='{rv}' y1='{rhh - (t - lo) * rk:.1f}' y2='{rhh - (t - lo) * rk:.1f}' "
+                     "vector-effect='non-scaling-stroke'/>" for t in range(lo + 1, 6))
+    r_chart = (f"<div class='viz-plot viz-line' tabindex='0' role='img' aria-label='Average relevance per month' style='--h:{rhh}px' "
+               f"data-tips='{esc(json.dumps(rel_tips, ensure_ascii=False))}'>"
+               + "<div class='viz-y'>" + "".join(f"<span style='bottom:{(t - lo) * rk:.1f}px'>{t}</span>" for t in range(lo, 6)) + "</div>"
+               f"<div class='viz-area'><svg viewBox='0 0 {rv} {rhh}' preserveAspectRatio='none' aria-hidden='true'>{r_grid}"
+               f"<line class='base' x1='0' x2='{rv}' y1='{rhh}' y2='{rhh}' vector-effect='non-scaling-stroke'/>"
+               f"<path class='ln one' d='{line_path(rxs, rys)}' vector-effect='non-scaling-stroke'/></svg>{end}"
+               f"<i class='xh' hidden></i><i class='hd' hidden></i></div>{x_labels(months, rxs, rv)}</div>")
+    r_table = viz_table(["Month", "Average relevance", "AI-rated stories", "Rated 5 / 5"],
+                        [[m["label"], f"{m['rel'] / m['rated']:.2f}" if m["rated"] else "–", m["rated"], m["r5"]] for m in reversed(T["months"])])
+    out.append("<h2 class='section-h'>Editorial mix</h2><p class='hint'>What Claude suggested each story could become, and how "
+               "relevant it rated them (only AI-rated stories count here).</p>")
+    unrated = ("<p class='viz-empty'>No AI-rated stories in these months: stories selected by keywords alone "
+               "carry no rating or suggested use.</p>")
+    rated = any(m["rated"] for m in months)
+    out.append("<div class='viz-grid'>"
+               + (figure("Suggested use", "Share of each month's rated stories, strongest material at the base",
+                         column_chart(u_cols, u_series, 200, share=True, vw=480, label="Rated stories"), u_table,
+                         legend([(c, n) for n, c in u_series])) if rated else figure("Suggested use", "", unrated))
+               + (figure("Average relevance", "Mean rating of the month's stories, on a scale of 1 to 5", r_chart, r_table)
+                  if rated else figure("Average relevance", "", unrated))
+               + "</div>")
+
+    # top sources
+    src = T["sources"]
+    top = nice_ticks(max((v for _, v in src), default=0))[-1]
+    s_rows = [(esc(n), [("one", v, 0)], f"{v:,}") for n, v in src]
+    s_tips = [tip(n, [["one", f"{v:,}", "stories in the archive"], ["", f"{T['sources90'].get(n, 0):,}", "in the last 90 days"],
+                      ["", f"{v / T['stories'] * 100:.1f}%", "of all stories"]]) for n, v in src]
+    out.append("<h2 class='section-h'>Top sources</h2>")
+    out.append(figure("Most frequent sources", f"The {len(src)} publishers with the most stories in the archive",
+                      bar_rows(s_rows, top, "one", s_tips),
+                      viz_table(["Source", "Stories", "Last 90 days", "Share"],
+                                [[n, v, T["sources90"].get(n, 0), f"{v / T['stories'] * 100:.1f}%"] for n, v in src]))
+               if src else figure("Most frequent sources", "", NO_STORIES))
+    return "".join(out)
+
+
+def write_trends_csv(path, T, order):
+    """The monthly and quarterly numbers behind the trends page, one row per period."""
+    uses = [u for u, *_ in USE_RAMP]
+    regions = sorted({r for p in T["months"] for r in p["regions"]}, key=lambda r: (r == "", edition_name(r)))
+    journals = sorted({j for p in T["months"] for j in p["journals"]})
+    head = (["Period type", "Period", "Label", "Daily digests", "Stories", "AI-rated stories", "Average relevance", "Rated 5 / 5"]
+            + [f"Theme: {t}" for t in order] + [f"Use: {u}" for u in uses] + ["Research papers"]
+            + [csv_text(f"Journal: {j}") for j in journals] + [csv_text(f"Edition: {edition_name(r)}") for r in regions])
+    with open(path, "w", newline="", encoding="utf-8-sig") as f:
+        w = csv.writer(f)
+        w.writerow(head)
+        for kind, periods in (("Month", T["months"]), ("Issue window", T["quarters"])):
+            for p in periods:
+                w.writerow([kind, p["key"], p["label"], p["digests"], p["stories"], p["rated"],
+                            f"{p['rel'] / p['rated']:.2f}" if p["rated"] else "", p["r5"]]
+                           + [p["themes"].get(t, 0) for t in order] + [p["uses"].get(u, 0) for u in uses] + [p["papers"]]
+                           + [p["journals"].get(j, 0) for j in journals] + [p["regions"].get(r, 0) for r in regions])
 
 
 # ------------------------------------------------------------------ e-mail
@@ -548,6 +1431,19 @@ def render_email(d, cfg):
                 f"<div style='font:12px Arial,sans-serif;color:#5b6573;margin-top:2px'>{rel}{esc(s.get('use') or '')}"
                 f"{' · ' if s.get('use') else ''}{esc(s['source'])}</div>"
                 + (f"<div style='font:italic 14px Georgia,serif;color:#333;margin-top:4px'>{esc(s['angle'])}</div>" if s.get("angle") else "")
+                + "</div>")
+    papers = sorted(d.get("papers", []), key=lambda p: -paper_rank(p))[:8]
+    if papers:
+        rows.append("<h2 style='font:600 15px Arial,sans-serif;color:#5137b0;border-bottom:2px solid #5137b0;"
+                    "padding-bottom:4px;margin:26px 0 8px'>New research (Academia-to-Industry)</h2>")
+        for p in papers:
+            rel = f"{p['relevance']}/5 for practice · " if p.get("relevance") else ""
+            rows.append(
+                "<div style='margin:0 0 14px'>"
+                f"<a href='{esc(safe_url(p['link']))}' style='font:600 15px Arial,sans-serif;color:#1b2430'>{esc(p['title'])}</a>"
+                f"<div style='font:12px Arial,sans-serif;color:#5b6573;margin-top:2px'>{rel}{esc(p.get('journal', ''))}"
+                f"{' · ' + esc(p['authors']) if p.get('authors') else ''}</div>"
+                + (f"<div style='font:italic 14px Georgia,serif;color:#333;margin-top:4px'>{esc(p['angle'])}</div>" if p.get("angle") else "")
                 + "</div>")
     link = (f"<p style='font:13px Arial,sans-serif'><a href='{url}digests/{d['date']}.html'>Open this digest on the website</a> · "
             f"<a href='{url}archive.html'>Archive</a></p>") if url else ""
@@ -591,10 +1487,13 @@ def export_rows(stories):
 
 
 def build(cfg):
+    import brief  # the issue brief's Word file (brief.py imports this module, so not at the top)
+
     use_list = USES
     digests = load_digests()
+    briefs, brief_opts = load_briefs(), brief.settings(cfg)
     # themes found in the archive but no longer in config.yaml still get pages and rows
-    extra = sorted({s["theme"] for d in digests for s in d["stories"]} - set(theme_order(cfg)))
+    extra = sorted({s["theme"] for d in digests for s in d["stories"] + d["papers"]} - set(theme_order(cfg)))
     if extra:
         cfg = dict(cfg, themes={**cfg["themes"], **{t: [] for t in extra}})
     sm = start_month(cfg)
@@ -606,21 +1505,33 @@ def build(cfg):
     for d in digests:
         win = issue_window(d["date"], sm)
         if win["key"] not in by_key:
-            by_key[win["key"]] = {"win": win, "digests": [], "stories": []}
+            by_key[win["key"]] = {"win": win, "digests": [], "stories": [], "papers": []}
             windows.append(by_key[win["key"]])
         w = by_key[win["key"]]
         w["digests"].append(d)
         for s in d["stories"]:
             w["stories"].append(dict(s, _digest=d["date"], _window=win["key"],
                                      _region=COUNTRIES.get(s.get("region", ""), s.get("region", ""))))
+        for p in d["papers"]:
+            w["papers"].append(dict(p, _digest=d["date"], _window=win["key"]))
 
     # fresh output folder (the archive itself lives in data/digests/)
-    for sub in ("digests", "issues", "exports", "assets", "reports"):
+    for sub in ("digests", "issues", "exports", "assets", "reports", "briefs"):
         shutil.rmtree(DOCS / sub, ignore_errors=True)
     shutil.copytree(ASSETS, DOCS / "assets")
     (DOCS / "exports").mkdir()
     (DOCS / "reports").mkdir()
+    (DOCS / "briefs").mkdir()
     write(DOCS / ".nojekyll", "")
+
+    # issue briefs, from their JSON alone; one that cannot be rendered (a hand edit gone
+    # wrong) is left out with a message rather than stopping the build and the scan's save
+    for key, b in list(briefs.items()):
+        try:
+            brief.write_docx(DOCS / brief_file(key), b, cfg, theme_color)
+        except (AttributeError, KeyError, TypeError, ValueError) as ex:
+            print(f"Issue brief {key} left out: it could not be rendered ({type(ex).__name__}: {ex}).")
+            del briefs[key]
 
     dates = [d["date"] for d in digests]
     for i, d in enumerate(digests):
@@ -632,7 +1543,8 @@ def build(cfg):
 
     if digests:
         latest = digests[0]
-        body = digest_body(latest, cfg, "", use_list, dates[1] if len(dates) > 1 else None, None, latest=True)
+        body = digest_body(latest, cfg, "", use_list, dates[1] if len(dates) > 1 else None, None, latest=True,
+                           brief=briefs.get(issue_window(latest["date"], sm)["key"]))
     else:
         latest = None
         body = hero("Latest digest", "Welcome",
@@ -644,7 +1556,8 @@ def build(cfg):
         key = w["win"]["key"]
         write(DOCS / "issues" / f"{key}.html",
               page(cfg, f"{w['win']['label']} issue window",
-                   issue_body(w["win"], w["stories"], w["digests"], cfg, use_list, key == today_key), "../", "archive"))
+                   issue_body(w["win"], w["stories"], w["digests"], cfg, use_list, key == today_key,
+                              briefs.get(key), brief_opts, w["papers"]), "../", "archive"))
         ordered = sorted(w["stories"], key=lambda s: (s["theme"], -s["rank"]))
         with open(DOCS / "exports" / f"{key}.csv", "w", newline="", encoding="utf-8-sig") as f:
             writer = csv.DictWriter(f, fieldnames=CSV_FIELDS)
@@ -654,28 +1567,43 @@ def build(cfg):
             DOCS / "exports" / f"{key}.xlsx", f"Geotechnical News · {w['win']['label']}",
             f"Issue window {w['win']['span']}", w["stories"], order, theme_color,
             [(nice_date(d["date"]), len(d["stories"])) for d in reversed(w["digests"])], "daily digest",
-            digest_count=len(w["digests"]), windows=[key])
+            digest_count=len(w["digests"]), windows=[key], papers=w["papers"])
         compact = [{"d": s["_digest"], "w": key, "t": s["title"], "te": s.get("title_en", ""), "l": s["link"],
                     "s": s["source"], "c": s["_region"], "p": (s.get("published") or "")[:10], "th": s["theme"],
                     "r": s.get("relevance") or 0, "u": s.get("use", ""), "a": s.get("angle", ""),
                     "k": s.get("keywords", []), "x": s.get("summary", "")[:200] if not s.get("angle") else "",
                     "rk": s["rank"]}
                    for s in w["stories"]]
+        # research papers in the same shape (source = journal), marked kind "paper", with their authors
+        compact += [{"d": p["_digest"], "w": key, "t": p["title"], "te": "", "l": p["link"],
+                     "s": p.get("journal", ""), "c": "", "p": (p.get("published") or "")[:10], "th": p["theme"],
+                     "r": p.get("relevance") or 0, "u": A2I, "a": p.get("angle", ""), "k": p.get("keywords", []),
+                     "x": p.get("abstract", "")[:200] if not p.get("angle") else "", "rk": paper_rank(p),
+                     "kind": "paper", "au": p.get("authors", "")}
+                    for p in w["papers"]]
         write(DOCS / "exports" / f"{key}.json", json.dumps(compact, ensure_ascii=False, separators=(",", ":")))
     write(DOCS / "exports" / "index.json",
-          json.dumps([w["win"] | {"stories": len(w["stories"])} for w in windows], ensure_ascii=False))
+          json.dumps([w["win"] | {"stories": len(w["stories"]), "papers": len(w["papers"])} for w in windows],
+                     ensure_ascii=False))
     exports.write_workbook(
         DOCS / "exports" / "geotech-news-archive.xlsx", "Geotechnical News · Whole archive",
         f"All {len(windows)} issue windows", [s for w in windows for s in w["stories"]], order, theme_color,
         [(w["win"]["label"], len(w["stories"])) for w in reversed(windows)], "issue window",
-        digest_count=len(digests), windows=[w["win"]["key"] for w in windows])
+        digest_count=len(digests), windows=[w["win"]["key"] for w in windows],
+        papers=[p for w in windows for p in w["papers"]])
     report.write_report(DOCS / "reports" / "site-report.docx", cfg, digests, windows, theme_color,
                         site_url(cfg), CHANGELOG)
 
-    write(DOCS / "archive.html", page(cfg, "Archive", archive_body(windows, cfg, today_key), "", "archive"))
+    write(DOCS / "archive.html", page(cfg, "Archive", archive_body(windows, cfg, today_key, briefs), "", "archive"))
     write(DOCS / "search.html", page(cfg, "Search the archive", search_body(cfg, use_list, windows), "", "search"))
+    trends = trend_stats(digests, cfg) if digests else None
+    if trends:
+        write_trends_csv(DOCS / "exports" / "trends.csv", trends, order)
+    write(DOCS / "trends.html", page(cfg, "Trends", trends_body(trends, cfg, extra), "", "trends",
+                                     "Themes, rising keywords and regions month by month and quarter by quarter",
+                                     head="<script src='assets/trends.js' defer></script>"))
     write(DOCS / "assistant.html", page(cfg, "AI assistant", assistant_body(cfg), "", "assistant"))
-    write(DOCS / "about.html", page(cfg, "Method & sources", about_body(cfg, latest), "", "about"))
+    write(DOCS / "about.html", page(cfg, "Method & sources", about_body(cfg, latest, brief_opts), "", "about"))
 
 
 if __name__ == "__main__":

@@ -24,7 +24,7 @@ import unicodedata
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from pathlib import Path
-from urllib.parse import quote_plus, urljoin
+from urllib.parse import quote, quote_plus, urlencode, urljoin
 
 import feedparser
 import requests
@@ -76,13 +76,18 @@ def read_feed(url):
 
 
 def google_news_url(query, lang, country):
+    """A language with its own region code, such as es-419 (the Spanish of the
+    Latin American editions), is used as it is; others get the country's."""
     q = quote_plus(f"{query} when:3d")
-    return f"https://news.google.com/rss/search?q={q}&hl={lang}-{country}&gl={country}&ceid={country}:{lang}"
+    hl = lang if "-" in lang else f"{lang}-{country}"
+    return f"https://news.google.com/rss/search?q={q}&hl={hl}&gl={country}&ceid={country}:{lang}"
 
 
 def google_sources(g):
     """Build one feed per (query, edition). Non-English queries carry a bonus so
-    they survive the English keyword filter and are judged by Claude instead."""
+    they survive the English keyword filter and are judged by Claude instead.
+    A query may also carry a boost, like a website: the site searches that
+    stand in for sites which block feed readers keep their specialist bonus."""
     out = []
     dl, dc = g.get("language", "en"), g.get("country", "GB")
     editions = g.get("editions") or [{"language": dl, "country": dc}]
@@ -96,8 +101,8 @@ def google_sources(g):
             item = {"q": item}
         lang, country = item.get("language", dl), item.get("country", dc)
         out.append({"name": f"Google News {country}", "google": True,
-                    "bonus": int(item.get("bonus", 0)), "region": country,
-                    "url": google_news_url(item["q"], lang, country)})
+                    "bonus": int(item.get("bonus", 0)), "boost": int(item.get("boost", 0)),
+                    "region": country, "url": google_news_url(item["q"], lang, country)})
     return out
 
 
@@ -112,12 +117,20 @@ def clean(text):
     return re.sub(r"\s+", " ", text).strip()
 
 
+# Persian is written with its own yeh and kaf, but many sites (and Egyptian
+# Arabic, which ends words with a dotless yeh) use the Arabic letters, so all
+# are read as one. The zero-width non-joiner inside Persian words (زمین‌لغزش)
+# counts as a space; Russian ё is read as е, as most Russian text writes it.
+LETTER_FOLD = str.maketrans({"ي": "ی", "ى": "ی", "ك": "ک", "\u200c": " ", "ё": "е"})
+
+
 def fold(text):
     """Lower-case text for matching. NFKC turns full-width letters into plain
     ones. Turkish capitals lower-case oddly (İ becomes i plus a combining dot,
     I becomes i where the word has ı), so the dot is dropped and ı is read as i;
     text and terms are folded alike."""
-    return unicodedata.normalize("NFKC", text or "").lower().replace("\u0307", "").replace("ı", "i")
+    low = unicodedata.normalize("NFKC", text or "").lower().replace("\u0307", "").replace("ı", "i")
+    return low.translate(LETTER_FOLD)
 
 
 def entry_time(e):
@@ -128,26 +141,47 @@ def entry_time(e):
     return None
 
 
-# scripts written without spaces between words: Thai, Japanese kana, Chinese characters
-NOSPACE = "\u0e00-\u0e7f\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff"
+# scripts matched inside words: Thai, Japanese kana and Chinese characters,
+# written without spaces between words, and Korean Hangul, whose particles
+# attach to the noun before them (산사태로, "by a landslide")
+NOSPACE = ("\u0e00-\u0e7f\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff"
+           "\u1100-\u11ff\u3130-\u318f\uac00-\ud7af")
 NOSPACE_CHAR = re.compile(f"[{NOSPACE}]")
 # a word goes on while a letter, digit or combining mark (Arabic vowel sign,
 # Devanagari vowel sign) of any script follows
-WORD_END = (r"(?![^\W_]|[\u0300-\u036f\u0610-\u061a\u064b-\u065f\u0670\u06d6-\u06ed"
-            r"\u0900-\u0903\u093a-\u094f\u0951-\u0957\u0962\u0963])")
+MARKS = (r"\u0300-\u036f\u0610-\u061a\u064b-\u065f\u0670\u06d6-\u06ed"
+         r"\u0900-\u0903\u093a-\u094f\u0951-\u0957\u0962\u0963")
+WORD_END = rf"(?![^\W_]|[{MARKS}])"
+# a word may not start inside a Latin (accented ones too), Greek or Cyrillic
+# word: сель (debris flow) is not found in Брюссель
+WORD_START = r"(?<![a-z0-9\u00c0-\u024f\u1e00-\u1eff\u0370-\u03ff\u0400-\u052f])"
+# "*" in a term stands for the rest of the word: оползн* finds оползень's
+# other forms оползня, оползни, оползневой
+WILDCARD = rf"(?:[^\W_]|[{MARKS}])*"
+# Korean writes spaces between words, so a Korean term must start a word:
+# 제방 (embankment) is not found in 규제방안 (regulatory measures)
+HANGUL = "\u1100-\u11ff\u3130-\u318f\uac00-\ud7af"
+HANGUL_CHAR = re.compile(f"[{HANGUL}]")
+HANGUL_START = f"(?<![{HANGUL}])"
 
 
 @functools.lru_cache(maxsize=None)
 def term_regex(term):
     """Chinese and Japanese terms match anywhere, since those languages put no
-    spaces between words. Other terms must end where a word ends, with an
-    optional plural s/es, so نفق (tunnel) does not match inside نفقات
-    (expenses). The start is checked against Latin letters only, so Arabic
+    spaces between words. Korean terms must start a word but may go on, since
+    Korean attaches particles to the end of a word (산사태로, "by a landslide");
+    a leading "*" lets them start inside a word too: '*댐' finds 소양강댐 (Soyang
+    River Dam). Other terms must end where a word ends, with an optional plural
+    s/es, so نفق (tunnel) does not match inside نفقات (expenses); a "*" lets the
+    word go on, for languages that change a word's ending (Russian, Polish):
+    'подпорн* стен*' is any form of подпорная стена (retaining wall). The start
+    is checked against Latin, Greek and Cyrillic letters only, so Arabic
     prefixes such as ال (the) still match."""
     t = fold(str(term))
+    body = WILDCARD.join(re.escape(part) for part in t.split("*"))
     if NOSPACE_CHAR.search(t):
-        return re.compile(re.escape(t))
-    return re.compile(r"(?<![a-z0-9])" + re.escape(t) + r"(?:s|es)?" + WORD_END)
+        return re.compile((HANGUL_START if HANGUL_CHAR.match(t) else "") + body)
+    return re.compile(WORD_START + body + ("" if t.endswith("*") else r"(?:s|es)?") + WORD_END)
 
 
 def compile_keywords(cfg):
@@ -202,8 +236,8 @@ def guess_theme(text, themes, hits=()):
 
 # ------------------------------------------------------------------ same event, several outlets
 # Function words of the covered languages (words of one or two letters are
-# dropped anyway). Chinese and Japanese are compared by pairs of characters.
-STOPWORDS = frozenset("""
+# dropped anyway). Chinese, Japanese and Korean are compared by pairs of characters.
+STOPWORDS = """
 the and for with from into after over under about amid near than that this these those will would could should
 have has had was were are been being not but its their they them his her our out off new says said say why how
 what when where who which while more most also just against between through during before upon via per
@@ -224,7 +258,27 @@ dan yang untuk dengan dari pada dalam akan oleh juga tidak ini itu atau karena s
 sudah masih bisa dapat ada saat
 में से की का के को ने पर और है हैं था थी थे लिए बाद साथ एक यह वह गया गई गए किया कर तक भी नहीं हुआ हुई हुए रहा रही रहे
 في من على إلى الى عن مع بعد قبل حتى هذا هذه ذلك التي الذي الذين وفي ومن أن إن كان كانت بين خلال عند تم
+что это как для при после около более также его она они был была были будет может где когда который которая
+которые против между через чтобы тоже уже еще всех все под над без или так
+się jest nie dla przez oraz który która które jak już tak ale czy jego ich pod nad bez przy został została
+zostały będzie może gdzie kiedy także tylko więcej ponad wśród
+của và các những cho với được trong tại khi này một người đã đang sẽ không có là từ theo về sau trên vào
+برای این است شده بود خود های
+""".split()
+STOPWORDS = frozenset(fold(w) for w in STOPWORDS)  # folded like the headlines (في, على)
+# Words of every Korean disaster story (occurred, residents, evacuation, damage,
+# heavy rain...) and counters (50명, 3대). Korean has no capitals that tell
+# places apart, so two headlines must share another word to be one event:
+# '강원 정선 산사태 발생…주민 대피' and '경북 봉화 산사태 발생…주민 대피' are two.
+# A word that starts with one of these (주민들, 발생해) counts as that word.
+KOREAN_NEWS_WORDS = frozenset("""
+발생 주민 시민 이재민 대피 피해 사고 현장 정부 당국 경찰 소방 원인 조사 점검 우려 위험 비상 긴급 통제 복구 지원
+대책 추가 확인 사망 실종 부상 숨져 숨진 구조 수색 매몰 발견 출동 인근 일대 곳곳 지역 마을 도심 전국 오늘 어제 새벽
+오전 오후 밤사이 이틀째 사흘째 잇따라 속보 단독 종합 영상 포토 폭우 호우 집중호우 장마 태풍 강풍 폭설 기상청 특보
+경보 주의보 관계자 작업자 근로자 운전자 차량 건물 주택 아파트 공사 공사장 대형 가구 세대 명 곳 건 채 대 개
 """.split())
+KOREAN_PARTICLE = re.compile("(?:으로|에서|에게|로|에|서|의|은|는|을|를|과|와)$")
+KOREAN_STEMS = sorted((w for w in KOREAN_NEWS_WORDS if len(w) > 1), key=len, reverse=True)
 SCRIPT_RUNS = re.compile(f"[{NOSPACE}]+|[^{NOSPACE}]+")
 SENTENCE_BREAK = re.compile(r"[.!?¡¿|•]")
 NAME_TOKEN = re.compile(r"[^\W\d_][\w'’-]*")
@@ -242,13 +296,19 @@ def title_words(norm, topic=frozenset()):
     """The significant words of a normalised headline: no short words, numbers
     or stopwords; the first six letters stand for the word (deslizamiento and
     deslizamientos, destruyó and destruidas); Arabic ال (the) is dropped.
-    Chinese and Japanese give pairs of characters. Words of the keyword lists
+    Chinese, Japanese and Korean give pairs of characters (common Korean news
+    words stay whole). Words of the keyword lists
     (topic) are left out: every landslide story says landslide, while place
     names and details tell one event from another."""
     out = set()
     for word in norm.split():
         for run in SCRIPT_RUNS.findall(word):
-            if NOSPACE_CHAR.match(run):
+            if HANGUL_CHAR.match(run) and len(run) >= 3:
+                run = KOREAN_PARTICLE.sub("", run)  # 산사태로 -> 산사태
+            stem = HANGUL_CHAR.match(run) and next((w for w in KOREAN_STEMS if run.startswith(w)), None)
+            if stem or run in KOREAN_NEWS_WORDS:
+                out.add(stem or run)
+            elif NOSPACE_CHAR.match(run):
                 out.update({run[i:i + 2] for i in range(len(run) - 1)} or {run})
             elif len(run) >= 3 and not run.isdigit() and run not in STOPWORDS:
                 if len(run) >= 5 and run.startswith("ال"):
@@ -258,10 +318,13 @@ def title_words(norm, topic=frozenset()):
 
 
 def topic_words(cfg):
-    terms = list(cfg.get("keywords") or {})
+    terms = [str(t) for t in (cfg.get("keywords") or {})]
     for spec in (cfg.get("multilingual_keywords") or {}).values():
-        terms += spec.get("terms", [])
-    return frozenset(w for t in terms for w in title_words(title_norm(str(t))))
+        terms += [str(t) for t in spec.get("terms", [])]
+    # Korean compounds listed for matching (포항지진, 하천제방) would otherwise make
+    # their place or river part (포항, 하천) a topic word and hide it from comparison
+    base = [t for t in terms if not (HANGUL_CHAR.match(t) and any(o != t and t.endswith(o) for o in terms))]
+    return frozenset(w for t in base for w in title_words(title_norm(t)))
 
 
 def title_names(title, topic):
@@ -289,8 +352,8 @@ def same_event(a, b):
     """a and b are (normalised title, significant words, names) of two headlines."""
     if a[2] and b[2] and (a[2] - b[2]) and (b[2] - a[2]):
         return False  # each names a place or person the other does not
-    if a[1] and b[1] and not a[1] & b[1]:
-        return False  # no significant word in common
+    if a[1] and b[1] and not (a[1] & b[1]) - KOREAN_NEWS_WORDS and a[0] != b[0]:
+        return False  # no significant word in common (common Korean news words do not count)
     shared = len(a[1] & b[1])
     if (shared >= (2 if a[2] and b[2] else 3)
             and shared >= SAME_EVENT_OVERLAP * min(len(a[1]), len(b[1]))):
@@ -531,6 +594,233 @@ Stories:
     return rated > 0
 
 
+# ------------------------------------------------------------------ research papers
+# New papers from the journals in config.yaml (research: journals), read from
+# Crossref's free API. They are scored and themed like the news, rated by
+# Claude for their use in practice, and kept in the digest as "papers".
+CROSSREF = "https://api.crossref.org/journals/{issn}/works?"
+CROSSREF_FIELDS = "DOI,title,author,container-title,created,published,published-online,abstract,type"
+CROSSREF_ROWS = 50
+# notices, corrections and replies that Crossref files as journal articles.
+# Discussions are titled 'Discussion of “…”' (ASCE), 'Discussion: …' (ICE) or
+# 'Discussion on “…”' (Elsevier); a paper may begin "Discussion on the …".
+NOT_RESEARCH = re.compile(
+    r"^(?:(?:erratum|corrigendum|correction|retraction|retracted|expression of concern|editorial|editor['’]?s note|"
+    r"publisher['’]?s note|in memoriam|obituary|book review|reviewers|acknowledg|issue information|front matter|"
+    r"back matter|cover image|table of contents|call for papers|announcement|discussion of|discussion by|"
+    r"closure to|reply to|response to|comment on|author(?:['’]?s|s['’])? (?:reply|response|closure))\b"
+    r"|(?:discussion|closure|reply|response)(?: on)?\s*[:“\"‘'«])", re.I)
+JATS_HEADING = re.compile(r"<jats:title[^>]*>.*?</jats:title>", re.I | re.S)
+# markup inside words and formulas (CO<sub>2</sub>, <scp>CPT</scp>‐based,
+# MathML), dropped without a space so the word stays whole
+INLINE_TAG = re.compile(r"</?(?:jats:)?(?:sub|sup|i|b|em|strong|u|sc|scp|italic|bold|underline|monospace|"
+                        r"span|inline-formula)\b[^>]*>|</?mml:[^>]*>", re.I)
+
+
+def research_cfg(cfg):
+    return cfg.get("research") or {}
+
+
+def crossref_headers(cfg):
+    """Crossref asks API users to name their tool, with a link and (optionally)
+    an e-mail address so that it can get in touch about heavy use."""
+    repo = site_builder.repository(cfg) or "monabadr12/geotech-news"
+    mailto = str(research_cfg(cfg).get("mailto") or "").strip()
+    contact = f"https://github.com/{repo}" + (f"; mailto:{mailto}" if mailto else "")
+    return {"User-Agent": f"GeotechNewsScanner/1.0 ({contact})"}
+
+
+def crossref_url(issn, since, cfg):
+    params = {"filter": f"from-created-date:{since:%Y-%m-%d},type:journal-article", "sort": "created",
+              "order": "desc", "rows": CROSSREF_ROWS, "select": CROSSREF_FIELDS}
+    mailto = str(research_cfg(cfg).get("mailto") or "").strip()
+    if mailto:
+        params["mailto"] = mailto
+    return CROSSREF.format(issn=issn) + urlencode(params, safe=":,")
+
+
+def shorten(text, limit):
+    """text cut at a word break so that, with the ellipsis, it has at most limit characters."""
+    if len(text) <= limit:
+        return text
+    return text[:limit - 1].rsplit(" ", 1)[0].rstrip(" ,;:") + "…"
+
+
+def plain_abstract(raw):
+    """Crossref abstracts are JATS XML: drop the headings (Abstract, Purpose…)
+    and the tags, keep the text."""
+    text = clean(INLINE_TAG.sub("", JATS_HEADING.sub(" ", raw or "")))
+    return shorten(re.sub(r"^(?:abstract|summary)\b[\s:.]*", "", text, flags=re.I), 800)
+
+
+def short_authors(authors):
+    """'Smith J, Lee K' for one to three authors, 'Smith J, Lee K et al.' for more."""
+    names = []
+    for a in authors or []:
+        family = clean(a.get("family") or a.get("name") or "")
+        if family:
+            given = clean(a.get("given") or "")
+            initials = "".join(p[0].upper() for p in re.split(r"[\s.\-]+", given) if p)
+            names.append(f"{family} {initials}".strip())
+    return ", ".join(names[:2]) + " et al." if len(names) > 3 else ", ".join(names)
+
+
+def crossref_date(item, today):
+    """The first complete date among online publication, publication and DOI
+    registration that is not in the future."""
+    for key in ("published-online", "published", "created"):
+        parts = ((item.get(key) or {}).get("date-parts") or [[]])[0] or []
+        try:
+            day = dt.date(*(int(p) for p in parts)) if len(parts) == 3 else None
+        except (TypeError, ValueError):
+            day = None
+        if day and day <= today:
+            return day.isoformat()
+    return today.isoformat()
+
+
+def paper_text(p):
+    return f"{p['title']} {p.get('abstract', '')}"
+
+
+def paper_rank(p, cfg, compiled):
+    """Claude's rating first, then the keyword score of title and abstract."""
+    return (p.get("relevance") or 0) * 100 + keyword_score(paper_text(p), cfg, compiled)[0]
+
+
+def select_papers(papers, cfg, compiled=None):
+    """Up to research: max_papers papers, best first, spread across the themes
+    like the stories."""
+    compiled = compiled or compile_keywords(cfg)
+    ranks = {p["id"]: paper_rank(p, cfg, compiled) for p in papers}
+    limit = int(research_cfg(cfg).get("max_papers", 20))
+    return balanced(papers, limit, theme_share(cfg), lambda p: ranks[p["id"]], fill=fill_leftovers(cfg))
+
+
+def fetch_papers(cfg, now, seen, compiled, failures):
+    """New papers of every journal since research: lookback_days, not seen before."""
+    rcfg = research_cfg(cfg)
+    since = now.date() - dt.timedelta(days=int(rcfg.get("lookback_days", 4)))
+    headers = crossref_headers(cfg)
+    papers = []
+    for journal in rcfg.get("journals") or []:
+        name, issn = journal["name"], str(journal["issn"]).strip()
+        try:
+            r = requests.get(crossref_url(issn, since, cfg), headers=headers, timeout=30)
+            r.raise_for_status()
+            items = r.json()["message"]["items"]
+        except Exception as ex:
+            failures.append((f"{name} (Crossref)", str(ex)[:140]))
+            continue
+        for it in items:
+            doi = str(it.get("DOI") or "").strip()
+            title = clean(INLINE_TAG.sub("", " ".join(it.get("title") or [])))
+            if not doi or not title or NOT_RESEARCH.match(title):
+                continue
+            pid = hashlib.sha1(f"doi:{doi.lower()}".encode()).hexdigest()[:16]
+            if pid in seen:
+                continue
+            seen[pid] = now.date().isoformat()
+            abstract = plain_abstract(it.get("abstract"))
+            score, hits = keyword_score(f"{title} {abstract}", cfg, compiled)
+            papers.append({
+                "id": pid, "title": title, "link": "https://doi.org/" + quote(doi, safe="/:;()._-"),
+                "journal": clean(" ".join(it.get("container-title") or [])) or name,
+                "authors": short_authors(it.get("author")), "published": crossref_date(it, now.date()),
+                "abstract": abstract, "theme": guess_theme(title, cfg["themes"], hits), "relevance": 0,
+                "angle": "", "keywords": hits[:6], "score": score})
+        time.sleep(0.2)
+    return papers
+
+
+def paper_schema(themes):
+    paper = {
+        "type": "object",
+        "properties": {
+            "id": {"type": "integer"},
+            "relevance": {"type": "integer"},
+            "theme": {"type": "string", "enum": themes},
+            "angle": {"type": "string"},
+        },
+        "required": ["id", "relevance", "theme", "angle"],
+        "additionalProperties": False,
+    }
+    return {"type": "object", "properties": {"papers": {"type": "array", "items": paper}},
+            "required": ["papers"], "additionalProperties": False}
+
+
+def claude_papers(papers, cfg, notes):
+    """Ask Claude, in one small batch, how useful each paper is in practice and
+    why. True if the batch was rated."""
+    raw = os.environ.get("ANTHROPIC_API_KEY", "")
+    key = clean_api_key(raw)
+    if not key or not papers:
+        return False
+    import anthropic  # only needed when a key is configured
+
+    client = anthropic.Anthropic(api_key=key, max_retries=3)
+    ccfg = cfg["claude"]
+    themes = list(cfg["themes"].keys()) + ["General"]
+    listing = "\n".join(f'{i}. [{p["journal"]}] {p["title"]} :: {p["abstract"][:600]}' for i, p in enumerate(papers))
+    prompt = f"""You are the news-desk assistant of the ISSMGE magazine (International Society for Soil Mechanics and Geotechnical Engineering). Its Academia-to-Industry pages tell practising geotechnical engineers about new research they can use.
+
+For each paper below return an object with:
+- "id": the number
+- "relevance": 1-5 for practice (5 = findings a practising engineer could apply now or should know about: design methods, case histories, field performance, monitoring, new testing or construction techniques; 3 = sound research with a clear route to practice; 1 = theoretical with no near-term use, or not geotechnical)
+- "theme": the one magazine theme it fits best
+- "angle": one sentence (max 30 words), in your own words, on why the paper matters to practitioners
+
+Papers:
+{listing}"""
+    try:
+        response = client.messages.create(
+            model=ccfg["model"],
+            max_tokens=16000,
+            output_config={"effort": ccfg.get("effort", "low"),
+                           "format": {"type": "json_schema", "schema": paper_schema(themes)}},
+            messages=[{"role": "user", "content": prompt}])
+        if response.stop_reason != "end_turn":
+            raise ValueError(f"stopped early: {response.stop_reason}")
+        results = json.loads(next((b.text for b in response.content if b.type == "text"), ""))["papers"]
+    except (anthropic.AuthenticationError, anthropic.PermissionDeniedError) as ex:
+        if not any(n.startswith("AI triage skipped") for n in notes):  # the stories' note already explains it
+            notes.append(f"AI review of research papers skipped: the ANTHROPIC_API_KEY secret was refused "
+                         f"({api_message(ex)}). " + describe_key(raw, key))
+        return False
+    except (anthropic.APIError, ValueError, KeyError, TypeError) as ex:
+        msg = api_message(ex) if isinstance(ex, anthropic.APIError) else str(ex)
+        notes.append(f"AI review of research papers failed ({msg[:100]}); keyword ranking used.")
+        return False
+    for d in results:
+        idx = int(d["id"])
+        if 0 <= idx < len(papers):
+            papers[idx].update(relevance=max(1, min(5, int(d["relevance"]))),
+                               theme=d["theme"] if d["theme"] in themes else papers[idx]["theme"],
+                               angle=d["angle"][:300])
+    return True
+
+
+PAPER_FIELDS = ("id", "title", "link", "journal", "authors", "published", "abstract", "theme", "relevance",
+                "angle", "keywords")
+
+
+def research_papers(cfg, now, seen, compiled, failures, notes):
+    """The digest's papers (see PAPER_FIELDS), best first; None when no
+    journals are configured."""
+    rcfg = research_cfg(cfg)
+    if not rcfg.get("journals") or rcfg.get("enabled") is False:
+        return None
+    found = fetch_papers(cfg, now, seen, compiled, failures)
+    share = theme_share(cfg)
+    candidates = balanced(found, int(rcfg.get("max_candidates", 40)), share, lambda p: p["score"])
+    if claude_papers(candidates, cfg, notes):
+        minrel = int(rcfg.get("min_relevance", 3))
+        found = [p for p in candidates if p["relevance"] >= minrel]
+    papers = select_papers(found, cfg, compiled)
+    print(f"Research papers: {len(papers)} selected for the digest.")
+    return [{k: p[k] for k in PAPER_FIELDS} for p in papers]
+
+
 # ------------------------------------------------------------------ e-mail
 def send_email(subject, body_html):
     host, to = os.environ.get("SMTP_HOST", "").strip(), os.environ.get("MAIL_TO", "").strip()
@@ -562,16 +852,25 @@ def rescore_unrated(stories, cfg):
             s["keywords"] = hits[:6]
 
 
-def save_digest(now, stories, failures, notes, ai_used, new_count, cfg):
+def merge_papers(ours, theirs, cfg):
+    """Union of two lists of papers (ours win), balanced again to max_papers."""
+    known = {p["id"] for p in ours}
+    return select_papers(list(ours) + [p for p in theirs or [] if p["id"] not in known], cfg)
+
+
+def save_digest(now, stories, failures, notes, ai_used, new_count, cfg, papers=None):
     """Write today's digest to data/digests/YYYY-MM-DD.json. A second run on the
     same day merges its stories with the morning's file: the union is cleared
     of repeated events and balanced across the themes again, up to max_items,
-    so a re-run also mends a lopsided earlier digest."""
+    so a re-run also mends a lopsided earlier digest. Research papers are
+    merged the same way."""
     path = site_builder.DIGESTS / f"{now:%Y-%m-%d}.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     digest = {"date": f"{now:%Y-%m-%d}", "generated": now.isoformat(timespec="minutes"),
               "ai_used": ai_used, "new_items": new_count, "stories": stories,
               "failures": [list(f) for f in failures], "notes": notes}
+    if papers is not None:
+        digest["papers"] = papers
     if path.exists():
         old = json.loads(path.read_text(encoding="utf-8"))
         rescore_unrated(old.get("stories", []), cfg)
@@ -584,6 +883,8 @@ def save_digest(now, stories, failures, notes, ai_used, new_count, cfg):
                                      theme_share(cfg), lambda s: s["rank"], fill=fill_leftovers(cfg))
         digest["new_items"] += old.get("new_items", 0)
         digest["ai_used"] = ai_used or old.get("ai_used", False)
+        if papers is not None or old.get("papers"):
+            digest["papers"] = merge_papers(papers or [], old.get("papers"), cfg)
     digest["stories"].sort(key=lambda s: -s["rank"])
     path.write_text(json.dumps(digest, ensure_ascii=False, indent=1), encoding="utf-8")
     return digest
@@ -666,6 +967,9 @@ def main():
         i["rank"] = i["relevance"] * 100 + i["score"]
     selected = balanced(kept, cfg.get("max_items", 40), share, lambda i: i["rank"], fill=fill_leftovers(cfg))
 
+    # new research papers for the Academia-to-Industry pages (remembered by DOI)
+    papers = research_papers(cfg, now, seen, compiled, failures, notes)
+
     # prune memory older than 45 days
     limit = (now - dt.timedelta(days=45)).date().isoformat()
     seen = {k: v for k, v in seen.items() if v >= limit}
@@ -679,7 +983,7 @@ def main():
         "theme": i["theme"], "relevance": i["relevance"], "use": i["use"], "angle": i["angle"],
         "keywords": i["hits"][:6], "score": i["score"], "rank": i["rank"],
     } for i in selected]
-    digest = save_digest(now, stories, failures, notes, ai_used, new_count, cfg)
+    digest = save_digest(now, stories, failures, notes, ai_used, new_count, cfg, papers)
     site_builder.build(cfg)
 
     try:
@@ -712,6 +1016,14 @@ def reclassify():
             if theme != s["theme"] or hits[:6] != s.get("keywords"):
                 s["theme"], s["keywords"] = theme, hits[:6]
                 changed += 1
+        for p in digest.get("papers", []):
+            if p.get("relevance"):
+                continue
+            _, hits = keyword_score(paper_text(p), cfg, compiled)
+            theme = guess_theme(p["title"], cfg["themes"], hits)
+            if theme != p["theme"] or hits[:6] != p.get("keywords"):
+                p["theme"], p["keywords"] = theme, hits[:6]
+                changed += 1
         if changed:
             path.write_text(json.dumps(digest, ensure_ascii=False, indent=1), encoding="utf-8")
             print(f"{path.name}: {changed} stories re-classified")
@@ -731,6 +1043,8 @@ def rebalance(names):
                          key=lambda s: -s["rank"])
         digest["stories"] = balanced(drop_same_events(stories, cfg), cfg.get("max_items", 40), theme_share(cfg),
                                      lambda s: s["rank"], fill=fill_leftovers(cfg))
+        if digest.get("papers"):
+            digest["papers"] = select_papers(digest["papers"], cfg)
         path.write_text(json.dumps(digest, ensure_ascii=False, indent=1), encoding="utf-8")
         print(f"{path.name}: {len(digest['stories'])} stories after re-balancing")
 

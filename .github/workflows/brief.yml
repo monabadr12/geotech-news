@@ -1,0 +1,70 @@
+name: Issue brief
+
+on:
+  workflow_dispatch:   # "Run workflow" button on GitHub and the issue pages' "Generate / update brief" button
+    inputs:
+      window:
+        description: "Issue window, e.g. 2026-Q4 (leave empty for the current quarter)"
+        required: false
+        default: ""
+      final:
+        description: "Final brief (tick once the quarter has closed)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency: news-scan   # shared with the scan, so the two never save at the same time
+
+jobs:
+  brief:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}   # the branch tip when the job starts, not the commit that queued it
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - name: Check the Anthropic key
+        # brief.py itself skips quietly without a key (as after a scan); here a brief was asked for, so say so
+        run: |
+          if [ -z "$(printf '%s' "$ANTHROPIC_API_KEY" | tr -d '[:space:]')" ]; then
+            echo "::error::The ANTHROPIC_API_KEY secret is missing or empty, so Claude cannot draft the brief. Add it in Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      - name: Draft the issue brief
+        id: brief
+        timeout-minutes: 30
+        run: |
+          args=()
+          if [ -n "$WINDOW" ]; then args+=(--window "$WINDOW"); fi
+          if [ "$FINAL" = "true" ]; then args+=(--final); fi
+          python brief.py "${args[@]}"
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          WINDOW: ${{ inputs.window }}
+          FINAL: ${{ inputs.final }}
+      - name: Save the brief
+        env:
+          WINDOW_KEY: ${{ steps.brief.outputs.window }}
+        run: |
+          git config user.name "news-scanner"
+          git config user.email "news-scanner@users.noreply.github.com"
+          msg="Issue brief ${WINDOW_KEY}"
+          # Put the brief on the newest main and rebuild the site from it, exactly as the
+          # scan's save step does, so the save never clashes with a scan saved meanwhile.
+          for attempt in 1 2 3; do
+            python sync_data.py "${GITHUB_REF_NAME}"
+            git add docs data
+            if git diff --cached --quiet; then echo "Nothing to save."; exit 0; fi
+            git commit -q -m "$msg"
+            if git push; then exit 0; fi
+            echo "The branch moved while saving; trying again ($attempt)."
+            git reset -q --soft HEAD~1
+          done
+          exit 1

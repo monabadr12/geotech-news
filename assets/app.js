@@ -1,4 +1,4 @@
-/* Geotechnical News Desk — filters, archive search, Scan now button and AI assistant. */
+/* Geotechnical News Desk — filters, archive search, Scan now and issue brief buttons, and AI assistant. */
 (function () {
   "use strict";
   var root = document.body.getAttribute("data-root") || "";
@@ -14,7 +14,7 @@
     get: function (k) { try { return localStorage.getItem(k) || ""; } catch (e) { return ""; } },
     set: function (k, v) { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (e) { /* ignore */ } }
   };
-  var KEYS = { model: "gnd_model", scan: "gnd_scan_started", passcode: "gnd_passcode" };
+  var KEYS = { model: "gnd_model", scan: "gnd_scan_started", brief: "gnd_brief_started", passcode: "gnd_passcode" };
 
   function fmt(iso) {
     if (!iso) return "";
@@ -24,82 +24,96 @@
 
   /* ---------- toast ---------- */
   var toastEl = document.getElementById("toast"), toastTimer;
-  function toast(html, kind, sticky) {
+  /* owner: the storage key of the run being followed; closing its message stops following */
+  function toast(html, kind, sticky, owner) {
     if (!toastEl) return;
     toastEl.className = "toast" + (kind ? " " + kind : "");
     toastEl.innerHTML = html + "<button type='button' class='toast-x' aria-label='Close'>×</button>";
     toastEl.hidden = false;
+    toastEl.dataset.owner = owner || "";
     clearTimeout(toastTimer);
     if (!sticky) toastTimer = setTimeout(function () { toastEl.hidden = true; }, 9000);
   }
   if (toastEl) toastEl.addEventListener("click", function (e) {
-    if (e.target.classList.contains("toast-x")) { toastEl.hidden = true; store.set(KEYS.scan, ""); }
+    if (e.target.classList.contains("toast-x")) { toastEl.hidden = true; if (toastEl.dataset.owner) store.set(toastEl.dataset.owner, ""); }
   });
 
-  /* ---------- Scan now ----------
-     Starting a GitHub workflow needs a signed-in GitHub user, so the button opens the
+  /* ---------- Scan now and Generate / update brief ----------
+     Starting a GitHub workflow needs a signed-in GitHub user, so these buttons open the
      workflow's page on GitHub (where you are signed in) and this page then follows the
-     run through GitHub's public API and says when the new digest is ready. */
-  var scanBtn = document.getElementById("scan-btn");
-  var ghPage = "https://github.com/" + repo + "/actions/workflows/scan.yml";
-  var ghRuns = "https://api.github.com/repos/" + repo + "/actions/workflows/scan.yml/runs?per_page=5";
-  function setRunning(on) { if (scanBtn) scanBtn.classList.toggle("running", on); }
+     run through GitHub's public API and says when it has finished. */
+  var WORKFLOWS = {
+    scan: { file: "scan.yml", key: KEYS.scan, button: "Scan now", noun: "scan", minutes: "3–4",
+      wait: "This page will follow the scan and tell you when the new digest is ready.",
+      done: "Scan finished. The website refreshes about a minute later — <a href='#' class='reload-link'>reload the page</a>." },
+    brief: { file: "brief.yml", key: KEYS.brief, button: "Generate / update brief", noun: "issue brief", minutes: "3–6",
+      wait: "This page will follow Claude while it drafts the brief and tell you when the Word file is ready.",
+      done: "The issue brief is ready. The website refreshes about a minute later — <a href='#' class='reload-link'>reload the page</a> to download it." }
+  };
+  function ghPage(w) { return "https://github.com/" + repo + "/actions/workflows/" + w.file; }
 
-  function watchScan(started) {
+  /* how prompt: what to do on the GitHub page before pressing the green button */
+  function follow(w, btn, started, how) {
+    var page = ghPage(w), noun = w.noun.charAt(0).toUpperCase() + w.noun.slice(1);
+    var runs = "https://api.github.com/repos/" + repo + "/actions/workflows/" + w.file + "/runs?per_page=5";
+    function setRunning(on) { if (btn) btn.classList.toggle("running", on); }
+    function stop() { store.set(w.key, ""); setRunning(false); }
+    function say(html, kind) { toast(html, kind, true, w.key); }
     setRunning(true);
     var tick = function () {
-      fetch(ghRuns, { headers: { Accept: "application/vnd.github+json" } }).then(function (r) {
+      fetch(runs, { headers: { Accept: "application/vnd.github+json" } }).then(function (r) {
         if (!r.ok) throw new Error("status " + r.status);
         return r.json();
       }).then(function (j) {
-        if (!store.get(KEYS.scan)) { setRunning(false); return; }  // dismissed
+        if (!store.get(w.key)) { setRunning(false); return; }  // dismissed
         var run = (j.workflow_runs || []).filter(function (x) {
           return x.event === "workflow_dispatch" && new Date(x.created_at).getTime() >= started - 60000;
         })[0];  // newest first
         var mins = Math.max(0, Math.round((Date.now() - started) / 60000));
         if (!run) {
           if (Date.now() - started > 10 * 60000) {
-            store.set(KEYS.scan, ""); setRunning(false);
-            toast("No scan was started on GitHub. Press <b>Scan now</b> again, then <b>Run workflow</b> on the GitHub page.", "err", true);
+            stop();
+            toast("No " + w.noun + " was started on GitHub. Press <b>" + w.button + "</b> again, then <b>Run workflow</b> on the GitHub page.", "err", true);
             return;
           }
-          toast("On the GitHub tab, press <b>Run workflow</b> and then the green <b>Run workflow</b> button. " +
-            "This page will follow the scan and tell you when the new digest is ready. <a href='" + ghPage + "' target='_blank' rel='noopener'>Open GitHub again</a>", "", true);
+          say("On the GitHub tab, press <b>Run workflow</b>" + (how ? ", " + how + "," : "") + " and then the green <b>Run workflow</b> button. " +
+            w.wait + " <a href='" + page + "' target='_blank' rel='noopener'>Open GitHub again</a>", "");
         } else if (run.status !== "completed") {
-          toast("Scan " + (run.status === "queued" ? "queued" : "running") + " · " + mins + " min so far. It usually takes 3–4 minutes. " +
-            "<a href='" + esc(run.html_url) + "' target='_blank' rel='noopener'>Watch on GitHub</a>", "", true);
+          say(noun + " " + (run.status === "queued" ? "queued" : "running") + " · " + mins + " min so far. It usually takes " + w.minutes + " minutes. " +
+            "<a href='" + esc(run.html_url) + "' target='_blank' rel='noopener'>Watch on GitHub</a>", "");
         } else {
-          store.set(KEYS.scan, "");
-          setRunning(false);
-          if (run.conclusion === "success") {
-            toast("Scan finished. The website refreshes about a minute later — <a href='#' class='reload-link'>reload the page</a>.", "ok", true);
-          } else {
-            toast("The scan ended with “" + esc(run.conclusion) + "”. <a href='" + esc(run.html_url) + "' target='_blank' rel='noopener'>See the log on GitHub</a>.", "err", true);
-          }
+          stop();
+          if (run.conclusion === "success") toast(w.done, "ok", true);
+          else toast("The " + w.noun + " ended with “" + esc(run.conclusion) + "”. <a href='" + esc(run.html_url) + "' target='_blank' rel='noopener'>See the log on GitHub</a>.", "err", true);
           return;
         }
         if (Date.now() - started < 25 * 60000) setTimeout(tick, 20000);
-        else { setRunning(false); store.set(KEYS.scan, ""); }
+        else stop();
       }).catch(function () {
         // GitHub allows 60 public API calls an hour; if they run out, stop following quietly
-        setRunning(false);
-        store.set(KEYS.scan, "");
-        toast("This page can't follow the scan right now. <a href='" + ghPage + "' target='_blank' rel='noopener'>Check its progress on GitHub</a>.", "", true);
+        stop();
+        toast("This page can't follow the " + w.noun + " right now. <a href='" + page + "' target='_blank' rel='noopener'>Check its progress on GitHub</a>.", "", true);
       });
     };
     tick();
   }
 
-  if (scanBtn) {
-    scanBtn.addEventListener("click", function () {
-      window.open(ghPage, "_blank", "noopener");
+  function startButton(w, btn, how) {
+    if (btn) btn.addEventListener("click", function () {
+      window.open(ghPage(w), "_blank", "noopener");
       var started = Date.now();
-      store.set(KEYS.scan, String(started));
-      watchScan(started);
+      store.set(w.key, String(started));
+      follow(w, btn, started, how);
     });
-    var pending = +store.get(KEYS.scan);
-    if (pending && Date.now() - pending < 25 * 60000) watchScan(pending);
+    var pending = +store.get(w.key);  // a run started on another page or before a reload
+    if (pending && Date.now() - pending < 25 * 60000) follow(w, btn, pending, how);
   }
+
+  startButton(WORKFLOWS.scan, document.getElementById("scan-btn"), "");
+  var briefBtn = document.getElementById("brief-btn");
+  startButton(WORKFLOWS.brief, briefBtn, !briefBtn ? "enter the issue window unless it is the current quarter"
+    : briefBtn.getAttribute("data-current") ? "leave <b>Issue window</b> empty for the current quarter"
+    : "type <b>" + esc(briefBtn.getAttribute("data-window")) + "</b> under <b>Issue window</b> (and tick <b>Final</b> if the quarter has closed)");
   document.addEventListener("click", function (e) {
     if (e.target.classList && e.target.classList.contains("reload-link")) { e.preventDefault(); location.reload(); }
   });
@@ -145,10 +159,11 @@
   }
   function windowLabel(key) { var p = key.split("-"); return p[1] + " " + p[0]; }
 
+  function isPaper(s) { return s.kind === "paper"; }
   function card(s) {
-    var title = s.te || s.t, rel = s.r
-      ? "<span class='rel rel-" + s.r + "' title='Geotechnical relevance: " + s.r + " of 5'><i></i><i></i><i></i><i></i><i></i><b>" + s.r + "/5</b></span>"
-      : "<span class='rel rel-kw'>Keyword-ranked</span>";
+    var paper = isPaper(s), title = s.te || s.t, rel = s.r
+      ? "<span class='rel rel-" + s.r + "' title='" + (paper ? "Use in practice: " : "Geotechnical relevance: ") + s.r + " of 5'><i></i><i></i><i></i><i></i><i></i><b>" + s.r + "/5</b></span>"
+      : "<span class='rel rel-kw'>" + (paper ? "Not rated" : "Keyword-ranked") + "</span>";
     var meta = ["<span class='src'>" + esc(s.s) + "</span>"];
     if (s.p) meta.push("<time>" + esc(fmt(s.p)) + "</time>");
     if (s.c) meta.push("<span>" + esc(s.c) + " edition</span>");
@@ -158,8 +173,11 @@
     return "<article class='story' style='--tc:" + tc + "'><div class='story-top'><a class='story-title' dir='auto' href='" + esc(href) + "' target='_blank' rel='noopener'>" +
       esc(title) + "</a>" + rel + "</div>" +
       (s.te ? "<div class='orig' dir='auto'>Original: " + esc(s.t) + "</div>" : "") +
-      (s.a ? "<p class='angle'><span>Magazine angle</span>" + esc(s.a) + "</p>" : (s.x ? "<p class='summary'>" + esc(s.x) + "…</p>" : "")) +
-      "<div class='story-meta'>" + (s.u ? "<span class='use use-" + esc(useSlug) + "'>" + esc(s.u) + "</span>" : "") +
+      (paper && s.au ? "<div class='orig' dir='auto'>" + esc(s.au) + "</div>" : "") +
+      (s.a ? "<p class='angle'><span>" + (paper ? "Why it matters in practice" : "Magazine angle") + "</span>" + esc(s.a) + "</p>"
+        : (s.x ? "<p class='summary'>" + esc(s.x) + "…</p>" : "")) +
+      "<div class='story-meta'>" + (paper ? "<span class='badge'>Research paper</span>" : "") +
+      (s.u ? "<span class='use use-" + esc(useSlug) + "'>" + esc(s.u) + "</span>" : "") +
       "<span class='theme-tag'>" + esc(s.th) + "</span>" + meta.join(" · ") + "</div>" +
       (s.k && s.k.length ? "<div class='kw'>" + s.k.slice(0, 5).map(function (k) { return "<span>" + esc(k) + "</span>"; }).join("") + "</div>" : "") +
       "<div class='found'>Found in the <a href='" + root + "digests/" + esc(s.d) + ".html'>" + esc(fmt(s.d)) + " digest</a> · " +
@@ -202,9 +220,18 @@
       Object.keys(els).forEach(function (id) { if (els[id].value && els[id].value !== "0" && els[id].value !== "rel") qs.set(id, els[id].value); });
       history.replaceState(null, "", qs.toString() ? "?" + qs : location.pathname);
     }
+    function n(k, one, many) { return k + " " + (k === 1 ? one : many); }
+    function tally(list) {  // "3 stories", "2 research papers" or "3 stories and 2 research papers"
+      var p = list.filter(isPaper).length, parts = [];
+      if (list.length - p || !p) parts.push(n(list.length - p, "story", "stories"));
+      if (p) parts.push(n(p, "research paper", "research papers"));
+      return parts.join(" and ");
+    }
     function draw() {
-      countEl.textContent = matches.length + (matches.length === 1 ? " story" : " stories") + " found in " + all.length + " archived";
-      results.innerHTML = matches.length ? matches.slice(0, limit).map(card).join("") : "<p class='empty'>No stories match these filters.</p>";
+      var papers = all.some(isPaper);
+      countEl.textContent = tally(matches) + " found in " + (papers ? "the archive's " + tally(all) : all.length + " archived");
+      results.innerHTML = matches.length ? matches.slice(0, limit).map(card).join("")
+        : "<p class='empty'>No " + (papers ? "stories or research papers" : "stories") + " match these filters.</p>";
       moreBtn.hidden = matches.length <= limit;
     }
     function csvCell(v) {

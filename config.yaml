@@ -46,39 +46,40 @@ min_keyword_score: 3
 # ---- Trade / technical websites --------------------------------
 # You may give a site's home page: the scanner finds its RSS feed
 # automatically. If a site shows under "Sources that failed" in the
-# digest, replace its address with the site's RSS feed address.
+# digest, replace its address with the site's RSS feed address (test
+# candidates first with the "Check feeds" workflow on GitHub).
 # "boost" adds points to stories from specialist geotechnical sources.
+# Sites that block feed readers or publish no feed (GeoEngineer,
+# Geosynthetica, ISSMGE, ASCE Geo-Institute, ICE, FHWA, GEER, USGS,
+# ReliefWeb, Rail Business UK, Railway Gazette, International Construction,
+# Construction Week) are searched through Google News instead: see
+# google_news: extra_queries below.
 feeds:
   # --- specialist geotechnical sources (weighted up) ---
-  - {name: GeoEngineer,                  url: "https://www.geoengineer.org",             boost: 3}
-  - {name: Geosynthetica,                url: "https://www.geosynthetica.com/feed/",     boost: 3}
+  - {name: Ground Engineering,           url: "https://www.geplus.co.uk/feed/",          boost: 3}
   - {name: The Landslide Blog (Eos),     url: "https://eos.org/landslide-blog",          boost: 3}
   # --- societies and institutions ---
-  - {name: ISSMGE,                       url: "https://www.issmge.org",                  boost: 4}
-  - {name: ASCE Geo-Institute,           url: "https://www.geoinstitute.org",            boost: 4}
   - {name: Deep Foundations Institute,   url: "https://www.dfi.org",                     boost: 4}
-  - {name: ICE (Institution of Civil Engineers), url: "https://www.ice.org.uk/news-insight", boost: 2}
-  - {name: FHWA Infrastructure R&D,      url: "https://highways.dot.gov/newsroom",       boost: 2}
-  # --- post-event technical / hazard reporting ---
-  - {name: GEER Association,             url: "https://geerassociation.org",             boost: 4}
-  - {name: USGS Landslide Hazards,       url: "https://www.usgs.gov/programs/landslide-hazards", boost: 4}
-  - {name: USGS Natural Hazards news,    url: "https://www.usgs.gov/news",               boost: 2}
-  - {name: ReliefWeb disasters,          url: "https://reliefweb.int/disasters/rss.xml"}
   # --- trade press ---
   - {name: New Civil Engineer,           url: "https://www.newcivilengineer.com/feed/",  boost: 1}
-  - {name: Tunnels & Tunnelling,         url: "https://www.tunnelsonline.info"}
-  - {name: TunnelTalk,                   url: "https://www.tunneltalk.com",              boost: 2}
-  - {name: Rail Business UK,             url: "https://www.railbusinessuk.com/feed/"}
-  - {name: Railway Gazette,              url: "https://www.railwaygazette.com"}
-  - {name: Rail Technology Magazine,     url: "https://www.railtechnologymagazine.com"}
+  - {name: Tunnels & Tunnelling,         url: "https://www.tunnelsonline.info/feed/"}
+  # in place of TunnelTalk, which GitHub's servers cannot reach
+  - {name: Tunnelling Journal,           url: "https://tunnellingjournal.com/feed/",     boost: 2}
+  - {name: Rail Technology Magazine,     url: "https://www.railtechnologymagazine.com/rss.xml"}
   - {name: World Highways,               url: "https://www.worldhighways.com"}
-  - {name: International Construction,   url: "https://www.khl.com/international-construction"}
   - {name: Construction Enquirer,        url: "https://www.constructionenquirer.com/feed/"}
-  - {name: Engineering News-Record,      url: "https://www.enr.com"}
-  - {name: Construction Week (Middle East), url: "https://www.constructionweekonline.com"}
+  - {name: Engineering News-Record,      url: "https://www.enr.com/rss/articles"}
   - {name: Mining.com (tailings, ground), url: "https://www.mining.com/feed/"}
   - {name: ScienceDaily Earth,           url: "https://www.sciencedaily.com/rss/earth_climate.xml"}
   - {name: Phys.org Earth Sciences,      url: "https://phys.org/rss-feed/earth-news/"}
+  # --- Persian-language news (Google News has no Persian edition). General
+  #     news: only stories that match the Persian keywords below go forward ---
+  - {name: BBC Persian,                  url: "https://feeds.bbci.co.uk/persian/rss.xml", region: IR, language: fa}
+  - {name: DW Persian,                   url: "https://rss.dw.com/rdf/rss-per-all", region: IR, language: fa}
+  - {name: Euronews Persian,             url: "https://parsi.euronews.com/rss", region: IR, language: fa}
+  - {name: Independent Persian,          url: "https://www.independentpersian.com/rss.xml", region: IR, language: fa}
+  - {name: Hamshahri Online,             url: "https://www.hamshahrionline.ir/rss", region: IR, language: fa}
+  - {name: Mehr News,                    url: "https://www.mehrnews.com/rss", region: IR, language: fa}
 
 # ---- Google News searches (worldwide coverage) -------------------
 google_news:
@@ -116,13 +117,39 @@ google_news:
     - 'ISSMGE OR "soil mechanics conference"'
     - 'permafrost thaw infrastructure OR "expansive soil" damage'
     - 'sabkha OR "collapsible soil" OR "karst" foundation'
+    # --- sites that block feed readers, read through Google News instead;
+    #     "boost" adds points as it does for the websites above ---
+    - {q: 'site:geoengineer.org', country: US, boost: 3}                                  # GeoEngineer
+    - {q: '"geosynthetic" OR "geosynthetics" OR "geomembrane" OR "geogrid" OR "geotextile"', country: US}  # for Geosynthetica
+    - {q: 'site:issmge.org', boost: 4}                                                    # ISSMGE
+    # The Geo-Institute and GEER publish rarely, so their searches (this one and
+    # GEER's below) also catch coverage of them elsewhere, and still find nothing
+    # on most days. ("site:" in an OR list finds nothing once a word is ANDed to it.)
+    - {q: 'site:geoinstitute.org', country: US, boost: 4}  # ASCE Geo-Institute's own news (only the site: search finds it)
+    - {q: '"Geo-Institute" OR "Geo-Congress" OR GeoStrata OR "Geo-Frontiers" OR "geotechnical engineering" ASCE', country: US, boost: 4}  # coverage of the Geo-Institute
+    # -"job with" leaves out the job ads of ASCE's job board (-site: does not work in Google News)
+    - {q: 'site:asce.org geotechnical OR "Geo-Institute" OR foundations OR tunnel OR landslide -"job with" -"Career Connections"', country: US, boost: 2}
+    - {q: 'site:ice.org.uk', boost: 2}                                                    # ICE
+    - {q: 'site:highways.dot.gov OR site:fhwa.dot.gov', country: US, boost: 2}            # FHWA
+    - {q: '"GEER" earthquake OR landslide OR reconnaissance OR liquefaction', country: US, boost: 4}  # GEER
+    - {q: 'site:usgs.gov landslide OR landslides OR liquefaction OR subsidence OR sinkhole OR "ground failure"', country: US, boost: 3}  # USGS
+    - {q: 'site:reliefweb.int landslide OR landslides OR mudslide OR "dam collapse"'}     # ReliefWeb
+    - {q: 'site:railbusinessuk.com tunnel OR embankment OR earthworks OR cutting OR landslip OR geotechnical OR piling OR viaduct OR drainage'}
+    - {q: 'site:railwaygazette.com tunnel OR tunnelling OR embankment OR earthworks OR landslide OR geotechnical OR piling OR viaduct'}
+    - {q: 'site:constructionbriefing.com tunnel OR tunnelling OR foundations OR piling OR geotechnical OR excavation OR dam'}  # International Construction, now Construction Briefing
+    - {q: 'site:constructionweekonline.com tunnel OR foundation OR piling OR geotechnical OR excavation OR metro OR dewatering', country: AE}
     # --- non-English editions (Claude reads these and gives an English title) ---
     - {q: 'glissement de terrain OR "étude géotechnique" OR effondrement', language: fr, country: FR, bonus: 6}
     - {q: '"génie civil" fondations OR tunnel OR digue', language: fr, country: SN, bonus: 6}
     - {q: 'انهيار أرضي OR "دراسة جيوتقنية" OR "هبوط أرضي" OR أساسات', language: ar, country: EG, bonus: 6}
     - {q: 'انهيار نفق OR جدار استنادي OR تربة', language: ar, country: AE, bonus: 6}
     - {q: 'deslizamiento de tierra OR socavón OR "estudio geotécnico"', language: es, country: ES, bonus: 6}
-    - {q: 'deslizamiento OR licuefacción OR "muro de contención" colapso', language: es, country: MX, bonus: 6}
+    # Latin American editions use es-419, the Spanish of Latin America
+    - {q: 'deslizamiento OR licuefacción OR "muro de contención" colapso', language: es-419, country: MX, bonus: 6}
+    - {q: '"deslizamiento de tierra" OR "remoción en masa" OR socavón OR "pérdida de banca"', language: es-419, country: CO, bonus: 6}
+    - {q: '"remoción en masa" OR socavón OR aluvión OR "tranque de relaves"', language: es-419, country: CL, bonus: 6}
+    - {q: 'huaico OR "deslizamiento de tierra" OR "presa de relaves" OR "estudio de suelos"', language: es-419, country: PE, bonus: 6}
+    - {q: '"deslizamiento de tierra" OR hundimiento OR socavón OR "estudio de suelos"', language: es-419, country: AR, bonus: 6}
     - {q: 'deslizamento de terra OR "barragem de rejeitos" OR geotecnia', language: pt, country: BR, bonus: 6}
     - {q: 'Hangrutschung OR Baugrundgutachten OR Tunnelvortrieb', language: de, country: DE, bonus: 6}
     - {q: 'frana OR "cedimento del terreno" OR geotecnica', language: it, country: IT, bonus: 6}
@@ -131,10 +158,63 @@ google_news:
     - {q: 'tanah longsor OR "penurunan tanah" OR terowongan', language: id, country: ID, bonus: 6}
     - {q: '山体滑坡 OR 地面沉降 OR 岩土工程', language: zh, country: CN, bonus: 6}
     - {q: '地盤沈下 OR 液状化 OR 斜面崩壊', language: ja, country: JP, bonus: 6}
+    - {q: '"sạt lở" OR "sụt lún" OR "hố tử thần" OR "địa kỹ thuật"', language: vi, country: VN, bonus: 6}
+    - {q: '"sập hầm" OR "nền đất yếu" OR "vỡ đê" OR "tường chắn"', language: vi, country: VN, bonus: 6}
+    - {q: '산사태 OR 싱크홀 OR 땅꺼짐 OR 지반침하 OR 흙막이', language: ko, country: KR, bonus: 6}
+    - {q: '옹벽 붕괴 OR "터널 붕괴" OR 액상화 OR 지반조사', language: ko, country: KR, bonus: 6}
+    - {q: 'оползень OR "провал грунта" OR котлован OR "инженерно-геологические изыскания"', language: ru, country: RU, bonus: 6}
+    - {q: '"подпорная стена" OR "провал грунта" OR "обрушение тоннеля" OR "сход оползня"', language: ru, country: RU, bonus: 6}
+    - {q: 'osuwisko OR zapadlisko OR "szkody górnicze" OR "badania geotechniczne"', language: pl, country: PL, bonus: 6}
+    - {q: '"osunięcie ziemi" OR "katastrofa budowlana" OR "ściana oporowa" OR "wał przeciwpowodziowy"', language: pl, country: PL, bonus: 6}
+    # Persian: Google News has no Persian edition, so Persian news sites are
+    # read directly (see feeds above)
+
+# ---- New research papers (Academia-to-Industry) --------------------
+# Each run asks Crossref (free, no key needed) for the papers that the
+# journals below registered in the last few days. Papers are scored and
+# themed with the same keywords as the news; with the Claude key, Claude
+# rates each 1-5 for its use in practice and says in one sentence why it
+# matters to practitioners. A paper is shown once: papers are remembered
+# by DOI. Add a journal with its ISSN (print or online, as Crossref lists
+# it); the "Check feeds" workflow tests the whole list when given
+# {"research": true}.
+research:
+  lookback_days: 4        # papers registered in the last 4 days
+  max_papers: 20          # papers kept per digest, spread across the themes
+  max_candidates: 40      # best-scoring papers sent to Claude per run (one batch)
+  min_relevance: 3        # with Claude: keep papers rated 3/5 or higher for practice
+  mailto: ""              # optional contact e-mail Crossref may use about heavy use
+  journals:
+    - {name: Géotechnique,                                         issn: "0016-8505"}
+    - {name: Géotechnique Letters,                                 issn: "2045-2543"}
+    - {name: Canadian Geotechnical Journal,                        issn: "0008-3674"}
+    - {name: Journal of Geotechnical and Geoenvironmental Engineering (ASCE), issn: "1090-0241"}
+    - {name: Soils and Foundations,                                issn: "0038-0806"}
+    - {name: Acta Geotechnica,                                     issn: "1861-1125"}
+    - {name: Computers and Geotechnics,                            issn: "0266-352X"}
+    - {name: Engineering Geology,                                  issn: "0013-7952"}
+    - {name: Landslides,                                           issn: "1612-510X"}
+    - {name: Tunnelling and Underground Space Technology,          issn: "0886-7798"}
+    - {name: Geotextiles and Geomembranes,                         issn: "0266-1144"}
+    - {name: International Journal of Geomechanics (ASCE),         issn: "1532-3641"}
+    - {name: Transportation Geotechnics,                           issn: "2214-3912"}
+    - {name: "Proceedings of the ICE: Geotechnical Engineering",   issn: "1353-2618"}
+    - {name: Geotechnical Testing Journal,                         issn: "0149-6115"}
+    - {name: Soil Dynamics and Earthquake Engineering,             issn: "0267-7261"}
+    - {name: Rock Mechanics and Rock Engineering,                  issn: "0723-2632"}
+    - {name: Journal of Rock Mechanics and Geotechnical Engineering, issn: "1674-7755"}
+    - {name: Bulletin of Engineering Geology and the Environment,  issn: "1435-9529"}
+    - {name: Georisk,                                              issn: "1749-9518"}
+    - {name: Geosynthetics International,                          issn: "1072-6349"}
+    - {name: International Journal for Numerical and Analytical Methods in Geomechanics, issn: "0363-9061"}
+    - {name: Underground Space,                                    issn: "2467-9674"}
+    - {name: Geomechanics for Energy and the Environment,          issn: "2352-3808"}
+    - {name: Quarterly Journal of Engineering Geology and Hydrogeology, issn: "1470-9236"}
 
 # ---- Keywords and their weight -----------------------------------
 # Plurals are matched automatically (pile -> piles). Terms match whole
-# words only, except Chinese and Japanese terms, which match anywhere.
+# words only, except Chinese and Japanese terms, which match anywhere, and
+# Korean terms, which must start a word (particles after them still match).
 keywords:
   geotechnical: 5
   geotechnics: 5
@@ -201,121 +281,190 @@ keywords:
 # the English concept, so a French "glissement de terrain" or an Arabic
 # "انهيار أرضي" is filed exactly like an English "landslide".
 # To add a language, append its words to the relevant "terms" lists.
+# A "*" stands for the rest of a word, for languages that change word
+# endings: оползн* matches оползня and оползни, 'подпорн* стен*' any form
+# of подпорная стена, osuwisk* osuwisko and osuwiska. Keep the part before
+# the "*" long enough not to start other words (skarp* would also find
+# skarpety, socks), and list the forms instead when it is not.
+# Korean terms must start a word (the particles after them still match:
+# 산사태로), so 제방 (embankment) is not found in 규제방안 (regulatory measures).
+# List the compounds that start with another word (하천제방, 대지진), or put
+# a "*" in front of a term, in quotes, when it also ends names and compounds
+# and is found in no other word: '*댐' finds 소양강댐 (Soyang River Dam).
 multilingual_keywords:
   geotechnical:
     weight: 5
     terms: [géotechnique, géotechnicien, geotecnia, geotécnico, geotécnica, geotecnico, geotecnica,
             geoteknik, geotechnik, geotechnisch, baugrundgutachten, baugrunduntersuchung, bodengutachten,
-            भू-तकनीकी, 岩土工程, 岩土, 地盤工学, جيوتقني, جيوتقنية, جيوتكنيك]
+            भू-तकनीकी, 岩土工程, 岩土, 地盤工学, جيوتقني, جيوتقنية, جيوتكنيك,
+            địa kỹ thuật, ژئوتکنیک*, '*지반공학', 지반 공학, геотехни*, geotechni*]
   soil mechanics:
     weight: 5
     terms: [mécanique des sols, mecánica de suelos, mecânica dos solos, meccanica dei terreni, zemin mekaniği,
-            bodenmechanik, mekanika tanah, 土力学, 土質力学, ميكانيكا التربة]
+            bodenmechanik, mekanika tanah, 土力学, 土質力学, ميكانيكا التربة,
+            cơ học đất, مکانیک خاک, 토질역학, 토질 역학, механик* грунт*, mechanik* grunt*]
   landslide:
     weight: 4
     terms: [glissement de terrain, glissements de terrain, éboulement, deslizamiento, deslave, derrumbe de tierra,
             deslizamento, desmoronamento, frana, frane, smottamento, smottamenti, heyelan, toprak kayması,
             erdrutsch, erdrutsche, hangrutschung, hangrutschungen, tanah longsor, longsor, भूस्खलन,
             山体滑坡, 滑坡灾害, 发生滑坡, 滑坡体, 土砂崩れ, 地すべり, 崖崩れ,
-            انهيار أرضي, انزلاق أرضي, انهيارات أرضية, انزلاقات أرضية]
+            انهيار أرضي, انزلاق أرضي, انهيارات أرضية, انزلاقات أرضية,
+            sạt lở, lở đất, trượt lở, sạt trượt, زمین لغزش*, زمینلغزش*, رانش زمین, لغزش زمین, 산사태, 땅밀림, 토사 붕괴, 토사붕괴,
+            оползень, оползн*, сход грунта, osuwisk*, osunięci* ziemi, osunięci* gruntu, osunięci* się ziemi,
+            osunęła się ziemia, obsunięci* ziemi, remoción en masa, remociones en masa]
   debris flow:
     weight: 4
     terms: [lave torrentielle, coulée de boue, flujo de detritos, alud de lodo, corrida de lama, colata detritica,
-            çamur akıntısı, murgang, 泥石流, 土石流, سيل طيني]
+            çamur akıntısı, murgang, 泥石流, 土石流, سيل طيني,
+            lũ bùn đá, lũ bùn, جریان واریزه*, جریان گلی, 토석류, сель, селя, селем, селев*, грязев* поток*, lawin* błotn*,
+            spływ* gruzow*, huaico, huaicos, huayco, huaycos, aluvión, aluviones]
   rockfall:
     weight: 4
     terms: [chute de pierres, chute de blocs, caída de rocas, desprendimiento de rocas, queda de rochas,
-            caduta massi, kaya düşmesi, steinschlag, felssturz, batu runtuh, 落石, سقوط صخور, انهيار صخري]
+            caduta massi, kaya düşmesi, steinschlag, felssturz, batu runtuh, 落石, سقوط صخور, انهيار صخري,
+            lở đá, đá lở, đá lăn, đá rơi, ریزش سنگ, سقوط سنگ, ریزش کوه, 낙석, камнепад*, обвал* скал*, obryw* skaln*,
+            obryw* skał*]
   liquefaction:
     weight: 5
     terms: [liquéfaction, licuefacción, licuación, liquefação, liquefazione, sıvılaşma, bodenverflüssigung,
-            likuifaksi, 砂土液化, 土壤液化, 液状化, تميع التربة, تسييل التربة]
+            likuifaksi, 砂土液化, 土壤液化, 液状化, تميع التربة, تسييل التربة,
+            hóa lỏng đất, hoá lỏng đất, đất hóa lỏng, đất hoá lỏng, روانگرایی, روان گرایی, 액상화, разжижени* грунт*,
+            разжижени* почв*, upłynnieni* grunt*, upłynnieni* podłoża]
   sinkhole:
     weight: 4
     terms: [effondrement karstique, fontis, doline, socavón, socavones, sumidero, dolina, cratera, voragine,
-            obruk, erdfall, tanah ambles, amblesan, 天坑, 地面塌陷, 陥没, حفرة انهدامية, حفرة عميقة]
+            obruk, erdfall, tanah ambles, amblesan, 天坑, 地面塌陷, 陥没, حفرة انهدامية, حفرة عميقة,
+            hố tử thần, hố sụt, فروچاله*, فرو چاله*, '*싱크홀', 땅꺼짐, 땅 꺼짐, 지반 함몰, 지반함몰, 도로 함몰, 도로함몰, карстов* провал*,
+            провал* грунт*, провал* асфальт*, zapadlisk*, zapadnięci* gruntu, zapadnięci* się gruntu,
+            zapadnięci* jezdni, lej* krasow*]
   subsidence:
     weight: 3
     terms: [affaissement, hundimiento del terreno, subsidencia, afundamento do solo, subsidenza,
-            cedimento del terreno, zemin çökmesi, bodenabsenkung, penurunan tanah, धंसाव, भू-धंसाव, 地面沉降, 沉降, 地盤沈下, هبوط أرضي, هبوط التربة]
+            cedimento del terreno, zemin çökmesi, bodenabsenkung, penurunan tanah, धंसाव, भू-धंसाव, 地面沉降, 沉降, 地盤沈下,
+            هبوط أرضي, هبوط التربة,
+            sụt lún, lún sụt, lún nứt, فرونشست*, 지반침하, 지반 침하, 침하, 부등침하, 압밀침하, 도로침하, просадк* грунт*, проседани* грунт*, оседани* грунт*,
+            просел* грунт*, оседани* земн* поверхност*, osiadani* gruntu, osiadani* terenu, szkod* górnicz*,
+            deformacj* terenu]
   foundation:
     weight: 2
     terms: [fondation, fondations, cimentación, cimentaciones, fundação, fundações, fondazioni, bina temeli,
             temel kazısı, radye temel, kazıklı temel, fundament, gründung, fondasi, pondasi, नींव, 基础工程,
-            基礎工事, أساسات, الأساسات]
+            基礎工事, أساسات, الأساسات,
+            móng nhà, móng công trình, thi công móng, فونداسیون, پی سازی, پی ساختمان, 기초공사, 기초 공사, 기초 지반, фундамент,
+            фундамента, фундаменте, фундаменты, фундаментов, фундаментом, фундаментн*, fundamentu, fundamenty,
+            fundamentów, fundamentach, fundamentowani*, posadowieni*]
   piling:
     weight: 4
     terms: [pieux, pilotis, pilotes de cimentación, hinca de pilotes, pilotaje, estacas, estaqueamento,
-            pali di fondazione, kazık, pfähle, pfahlgründung, tiang pancang, 桩基, 打桩, 杭基礎, خوازيق]
+            pali di fondazione, kazık, pfähle, pfahlgründung, tiang pancang, 桩基, 打桩, 杭基礎, خوازيق,
+            cọc khoan nhồi, ép cọc, đóng cọc, cọc bê tông, móng cọc, شمع کوبی, شمعکوبی, شمع بتنی, شمع های بتنی, 말뚝, 강관말뚝, 항타,
+            свая, сваи, свай, сваями, сваю, свайн*, pale fundamentowe, pal* wiercon*, pal* przemieszczeniow*,
+            palowani*, wbijani* pali]
   retaining wall:
     weight: 4
     terms: [mur de soutènement, muro de contención, muro de contenção, muro di sostegno, istinat duvarı,
-            stützmauer, dinding penahan tanah, talud, 挡土墙, 擁壁, جدار استنادي, جدار ساند]
+            stützmauer, dinding penahan tanah, talud, 挡土墙, 擁壁, جدار استنادي, جدار ساند,
+            tường chắn, tường chắn đất, دیوار حائل, دیوار نگهبان, سازه نگهبان, '*옹벽', 흙막이, подпорн* стен*, ścian* oporow*,
+            mur* oporow*, ściank* szczeln*]
   tunnel:
     weight: 2
-    terms: [túnel, tunel, tünel, terowongan, galleria, सुरंग, 隧道, 隧洞, トンネル, نفق, أنفاق]
+    terms: [túnel, tunel, tünel, terowongan, galleria, सुरंग, 隧道, 隧洞, トンネル, نفق, أنفاق,
+            đường hầm, hầm đường bộ, hầm chui, hầm metro, hầm xuyên núi, تونل*, '*터널', тоннел*, туннел*, tunel*]
   tunnel boring machine:
     weight: 4
     terms: [tunnelier, tuneladora, tatuzão, talpa meccanica, tunnelbohrmaschine, tunnelvortrieb, 盾构, 盾构机,
-            シールドマシン, آلة حفر الأنفاق]
+            シールドマシン, آلة حفر الأنفاق,
+            máy đào hầm, robot đào hầm, دستگاه حفاری تونل, ماشین حفاری تونل, тоннелепроходческ*, проходческ* щит*,
+            проходческ* комплекс*, drążeni* tunel*, maszyn* drążąc*, tarcz* drążąc*]
   tunnel collapse:
     weight: 4
     terms: [tunnel collapse, effondrement de tunnel, derrumbe de túnel, desabamento de túnel, crollo della galleria,
-            tünel çökmesi, tunneleinsturz, terowongan runtuh, 隧道坍塌, トンネル崩落, انهيار نفق]
+            tünel çökmesi, tunneleinsturz, terowongan runtuh, 隧道坍塌, トンネル崩落, انهيار نفق,
+            sập hầm, sập đường hầm, ریزش تونل, '*터널 붕괴', '*터널붕괴', обрушени* тоннел*, обрушени* туннел*, обрушени* в тоннел*,
+            zawaleni* tunel*, zawalił się tunel, katastrof* w tunelu]
   excavation:
     weight: 2
-    terms: [excavación, escavação, scavo, kazı, baugrube, aushub, galian, खुदाई, 基坑, 开挖, 掘削, حفريات]
+    terms: [excavación, escavação, scavo, kazı, baugrube, aushub, galian, खुदाई, 基坑, 开挖, 掘削, حفريات,
+            hố đào, hố móng, گودبرداری*, گود برداری*, 굴착, 터파기, котлован*, wykop, wykopu, wykopy, wykopów, wykopie,
+            wykopach]
   embankment:
     weight: 3
     terms: [remblai, digue, terraplén, aterro, rilevato ferroviario, rilevato stradale, rilevato arginale,
-            argine, dolgu, damm, böschung, tanggul, timbunan, तटबंध, 路堤, 堤防, 盛土, سد ترابي]
+            argine, dolgu, damm, böschung, tanggul, timbunan, तटबंध, 路堤, 堤防, 盛土, سد ترابي,
+            đê điều, tuyến đê, thân đê, nền đắp, đất đắp, سیل بند, 제방, 하천제방, 임시제방, насыпь, насыпи, насыпью, дамб*, nasyp,
+            nasypu, nasypy, nasypie, wał* przeciwpowodziow*, pérdida de banca]
   dam failure:
     weight: 4
     terms: [dam failure, dam collapse, dam burst, rupture de barrage, rotura de presa, rompimento de barragem,
             crollo della diga, baraj yıkılması, dammbruch, bendungan jebol, tanggul jebol, बांध टूटना, 溃坝,
-            決壊, انهيار سد]
+            決壊, انهيار سد,
+            vỡ đập, vỡ đê, sự cố đập, شکست سد, تخریب سد, شکستن سد, '*댐 붕괴', '*댐붕괴', 저수지 붕괴, '*제방 붕괴', '*제방붕괴', '*제방 유실',
+            прорыв* дамб*, прорыв* плотин*, разрушени* плотин*, разрушени* дамб*, przerwani* wału,
+            przerwan* wał* przeciwpowodziow*, przerwani* tamy, przerwana tama, katastrof* zapory, pęknięci* tamy]
   dam:
     weight: 2
-    terms: [presa, represa, barragem, diga, baraj, talsperre, staudamm, bendungan, बांध, 大坝, ダム, السد]
+    terms: [presa, represa, barragem, diga, baraj, talsperre, staudamm, bendungan, बांध, 大坝, ダム, السد,
+            đập thủy điện, đập thuỷ điện, đập thủy lợi, đập thuỷ lợi, hồ đập, سدهای, سد مخزنی, سد خاکی, دریاچه سد,
+            سدسازی, '*댐', плотин*, zapor* wodn*, tama, tamy, tamie, tamą]
   tailings:
     weight: 3
     terms: [résidus miniers, relaves, rejeitos, barragem de rejeitos, sterili minerari, atık barajı, 尾矿, 尾矿库,
-            鉱滓, مخلفات التعدين]
+            鉱滓, مخلفات التعدين,
+            bùn thải quặng, hồ chứa bùn thải, باطله*, سد باطله, хвостохранилищ*, odpady poflotacyjne, poflotacyjn*,
+            tranque de relaves, tranques de relaves]
   slope stability:
     weight: 5
     terms: [stabilité des pentes, stabilité des talus, estabilidad de taludes, estabilidade de taludes,
             stabilità dei versanti, şev stabilitesi, böschungsstabilität, stabilitas lereng, 边坡稳定, 斜面崩壊,
-            ثبات المنحدرات]
+            ثبات المنحدرات,
+            ổn định mái dốc, ổn định sườn dốc, پایداری شیب, پایداری دامنه, 사면안정, 사면 안정, 비탈면 안정, устойчивост* склон*,
+            устойчивост* откос*, stateczn* skarp*, stateczn* zbocz*]
   slope:
     weight: 2
-    terms: [talus, pente, ladera, encosta, versante, şev, yamaç, lereng, tebing, ढलान, 边坡, 山坡, 斜面, 法面, منحدر]
+    terms: [talus, pente, ladera, encosta, versante, şev, yamaç, lereng, tebing, ढलान, 边坡, 山坡, 斜面, 法面, منحدر,
+            mái dốc, taluy, ta luy, 비탈면, 절개지, 급경사지, склон, склона, склоне, склоны, склонов, склонах, откосы, откосов,
+            откоса, skarpa, skarpy, skarpie, skarpę, skarpą, zbocze, zbocza, zboczu, falla geológica]
   ground improvement:
     weight: 5
     terms: [amélioration des sols, renforcement des sols, mejoramiento de suelos, melhoramento de solos,
             consolidamento del terreno, zemin iyileştirme, bodenverbesserung, perbaikan tanah, 地基处理, 地基加固,
-            地盤改良, تحسين التربة]
+            地盤改良, تحسين التربة,
+            xử lý nền đất yếu, xử lý nền, gia cố nền, بهسازی خاک, تثبیت خاک, بهسازی زمین, '*지반개량', 지반 개량, '*지반보강', 지반 보강,
+            укреплени* грунт*, стабилизаци* грунт*, уплотнени* грунт*, wzmocnieni* podłoża, wzmocnieni* gruntu,
+            stabilizacj* gruntu]
   grouting:
     weight: 3
     terms: [injection de coulis, inyección de lechada, injeção de calda, iniezioni di consolidamento, enjeksiyon,
-            injektion, 注浆, 灌浆, グラウト, حقن التربة]
+            injektion, 注浆, 灌浆, グラウト, حقن التربة,
+            phụt vữa, khoan phụt, تزریق دوغاب, تزریق سیمان, 그라우팅, цементаци* грунт*, инъекци* в грунт,
+            iniekcj* cementow*, iniekcj* gruntu]
   site investigation:
     weight: 4
     terms: [étude de sol, étude géotechnique, reconnaissance géotechnique, estudio geotécnico, estudio de suelos,
             investigação geotécnica, indagini geotecniche, zemin etüdü, baugrunderkundung, penyelidikan tanah,
-            sondir, 地质勘察, 勘察, 地盤調査, ボーリング調査, دراسة جيوتقنية, دراسة التربة, جسات]
+            sondir, 地质勘察, 勘察, 地盤調査, ボーリング調査, دراسة جيوتقنية, دراسة التربة, جسات,
+            khảo sát địa chất, khoan khảo sát, khảo sát địa kỹ thuật, مطالعات خاک, آزمایش خاک, '*지반조사', 지반 조사, 시추조사, 지질조사,
+            инженерно-геологическ* изыскани*, инженерн* изыскани*, геологическ* изыскани*, badani* geotechniczn*,
+            badani* podłoża, rozpoznani* geologiczn*, odwiert* geologiczn*]
   erosion:
     weight: 2
-    terms: [érosion, erosión, erosão, erosione, erozyon, erosi, abrasi, 侵蚀, 冲刷, 浸食, 侵食, انجراف التربة]
+    terms: [érosion, erosión, erosão, erosione, erozyon, erosi, abrasi, 侵蚀, 冲刷, 浸食, 侵食, انجراف التربة,
+            xói lở, xói mòn đất, فرسایش خاک, 침식, 해안침식, 세굴, эрози*, размыв, размыва, размывом, размыло, erozj*, cárcava,
+            cárcavas, socavación]
   earthquake:
     weight: 2
-    terms: [séisme, tremblement de terre, sismo, terremoto, deprem, erdbeben, gempa, भूकंप, 地震, زلزال]
+    terms: [séisme, tremblement de terre, sismo, terremoto, deprem, erdbeben, gempa, भूकंप, 地震, زلزال,
+            động đất, زلزله, زمین لرزه, 지진, 대지진, 포항지진, 경주지진, землетрясени*, trzęsieni* ziemi, wstrząs* sejsmiczn*, wstrząs* górnicz*]
   permafrost:
     weight: 3
-    terms: [pergélisol, 冻土, 永久凍土]
+    terms: [pergélisol, 冻土, 永久凍土,
+            вечн* мерзлот*, многолетнемерзл*, 영구동토, wieczn* zmarzlin*]
   offshore wind:
     weight: 3
     terms: [offshore wind, éolien en mer, eólica marina, eólica offshore, eolico offshore, offshore-wind,
-            海上风电, 洋上風力, طاقة الرياح البحرية]
+            海上风电, 洋上風力, طاقة الرياح البحرية,
+            điện gió ngoài khơi, 해상풍력, morsk* farm* wiatrow*, morsk* energetyk* wiatrow*]
   coastal protection:
     weight: 2
     terms: [protection côtière, defensa costera, proteção costeira, difesa costiera, kıyı koruma, küstenschutz,
@@ -323,29 +472,50 @@ multilingual_keywords:
   collapse:
     weight: 1
     terms: [collapse, effondrement, colapso, derrumbe, desabamento, crollo, cedimento, çökme, göçük, einsturz,
-            runtuh, ambruk, ढहना, 坍塌, 倒塌, 崩落, 崩壊, انهيار]
+            runtuh, ambruk, ढहना, 坍塌, 倒塌, 崩落, 崩壊, انهيار,
+            sụp đổ, đổ sập, bị sập, sập nhà, sập cầu, فروریزش, فرو ریخت*, ریزش ساختمان, آوار, '*붕괴', 무너져, 무너진, обрушени*,
+            обрушил*, рухнул*, zawaleni*, zawalił*, zawaliła*, runął, runęła, katastrof* budowlan*]
   soil:
     weight: 1
-    terms: [soil, suelo, suelos, zemin, toprak, boden, मिट्टी, 土壤, 土体, 土壌, تربة, التربة]
+    terms: [soil, suelo, suelos, zemin, toprak, boden, मिट्टी, 土壤, 土体, 土壌, تربة, التربة,
+            đất yếu, nền đất yếu, خاک, 토양, грунт*, gruntu, grunty, gruntów, gleb*]
   groundwater:
     weight: 1
     terms: [groundwater, nappe phréatique, eaux souterraines, agua subterránea, água subterrânea, falda acquifera,
-            yeraltı suyu, grundwasser, air tanah, भूजल, 地下水, المياه الجوفية]
+            yeraltı suyu, grundwasser, air tanah, भूजल, 地下水, المياه الجوفية,
+            nước ngầm, آب زیرزمینی, آب های زیرزمینی, آبخوان*, 지하수, грунтов* вод*, подземн* вод*, wód gruntowych,
+            wody gruntowe, wód podziemnych, wody podziemne]
+  diaphragm wall:
+    weight: 5
+    terms: [paroi moulée, muro pantalla, parede diafragma, schlitzwand, 地下连续墙, 地中連続壁, tường vây, 지하연속벽, стена в грунте,
+            ścian* szczelinow*]
+  earthworks:
+    weight: 4
+    terms: [movimiento de tierras, terrassement, erdarbeiten, san lấp mặt bằng, عملیات خاکی, '*토공사', земляны* работ*,
+            robot* ziemn*]
+  jet grouting:
+    weight: 5
+    terms: [高压旋喷, 고압분사, струйн* цементаци*, iniekcj* strumieniow*]
   # weight 0: no points, but helps choose the theme
   flood:
     weight: 0
     terms: [flood, inondation, crue, inundación, inundação, enchente, alluvione, taşkın, hochwasser, überschwemmung,
-            banjir, बाढ़, 洪水, فيضان, سيول]
+            banjir, बाढ़, 洪水, فيضان, سيول,
+            lũ lụt, ngập lụt, lũ quét, سیل, سیلاب*, 홍수, 침수, наводнени*, паводк*, подтоплени*, powódź, powodzi,
+            powodzią, podtopieni*]
   metro line:
     weight: 0
-    terms: [metro line, metro station, metro rail, métro, metrô, u-bahn, mrt, 地铁, 地下鉄, مترو]
+    terms: [metro line, metro station, metro rail, métro, metrô, u-bahn, mrt, 地铁, 地下鉄, مترو, متروی,
+            tuyến metro, đường sắt đô thị, 지하철, 도시철도, метро, метрополитен*, linii metra, stacji metra, budow* metra]
   railway:
     weight: 0
-    terms: [railway, voie ferrée, ferrocarril, ferrovia, demiryolu, eisenbahn, kereta api, 铁路, 鉄道, سكة حديد]
+    terms: [railway, voie ferrée, ferrocarril, ferrovia, demiryolu, eisenbahn, kereta api, 铁路, 鉄道, سكة حديد,
+            đường sắt, راه آهن, 철도, железн* дорог*, kolejow*, linii kolejowej]
 
 # Headlines containing these lose 5 points each (noise filter). Whole words
 # only ("election" does not touch "selection"); Chinese and Japanese terms
-# match anywhere.
+# match anywhere, Korean ones at the start of a word; "*" works as in the
+# keyword lists.
 exclude:
   - share price
   - stock market
@@ -390,6 +560,22 @@ exclude:
   - 政界
   - 政権
   - 自民党
+  # market crashes and attacks in Russian (обвал рынка, обрушился с критикой)
+  - обвал* рынк*
+  - обвал* рубл*
+  - обвал* курс*
+  - обвал* акци*
+  - обвал* бирж*
+  - обвал* цен*
+  - рухнул* рынк*
+  - обрушил* с критик*
+  # Korean tunnel metaphors (the long tunnel of recession)
+  - 불황의 터널
+  - 터널의 끝
+  - 긴 터널을
+  # a flood of criticism, of votes (Spanish aluvión)
+  - aluvión de críticas
+  - aluvión de votos
   # traffic pile-ups and piling into investments
   - pile-up
   - pile up
@@ -417,3 +603,20 @@ claude:
   effort: low               # low | medium | high — how hard Claude thinks per batch
   max_candidates: 130     # best-scoring stories sent to Claude per run
   min_relevance: 3       # keep stories Claude rates 3/5 or higher
+
+# ---- Issue brief (Word document for the editorial meeting) -------
+# Claude reads the quarter's stories and research papers and drafts the brief:
+# an overview, a proposed line-up per theme, feature leads, Academia-to-Industry
+# topics, a regional-balance check, gaps worth covering and a watch list. It uses
+# the same ANTHROPIC_API_KEY secret as the triage. A draft is written by the daily
+# scan in the last days_before_end days of the quarter and refreshed when it is
+# refresh_days old; the final brief is written the day after the quarter closes.
+# "Generate / update brief" on an issue page writes one at any time.
+brief:
+  model: claude-opus-5-5   # Claude Opus: the most capable model, for a once-a-quarter document
+  effort: high             # low | medium | high — how hard Claude thinks about the line-up
+  min_relevance: 3         # stories rated 3/5 or higher (keyword-ranked stories count too)
+  max_per_theme: 40        # best stories per theme that Claude reads
+  max_papers: 40           # best research papers that Claude reads
+  days_before_end: 21      # automatic draft in the last 21 days of the quarter
+  refresh_days: 7          # the draft is rewritten when it is 7 days old

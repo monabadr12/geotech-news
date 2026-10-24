@@ -1,7 +1,29 @@
 # Change log and open items for the website report (docs/reports/site-report.docx).
 # Newest first. The report is rebuilt from this file after every scan.
 
+# What the website does (shown at the start of the report). "Name: description".
+features:
+  - "Daily scan: every day at 05:00 Cairo time, and on demand with Scan now, the scanner reads specialist, society and trade-press websites, worldwide Google News searches in English and 16 other languages, and new papers from geotechnical journals."
+  - "Categorisation: every headline, in any covered language, is scored against weighted geotechnical keywords and filed under one of the magazine's eight themes; Claude then rates its geotechnical substance (1-5), confirms the theme, suggests an editorial use, writes a magazine angle and translates foreign headlines."
+  - "Balanced digests: no theme may take more than 30 % of a digest, and several outlets reporting the same event are merged into one story."
+  - "Archive: every digest is kept permanently and grouped into three-month issue windows that follow the magazine's cycle, each with an issue page."
+  - "Issue brief: for each issue window Claude drafts a Word brief for the editorial meeting - a proposed line-up per theme, feature leads, Academia-to-Industry topics, a regional-balance check and gaps worth covering. Drafts appear in the last weeks of each quarter, a final brief after it closes, and on demand from the issue page."
+  - "Research papers: new papers from journals such as Géotechnique, Canadian Geotechnical Journal, ASCE JGGE, Soils and Foundations and Acta Geotechnica arrive through Crossref, with a one-line note on why each matters for practice."
+  - "Trends: a page charting stories per month and per quarter by theme, theme shares over time, rising keywords, regions, editorial uses and sources."
+  - "Search and AI assistant: search every archived story with filters, or ask the AI assistant, which can also read attached PDF and Word documents."
+  - "Excel workbooks: one per issue window and one for the whole archive, with an interactive dashboard, planning columns and a reading view by theme."
+  - "Website report: this document, rebuilt after every scan."
+
 changes:
+  - date: 2026-10-24
+    title: Issue brief, research papers, fixed sources, five more languages and a Trends page
+    items:
+      - Issue brief (Word) - for each issue window Claude drafts a brief for the editorial meeting - an overview, a proposed line-up per theme, feature leads with the kinds of experts to approach, Academia-to-Industry topics, a regional-balance check, gaps worth covering and a watch list. Drafts appear in the last 21 days of each quarter and are refreshed weekly, the final brief follows the day after the quarter closes, and Generate / update brief on the issue page starts one at any time.
+      - Research papers - each scan collects new papers from 25 geotechnical journals through Crossref (Géotechnique, Canadian Geotechnical Journal, ASCE JGGE, Soils and Foundations, Acta Geotechnica and others), with a one-line note from Claude on why each matters for practice. They appear under New research on digest and issue pages, in Search, in the Excel Research sheet and in the issue brief.
+      - All 18 failing sources were re-tested from GitHub's network with the new Check feeds workflow. Tunnels & Tunnelling, Rail Technology Magazine and ENR now have working feeds, TunnelTalk is replaced by Tunnelling Journal, Ground Engineering was added, and sites that block automated readers (ISSMGE, ICE, GEER, USGS, GeoEngineer, FHWA, ReliefWeb, Railway Gazette, Rail Business UK, Construction Week, International Construction) are read through Google News searches limited to the site.
+      - Five more languages - Vietnamese, Korean, Russian and Polish Google News editions, Persian through six Persian news sites (Google News has no Persian edition), and Spanish-language editions for Colombia, Chile, Peru and Argentina. About 470 new keywords, with word-stem matching for inflected languages.
+      - Trends page - stories per month and per quarter by theme, theme shares over time, rising keywords, regions, editorial uses, relevance and sources, with hover details, table views and a CSV download.
+      - The Word website report now opens with a summary of what the website does and has sections for research papers and issue briefs.
   - date: 2026-10-24
     title: Balanced digests, same-event merging, interactive Excel workbook
     items:
@@ -46,5 +68,4 @@ changes:
       - First scan ran on 24 October 2026 - 704 new items, 60 stories selected.
 
 open_items:
-  - Replace the addresses of failing websites with their RSS feeds (see Source health).
-  - Check that the ANTHROPIC_API_KEY secret is accepted (the first scan reported it as rejected).
+  - Check the Source health section after the next scans; any site still failing can be tested with the Check feeds workflow.
