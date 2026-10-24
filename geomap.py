@@ -76,6 +76,9 @@ def country_name(code):
     return (known["n"] if known else EXTRA_NAMES.get(code)) or site_builder.COUNTRIES.get(code, code)
 
 
+_warned = set()  # settings already reported as unreadable
+
+
 def settings(cfg):
     """The map: section of config.yaml, with defaults; a number that cannot be read is reported
     and its default used, so a typo there never stops the site from being built."""
@@ -89,7 +92,9 @@ def settings(cfg):
             try:
                 out[key] = max(0, int(m[key]))
             except (TypeError, ValueError):
-                print(f"config.yaml map: {key} should be a whole number; {default} is used.")
+                if key not in _warned:  # once per run, not once per call
+                    _warned.add(key)
+                    print(f"config.yaml map: {key} should be a whole number; {default} is used.")
         else:
             out[key] = str(m[key]).strip()
     out["model"] = out["model"] or str((cfg.get("claude") or {}).get("model") or "claude-haiku-5-5")
@@ -105,8 +110,13 @@ def region_info(cfg):
     out = []
     for name in REGIONS:
         r = regions.get(name) if isinstance(regions.get(name), dict) else {}
+        raw, trans = r.get("members"), r.get("transnational")
+        if isinstance(raw, str):  # codes written without brackets ("AU, NZ")
+            raw = raw.replace(",", " ").split()
+        if isinstance(trans, str):
+            trans = [trans]
         members = []
-        for c in r.get("members") or []:
+        for c in raw if isinstance(raw, list) else []:
             c = code_of(c)
             if c and c not in members:
                 members.append(c)
@@ -115,7 +125,7 @@ def region_info(cfg):
         except (TypeError, ValueError):
             societies = 0
         out.append({"name": name, "members": members, "societies": societies or len(members),
-                    "transnational": [str(t) for t in r.get("transnational") or []],
+                    "transnational": [str(t) for t in trans] if isinstance(trans, list) else [],
                     "to_check": bool(r.get("to_check"))})
     return out
 
@@ -202,9 +212,21 @@ def locate_missing(cfg, notes):
     """Give archived stories without a "country" key their country and place (Claude), newest
     first, at most map: locate_per_run per run, and save their digests. A story Claude answers
     for keeps its answer (a "" country means global), so it is never asked again. Returns how
-    many were located; without a key it does nothing."""
+    many were located; without a key it does nothing. The scan calls it before it saves the
+    day's digest, so an unexpected error here becomes a note, never a failed scan."""
     import scanner  # (it imports this module's callers, so not at the top)
 
+    try:
+        return _locate(cfg, notes, scanner)
+    except Exception as ex:
+        note = (f"Locating archived stories for the world map stopped ({type(ex).__name__}: "
+                f"{scanner.api_message(ex)[:100]}); they are tried again after the next scan.")
+        notes.append(note)
+        print(note)
+        return 0
+
+
+def _locate(cfg, notes, scanner):
     opts = settings(cfg)
     raw = os.environ.get("ANTHROPIC_API_KEY", "")
     key = scanner.clean_api_key(raw)
@@ -254,6 +276,8 @@ Stories:
         text = next((b.text for b in response.content if b.type == "text"), "")
         try:
             answers = json.loads(text)["stories"]
+            if not isinstance(answers, list):
+                raise TypeError("no list of stories")
         except (ValueError, KeyError, TypeError) as ex:
             failed = f"Claude's locations for the world map could not be read for a batch ({str(ex)[:80]})."
             continue
@@ -486,6 +510,10 @@ def map_body(ctx):
                 "during the scan; stories archived earlier are located in batches after the next scan.")
     elif not d0["n"]:
         note = "No stories in this period."
+    elif u:  # the same words as map.js
+        note = (f"{u:,} {'story' if u == 1 else 'stories'} in this period {'has' if u == 1 else 'have'} no location "
+                f"yet; {'it is' if u == 1 else 'they are'} located after the next scan. Member-society countries are "
+                "marked as gaps only from the stories already located.")
     count = f"{d0['n']:,} {'story' if d0['n'] == 1 else 'stories'} · {len(c)} {'country' if len(c) == 1 else 'countries'}"
     out = [
         site_builder.hero(f"World map · as of {esc(site_builder.nice_date(data['asof']))}", "World map", lede),
