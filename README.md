@@ -1,82 +1,112 @@
-# Geotechnical News Scanner — ISSMGE Magazine
+# Geotechnical News Desk — ISSMGE Magazine
 
 Every morning GitHub automatically:
+
 1. reads 26 websites (societies, hazard agencies, trade press) and 76 Google News
-   searches listed in `config.yaml`. The searches cover seven English-language
-   editions (UK, US, India, Australia, South Africa, Singapore, UAE) plus Arabic,
-   French, Spanish, Portuguese, German, Italian, Turkish, Hindi, Indonesian,
-   Chinese and Japanese, so coverage is worldwide;
-2. scores each new story for geotechnical relevance (keywords) and removes duplicates;
-3. *(optional)* asks Claude to rate each story 1–5, place it under one of the magazine's
-   eight cross-cutting themes, suggest a use (news brief, feature lead, Academia-to-Industry
-   topic…), write the geotechnical angle, and translate non-English headlines;
-4. publishes the digest at `https://<your-username>.github.io/<repo-name>/`
-   (with an archive) and *(optional)* e-mails it to you.
+   searches listed in `config.yaml`. The searches cover seven English-language editions
+   (UK, US, India, Australia, South Africa, Singapore, UAE) plus Arabic, French, Spanish,
+   Portuguese, German, Italian, Turkish, Hindi, Indonesian, Chinese and Japanese;
+2. scores each new story for geotechnical relevance (78 weighted keywords) and removes duplicates;
+3. asks Claude to rate each story 1–5, place it under one of the magazine's eight themes,
+   suggest a use (news brief, feature lead, Academia-to-Industry topic, regional insight,
+   watch only), write the geotechnical angle, and translate non-English headlines;
+4. saves the digest permanently, rebuilds the website and *(optionally)* e-mails it.
 
-Stories already shown are remembered, so each digest contains only new items.
+Website: **https://monabadr12.github.io/geotech-news/**
 
-## Quick setup — one command (recommended)
+## The website
 
-Install the free GitHub CLI (https://cli.github.com), then run once:
+| Page | What it is for |
+|---|---|
+| **Latest** | Today's digest, grouped by theme (strongest theme first), with filters for rating, use and keywords. |
+| **Archive** | Every digest ever produced, grouped into **three-month issue windows** that match the magazine's quarterly cycle. |
+| **Issue collection** (one per quarter, e.g. *Q4 2026*) | All stories from the quarter in one place: theme overview table, "strongest leads" shortlist, all stories by theme, list of daily digests, **spreadsheet download (CSV)** and print / save as PDF. This is the page to plan an issue from. |
+| **Search** | Search all archived stories by keyword, issue window, theme, use and rating; export the results as a spreadsheet. |
+| **Method & sources** | What is scanned, how stories are scored, and which sources failed on the latest run. |
 
-    gh auth login          # opens your browser; credentials stay on your computer
+### How the archive works
 
-Then, from inside this folder:
-
-    bash setup.sh          # or: bash setup.sh my-repo-name
-
-The script creates the repository, uploads the files, enables write permissions and
-the Pages website, asks for your Claude API key (typed hidden, stored as an encrypted
-GitHub secret), optionally sets up e-mail, and starts the first scan.
+* Each scan saves its stories to `data/digests/YYYY-MM-DD.json`. **These files are the archive** —
+  they are kept forever in the repository (and in its Git history).
+* Everything in `docs/` (the website) is rebuilt from those files on every run, so the design can be
+  changed at any time without losing anything.
+* Issue windows are calendar quarters by default (Jan–Mar, Apr–Jun, Jul–Sep, Oct–Dec). If the magazine's
+  cycle starts in a different month, change `issue_start_month` under `magazine:` in `config.yaml`.
+* The spreadsheets (`docs/exports/2026-Q4.csv` etc.) open directly in Excel and keep Arabic, Chinese and
+  other scripts intact.
 
 ---
 
-## Manual setup (about 15 minutes, once)
+## Setup (one time, about 15 minutes)
 
-1. **Create a repository** on GitHub, e.g. `geotech-news`, and upload all these files,
-   keeping the folders (`.github/workflows/scan.yml`, `data/`, `docs/`).
-   *Tip:* the `.github` folder is hidden on some computers. If it doesn't upload, create the file
-   on GitHub via **Add file → Create new file**, name it `.github/workflows/scan.yml`
-   and paste the contents.
-2. **Allow the workflow to save results:** Settings → Actions → General →
-   *Workflow permissions* → **Read and write permissions** → Save.
-3. **Turn on the web page:** Settings → Pages → *Deploy from a branch* → branch `main`,
-   folder `/docs` → Save. (Free for public repositories.)
-4. **Run a first scan:** Actions tab → *Geotechnical news scan* → **Run workflow**.
-   After 1–2 minutes, open your Pages address.
-5. **Check "Scanner notes and sources that failed"** at the bottom of the digest. For any
-   failed site, find its RSS feed address (often `site.com/feed/` or an RSS icon) and
-   replace the address in `config.yaml`.
+The files are already in this repository. What remains is done on github.com.
 
-## Optional: AI triage with Claude
-Get an API key at console.anthropic.com (billed separately from a Claude.ai subscription).
-Then Settings → Secrets and variables → Actions → **New repository secret**:
-`ANTHROPIC_API_KEY`. The configured model is Claude Haiku, the lowest-cost model.
-Without a key the tool still works using keywords only.
+### 1. Put the workflow live
+The scheduled scan only runs from the repository's **main** branch. Merge this work into `main`
+(open the pull request on GitHub and press **Merge**).
+
+### 2. Allow the workflow to save results
+**Settings → Actions → General → Workflow permissions → Read and write permissions → Save.**
+
+### 3. Add your Anthropic API key as a GitHub secret
+The key lets the scanner call Claude. A *secret* is stored encrypted by GitHub: nobody can read it back
+(not even you), it never appears in the code or the logs, and only the workflow can use it.
+
+1. **Get a key.** Go to <https://console.anthropic.com>, sign in, open **API Keys** and press
+   **Create Key**. Name it e.g. `geotech-news`, then copy the key (it starts with `sk-ant-`).
+   The key is shown only once. API use is billed separately from a Claude.ai subscription, so
+   add a payment method or credits under **Billing**. A monthly spend limit is a sensible safeguard
+   (Settings → Limits).
+2. **Open the repository's secrets.** On github.com open `monabadr12/geotech-news` →
+   **Settings** (top bar of the repository) → in the left menu **Secrets and variables** → **Actions**.
+3. Press **New repository secret**.
+4. **Name:** `ANTHROPIC_API_KEY` (exactly this, in capitals).
+   **Secret:** paste the key. Press **Add secret**.
+5. You should now see `ANTHROPIC_API_KEY` listed under *Repository secrets*. To change the key later,
+   press the pencil icon next to it; to stop using it, delete it.
+
+Never paste the key into `config.yaml`, a commit, an issue or an e-mail: the repository is public.
+Without a key the scanner still works, ranking stories by keywords only.
+
+The configured model is Claude Haiku (`claude-haiku-5-5`), the lowest-cost model, which is ample for this
+triage. A daily run sends about 130 short headlines, so the cost is typically a few cents per day.
+
+### 4. Turn on the website
+**Settings → Pages → Build and deployment → Source: Deploy from a branch → Branch: `main`, folder `/docs`
+→ Save.** After a minute or two the site is live at the address above.
+
+### 5. Run the first scan
+**Actions** tab → **Geotechnical news scan** → **Run workflow**. It takes 2–4 minutes; then open the website.
+
+### 6. Check the sources
+At the bottom of the digest, open **Scanner notes and sources that failed**. For any failed site find its
+RSS feed address (often `site.com/feed/` or an RSS icon) and replace the address in `config.yaml`.
+If AI triage did not work, the same panel says why (for example, a rejected API key).
 
 ## Optional: e-mail delivery
-Add these secrets: `SMTP_HOST`, `SMTP_PORT` (usually 587), `SMTP_USER`, `SMTP_PASSWORD`,
-`MAIL_TO` (comma-separate several addresses).
+Add these secrets the same way as the API key: `SMTP_HOST`, `SMTP_PORT` (usually 587), `SMTP_USER`,
+`SMTP_PASSWORD`, `MAIL_TO` (comma-separate several addresses).
 For Gmail: host `smtp.gmail.com`, and create an *App password* in your Google account
 (2-step verification required) to use as `SMTP_PASSWORD`.
 
 ## Changing things
-All in `config.yaml`: add sites under `feeds`, add Google News searches under `queries`
-(e.g. Arabic or French searches with `language: ar`), tune keyword weights, or change
-`lookback_hours`/`max_items`. The schedule is in `.github/workflows/scan.yml`.
+* **Sources, searches, keywords, themes, limits:** all in `config.yaml` (edit it on GitHub with the pencil icon).
+  Adding a language is one line under `extra_queries`.
+* **Schedule:** `.github/workflows/scan.yml` (daily at 05:00 UTC; the file shows how to switch to every two days).
+* **Look of the website:** `assets/style.css`. To rebuild the site without scanning, run `python site_builder.py`.
 
-## Sources at a glance
-* **Geotechnical specialists:** GeoEngineer, Geosynthetica, The Landslide Blog (Eos).
-* **Societies and institutions:** ISSMGE, ASCE Geo-Institute, DFI, ICE, FHWA.
-* **Hazard and post-event reporting:** GEER Association, USGS Landslide Hazards,
-  USGS news, ReliefWeb.
-* **Trade press:** New Civil Engineer, Tunnels & Tunnelling, TunnelTalk, Rail Business UK,
-  Railway Gazette, Rail Technology Magazine, World Highways, International Construction,
-  Construction Enquirer, ENR, Construction Week Middle East, Mining.com.
-* **Research announcements:** ScienceDaily (Earth & Climate), Phys.org (Earth Sciences).
+## Files
+| File | Purpose |
+|---|---|
+| `scanner.py` | Reads the sources, scores and triages stories, saves the digest. |
+| `site_builder.py` | Builds the website in `docs/` from the archive in `data/digests/`. |
+| `config.yaml` | All settings. |
+| `assets/` | Website style sheet and script. |
+| `data/digests/` | **The permanent archive**, one file per day. |
+| `data/seen.json` | Stories already shown (45-day memory, so nothing repeats). |
+| `docs/` | The generated website (do not edit by hand). |
 
 ## Notes
-* Headlines link to the original publishers; the digest reproduces no article text beyond
-  the short feed summary. Treat stories as leads and go to the primary source before publishing.
-* Some sites block automated readers or have no feed; Google News searches usually still
-  catch their stories.
+* Headlines link to the original publishers; the digest reproduces no article text beyond the short feed
+  summary. Treat stories as leads and go to the primary source before publishing.
+* Some sites block automated readers or have no feed; Google News searches usually still catch their stories.

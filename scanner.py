@@ -2,8 +2,9 @@
 """
 ISSMGE Magazine — Geotechnical News Scanner
 Reads trade-site feeds and Google News searches, scores stories for
-geotechnical relevance, (optionally) asks Claude to triage them, and
-writes an HTML digest to docs/ (GitHub Pages) with optional e-mail.
+geotechnical relevance, (optionally) asks Claude to triage them, saves the
+digest to data/digests/ (the permanent archive) and rebuilds the website in
+docs/ (GitHub Pages). Optionally e-mails the digest.
 """
 import calendar
 import datetime as dt
@@ -25,12 +26,13 @@ import feedparser
 import requests
 import yaml
 
+import site_builder
+
 ROOT = Path(__file__).resolve().parent
 CONFIG = Path(os.environ.get("SCANNER_CONFIG", ROOT / "config.yaml"))
 SEEN_FILE = ROOT / "data" / "seen.json"
-DOCS = ROOT / "docs"
 HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; GeotechNewsScanner/1.0)"}
-USES = ["News brief", "Feature lead", "Academia-to-Industry topic", "Regional insight", "Watch only"]
+USES = site_builder.USES
 
 
 # ------------------------------------------------------------------ fetching
@@ -76,13 +78,13 @@ def google_sources(g):
         for ed in editions:
             lang, country = ed.get("language", dl), ed.get("country", dc)
             out.append({"name": f"Google News {country}", "google": True, "bonus": 0,
-                        "url": google_news_url(q, lang, country)})
+                        "region": country, "url": google_news_url(q, lang, country)})
     for item in g.get("extra_queries", []):
         if isinstance(item, str):
             item = {"q": item}
         lang, country = item.get("language", dl), item.get("country", dc)
         out.append({"name": f"Google News {country}", "google": True,
-                    "bonus": int(item.get("bonus", 0)),
+                    "bonus": int(item.get("bonus", 0)), "region": country,
                     "url": google_news_url(item["q"], lang, country)})
     return out
 
@@ -129,11 +131,34 @@ def guess_theme(text, themes):
 
 
 # ------------------------------------------------------------------ Claude triage
+def triage_schema(themes):
+    story = {
+        "type": "object",
+        "properties": {
+            "id": {"type": "integer"},
+            "relevance": {"type": "integer"},
+            "theme": {"type": "string", "enum": themes},
+            "use": {"type": "string", "enum": USES},
+            "angle": {"type": "string"},
+            "title_en": {"type": "string"},
+        },
+        "required": ["id", "relevance", "theme", "use", "angle", "title_en"],
+        "additionalProperties": False,
+    }
+    return {"type": "object", "properties": {"stories": {"type": "array", "items": story}},
+            "required": ["stories"], "additionalProperties": False}
+
+
 def claude_triage(items, cfg, notes):
     key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
     if not key or not items:
         return False
+    import anthropic  # only needed when a key is configured
+
+    client = anthropic.Anthropic(api_key=key, max_retries=3)
+    ccfg = cfg["claude"]
     themes = list(cfg["themes"].keys()) + ["General"]
+    schema = triage_schema(themes)
     for start in range(0, len(items), 40):
         batch = items[start:start + 40]
         listing = "\n".join(
@@ -141,111 +166,52 @@ def claude_triage(items, cfg, notes):
             for i, it in enumerate(batch))
         prompt = f"""You are the news-desk assistant of the ISSMGE magazine (International Society for Soil Mechanics and Geotechnical Engineering). Readers are practising geotechnical engineers and academics worldwide. The editor wants stories with real geotechnical substance, not general construction or politics.
 
-For each story below return a JSON object with:
+For each story below return an object with:
 - "id": the number
 - "relevance": 1-5 (5 = rich geotechnical lesson or major ground-related event; 3 = clear ground engineering element worth a brief; 1 = not geotechnical)
-- "theme": exactly one of {json.dumps(themes)}
-- "use": exactly one of {json.dumps(USES)}
+- "theme": the one magazine theme it fits best
+- "use": the best editorial use
 - "angle": one sentence (max 30 words) stating the geotechnical question a magazine piece could explore, in your own words
 - "title_en": if the headline is not in English, your English translation of it (max 20 words); otherwise ""
-
-Respond ONLY with a JSON array, no other text.
 
 Stories:
 {listing}"""
         try:
-            r = requests.post(
-                "https://api.anthropic.com/v1/messages",
-                headers={"x-api-key": key, "anthropic-version": "2023-06-01",
-                         "content-type": "application/json"},
-                json={"model": cfg["claude"]["model"], "max_tokens": 6000,
-                      "messages": [{"role": "user", "content": prompt}]},
-                timeout=180)
-            r.raise_for_status()
-            text = "".join(b.get("text", "") for b in r.json().get("content", []))
-            text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text.strip())
-            for d in json.loads(text):
-                idx = int(d["id"])
-                if 0 <= idx < len(items):
-                    items[idx].update(
-                        relevance=int(d.get("relevance", 0)),
-                        theme=d.get("theme") if d.get("theme") in themes else items[idx]["theme"],
-                        use=d.get("use") if d.get("use") in USES else "",
-                        angle=str(d.get("angle", ""))[:300],
-                        title_en=str(d.get("title_en", ""))[:200])
-        except Exception as ex:  # fall back to keywords for this batch
+            response = client.messages.create(
+                model=ccfg["model"],
+                max_tokens=16000,
+                output_config={"effort": ccfg.get("effort", "low"),
+                               "format": {"type": "json_schema", "schema": schema}},
+                messages=[{"role": "user", "content": prompt}])
+        except anthropic.AuthenticationError:
+            notes.append("AI triage skipped: the ANTHROPIC_API_KEY secret was rejected. "
+                         "Check the key in Settings → Secrets and variables → Actions.")
+            return False
+        except anthropic.APIError as ex:  # fall back to keywords for this batch
             notes.append(f"AI triage failed for one batch ({str(ex)[:100]}); keyword ranking used.")
+            continue
+        if response.stop_reason != "end_turn":
+            notes.append(f"AI triage stopped early for one batch ({response.stop_reason}); keyword ranking used.")
+            continue
+        text = next((b.text for b in response.content if b.type == "text"), "")
+        try:
+            results = json.loads(text)["stories"]
+        except (ValueError, KeyError) as ex:
+            notes.append(f"AI triage returned unreadable output for one batch ({str(ex)[:80]}).")
+            continue
+        for d in results:
+            idx = int(d["id"])
+            if 0 <= idx < len(items):
+                items[idx].update(
+                    relevance=max(1, min(5, int(d["relevance"]))),
+                    theme=d["theme"] if d["theme"] in themes else items[idx]["theme"],
+                    use=d["use"] if d["use"] in USES else "",
+                    angle=d["angle"][:300],
+                    title_en=d["title_en"][:200])
     return True
 
 
-# ------------------------------------------------------------------ output
-CSS = """
-:root{--bg:#f6f5f1;--card:#fff;--ink:#1d2327;--muted:#5f6b72;--line:#e2e0d8;--accent:#8a5a19;--chip:#f1e9dc}
-@media (prefers-color-scheme:dark){:root{--bg:#15181b;--card:#1f2327;--ink:#e9ecee;--muted:#9aa6ad;--line:#30363b;--accent:#e0a95a;--chip:#2c2a25}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Georgia,'Times New Roman',serif}
-.wrap{max-width:860px;margin:0 auto;padding:28px 18px 60px}
-header{border-bottom:3px double var(--line);margin-bottom:22px;padding-bottom:14px}
-h1{font-size:1.9rem;margin:0 0 4px}h2{font-size:1.15rem;margin:34px 0 10px;color:var(--accent);font-family:Arial,sans-serif;letter-spacing:.02em}
-.meta,.small{color:var(--muted);font:13px/1.5 Arial,sans-serif}
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:10px 0}
-.card a{color:var(--ink);font-weight:bold;text-decoration:none}.card a:hover{text-decoration:underline}
-.angle{margin:8px 0 4px;font-style:italic}
-.chip{display:inline-block;background:var(--chip);border-radius:20px;padding:1px 9px;margin:4px 4px 0 0;font:12px Arial,sans-serif;color:var(--muted)}
-.chip.use{color:var(--accent);font-weight:bold}
-details{margin-top:30px}summary{cursor:pointer}ul{padding-left:20px}
-"""
-
-
-def render(items, failures, notes, now, ai_used, total_seen, archive_links):
-    esc = html.escape
-    by_theme = {}
-    for it in items:
-        by_theme.setdefault(it["theme"], []).append(it)
-    order = sorted(by_theme, key=lambda t: (-max(i["rank"] for i in by_theme[t]), t))
-    parts = [f"<!doctype html><html lang='en'><head><meta charset='utf-8'>"
-             f"<meta name='viewport' content='width=device-width,initial-scale=1'>"
-             f"<title>Geotechnical News Digest — {now:%d %b %Y}</title><style>{CSS}</style></head>"
-             f"<body><div class='wrap'><header><h1>Geotechnical News Digest</h1>"
-             f"<div class='meta'>ISSMGE Magazine news desk · {now:%A %d %B %Y, %H:%M} UTC · "
-             f"{len(items)} stories selected from {total_seen} new items"
-             f"{' · AI-triaged' if ai_used else ' · keyword-ranked'}</div></header>"]
-    if not items:
-        parts.append("<p>No new geotechnical stories met the threshold in this period.</p>")
-    for theme in order:
-        parts.append(f"<h2>{esc(theme)}</h2>")
-        for it in sorted(by_theme[theme], key=lambda i: -i["rank"]):
-            date = it["time"].strftime("%d %b") if it["time"] else "date n/a"
-            stars = ("★" * it["relevance"] + "☆" * (5 - it["relevance"])) if it.get("relevance") else ""
-            shown = it.get("title_en") or it["title"]
-            parts.append("<div class='card'>"
-                         f"<a href='{esc(it['link'])}' target='_blank' rel='noopener'>{esc(shown)}</a>"
-                         + (f"<div class='small'>original: {esc(it['title'])}</div>"
-                            if it.get('title_en') else ""))
-            parts.append(
-                f"<div class='small'>{esc(it['source'])} · {date} {('· ' + stars) if stars else ''}</div>")
-            if it.get("angle"):
-                parts.append(f"<div class='angle'>{esc(it['angle'])}</div>")
-            elif it["summary"]:
-                parts.append(f"<div class='small' style='margin-top:6px'>{esc(it['summary'][:260])}…</div>")
-            if it.get("use"):
-                parts.append(f"<span class='chip use'>{esc(it['use'])}</span>")
-            for h in it["hits"][:5]:
-                parts.append(f"<span class='chip'>{esc(h)}</span>")
-            parts.append("</div>")
-    if failures or notes:
-        parts.append("<details><summary class='small'>Scanner notes and sources that failed</summary><ul class='small'>")
-        parts += [f"<li>{esc(n)}</li>" for n in notes]
-        parts += [f"<li><b>{esc(n)}</b>: {esc(e)}</li>" for n, e in failures]
-        parts.append("</ul></details>")
-    if archive_links:
-        parts.append("<details><summary class='small'>Previous digests</summary><ul class='small'>")
-        parts += [f"<li><a href='{esc(href)}'>{esc(label)}</a></li>" for label, href in archive_links]
-        parts.append("</ul></details>")
-    parts.append("<p class='small' style='margin-top:30px'>Headlines link to the original publishers. "
-                 "Use them as leads; verify with the primary source before publishing.</p></div></body></html>")
-    return "".join(parts)
-
-
+# ------------------------------------------------------------------ e-mail
 def send_email(subject, body_html):
     host, to = os.environ.get("SMTP_HOST", "").strip(), os.environ.get("MAIL_TO", "").strip()
     if not host or not to:
@@ -261,6 +227,26 @@ def send_email(subject, body_html):
             s.login(user, pwd)
         s.sendmail(msg["From"], [a.strip() for a in to.split(",")], msg.as_string())
     return f"E-mail sent to {to}."
+
+
+# ------------------------------------------------------------------ archive
+def save_digest(now, stories, failures, notes, ai_used, new_count):
+    """Write today's digest to data/digests/YYYY-MM-DD.json. A second run on the
+    same day adds its stories to the morning's file instead of replacing it."""
+    path = site_builder.DIGESTS / f"{now:%Y-%m-%d}.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    digest = {"date": f"{now:%Y-%m-%d}", "generated": now.isoformat(timespec="minutes"),
+              "ai_used": ai_used, "new_items": new_count, "stories": stories,
+              "failures": [list(f) for f in failures], "notes": notes}
+    if path.exists():
+        old = json.loads(path.read_text(encoding="utf-8"))
+        known = {s["id"] for s in stories}
+        digest["stories"] = stories + [s for s in old.get("stories", []) if s["id"] not in known]
+        digest["new_items"] += old.get("new_items", 0)
+        digest["ai_used"] = ai_used or old.get("ai_used", False)
+    digest["stories"].sort(key=lambda s: -s["rank"])
+    path.write_text(json.dumps(digest, ensure_ascii=False, indent=1), encoding="utf-8")
+    return digest
 
 
 # ------------------------------------------------------------------ main
@@ -307,8 +293,9 @@ def main():
             score, hits = keyword_score(text, cfg, compiled)
             score += src.get("boost", 0) if hits else 0
             score += src.get("bonus", 0)
-            items.append(dict(title=title, link=link, source=source, summary=summary, time=when,
-                              score=score, hits=hits, theme=guess_theme(text, cfg["themes"]),
+            items.append(dict(id=uid, title=title, link=link, source=source, summary=summary,
+                              time=when, region=src.get("region", ""), score=score, hits=hits,
+                              theme=guess_theme(text, cfg["themes"]),
                               relevance=0, use="", angle="", title_en=""))
         time.sleep(0.3)
 
@@ -338,20 +325,22 @@ def main():
     SEEN_FILE.parent.mkdir(parents=True, exist_ok=True)
     SEEN_FILE.write_text(json.dumps(seen, indent=0))
 
-    archive_dir = DOCS / "archive"
-    archive_dir.mkdir(parents=True, exist_ok=True)
-    stamp = now.strftime("%Y-%m-%d")
-    old = sorted((p for p in archive_dir.glob("*.html") if p.stem != stamp), reverse=True)[:60]
-    links = [(p.stem, f"archive/{p.name}") for p in old]
+    stories = [{
+        "id": i["id"], "title": i["title"], "title_en": i["title_en"], "link": i["link"],
+        "source": i["source"], "region": i["region"], "summary": i["summary"][:400],
+        "published": i["time"].isoformat(timespec="minutes") if i["time"] else "",
+        "theme": i["theme"], "relevance": i["relevance"], "use": i["use"], "angle": i["angle"],
+        "keywords": i["hits"][:6], "score": i["score"], "rank": i["rank"],
+    } for i in selected]
+    digest = save_digest(now, stories, failures, notes, ai_used, new_count)
+    site_builder.build(cfg)
 
     try:
         mail_note = None
-        page = render(selected, failures, notes, now, ai_used, new_count, links)
-        (archive_dir / f"{stamp}.html").write_text(
-            render(selected, failures, notes, now, ai_used, new_count, []), encoding="utf-8")
-        (DOCS / "index.html").write_text(page, encoding="utf-8")
         if selected:
-            mail_note = send_email(f"Geotechnical News Digest — {now:%d %b %Y} ({len(selected)} stories)", page)
+            mail_note = send_email(
+                f"Geotechnical News Digest — {now:%d %b %Y} ({len(digest['stories'])} stories)",
+                site_builder.render_email(digest, cfg))
     except Exception as ex:
         mail_note = f"E-mail failed: {ex}"
     print(f"{new_count} new items, {len(selected)} selected, {len(failures)} failed sources. {mail_note or ''}")
