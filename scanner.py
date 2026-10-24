@@ -718,5 +718,24 @@ def reclassify():
     site_builder.build(cfg)
 
 
+def rebalance(names):
+    """Clear repeated events from the named digests and balance them across the
+    themes again (used when two runs saved the same day)."""
+    cfg = yaml.safe_load(CONFIG.read_text(encoding="utf-8"))
+    minscore = cfg.get("min_keyword_score", 3)
+    for name in names:
+        path = site_builder.DIGESTS / Path(name).name
+        digest = json.loads(path.read_text(encoding="utf-8"))
+        rescore_unrated(digest["stories"], cfg)
+        stories = sorted((s for s in digest["stories"] if s.get("relevance") or s["score"] >= minscore),
+                         key=lambda s: -s["rank"])
+        digest["stories"] = balanced(drop_same_events(stories, cfg), cfg.get("max_items", 40), theme_share(cfg),
+                                     lambda s: s["rank"], fill=fill_leftovers(cfg))
+        path.write_text(json.dumps(digest, ensure_ascii=False, indent=1), encoding="utf-8")
+        print(f"{path.name}: {len(digest['stories'])} stories after re-balancing")
+
+
 if __name__ == "__main__":
+    if "--rebalance" in sys.argv:
+        sys.exit(rebalance(sys.argv[sys.argv.index("--rebalance") + 1:]))
     sys.exit(reclassify() if "--reclassify" in sys.argv else main())
