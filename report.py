@@ -5,6 +5,7 @@ Regenerated after every scan, so it is always up to date. The change log and
 open items come from data/changelog.yaml.
 """
 import datetime as dt
+import json
 from collections import Counter
 
 import yaml
@@ -196,6 +197,13 @@ def write_report(path, cfg, digests, windows, theme_color, site_url, changelog_p
             ("Websites failing on latest scan", f"{len(latest.get('failures', []))} of {len(cfg.get('feeds', []))}" if latest else "—")]
     table(doc, ["Item", "Value"], rows, [8, 9])
 
+    # ---- features
+    if log.get("features"):
+        heading(doc, "What the website does")
+        for item in log["features"]:
+            name, _, text = item.partition(":")
+            bullet(doc, text.strip(), bold_prefix=name.strip() + ": ") if text else bullet(doc, item)
+
     # ---- 2. review
     heading(doc, "2. Review of the latest scan")
     marks = {"ok": ("✔ ", "1E7B4F"), "warn": ("⚠ ", "B5560E"), "info": ("• ", MUTED)}
@@ -239,8 +247,40 @@ def write_report(path, cfg, digests, windows, theme_color, site_url, changelog_p
                 sum(1 for s in w["stories"] if s["theme"] == t and (s.get("relevance") or 0) >= 4)) for t in themes],
               [8, 2.5, 2.5, 3], first_col_colors=[theme_color(t) for t in themes])
 
-    # ---- 6. change log
-    heading(doc, "6. Change log")
+    # ---- 6. research papers
+    papers = [dict(pp, _digest=d["date"]) for w in windows[:1] for d in w["digests"] for pp in d.get("papers", [])]
+    heading(doc, "6. Research papers" + (f" ({windows[0]['win']['label']})" if windows else ""))
+    if papers:
+        journals = Counter(pp.get("journal", "") for pp in papers)
+        doc.add_paragraph(f"{len(papers)} new papers from {len(journals)} journals were picked up for Academia-to-Industry topics.")
+        table(doc, ["Journal", "Papers"], journals.most_common(), [12, 3])
+        best = sorted(papers, key=lambda pp: -(pp.get("relevance") or 0))[:8]
+        for pp in best:
+            bullet(doc, f" — {pp.get('journal', '')}, {pp.get('published', '')}" + (f". {pp['angle']}" if pp.get("angle") else ""),
+                   bold_prefix=pp.get("title", ""))
+    else:
+        doc.add_paragraph("No research papers have been collected in this issue window yet.")
+
+    # ---- 7. issue briefs
+    heading(doc, "7. Issue briefs")
+    briefs = []
+    for f in sorted((changelog_path.parent / "briefs").glob("*.json"), reverse=True):
+        try:
+            b = json.loads(f.read_text(encoding="utf-8"))
+        except ValueError:
+            continue
+        briefs.append((f.stem, b.get("status", "draft"), str(b.get("generated", ""))[:16].replace("T", " "),
+                       f"{b.get('stories_considered', b.get('n_stories', '—'))} stories"))
+    if briefs:
+        doc.add_paragraph("Claude drafts a brief for each issue window: a proposed line-up per theme, feature leads, "
+                          "Academia-to-Industry topics, a regional-balance check and gaps worth covering.")
+        table(doc, ["Issue window", "Status", "Generated (UTC)", "Drafted from"], briefs, [3.5, 2.5, 5, 6])
+    else:
+        doc.add_paragraph("No issue brief has been generated yet. Drafts appear automatically in the last weeks of each "
+                          "quarter, a final brief right after it closes, and any time from the issue page.")
+
+    # ---- 8. change log
+    heading(doc, "8. Change log")
     for entry in log.get("changes", []):
         p = doc.add_paragraph()
         r = p.add_run(f"{entry['date']} · {entry['title']}")
@@ -249,9 +289,9 @@ def write_report(path, cfg, digests, windows, theme_color, site_url, changelog_p
         for item in entry.get("items", []):
             bullet(doc, item)
 
-    # ---- 7. open items
+    # ---- 9. open items
     if log.get("open_items"):
-        heading(doc, "7. Open items and recommendations")
+        heading(doc, "9. Open items and recommendations")
         for item in log["open_items"]:
             bullet(doc, item)
 
