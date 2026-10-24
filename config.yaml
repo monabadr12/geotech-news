@@ -18,6 +18,14 @@ magazine:
   # GitHub repository (owner/name): used by the website's "Scan now" button
   repository: monabadr12/geotech-news
 
+# ---- AI assistant on the website -----------------------------------
+# Web address of the assistant connector: the script in assistant/bridge.gs,
+# deployed as a web app in your Google account (see README, "AI assistant").
+# It holds the Anthropic key, so the website itself never needs one.
+assistant:
+  endpoint: ""
+
+
 # Maximum stories shown in one digest.
 max_items: 60
 
