@@ -20,20 +20,42 @@ Website: **https://monabadr12.github.io/geotech-news/**
 |---|---|
 | **Latest** | Today's digest, grouped by theme (strongest theme first), with filters for rating, use and keywords. |
 | **Archive** | Every digest ever produced, grouped into **three-month issue windows** that match the magazine's quarterly cycle. |
-| **Issue collection** (one per quarter, e.g. *Q4 2026*) | All stories from the quarter in one place: theme overview table, "strongest leads" shortlist, all stories by theme, list of daily digests, **spreadsheet download (CSV)** and print / save as PDF. This is the page to plan an issue from. |
-| **Search** | Search all archived stories by keyword, issue window, theme, use and rating; export the results as a spreadsheet. |
+| **Issue collection** (one per quarter, e.g. *Q4 2026*) | All stories from the quarter in one place: theme overview, "strongest leads" shortlist, all stories by theme, list of daily digests, **Excel workbook**, CSV, and print / save as PDF. This is the page to plan an issue from. |
+| **Search** | Search all archived stories by keyword, issue window, theme, use and rating; export the results. |
+| **AI assistant** | Chat with Claude about the archive: find stories, compare quarters, get a recommended line-up for an issue, and attach PDF or Word documents (calls for papers, drafts, reports) to discuss them alongside the news. |
 | **Method & sources** | What is scanned, how stories are scored, and which sources failed on the latest run. |
 
-### How the archive works
+Every page has a **Scan now** button (runs a scan immediately) and a **Settings** gear (see below).
+The footer links the **Website report (Word)**.
 
+### How stories are categorised
+Every headline is matched against English keywords **and** 452 terms in 11 other languages
+(`multilingual_keywords` in `config.yaml`). Each foreign term counts as its English equivalent —
+*glissement de terrain*, *deslizamiento*, *longsor*, *滑坡* and *انهيار أرضي* all count as "landslide" — and those
+English concepts decide the theme. So a story in any covered language is filed under the correct English theme,
+even when Claude is not available. When Claude triage runs, it confirms or corrects the theme and translates the headline.
+After changing the keyword or theme lists, `python scanner.py --reclassify` re-files the stories already archived.
+
+### Excel workbooks
+Each issue window has a workbook (`docs/exports/2026-Q4.xlsx`), and there is one for the whole archive
+(`geotech-news-archive.xlsx`). Each contains:
+* **Dashboard** — key figures, colour-coded tables and charts: stories by theme, suggested use, relevance,
+  stories per digest, and a theme × use heat map.
+* **Stories** — every story as a filterable Excel table, colour-coded by theme and rating, with clickable links.
+* **Sources** — which outlets contributed and how relevant their stories were.
+
+### Website report (Word)
+`docs/reports/site-report.docx` is regenerated after every scan: status at a glance, an automatic review of the
+latest scan (triage, failed sources, theme balance), source health with suggested fixes, archive figures, the
+change log and open items. The change log and open items are kept in `data/changelog.yaml`.
+
+### How the archive works
 * Each scan saves its stories to `data/digests/YYYY-MM-DD.json`. **These files are the archive** —
   they are kept forever in the repository (and in its Git history).
-* Everything in `docs/` (the website) is rebuilt from those files on every run, so the design can be
-  changed at any time without losing anything.
+* Everything in `docs/` (the website, workbooks and report) is rebuilt from those files on every run, so the design
+  can be changed at any time without losing anything.
 * Issue windows are calendar quarters by default (Jan–Mar, Apr–Jun, Jul–Sep, Oct–Dec). If the magazine's
   cycle starts in a different month, change `issue_start_month` under `magazine:` in `config.yaml`.
-* The spreadsheets (`docs/exports/2026-Q4.csv` etc.) open directly in Excel and keep Arabic, Chinese and
-  other scripts intact.
 
 ---
 
@@ -83,6 +105,19 @@ At the bottom of the digest, open **Scanner notes and sources that failed**. For
 RSS feed address (often `site.com/feed/` or an RSS icon) and replace the address in `config.yaml`.
 If AI triage did not work, the same panel says why (for example, a rejected API key).
 
+## Website settings: Scan now button and AI assistant
+The website is public, so it holds no keys itself. The two features that need keys read them from your browser:
+open the **gear icon** on any page and paste them once per device. They are stored only in that browser.
+
+* **GitHub token (Scan now).** On GitHub open *Settings → Developer settings → Personal access tokens →
+  Fine-grained tokens → Generate new token*. Repository access: *Only select repositories* → `geotech-news`.
+  Permissions: *Actions → Read and write*. Copy the token into the website's settings.
+  Without a token, the button opens the GitHub page where you can press **Run workflow**.
+* **Anthropic API key (AI assistant).** Create one at console.anthropic.com → API Keys (a separate key with a
+  monthly spend limit is a good safeguard) and paste it into the website's settings. The assistant calls Claude
+  directly from your browser. Choose the model there: Claude Opus 5.5 gives the best answers; Claude Sonnet 5.5 and
+  Claude Haiku 5.5 are faster and cheaper.
+
 ## Optional: e-mail delivery
 Add these secrets the same way as the API key: `SMTP_HOST`, `SMTP_PORT` (usually 587), `SMTP_USER`,
 `SMTP_PASSWORD`, `MAIL_TO` (comma-separate several addresses).
@@ -92,16 +127,20 @@ For Gmail: host `smtp.gmail.com`, and create an *App password* in your Google ac
 ## Changing things
 * **Sources, searches, keywords, themes, limits:** all in `config.yaml` (edit it on GitHub with the pencil icon).
   Adding a language is one line under `extra_queries`.
-* **Schedule:** `.github/workflows/scan.yml` (daily at 05:00 UTC; the file shows how to switch to every two days).
-* **Look of the website:** `assets/style.css`. To rebuild the site without scanning, run `python site_builder.py`.
+* **Schedule:** `.github/workflows/scan.yml` — daily at 05:00 Cairo time, adjusted automatically for Egypt's summer
+  and winter clocks. Changes to the website's design or `config.yaml` rebuild the site automatically (no scan).
+* **Look of the website:** `assets/style.css` and `assets/app.js`. To rebuild the site without scanning, run `python site_builder.py`.
 
 ## Files
 | File | Purpose |
 |---|---|
 | `scanner.py` | Reads the sources, scores and triages stories, saves the digest. |
 | `site_builder.py` | Builds the website in `docs/` from the archive in `data/digests/`. |
+| `exports.py` | Builds the Excel workbooks. |
+| `report.py` | Builds the Word website report. |
+| `data/changelog.yaml` | Change log and open items shown in the Word report. |
 | `config.yaml` | All settings. |
-| `assets/` | Website style sheet and script. |
+| `assets/` | Website style sheet, script and icons. |
 | `data/digests/` | **The permanent archive**, one file per day. |
 | `data/seen.json` | Stories already shown (45-day memory, so nothing repeats). |
 | `docs/` | The generated website (do not edit by hand). |

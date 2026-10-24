@@ -15,6 +15,8 @@ lookback_hours: 60
 magazine:
   name: ISSMGE Magazine
   issue_start_month: 1
+  # GitHub repository (owner/name): used by the website's "Scan now" button
+  repository: monabadr12/geotech-news
 
 # Maximum stories shown in one digest.
 max_items: 60
@@ -170,29 +172,152 @@ keywords:
   drainage: 1
   coastal protection: 2
   climate resilience: 1
-  # --- other languages (Latin script) so scoring still works ---
-  geotecnia: 5
-  geotecnica: 5
-  geotécnico: 5
-  géotechnique: 5
-  glissement de terrain: 5
-  deslizamiento: 4
-  deslizamento: 4
-  socavón: 4
-  frana: 4
-  heyelan: 4
-  hangrutschung: 4
-  baugrund: 4
-  licuefacción: 5
-  licuefação: 5
-  rejeitos: 4
-  fondations: 3
-  cimentaciones: 3
-  fundações: 3
-  muro de contención: 4
-  talud: 3
-  terowongan: 2
-  longsor: 4
+
+# ---- Keywords in other languages -----------------------------------
+# Each English concept on the left is matched by any of the terms in
+# other languages. A story that matches is scored, tagged and themed under
+# the English concept, so a French "glissement de terrain" or an Arabic
+# "انهيار أرضي" is filed exactly like an English "landslide".
+# To add a language, append its words to the relevant "terms" lists.
+multilingual_keywords:
+  geotechnical:
+    weight: 5
+    terms: [géotechnique, géotechnicien, geotecnia, geotécnico, geotécnica, geotecnico, geotecnica,
+            geoteknik, geotechnik, geotechnisch, baugrund, bodengutachten, भू-तकनीकी, 岩土工程, 岩土,
+            地盤工学, جيوتقني, جيوتقنية, جيوتكنيك]
+  soil mechanics:
+    weight: 5
+    terms: [mécanique des sols, mecánica de suelos, mecânica dos solos, meccanica dei terreni, zemin mekaniği,
+            bodenmechanik, mekanika tanah, 土力学, 土質力学, ميكانيكا التربة]
+  landslide:
+    weight: 4
+    terms: [glissement de terrain, glissements de terrain, éboulement, deslizamiento, deslave, derrumbe de tierra,
+            deslizamento, desmoronamento, frana, smottamento, heyelan, toprak kayması, erdrutsch, hangrutschung,
+            tanah longsor, longsor, भूस्खलन, 滑坡, 山体滑坡, 土砂崩れ, 地すべり, 崖崩れ,
+            انهيار أرضي, انزلاق أرضي, انهيارات أرضية, انزلاقات أرضية]
+  debris flow:
+    weight: 4
+    terms: [lave torrentielle, coulée de boue, flujo de detritos, alud de lodo, corrida de lama, colata detritica,
+            çamur akıntısı, murgang, 泥石流, 土石流, سيل طيني]
+  rockfall:
+    weight: 4
+    terms: [chute de pierres, chute de blocs, caída de rocas, desprendimiento de rocas, queda de rochas,
+            caduta massi, kaya düşmesi, steinschlag, felssturz, batu runtuh, 落石, سقوط صخور, انهيار صخري]
+  liquefaction:
+    weight: 5
+    terms: [liquéfaction, licuefacción, licuación, liquefação, liquefazione, sıvılaşma, bodenverflüssigung,
+            likuifaksi, 砂土液化, 液化, 液状化, تميع التربة, تسييل التربة]
+  sinkhole:
+    weight: 4
+    terms: [effondrement karstique, fontis, doline, socavón, sumidero, dolina, cratera, voragine, obruk,
+            erdfall, tanah ambles, amblesan, 天坑, 地面塌陷, 陥没, حفرة انهدامية, حفرة عميقة]
+  subsidence:
+    weight: 3
+    terms: [affaissement, hundimiento, subsidencia, afundamento, subsidenza, cedimento del terreno, zemin çökmesi,
+            bodenabsenkung, penurunan tanah, धंसाव, भू-धंसाव, 地面沉降, 沉降, 地盤沈下, هبوط أرضي, هبوط التربة]
+  foundation:
+    weight: 3
+    terms: [fondation, fondations, cimentación, cimentaciones, fundação, fundações, fondazioni, temel, fundament,
+            gründung, fondasi, pondasi, नींव, 地基, 基础工程, 基礎工事, أساسات, الأساسات]
+  piling:
+    weight: 4
+    terms: [pieux, pilotis, pilotes, pilotaje, estacas, estaqueamento, pali di fondazione, kazık, pfähle,
+            pfahlgründung, tiang pancang, 桩基, 打桩, 杭基礎, خوازيق]
+  retaining wall:
+    weight: 4
+    terms: [mur de soutènement, muro de contención, muro de contenção, muro di sostegno, istinat duvarı,
+            stützmauer, dinding penahan tanah, talud, 挡土墙, 擁壁, جدار استنادي, جدار ساند]
+  tunnel:
+    weight: 2
+    terms: [túnel, tunel, tünel, terowongan, galleria, सुरंग, 隧道, 隧洞, トンネル, نفق, أنفاق]
+  tunnel boring machine:
+    weight: 4
+    terms: [tunnelier, tuneladora, tatuzão, talpa meccanica, tunnelbohrmaschine, tunnelvortrieb, 盾构, 盾构机,
+            シールドマシン, آلة حفر الأنفاق]
+  tunnel collapse:
+    weight: 4
+    terms: [tunnel collapse, effondrement de tunnel, derrumbe de túnel, desabamento de túnel, crollo della galleria,
+            tünel çökmesi, tunneleinsturz, terowongan runtuh, 隧道坍塌, トンネル崩落, انهيار نفق]
+  excavation:
+    weight: 2
+    terms: [excavación, escavação, scavo, kazı, baugrube, aushub, galian, खुदाई, 基坑, 开挖, 掘削, حفريات]
+  embankment:
+    weight: 3
+    terms: [remblai, digue, terraplén, aterro, rilevato, argine, dolgu, damm, böschung, tanggul, timbunan,
+            तटबंध, 路堤, 堤防, 盛土, سد ترابي]
+  dam failure:
+    weight: 4
+    terms: [dam failure, dam collapse, dam burst, rupture de barrage, rotura de presa, rompimento de barragem,
+            crollo della diga, baraj yıkılması, dammbruch, bendungan jebol, tanggul jebol, बांध टूटना, 溃坝,
+            決壊, انهيار سد]
+  dam:
+    weight: 2
+    terms: [presa, represa, barragem, diga, baraj, talsperre, staudamm, bendungan, बांध, 大坝, ダム, السد]
+  tailings:
+    weight: 3
+    terms: [résidus miniers, relaves, rejeitos, barragem de rejeitos, sterili minerari, atık barajı, 尾矿, 尾矿库,
+            鉱滓, مخلفات التعدين]
+  slope stability:
+    weight: 5
+    terms: [stabilité des pentes, stabilité des talus, estabilidad de taludes, estabilidade de taludes,
+            stabilità dei versanti, şev stabilitesi, böschungsstabilität, stabilitas lereng, 边坡稳定, 斜面崩壊,
+            ثبات المنحدرات]
+  slope:
+    weight: 2
+    terms: [talus, pente, ladera, encosta, versante, şev, yamaç, lereng, tebing, ढलान, 边坡, 山坡, 斜面, 法面, منحدر]
+  ground improvement:
+    weight: 5
+    terms: [amélioration des sols, renforcement des sols, mejoramiento de suelos, melhoramento de solos,
+            consolidamento del terreno, zemin iyileştirme, bodenverbesserung, perbaikan tanah, 地基处理, 地基加固,
+            地盤改良, تحسين التربة]
+  grouting:
+    weight: 3
+    terms: [injection de coulis, inyección de lechada, injeção de calda, iniezioni di consolidamento, enjeksiyon,
+            injektion, 注浆, 灌浆, グラウト, حقن التربة]
+  site investigation:
+    weight: 4
+    terms: [étude de sol, étude géotechnique, reconnaissance géotechnique, estudio geotécnico, estudio de suelos,
+            investigação geotécnica, indagini geotecniche, zemin etüdü, baugrunderkundung, penyelidikan tanah,
+            sondir, 地质勘察, 勘察, 地盤調査, ボーリング調査, دراسة جيوتقنية, دراسة التربة, جسات]
+  erosion:
+    weight: 2
+    terms: [érosion, erosión, erosão, erosione, erozyon, erosi, abrasi, 侵蚀, 冲刷, 浸食, 侵食, انجراف التربة]
+  earthquake:
+    weight: 2
+    terms: [séisme, tremblement de terre, sismo, terremoto, deprem, erdbeben, gempa, भूकंप, 地震, زلزال]
+  permafrost:
+    weight: 3
+    terms: [pergélisol, 冻土, 永久凍土]
+  offshore wind:
+    weight: 3
+    terms: [offshore wind, éolien en mer, eólica marina, eólica offshore, eolico offshore, offshore-wind,
+            海上风电, 洋上風力, طاقة الرياح البحرية]
+  coastal protection:
+    weight: 2
+    terms: [protection côtière, defensa costera, proteção costeira, difesa costiera, kıyı koruma, küstenschutz,
+            abrasi pantai, 海岸防护, 護岸, حماية الشواطئ]
+  collapse:
+    weight: 1
+    terms: [collapse, effondrement, colapso, derrumbe, desabamento, crollo, cedimento, çökme, göçük, einsturz,
+            runtuh, ambruk, ढहना, 坍塌, 倒塌, 崩落, 崩壊, انهيار]
+  soil:
+    weight: 1
+    terms: [soil, suelo, suelos, zemin, toprak, boden, मिट्टी, 土壤, 土体, 土壌, تربة, التربة]
+  groundwater:
+    weight: 1
+    terms: [groundwater, nappe phréatique, eaux souterraines, agua subterránea, água subterrânea, falda acquifera,
+            yeraltı suyu, grundwasser, air tanah, भूजल, 地下水, المياه الجوفية]
+  # weight 0: no points, but helps choose the theme
+  flood:
+    weight: 0
+    terms: [flood, inondation, crue, inundación, inundação, enchente, alluvione, taşkın, hochwasser, überschwemmung,
+            banjir, बाढ़, 洪水, فيضان, سيول]
+  metro line:
+    weight: 0
+    terms: [metro line, metro station, metro rail, métro, metrô, u-bahn, mrt, 地铁, 地下鉄, مترو]
+  railway:
+    weight: 0
+    terms: [railway, voie ferrée, ferrocarril, ferrovia, demiryolu, eisenbahn, kereta api, 铁路, 鉄道, سكة حديد]
 
 # Headlines containing these lose points (noise filter).
 exclude:
@@ -203,14 +328,18 @@ exclude:
 
 # ---- Magazine cross-cutting themes (for sorting the digest) ------
 themes:
-  "Sustainability & the Energy Transition": [low carbon, carbon, sustainab, energy, geothermal, hydrogen, storage, net zero, wind]
-  "Digital Geotechnics": [digital, ai, artificial intelligence, machine learning, sensor, monitoring, bim, twin, drone, satellite, insar]
-  "Hazards & Resilience": [landslide, landslip, rockfall, debris flow, liquefaction, earthquake, sinkhole, flood, collapse, failure, climate, resilience, subsidence]
-  "Ground Improvement & Innovation": [ground improvement, grouting, soil nailing, geosynthetic, geogrid, stabilis, stabiliz, compaction, innovation]
-  "Infrastructure & the Underground City": [tunnel, tbm, metro, basement, excavation, diaphragm wall, pile, piling, foundation, railway, road, bridge, embankment, earthworks]
-  "Offshore, Coasts & Water": [offshore, monopile, coastal, port, quay, scour, dam, levee, dike, tailings, groundwater, river]
-  "Characterisation & Modelling": [site investigation, borehole, cone penetration, cpt, laboratory, testing, model, numerical, characteris]
-  "Geotechnics & Society": [education, award, profession, skills, safety, regulation, standard, code, eurocode, heritage]
+  # Words of 6+ letters also match longer forms (sustainab -> sustainable);
+  # shorter words must match whole (dam does not match damage).
+  # The English concept names from both keyword lists count here too, which is
+  # how non-English stories land in the right theme.
+  "Sustainability & the Energy Transition": [low carbon, carbon, sustainab, energy, geothermal, hydrogen, storage, net zero, wind, offshore wind, solar, renewable, decarbon, circular, recycl, emission]
+  "Digital Geotechnics": [digital, ai, artificial intelligence, machine learning, sensor, monitoring, bim, twin, drone, satellite, insar, laser scanning, automat, robot, software, early warning]
+  "Hazards & Resilience": [landslide, landslip, rockfall, debris flow, liquefaction, earthquake, sinkhole, flood, collapse, failure, climate, resilience, subsidence, dam failure, tunnel collapse, erosion, disaster, hazard, emergency, evacuat, monsoon, rainfall, storm, cyclone, typhoon]
+  "Ground Improvement & Innovation": [ground improvement, grouting, jet grouting, soil nailing, geosynthetic, geogrid, stabilis, stabiliz, compaction, innovation, dewatering, retaining wall, reinforced soil, new technique]
+  "Infrastructure & the Underground City": [tunnel, tbm, tunnel boring machine, metro line, basement, excavation, diaphragm wall, pile, piling, foundation, railway, road, highway, bridge, embankment, earthworks, underground, station, motorway]
+  "Offshore, Coasts & Water": [offshore, monopile, coastal, coastal protection, port, quay, scour, dam, levee, dike, tailings, groundwater, river, harbour, harbor, seabed, marine, reservoir, canal]
+  "Characterisation & Modelling": [site investigation, borehole, cone penetration, cpt, laboratory, testing, model, numerical, characteris, survey, geophysic, soil mechanics, rock mechanics, research, study, sampling]
+  "Geotechnics & Society": [education, award, profession, skills, safety, regulation, standard, code, eurocode, heritage, conference, society, issmge, policy, training, inquiry, investigation report, lawsuit, community]
 
 # ---- Optional AI triage (used only if ANTHROPIC_API_KEY is set) ---
 claude:
