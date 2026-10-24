@@ -1,0 +1,210 @@
+# ============================================================
+#  ISSMGE Magazine — Geotechnical News Scanner : settings
+#  Edit this file on GitHub to add/remove sources or keywords.
+# ============================================================
+
+# How far back to look on each run (hours). 60 h is safe for a
+# daily run and also covers a run every two days.
+lookback_hours: 60
+
+# Maximum stories shown in one digest.
+max_items: 60
+
+# Stories need at least this keyword score to be considered.
+min_keyword_score: 3
+
+# ---- Trade / technical websites --------------------------------
+# You may give a site's home page: the scanner finds its RSS feed
+# automatically. If a site shows under "Sources that failed" in the
+# digest, replace its address with the site's RSS feed address.
+# "boost" adds points to stories from specialist geotechnical sources.
+feeds:
+  # --- specialist geotechnical sources (weighted up) ---
+  - {name: GeoEngineer,                  url: "https://www.geoengineer.org",             boost: 3}
+  - {name: Geosynthetica,                url: "https://www.geosynthetica.com/feed/",     boost: 3}
+  - {name: The Landslide Blog (Eos),     url: "https://eos.org/landslide-blog",          boost: 3}
+  # --- societies and institutions ---
+  - {name: ISSMGE,                       url: "https://www.issmge.org",                  boost: 4}
+  - {name: ASCE Geo-Institute,           url: "https://www.geoinstitute.org",            boost: 4}
+  - {name: Deep Foundations Institute,   url: "https://www.dfi.org",                     boost: 4}
+  - {name: ICE (Institution of Civil Engineers), url: "https://www.ice.org.uk/news-insight", boost: 2}
+  - {name: FHWA Infrastructure R&D,      url: "https://highways.dot.gov/newsroom",       boost: 2}
+  # --- post-event technical / hazard reporting ---
+  - {name: GEER Association,             url: "https://geerassociation.org",             boost: 4}
+  - {name: USGS Landslide Hazards,       url: "https://www.usgs.gov/programs/landslide-hazards", boost: 4}
+  - {name: USGS Natural Hazards news,    url: "https://www.usgs.gov/news",               boost: 2}
+  - {name: ReliefWeb disasters,          url: "https://reliefweb.int/disasters/rss.xml"}
+  # --- trade press ---
+  - {name: New Civil Engineer,           url: "https://www.newcivilengineer.com/feed/",  boost: 1}
+  - {name: Tunnels & Tunnelling,         url: "https://www.tunnelsonline.info"}
+  - {name: TunnelTalk,                   url: "https://www.tunneltalk.com",              boost: 2}
+  - {name: Rail Business UK,             url: "https://www.railbusinessuk.com/feed/"}
+  - {name: Railway Gazette,              url: "https://www.railwaygazette.com"}
+  - {name: Rail Technology Magazine,     url: "https://www.railtechnologymagazine.com"}
+  - {name: World Highways,               url: "https://www.worldhighways.com"}
+  - {name: International Construction,   url: "https://www.khl.com/international-construction"}
+  - {name: Construction Enquirer,        url: "https://www.constructionenquirer.com/feed/"}
+  - {name: Engineering News-Record,      url: "https://www.enr.com"}
+  - {name: Construction Week (Middle East), url: "https://www.constructionweekonline.com"}
+  - {name: Mining.com (tailings, ground), url: "https://www.mining.com/feed/"}
+  - {name: ScienceDaily Earth,           url: "https://www.sciencedaily.com/rss/earth_climate.xml"}
+  - {name: Phys.org Earth Sciences,      url: "https://phys.org/rss-feed/earth-news/"}
+
+# ---- Google News searches (worldwide coverage) -------------------
+google_news:
+  # Default edition for queries that don't name their own.
+  language: en
+  country: GB
+
+  # The same core geotechnical searches are run across several English-language
+  # editions so that stories from every continent surface, not only UK/US ones.
+  editions:
+    - {language: en, country: GB}   # UK / Europe
+    - {language: en, country: US}   # Americas
+    - {language: en, country: IN}   # South Asia
+    - {language: en, country: AU}   # Australia / Pacific
+    - {language: en, country: ZA}   # Africa
+    - {language: en, country: SG}   # South-East Asia
+    - {language: en, country: AE}   # Middle East
+
+  # Core searches — run in EVERY edition above.
+  core_queries:
+    - '"geotechnical"'
+    - 'landslide OR landslip OR rockfall OR "debris flow"'
+    - 'liquefaction OR sinkhole OR "land subsidence"'
+    - '"ground improvement" OR "deep foundations" OR "piling works"'
+    - '"tunnel boring machine" OR "tunnel collapse" OR "metro tunnel"'
+    - '"embankment failure" OR "dam failure" OR "tailings dam"'
+    - '"retaining wall" collapse OR "excavation collapse" OR "slope failure"'
+    - '"soil mechanics" OR "geotechnical engineering"'
+
+  # Extra searches — run once, in the edition named (or the default).
+  extra_queries:
+    - '"monopile" OR "offshore wind foundations"'
+    - '"site investigation" OR "cone penetration test" OR "geophysical survey"'
+    - 'GEER reconnaissance OR "geotechnical reconnaissance" earthquake'
+    - 'ISSMGE OR "soil mechanics conference"'
+    - 'permafrost thaw infrastructure OR "expansive soil" damage'
+    - 'sabkha OR "collapsible soil" OR "karst" foundation'
+    # --- non-English editions (Claude reads these and gives an English title) ---
+    - {q: 'glissement de terrain OR "étude géotechnique" OR effondrement', language: fr, country: FR, bonus: 6}
+    - {q: '"génie civil" fondations OR tunnel OR digue', language: fr, country: SN, bonus: 6}
+    - {q: 'انهيار أرضي OR "دراسة جيوتقنية" OR "هبوط أرضي" OR أساسات', language: ar, country: EG, bonus: 6}
+    - {q: 'انهيار نفق OR جدار استنادي OR تربة', language: ar, country: AE, bonus: 6}
+    - {q: 'deslizamiento de tierra OR socavón OR "estudio geotécnico"', language: es, country: ES, bonus: 6}
+    - {q: 'deslizamiento OR licuefacción OR "muro de contención" colapso', language: es, country: MX, bonus: 6}
+    - {q: 'deslizamento de terra OR "barragem de rejeitos" OR geotecnia', language: pt, country: BR, bonus: 6}
+    - {q: 'Hangrutschung OR Baugrund OR Tunnelvortrieb', language: de, country: DE, bonus: 6}
+    - {q: 'frana OR "cedimento del terreno" OR geotecnica', language: it, country: IT, bonus: 6}
+    - {q: 'heyelan OR zemin etüdü OR tünel çökmesi', language: tr, country: TR, bonus: 6}
+    - {q: 'भूस्खलन OR "मिट्टी" धंसाव OR सुरंग', language: hi, country: IN, bonus: 6}
+    - {q: 'tanah longsor OR "penurunan tanah" OR terowongan', language: id, country: ID, bonus: 6}
+    - {q: '滑坡 OR 地面沉降 OR 岩土工程', language: zh, country: CN, bonus: 6}
+    - {q: '地盤沈下 OR 液状化 OR 斜面崩壊', language: ja, country: JP, bonus: 6}
+
+# ---- Keywords and their weight -----------------------------------
+# Plurals are matched automatically (pile -> piles).
+keywords:
+  geotechnical: 5
+  geotechnics: 5
+  soil mechanics: 5
+  rock mechanics: 4
+  engineering geology: 4
+  landslide: 4
+  landslip: 4
+  rockfall: 4
+  debris flow: 4
+  liquefaction: 5
+  sinkhole: 4
+  subsidence: 3
+  settlement: 2
+  ground improvement: 5
+  soil nailing: 5
+  grouting: 3
+  jet grouting: 5
+  dewatering: 3
+  deep foundation: 5
+  foundation: 2
+  piling: 4
+  pile: 3
+  monopile: 4
+  diaphragm wall: 5
+  retaining wall: 4
+  basement excavation: 4
+  excavation: 2
+  tunnel boring machine: 4
+  tbm: 3
+  tunnel: 2
+  shaft: 1
+  embankment: 3
+  earthworks: 4
+  slope stability: 5
+  slope: 2
+  tailings: 3
+  dam: 2
+  levee: 3
+  dike: 2
+  scour: 3
+  geosynthetic: 4
+  geogrid: 4
+  site investigation: 4
+  borehole: 3
+  cone penetration: 5
+  permafrost: 3
+  expansive soil: 5
+  collapsible soil: 5
+  sabkha: 5
+  clay: 1
+  bedrock: 2
+  earthquake: 2
+  erosion: 2
+  drainage: 1
+  coastal protection: 2
+  climate resilience: 1
+  # --- other languages (Latin script) so scoring still works ---
+  geotecnia: 5
+  geotecnica: 5
+  geotécnico: 5
+  géotechnique: 5
+  glissement de terrain: 5
+  deslizamiento: 4
+  deslizamento: 4
+  socavón: 4
+  frana: 4
+  heyelan: 4
+  hangrutschung: 4
+  baugrund: 4
+  licuefacción: 5
+  licuefação: 5
+  rejeitos: 4
+  fondations: 3
+  cimentaciones: 3
+  fundações: 3
+  muro de contención: 4
+  talud: 3
+  terowongan: 2
+  longsor: 4
+
+# Headlines containing these lose points (noise filter).
+exclude:
+  - share price
+  - stock market
+  - football
+  - election
+
+# ---- Magazine cross-cutting themes (for sorting the digest) ------
+themes:
+  "Sustainability & the Energy Transition": [low carbon, carbon, sustainab, energy, geothermal, hydrogen, storage, net zero, wind]
+  "Digital Geotechnics": [digital, ai, artificial intelligence, machine learning, sensor, monitoring, bim, twin, drone, satellite, insar]
+  "Hazards & Resilience": [landslide, landslip, rockfall, debris flow, liquefaction, earthquake, sinkhole, flood, collapse, failure, climate, resilience, subsidence]
+  "Ground Improvement & Innovation": [ground improvement, grouting, soil nailing, geosynthetic, geogrid, stabilis, stabiliz, compaction, innovation]
+  "Infrastructure & the Underground City": [tunnel, tbm, metro, basement, excavation, diaphragm wall, pile, piling, foundation, railway, road, bridge, embankment, earthworks]
+  "Offshore, Coasts & Water": [offshore, monopile, coastal, port, quay, scour, dam, levee, dike, tailings, groundwater, river]
+  "Characterisation & Modelling": [site investigation, borehole, cone penetration, cpt, laboratory, testing, model, numerical, characteris]
+  "Geotechnics & Society": [education, award, profession, skills, safety, regulation, standard, code, eurocode, heritage]
+
+# ---- Optional AI triage (used only if ANTHROPIC_API_KEY is set) ---
+claude:
+  model: claude-haiku-4-5-20251001
+  max_candidates: 130     # best-scoring stories sent to Claude per run
+  min_relevance: 3       # keep stories Claude rates 3/5 or higher
