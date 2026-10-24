@@ -3,6 +3,13 @@
 
 changes:
   - date: 2026-10-24
+    title: No more key prompts; clash-proof saving
+    items:
+      - The website no longer asks for a GitHub token or an Anthropic key. Scan now opens the scan's page on GitHub, where you press Run workflow, and the website then follows the scan and says when the new digest is ready.
+      - The AI assistant now talks to a small connector in the editor's own Google account (assistant/bridge.gs), which reads the Anthropic key from the editor's private Google Doc. The key never reaches the website or the repository. Until the connector is set up, the assistant page says so instead of asking for a key.
+      - Saving a scan can no longer fail with merge conflicts. A re-run of the first scan on 24 October started from old code and clashed with the newer website; the save step now puts each run's data on the newest version of the site and rebuilds the pages from it.
+      - Queued or re-run scans start from the newest version of the repository, not the commit that queued them.
+  - date: 2026-10-24
     title: Multilingual categorisation, Scan button, Excel workbooks, AI assistant and new design
     items:
       - Non-English stories are now tagged and themed through 452 terms in 11 languages, each mapped to an English concept (for example glissement de terrain, deslizamiento, longsor and انهيار أرضي all count as "landslide").
@@ -30,4 +37,4 @@ changes:
 open_items:
   - Replace the addresses of failing websites with their RSS feeds (see Source health).
   - Check that the ANTHROPIC_API_KEY secret is accepted (the first scan reported it as rejected).
-  - To use the Scan now button and the AI assistant, add a GitHub token and an Anthropic key under Settings (gear icon) on the website, on each device you use.
+  - Set up the AI assistant connector in Google (README, "AI assistant") and put its web address in config.yaml under assistant endpoint.

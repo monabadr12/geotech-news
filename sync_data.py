@@ -1,0 +1,78 @@
+#!/usr/bin/env python3
+"""
+Save step of the scan workflow.
+
+Carries this run's new data (the day's digest and the seen-stories memory) onto
+the newest version of the branch, then rebuilds the website from it. Generated
+files in docs/ are never merged line by line, they are rebuilt, so a scan cannot
+clash with a site update or another run that finished in the meantime (or with
+a re-run that started from an older commit).
+
+    python sync_data.py <branch>
+"""
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent
+DIGESTS = ROOT / "data" / "digests"
+SEEN_FILE = ROOT / "data" / "seen.json"
+
+
+def git(*args):
+    return subprocess.run(["git", *args], cwd=ROOT, check=True, capture_output=True, text=True).stdout
+
+
+def changed_digests():
+    """Digest files this run created or changed (staged or not)."""
+    out = git("status", "--porcelain", "--untracked-files=all", "--", "data/digests")
+    return sorted({Path(line[3:].strip()).name for line in out.splitlines() if line[3:].strip().endswith(".json")})
+
+
+def load(path):
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
+
+
+def merge_digest(theirs, ours):
+    """Union of the day's stories; this run's version of a story wins."""
+    if not theirs:
+        return ours
+    known = {s["id"] for s in ours["stories"]}
+    merged = dict(ours)
+    merged["stories"] = sorted(ours["stories"] + [s for s in theirs["stories"] if s["id"] not in known],
+                               key=lambda s: -s.get("rank", 0))
+    merged["new_items"] = max(ours.get("new_items", 0), theirs.get("new_items", 0))
+    merged["ai_used"] = ours.get("ai_used") or theirs.get("ai_used", False)
+    return merged
+
+
+def main():
+    branch = sys.argv[1] if len(sys.argv) > 1 else "main"
+    our_seen = load(SEEN_FILE) or {}
+    ours = {name: load(DIGESTS / name) for name in changed_digests()}
+
+    git("fetch", "--quiet", "origin", branch)
+    git("reset", "--quiet", "--hard", f"origin/{branch}")
+
+    if our_seen:
+        seen = load(SEEN_FILE) or {}
+        for key, day in our_seen.items():
+            if day > seen.get(key, ""):
+                seen[key] = day
+        SEEN_FILE.parent.mkdir(parents=True, exist_ok=True)
+        SEEN_FILE.write_text(json.dumps(seen, indent=0))
+    for name, digest in ours.items():
+        if digest is None:
+            continue
+        path = DIGESTS / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(merge_digest(load(path), digest), ensure_ascii=False, indent=1), encoding="utf-8")
+
+    # rebuild with the newest code, in a fresh process (this one has the old modules loaded)
+    subprocess.run([sys.executable, str(ROOT / "site_builder.py")], cwd=ROOT, check=True)
+    print(f"Synced {len(ours)} digest(s) onto origin/{branch} and rebuilt the website.")
+
+
+if __name__ == "__main__":
+    main()
