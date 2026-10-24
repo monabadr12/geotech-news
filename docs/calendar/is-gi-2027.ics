@@ -1,0 +1,27 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:IS-GI 2027
+NAME:IS-GI 2027
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:is-gi-2027@geotech-news-desk
+DTSTAMP:20261024T000000Z
+DTSTART;VALUE=DATE:20270412
+DTEND;VALUE=DATE:20270415
+SUMMARY:2nd International Symposium on Ground Improvement (IS-GI 2027)
+DESCRIPTION:2nd International Symposium on Ground Improvement\nOrganiser: I
+ SSMGE TC211\nKind: ISSMGE-supported\nAbstracts: 15 May 2026\nEvent website
+ : https://www.issmge.org/news/2nd-is-gi-2027-lyon-call-for-abstracts\nList
+ ed by the ISSMGE Magazine editors
+LOCATION:Lyon\, France
+URL:https://www.issmge.org/news/2nd-is-gi-2027-lyon-call-for-abstracts
+CATEGORIES:ISSMGE-supported
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

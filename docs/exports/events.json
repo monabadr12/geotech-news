@@ -1,0 +1,169 @@
+{
+ "updated": "",
+ "built": "2026-10-24",
+ "feed": "https://monabadr12.github.io/geotech-news/events.ics",
+ "kinds": [
+  "ISSMGE conference",
+  "ISSMGE-supported",
+  "Other conference",
+  "Course / webinar"
+ ],
+ "events": [
+  {
+   "id": "geo-congress-2027",
+   "name": "Geo-Congress 2027, part of ASCE2027",
+   "short": "Geo-Congress 2027",
+   "start": "2027-03-01",
+   "end": "2027-03-05",
+   "city": "Philadelphia",
+   "country": "US",
+   "country_name": "United States",
+   "region": "North America",
+   "online": false,
+   "organiser": "ASCE Geo-Institute",
+   "kind": "Other conference",
+   "issmge": false,
+   "url": "https://geoinstitute.org/news/call-abstract-geo-congress-2027-part-asce2027",
+   "deadlines": [
+    {
+     "label": "Abstracts",
+     "date": "2026-03-04",
+     "passed": true
+    }
+   ],
+   "source": "editors",
+   "found": "",
+   "notes": "Held within ASCE2027, the American Society of Civil Engineers' combined convention",
+   "status": "upcoming"
+  },
+  {
+   "id": "is-gi-2027",
+   "name": "2nd International Symposium on Ground Improvement",
+   "short": "IS-GI 2027",
+   "start": "2027-04-12",
+   "end": "2027-04-14",
+   "city": "Lyon",
+   "country": "FR",
+   "country_name": "France",
+   "region": "Europe",
+   "online": false,
+   "organiser": "ISSMGE TC211",
+   "kind": "ISSMGE-supported",
+   "issmge": true,
+   "url": "https://www.issmge.org/news/2nd-is-gi-2027-lyon-call-for-abstracts",
+   "deadlines": [
+    {
+     "label": "Abstracts",
+     "date": "2026-05-15",
+     "passed": true
+    }
+   ],
+   "source": "editors",
+   "found": "",
+   "notes": "",
+   "status": "upcoming"
+  },
+  {
+   "id": "wtc-2027",
+   "name": "ITA-AITES World Tunnel Congress 2027",
+   "short": "WTC 2027",
+   "start": "2027-04-23",
+   "end": "2027-04-29",
+   "city": "Antwerp",
+   "country": "BE",
+   "country_name": "Belgium",
+   "region": "Europe",
+   "online": false,
+   "organiser": "ITA-AITES with the Belgian Tunnel Association",
+   "kind": "Other conference",
+   "issmge": false,
+   "url": "https://about.ita-aites.org/future-events/2350/world-tunnel-congress-wtc-2027",
+   "deadlines": [
+    {
+     "label": "Abstracts",
+     "date": "2026-06-10",
+     "passed": true
+    }
+   ],
+   "source": "editors",
+   "found": "",
+   "notes": "Official congress website www.wtc2027.com",
+   "status": "upcoming"
+  },
+  {
+   "id": "icsge-2027",
+   "name": "International Conference on Sustainability in Geotechnical Engineering",
+   "short": "ICSGE 2027",
+   "start": "2027-06-28",
+   "end": "2027-07-01",
+   "city": "Lisbon",
+   "country": "PT",
+   "country_name": "Portugal",
+   "region": "Europe",
+   "online": false,
+   "organiser": "ISSMGE TC307 and LNEC",
+   "kind": "ISSMGE-supported",
+   "issmge": true,
+   "url": "https://www.issmge.org/news/tc223-june-news-update",
+   "deadlines": [
+    {
+     "label": "Abstracts",
+     "date": "2026-07-15",
+     "passed": true
+    }
+   ],
+   "source": "editors",
+   "found": "",
+   "notes": "",
+   "status": "upcoming"
+  },
+  {
+   "id": "is-ankara-2027",
+   "name": "9th International Symposium on Deformation Characteristics of Geomaterials",
+   "short": "IS-Ankara 2027",
+   "start": "2027-09-14",
+   "end": "2027-09-17",
+   "city": "Ankara",
+   "country": "TR",
+   "country_name": "Türkiye",
+   "region": "Europe",
+   "online": false,
+   "organiser": "ISSMGE TC101, Middle East Technical University (METU)",
+   "kind": "ISSMGE-supported",
+   "issmge": true,
+   "url": "https://www.issmge.org/news/tc223-june-news-update",
+   "deadlines": [
+    {
+     "label": "Abstracts",
+     "date": "2026-09-21",
+     "passed": true
+    }
+   ],
+   "source": "editors",
+   "found": "",
+   "notes": "Held at METU, Ankara",
+   "status": "upcoming"
+  },
+  {
+   "id": "18arc-2027",
+   "name": "18th Asian Regional Conference on Soil Mechanics and Geotechnical Engineering",
+   "short": "18ARC",
+   "start": "2027-11-09",
+   "end": "2027-11-13",
+   "city": "Bangkok",
+   "country": "TH",
+   "country_name": "Thailand",
+   "region": "Asia",
+   "online": false,
+   "organiser": "Thai Geotechnical Society, under the auspices of ISSMGE",
+   "kind": "ISSMGE conference",
+   "issmge": true,
+   "url": "https://www.issmge.org/events/18arc",
+   "deadlines": [],
+   "source": "editors",
+   "found": "",
+   "notes": "Call-for-papers deadlines not yet published",
+   "status": "upcoming"
+  }
+ ]
+}

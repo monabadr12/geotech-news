@@ -1,0 +1,28 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:ICSGE 2027
+NAME:ICSGE 2027
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:icsge-2027@geotech-news-desk
+DTSTAMP:20261024T000000Z
+DTSTART;VALUE=DATE:20270628
+DTEND;VALUE=DATE:20270702
+SUMMARY:International Conference on Sustainability in Geotechnical Engineer
+ ing (ICSGE 2027)
+DESCRIPTION:International Conference on Sustainability in Geotechnical Engi
+ neering\nOrganiser: ISSMGE TC307 and LNEC\nKind: ISSMGE-supported\nAbstrac
+ ts: 15 Jul 2026\nEvent website: https://www.issmge.org/news/tc223-june-new
+ s-update\nListed by the ISSMGE Magazine editors
+LOCATION:Lisbon\, Portugal
+URL:https://www.issmge.org/news/tc223-june-news-update
+CATEGORIES:ISSMGE-supported
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

@@ -1,0 +1,180 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Geotechnical events (ISSMGE Magazine)
+NAME:Geotechnical events (ISSMGE Magazine)
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:geo-congress-2027@geotech-news-desk
+DTSTAMP:20261024T000000Z
+DTSTART;VALUE=DATE:20270301
+DTEND;VALUE=DATE:20270306
+SUMMARY:Geo-Congress 2027\, part of ASCE2027
+DESCRIPTION:Geo-Congress 2027\, part of ASCE2027\nOrganiser: ASCE Geo-Insti
+ tute\nKind: Other conference\nAbstracts: 4 Mar 2026\nHeld within ASCE2027\
+ , the American Society of Civil Engineers' combined convention\nEvent webs
+ ite: https://geoinstitute.org/news/call-abstract-geo-congress-2027-part-as
+ ce2027\nListed by the ISSMGE Magazine editors
+LOCATION:Philadelphia\, United States
+URL:https://geoinstitute.org/news/call-abstract-geo-congress-2027-part-asce
+ 2027
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:geo-congress-2027-deadline-abstracts@geotech-news-desk
+DTSTAMP:20261024T000000Z
+DTSTART;VALUE=DATE:20260304
+DTEND;VALUE=DATE:20260305
+SUMMARY:Deadline: Abstracts – Geo-Congress 2027
+DESCRIPTION:Abstracts deadline for Geo-Congress 2027\, part of ASCE2027 (1
+ –5 Mar 2027\, Philadelphia\, United States).\nEvent website: https://geo
+ institute.org/news/call-abstract-geo-congress-2027-part-asce2027
+URL:https://geoinstitute.org/news/call-abstract-geo-congress-2027-part-asce
+ 2027
+CATEGORIES:Call for papers
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:is-gi-2027@geotech-news-desk
+DTSTAMP:20261024T000000Z
+DTSTART;VALUE=DATE:20270412
+DTEND;VALUE=DATE:20270415
+SUMMARY:2nd International Symposium on Ground Improvement (IS-GI 2027)
+DESCRIPTION:2nd International Symposium on Ground Improvement\nOrganiser: I
+ SSMGE TC211\nKind: ISSMGE-supported\nAbstracts: 15 May 2026\nEvent website
+ : https://www.issmge.org/news/2nd-is-gi-2027-lyon-call-for-abstracts\nList
+ ed by the ISSMGE Magazine editors
+LOCATION:Lyon\, France
+URL:https://www.issmge.org/news/2nd-is-gi-2027-lyon-call-for-abstracts
+CATEGORIES:ISSMGE-supported
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:is-gi-2027-deadline-abstracts@geotech-news-desk
+DTSTAMP:20261024T000000Z
+DTSTART;VALUE=DATE:20260515
+DTEND;VALUE=DATE:20260516
+SUMMARY:Deadline: Abstracts – IS-GI 2027
+DESCRIPTION:Abstracts deadline for 2nd International Symposium on Ground Im
+ provement (IS-GI 2027) (12–14 Apr 2027\, Lyon\, France).\nEvent website:
+  https://www.issmge.org/news/2nd-is-gi-2027-lyon-call-for-abstracts
+URL:https://www.issmge.org/news/2nd-is-gi-2027-lyon-call-for-abstracts
+CATEGORIES:Call for papers
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:wtc-2027@geotech-news-desk
+DTSTAMP:20261024T000000Z
+DTSTART;VALUE=DATE:20270423
+DTEND;VALUE=DATE:20270430
+SUMMARY:ITA-AITES World Tunnel Congress 2027 (WTC 2027)
+DESCRIPTION:ITA-AITES World Tunnel Congress 2027\nOrganiser: ITA-AITES with
+  the Belgian Tunnel Association\nKind: Other conference\nAbstracts: 10 Jun
+  2026\nOfficial congress website www.wtc2027.com\nEvent website: https://a
+ bout.ita-aites.org/future-events/2350/world-tunnel-congress-wtc-2027\nList
+ ed by the ISSMGE Magazine editors
+LOCATION:Antwerp\, Belgium
+URL:https://about.ita-aites.org/future-events/2350/world-tunnel-congress-wt
+ c-2027
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:wtc-2027-deadline-abstracts@geotech-news-desk
+DTSTAMP:20261024T000000Z
+DTSTART;VALUE=DATE:20260610
+DTEND;VALUE=DATE:20260611
+SUMMARY:Deadline: Abstracts – WTC 2027
+DESCRIPTION:Abstracts deadline for ITA-AITES World Tunnel Congress 2027 (WT
+ C 2027) (23–29 Apr 2027\, Antwerp\, Belgium).\nEvent website: https://ab
+ out.ita-aites.org/future-events/2350/world-tunnel-congress-wtc-2027
+URL:https://about.ita-aites.org/future-events/2350/world-tunnel-congress-wt
+ c-2027
+CATEGORIES:Call for papers
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:icsge-2027@geotech-news-desk
+DTSTAMP:20261024T000000Z
+DTSTART;VALUE=DATE:20270628
+DTEND;VALUE=DATE:20270702
+SUMMARY:International Conference on Sustainability in Geotechnical Engineer
+ ing (ICSGE 2027)
+DESCRIPTION:International Conference on Sustainability in Geotechnical Engi
+ neering\nOrganiser: ISSMGE TC307 and LNEC\nKind: ISSMGE-supported\nAbstrac
+ ts: 15 Jul 2026\nEvent website: https://www.issmge.org/news/tc223-june-new
+ s-update\nListed by the ISSMGE Magazine editors
+LOCATION:Lisbon\, Portugal
+URL:https://www.issmge.org/news/tc223-june-news-update
+CATEGORIES:ISSMGE-supported
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:icsge-2027-deadline-abstracts@geotech-news-desk
+DTSTAMP:20261024T000000Z
+DTSTART;VALUE=DATE:20260715
+DTEND;VALUE=DATE:20260716
+SUMMARY:Deadline: Abstracts – ICSGE 2027
+DESCRIPTION:Abstracts deadline for International Conference on Sustainabili
+ ty in Geotechnical Engineering (ICSGE 2027) (28 Jun – 1 Jul 2027\, Lisbo
+ n\, Portugal).\nEvent website: https://www.issmge.org/news/tc223-june-news
+ -update
+URL:https://www.issmge.org/news/tc223-june-news-update
+CATEGORIES:Call for papers
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:is-ankara-2027@geotech-news-desk
+DTSTAMP:20261024T000000Z
+DTSTART;VALUE=DATE:20270914
+DTEND;VALUE=DATE:20270918
+SUMMARY:9th International Symposium on Deformation Characteristics of Geoma
+ terials (IS-Ankara 2027)
+DESCRIPTION:9th International Symposium on Deformation Characteristics of G
+ eomaterials\nOrganiser: ISSMGE TC101\, Middle East Technical University (M
+ ETU)\nKind: ISSMGE-supported\nAbstracts: 21 Sep 2026\nHeld at METU\, Ankar
+ a\nEvent website: https://www.issmge.org/news/tc223-june-news-update\nList
+ ed by the ISSMGE Magazine editors
+LOCATION:Ankara\, Türkiye
+URL:https://www.issmge.org/news/tc223-june-news-update
+CATEGORIES:ISSMGE-supported
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:is-ankara-2027-deadline-abstracts@geotech-news-desk
+DTSTAMP:20261024T000000Z
+DTSTART;VALUE=DATE:20260921
+DTEND;VALUE=DATE:20260922
+SUMMARY:Deadline: Abstracts – IS-Ankara 2027
+DESCRIPTION:Abstracts deadline for 9th International Symposium on Deformati
+ on Characteristics of Geomaterials (IS-Ankara 2027) (14–17 Sep 2027\, An
+ kara\, Türkiye).\nEvent website: https://www.issmge.org/news/tc223-june-n
+ ews-update
+URL:https://www.issmge.org/news/tc223-june-news-update
+CATEGORIES:Call for papers
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:18arc-2027@geotech-news-desk
+DTSTAMP:20261024T000000Z
+DTSTART;VALUE=DATE:20271109
+DTEND;VALUE=DATE:20271114
+SUMMARY:18th Asian Regional Conference on Soil Mechanics and Geotechnical E
+ ngineering (18ARC)
+DESCRIPTION:18th Asian Regional Conference on Soil Mechanics and Geotechnic
+ al Engineering\nOrganiser: Thai Geotechnical Society\, under the auspices 
+ of ISSMGE\nKind: ISSMGE conference\nCall-for-papers deadlines not yet publ
+ ished\nEvent website: https://www.issmge.org/events/18arc\nListed by the I
+ SSMGE Magazine editors
+LOCATION:Bangkok\, Thailand
+URL:https://www.issmge.org/events/18arc
+CATEGORIES:ISSMGE conference
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

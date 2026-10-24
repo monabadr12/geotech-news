@@ -14,7 +14,8 @@
     get: function (k) { try { return localStorage.getItem(k) || ""; } catch (e) { return ""; } },
     set: function (k, v) { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (e) { /* ignore */ } }
   };
-  var KEYS = { model: "gnd_model", scan: "gnd_scan_started", brief: "gnd_brief_started", passcode: "gnd_passcode" };
+  var KEYS = { model: "gnd_model", scan: "gnd_scan_started", brief: "gnd_brief_started", passcode: "gnd_passcode",
+    events: "gnd_events_started", weekly: "gnd_weekly_started" };
 
   function fmt(iso) {
     if (!iso) return "";
@@ -48,7 +49,13 @@
       done: "Scan finished. The website refreshes about a minute later — <a href='#' class='reload-link'>reload the page</a>." },
     brief: { file: "brief.yml", key: KEYS.brief, button: "Generate / update brief", noun: "issue brief", minutes: "3–6",
       wait: "This page will follow Claude while it drafts the brief and tell you when the Word file is ready.",
-      done: "The issue brief is ready. The website refreshes about a minute later — <a href='#' class='reload-link'>reload the page</a> to download it." }
+      done: "The issue brief is ready. The website refreshes about a minute later — <a href='#' class='reload-link'>reload the page</a> to download it." },
+    events: { file: "extras.yml", key: KEYS.events, button: "Refresh calendar", noun: "calendar refresh", minutes: "3–6",
+      wait: "This page will follow Claude while it reads the organisers' calendars and tell you when the calendar is updated.",
+      done: "The events calendar is updated. The website refreshes about a minute later — <a href='#' class='reload-link'>reload the page</a>." },
+    weekly: { file: "extras.yml", key: KEYS.weekly, button: "Send summary now", noun: "weekly summary", minutes: "1–2",
+      wait: "This page will follow the run and tell you when the e-mail has gone.",
+      done: "The weekly summary was sent. The website refreshes about a minute later — <a href='#' class='reload-link'>reload the page</a>." }
   };
   function ghPage(w) { return "https://github.com/" + repo + "/actions/workflows/" + w.file; }
 
@@ -114,6 +121,8 @@
   startButton(WORKFLOWS.brief, briefBtn, !briefBtn ? "enter the issue window unless it is the current quarter"
     : briefBtn.getAttribute("data-current") ? "leave <b>Issue window</b> empty for the current quarter"
     : "type <b>" + esc(briefBtn.getAttribute("data-window")) + "</b> under <b>Issue window</b> (and tick <b>Final</b> if the quarter has closed)");
+  startButton(WORKFLOWS.events, document.getElementById("events-btn"), "choose <b>refresh the events calendar</b> under <b>What to do</b>");
+  startButton(WORKFLOWS.weekly, document.getElementById("weekly-btn"), "choose <b>send the weekly summary now</b> under <b>What to do</b>");
   document.addEventListener("click", function (e) {
     if (e.target.classList && e.target.classList.contains("reload-link")) { e.preventDefault(); location.reload(); }
   });
@@ -146,37 +155,56 @@
   });
 
   /* ---------- archive data (search page and assistant) ---------- */
-  var archivePromise;
+  var archivePromise, COUNTRY_NAMES = {};
+  function getJSON(path) {
+    return fetch(root + path).then(function (r) { if (!r.ok) throw new Error("status " + r.status); return r.json(); });
+  }
   function loadArchive() {
     if (!archivePromise) {
       archivePromise = fetch(root + "exports/index.json").then(function (r) { return r.json(); }).then(function (windows) {
         return Promise.all(windows.map(function (w) {
           return fetch(root + "exports/" + w.key + ".json").then(function (r) { return r.json(); });
         })).then(function (lists) { return { windows: windows, stories: [].concat.apply([], lists) }; });
+      }).then(function (data) {
+        // English names of the countries stories are about (an older site has none: the codes are shown)
+        return getJSON("exports/countries.json").then(function (names) { COUNTRY_NAMES = names || {}; })
+          .catch(function () { /* codes only */ }).then(function () { return data; });
       });
     }
     return archivePromise;
   }
   function windowLabel(key) { var p = key.split("-"); return p[1] + " " + p[0]; }
+  function countryName(cc) { return cc ? COUNTRY_NAMES[cc] || cc : ""; }
+  function placeText(s) {  // "Moniquirá, Boyacá, Colombia": where it happened, as Claude read it
+    var place = String(s.pl || "").trim(), country = countryName(s.cc);
+    if (country && place.toLowerCase().indexOf(country.toLowerCase()) !== -1) country = "";
+    return [place, country].filter(Boolean).join(", ");
+  }
+  var PIN = "<svg class='ico' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' " +
+    "stroke-linejoin='round' aria-hidden='true'><path d='M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z'/><circle cx='12' cy='10' r='3'/></svg>";
 
   function isPaper(s) { return s.kind === "paper"; }
   function card(s) {
     var paper = isPaper(s), title = s.te || s.t, rel = s.r
       ? "<span class='rel rel-" + s.r + "' title='" + (paper ? "Use in practice: " : "Geotechnical relevance: ") + s.r + " of 5'><i></i><i></i><i></i><i></i><i></i><b>" + s.r + "/5</b></span>"
       : "<span class='rel rel-kw'>" + (paper ? "Not rated" : "Keyword-ranked") + "</span>";
-    var meta = ["<span class='src'>" + esc(s.s) + "</span>"];
+    var meta = ["<span class='src'>" + esc(s.s) + "</span>"], where = placeText(s);
     if (s.p) meta.push("<time>" + esc(fmt(s.p)) + "</time>");
-    if (s.c) meta.push("<span>" + esc(s.c) + " edition</span>");
+    if (where) meta.push("<span class='loc'>" + PIN + esc(where) + "</span>");
+    if (s.c && s.c !== countryName(s.cc)) meta.push("<span>" + esc(s.c) + " edition</span>");
     var useSlug = s.u ? s.u.split(" ")[0].toLowerCase().replace(/-+$/, "") : "";
     var tc = THEME_COLORS[s.th] || "#64748b";
     var href = /^https?:\/\//i.test(s.l || "") ? s.l : "#";
+    // the developing story it belongs to, as on the story cards of the digest and issue pages
+    var chip = s.sl && s.st ? "<a class='sl-chip' href='" + root + "developing.html#" + esc(encodeURIComponent(s.sl)) + "' title='" + esc(s.st) + "'>" +
+      "Developing story · " + esc(s.sz || 2) + " reports" + (s.sg && s.sg !== "Event" ? " · " + esc(s.sg) : "") + "</a>" : "";
     return "<article class='story' style='--tc:" + tc + "'><div class='story-top'><a class='story-title' dir='auto' href='" + esc(href) + "' target='_blank' rel='noopener'>" +
       esc(title) + "</a>" + rel + "</div>" +
       (s.te ? "<div class='orig' dir='auto'>Original: " + esc(s.t) + "</div>" : "") +
       (paper && s.au ? "<div class='orig' dir='auto'>" + esc(s.au) + "</div>" : "") +
       (s.a ? "<p class='angle'><span>" + (paper ? "Why it matters in practice" : "Magazine angle") + "</span>" + esc(s.a) + "</p>"
         : (s.x ? "<p class='summary'>" + esc(s.x) + "…</p>" : "")) +
-      "<div class='story-meta'>" + (paper ? "<span class='badge'>Research paper</span>" : "") +
+      "<div class='story-meta'>" + (paper ? "<span class='badge'>Research paper</span>" : "") + chip +
       (s.u ? "<span class='use use-" + esc(useSlug) + "'>" + esc(s.u) + "</span>" : "") +
       "<span class='theme-tag'>" + esc(s.th) + "</span>" + meta.join(" · ") + "</div>" +
       (s.k && s.k.length ? "<div class='kw'>" + s.k.slice(0, 5).map(function (k) { return "<span>" + esc(k) + "</span>"; }).join("") + "</div>" : "") +
@@ -241,9 +269,10 @@
     }
     exportBtn.addEventListener("click", function () {
       var head = ["Digest date", "Issue window", "Theme", "Relevance (1-5)", "Suggested use", "Headline (English)", "Original headline",
-        "Magazine angle", "Source", "Google News edition", "Published", "Link", "Keywords"];
+        "Magazine angle", "Source", "Country", "Place", "Google News edition", "Published", "Developing story", "Link", "Keywords"];
       var rows = matches.map(function (s) {
-        return [s.d, s.w, s.th, s.r || "", s.u, s.te || s.t, s.te ? s.t : "", s.a, s.s, s.c, s.p, s.l, (s.k || []).join(", ")].map(csvCell).join(",");
+        return [s.d, s.w, s.th, s.r || "", s.u, s.te || s.t, s.te ? s.t : "", s.a, s.s, countryName(s.cc), s.pl, s.c, s.p,
+          s.st ? s.st + (s.sg ? " · " + s.sg : "") : "", s.l, (s.k || []).join(", ")].map(csvCell).join(",");
       });
       var blob = new Blob(["﻿" + [head.join(",")].concat(rows).join("\r\n")], { type: "text/csv;charset=utf-8" });
       var a = document.createElement("a");
@@ -259,7 +288,7 @@
   })();
 
   function hay(s) {
-    return s._hay || (s._hay = [s.t, s.te, s.a, s.s, s.c, s.th, s.u, s.x, (s.k || []).join(" ")].join(" ").toLowerCase());
+    return s._hay || (s._hay = [s.t, s.te, s.a, s.s, s.c, s.th, s.u, s.x, (s.k || []).join(" "), placeText(s), s.st].join(" ").toLowerCase());
   }
 
   /* ---------- AI assistant ---------- */
@@ -321,6 +350,60 @@
       systemText = buildSystem(data);
       refreshStatus();
     }).catch(function () { statusEl.textContent = "The archive could not be loaded; the assistant can still read attached documents."; systemText = buildSystem({ windows: [], stories: [] }); });
+    // the events calendar (docs/exports/events.json), for questions about conferences and deadlines
+    var calendar = null;
+    var calendarPromise = getJSON("exports/events.json").then(function (j) {
+      calendar = j && Array.isArray(j.events) ? j : null;
+      systemText = buildSystem(archive || { windows: [], stories: [] });
+    }).catch(function () { /* the assistant works without it */ });
+
+    function clip(text, n) { text = String(text == null ? "" : text); return text.length > n ? text.slice(0, n - 1) + "…" : text; }
+
+    /* the developing stories in the archive (reports sharing a storyline id), most recently active first */
+    function storylines() {
+      if (!archive) return [];
+      if (archive._lines) return archive._lines;
+      var by = {}, out = [];
+      archive.stories.forEach(function (s) {
+        if (!s.sl || isPaper(s)) return;
+        var g = by[s.sl];
+        if (!g) { g = by[s.sl] = { id: s.sl, title: s.st || "", reports: [], seen: {} }; out.push(g); }
+        var key = s.id || s.l;
+        if (g.seen[key]) return;  // a story kept in two digests counts once
+        g.seen[key] = 1;
+        g.reports.push(s);
+      });
+      function day(s) { return s.p || s.d || ""; }
+      archive._lines = out.filter(function (g) { return g.reports.length >= 2; }).map(function (g) {
+        g.reports.sort(function (a, b) { return day(a) < day(b) ? -1 : day(a) > day(b) ? 1 : 0; });
+        g.first = day(g.reports[0]);
+        g.last = day(g.reports[g.reports.length - 1]);
+        g.where = g.reports.map(placeText).filter(Boolean).pop() || "";
+        return g;
+      }).sort(function (a, b) { return a.last < b.last ? 1 : a.last > b.last ? -1 : 0; });
+      return archive._lines;
+    }
+    function storylineHead(g) {
+      return g.title + (g.where ? " | " + g.where : "") + " | " + g.reports.length + " reports, " + g.first + " to " + g.last +
+        " | latest stage: " + (g.reports[g.reports.length - 1].sg || "Update");
+    }
+    function eventsText() {
+      if (!calendar) return "Events calendar: not available.";
+      var coming = calendar.events.filter(function (e) { return e && e.status !== "past"; }).slice(0, 40);
+      var lines = coming.map(function (e) {
+        var where = [e.city, e.country_name].filter(Boolean).join(", ");
+        where = e.online ? (where ? where + " and online" : "Online") : where;
+        var open = (e.deadlines || []).filter(function (d) { return d && !d.passed; })
+          .map(function (d) { return d.label + " " + d.date; }).join("; ");
+        return "- " + e.start + (e.end && e.end !== e.start ? " to " + e.end : "") + " | " + clip(e.name, 160) +
+          (e.short && String(e.name).indexOf(e.short) === -1 ? " (" + e.short + ")" : "") + " | " + (where || "place to be announced") +
+          " | " + e.kind + (e.status === "under way" ? " | under way" : "") + (e.organiser ? " | " + clip(e.organiser, 80) : "") +
+          (open ? " | open deadlines: " + open : "") + (e.url ? " | " + e.url : "");
+      });
+      return "Events calendar (the website's Events page as built on " + calendar.built + (calendar.updated ? ", last refreshed " +
+        String(calendar.updated).slice(0, 10) : "") + "), upcoming and current events, soonest first, with their open call-for-papers deadlines:\n" +
+        (lines.join("\n") || "- (none)");
+    }
 
     function buildSystem(data) {
       var lines = data.windows.map(function (w) {
@@ -329,6 +412,7 @@
         return "- " + w.label + " (" + w.span + "): " + w.stories + " stories — " +
           Object.keys(themes).sort(function (a, b) { return themes[b] - themes[a]; }).map(function (t) { return t + " " + themes[t]; }).join(", ");
       });
+      var developing = storylines().slice(0, 25).map(function (g) { return "- " + storylineHead(g); });
       return "You are the AI assistant of the Geotechnical News Desk, the news-monitoring website of the ISSMGE Magazine " +
         "(International Society for Soil Mechanics and Geotechnical Engineering). The person you are helping is an editor of the magazine, " +
         "which is published every three months and read by practising geotechnical engineers and academics worldwide.\n\n" +
@@ -339,7 +423,15 @@
         "Archive overview by issue window:\n" + (lines.join("\n") || "- (archive empty)") + "\n\n" +
         "With each question you receive the archive stories most relevant to it, retrieved from the full archive. Base what you say about the " +
         "news on those stories. When you mention a story, give its headline as a markdown link to its URL, followed by the source and date. " +
-        "If the retrieved stories do not cover what was asked, say so plainly and suggest a search term or filter for the Search page.\n\n" +
+        "If the retrieved stories do not cover what was asked, say so plainly and suggest a search term or filter for the Search page. " +
+        "Each story line gives where it happened (place and country, as read from the story) when known.\n\n" +
+        "Developing stories are events, projects or sites reported more than once (a failure, then the inquiry, then the repair). When asked " +
+        "for the latest on one, give its reports in date order with the stage each reached, from the developing stories retrieved with the " +
+        "question, and link the Developing stories page (developing.html). The most recently active:\n" +
+        (developing.join("\n") || "- (none yet)") + "\n\n" +
+        "For questions about conferences, events or call-for-papers deadlines, answer from the events calendar below: give the dates, the " +
+        "place and the event's link, and remind the editor to check dates on the event's own website. Do not add events that are not listed.\n" +
+        eventsText() + "\n\n" +
         "The editor may attach PDF or Word documents such as calls for papers, article drafts or reports. Read them and relate them to the " +
         "archive when that helps.\n\nWrite in clear British English, with short paragraphs and bullet lists where they help.";
     }
@@ -367,14 +459,29 @@
         .slice(0, Math.max(30, 150 - matched.length));
       var chosen = matched.concat(fill);
       var text = chosen.map(function (x, i) {
-        var s = x.s;
+        var s = x.s, where = placeText(s);
         return "[" + (i + 1) + "] " + (s.p || s.d) + " | " + windowLabel(s.w) + " | " + s.th + " | " + (s.r ? s.r + "/5" : "keyword-ranked") +
           (s.u ? " | " + s.u : "") + " | " + (s.te || s.t) + (s.te ? " (original: " + s.t + ")" : "") +
-          (s.a ? " | angle: " + s.a : "") + " | " + s.s + (s.c ? " | " + s.c + " edition" : "") +
-          ((s.k && s.k.length) ? " | keywords: " + s.k.join(", ") : "") + " | " + s.l;
+          (s.a ? " | angle: " + s.a : "") + " | " + s.s + (where ? " | where: " + where : "") + (s.c ? " | " + s.c + " edition" : "") +
+          (s.st ? " | developing story: " + s.st : "") + ((s.k && s.k.length) ? " | keywords: " + s.k.join(", ") : "") + " | " + s.l;
+      }).join("\n");
+      // the developing stories the question names (title words count most): their whole timeline, so
+      // "What is the latest on …?" can be answered in order
+      var named = words.length ? storylines().map(function (g) {
+        var title = g.title.toLowerCase(), all = title + " " + g.reports.map(hay).join(" "), inTitle = 0, inAll = 0;
+        words.forEach(function (w) { if (title.indexOf(w) !== -1) inTitle++; if (all.indexOf(w) !== -1) inAll++; });
+        return { g: g, inTitle: inTitle, score: inTitle * 3 + inAll };
+      }).filter(function (x) { return x.inTitle || x.score >= Math.max(2, Math.ceil(words.length / 2)); })
+        .sort(function (a, b) { return b.score - a.score || (a.g.last < b.g.last ? 1 : -1); }).slice(0, 3) : [];
+      var timelines = named.map(function (x) {
+        var g = x.g;
+        return "Developing story: " + storylineHead(g) + "\n" + g.reports.slice(-15).map(function (s) {
+          return "  - " + (s.p || s.d) + " | " + (s.sg || "Update") + " | " + (s.te || s.t) + " | " + s.s + " | " + s.l;
+        }).join("\n");
       }).join("\n");
       return "Archive stories retrieved for this question (" + chosen.length + " of " + stories.length + " archived" +
-        (wkey ? ", limited to " + windowLabel(wkey) : "") + "; " + matched.length + " match its words):\n" + (text || "(none)");
+        (wkey ? ", limited to " + windowLabel(wkey) : "") + "; " + matched.length + " match its words):\n" + (text || "(none)") +
+        (timelines ? "\n\nDeveloping stories that match the question, oldest report first:\n" + timelines : "");
     }
 
     /* minimal, safe markdown for answers */
@@ -489,8 +596,8 @@
       if (!question && !pendingFiles.length && !reading.length) return false;
       busy = true;
       var mine = conversation;
-      // wait for attachments still being read and for the archive, so neither is left out
-      Promise.all(reading.concat([loadArchive().catch(function () { return null; })])).then(function () {
+      // wait for attachments still being read, the archive and the events calendar, so none is left out
+      Promise.all(reading.concat([loadArchive().catch(function () { return null; }), calendarPromise])).then(function () {
         if (mine === conversation) ask(question, mine);
       });
       return true;
