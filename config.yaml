@@ -29,6 +29,17 @@ assistant:
 # Maximum stories shown in one digest.
 max_items: 60
 
+# Largest share of the digest one magazine theme may take: 0.3 = 30 %, i.e.
+# at most 18 of 60 stories. Themes take turns, the theme with the best story
+# first, so every theme that has candidates is represented. The same share caps
+# each theme among the stories sent to Claude (claude: max_candidates below).
+max_share_per_theme: 0.3
+
+# When the other themes run out of stories, should the free places go to more
+# stories from the big themes (true), or should the digest stay shorter and
+# balanced (false)?
+fill_leftover_places: false
+
 # Stories need at least this keyword score to be considered.
 min_keyword_score: 3
 
@@ -113,16 +124,17 @@ google_news:
     - {q: 'deslizamiento de tierra OR socavón OR "estudio geotécnico"', language: es, country: ES, bonus: 6}
     - {q: 'deslizamiento OR licuefacción OR "muro de contención" colapso', language: es, country: MX, bonus: 6}
     - {q: 'deslizamento de terra OR "barragem de rejeitos" OR geotecnia', language: pt, country: BR, bonus: 6}
-    - {q: 'Hangrutschung OR Baugrund OR Tunnelvortrieb', language: de, country: DE, bonus: 6}
+    - {q: 'Hangrutschung OR Baugrundgutachten OR Tunnelvortrieb', language: de, country: DE, bonus: 6}
     - {q: 'frana OR "cedimento del terreno" OR geotecnica', language: it, country: IT, bonus: 6}
     - {q: 'heyelan OR zemin etüdü OR tünel çökmesi', language: tr, country: TR, bonus: 6}
     - {q: 'भूस्खलन OR "मिट्टी" धंसाव OR सुरंग', language: hi, country: IN, bonus: 6}
     - {q: 'tanah longsor OR "penurunan tanah" OR terowongan', language: id, country: ID, bonus: 6}
-    - {q: '滑坡 OR 地面沉降 OR 岩土工程', language: zh, country: CN, bonus: 6}
+    - {q: '山体滑坡 OR 地面沉降 OR 岩土工程', language: zh, country: CN, bonus: 6}
     - {q: '地盤沈下 OR 液状化 OR 斜面崩壊', language: ja, country: JP, bonus: 6}
 
 # ---- Keywords and their weight -----------------------------------
-# Plurals are matched automatically (pile -> piles).
+# Plurals are matched automatically (pile -> piles). Terms match whole
+# words only, except Chinese and Japanese terms, which match anywhere.
 keywords:
   geotechnical: 5
   geotechnics: 5
@@ -153,6 +165,8 @@ keywords:
   excavation: 2
   tunnel boring machine: 4
   tbm: 3
+  tunnelling: 3
+  tunneling: 3
   tunnel: 2
   shaft: 1
   embankment: 3
@@ -163,7 +177,7 @@ keywords:
   dam: 2
   levee: 3
   dike: 2
-  scour: 3
+  scour: 2
   geosynthetic: 4
   geogrid: 4
   site investigation: 4
@@ -191,8 +205,8 @@ multilingual_keywords:
   geotechnical:
     weight: 5
     terms: [géotechnique, géotechnicien, geotecnia, geotécnico, geotécnica, geotecnico, geotecnica,
-            geoteknik, geotechnik, geotechnisch, baugrund, bodengutachten, भू-तकनीकी, 岩土工程, 岩土,
-            地盤工学, جيوتقني, جيوتقنية, جيوتكنيك]
+            geoteknik, geotechnik, geotechnisch, baugrundgutachten, baugrunduntersuchung, bodengutachten,
+            भू-तकनीकी, 岩土工程, 岩土, 地盤工学, جيوتقني, جيوتقنية, جيوتكنيك]
   soil mechanics:
     weight: 5
     terms: [mécanique des sols, mecánica de suelos, mecânica dos solos, meccanica dei terreni, zemin mekaniği,
@@ -200,8 +214,9 @@ multilingual_keywords:
   landslide:
     weight: 4
     terms: [glissement de terrain, glissements de terrain, éboulement, deslizamiento, deslave, derrumbe de tierra,
-            deslizamento, desmoronamento, frana, smottamento, heyelan, toprak kayması, erdrutsch, hangrutschung,
-            tanah longsor, longsor, भूस्खलन, 滑坡, 山体滑坡, 土砂崩れ, 地すべり, 崖崩れ,
+            deslizamento, desmoronamento, frana, frane, smottamento, smottamenti, heyelan, toprak kayması,
+            erdrutsch, erdrutsche, hangrutschung, hangrutschungen, tanah longsor, longsor, भूस्खलन,
+            山体滑坡, 滑坡灾害, 发生滑坡, 滑坡体, 土砂崩れ, 地すべり, 崖崩れ,
             انهيار أرضي, انزلاق أرضي, انهيارات أرضية, انزلاقات أرضية]
   debris flow:
     weight: 4
@@ -214,23 +229,24 @@ multilingual_keywords:
   liquefaction:
     weight: 5
     terms: [liquéfaction, licuefacción, licuación, liquefação, liquefazione, sıvılaşma, bodenverflüssigung,
-            likuifaksi, 砂土液化, 液化, 液状化, تميع التربة, تسييل التربة]
+            likuifaksi, 砂土液化, 土壤液化, 液状化, تميع التربة, تسييل التربة]
   sinkhole:
     weight: 4
-    terms: [effondrement karstique, fontis, doline, socavón, sumidero, dolina, cratera, voragine, obruk,
-            erdfall, tanah ambles, amblesan, 天坑, 地面塌陷, 陥没, حفرة انهدامية, حفرة عميقة]
+    terms: [effondrement karstique, fontis, doline, socavón, socavones, sumidero, dolina, cratera, voragine,
+            obruk, erdfall, tanah ambles, amblesan, 天坑, 地面塌陷, 陥没, حفرة انهدامية, حفرة عميقة]
   subsidence:
     weight: 3
-    terms: [affaissement, hundimiento, subsidencia, afundamento, subsidenza, cedimento del terreno, zemin çökmesi,
-            bodenabsenkung, penurunan tanah, धंसाव, भू-धंसाव, 地面沉降, 沉降, 地盤沈下, هبوط أرضي, هبوط التربة]
+    terms: [affaissement, hundimiento del terreno, subsidencia, afundamento do solo, subsidenza,
+            cedimento del terreno, zemin çökmesi, bodenabsenkung, penurunan tanah, धंसाव, भू-धंसाव, 地面沉降, 沉降, 地盤沈下, هبوط أرضي, هبوط التربة]
   foundation:
-    weight: 3
-    terms: [fondation, fondations, cimentación, cimentaciones, fundação, fundações, fondazioni, temel, fundament,
-            gründung, fondasi, pondasi, नींव, 地基, 基础工程, 基礎工事, أساسات, الأساسات]
+    weight: 2
+    terms: [fondation, fondations, cimentación, cimentaciones, fundação, fundações, fondazioni, bina temeli,
+            temel kazısı, radye temel, kazıklı temel, fundament, gründung, fondasi, pondasi, नींव, 基础工程,
+            基礎工事, أساسات, الأساسات]
   piling:
     weight: 4
-    terms: [pieux, pilotis, pilotes, pilotaje, estacas, estaqueamento, pali di fondazione, kazık, pfähle,
-            pfahlgründung, tiang pancang, 桩基, 打桩, 杭基礎, خوازيق]
+    terms: [pieux, pilotis, pilotes de cimentación, hinca de pilotes, pilotaje, estacas, estaqueamento,
+            pali di fondazione, kazık, pfähle, pfahlgründung, tiang pancang, 桩基, 打桩, 杭基礎, خوازيق]
   retaining wall:
     weight: 4
     terms: [mur de soutènement, muro de contención, muro de contenção, muro di sostegno, istinat duvarı,
@@ -251,8 +267,8 @@ multilingual_keywords:
     terms: [excavación, escavação, scavo, kazı, baugrube, aushub, galian, खुदाई, 基坑, 开挖, 掘削, حفريات]
   embankment:
     weight: 3
-    terms: [remblai, digue, terraplén, aterro, rilevato, argine, dolgu, damm, böschung, tanggul, timbunan,
-            तटबंध, 路堤, 堤防, 盛土, سد ترابي]
+    terms: [remblai, digue, terraplén, aterro, rilevato ferroviario, rilevato stradale, rilevato arginale,
+            argine, dolgu, damm, böschung, tanggul, timbunan, तटबंध, 路堤, 堤防, 盛土, سد ترابي]
   dam failure:
     weight: 4
     terms: [dam failure, dam collapse, dam burst, rupture de barrage, rotura de presa, rompimento de barragem,
@@ -327,12 +343,58 @@ multilingual_keywords:
     weight: 0
     terms: [railway, voie ferrée, ferrocarril, ferrovia, demiryolu, eisenbahn, kereta api, 铁路, 鉄道, سكة حديد]
 
-# Headlines containing these lose points (noise filter).
+# Headlines containing these lose 5 points each (noise filter). Whole words
+# only ("election" does not touch "selection"); Chinese and Japanese terms
+# match anywhere.
 exclude:
   - share price
   - stock market
   - football
   - election
+  # elections won "by a landslide"
+  - landslide victory
+  - landslide win
+  - wins landslide
+  - won a landslide
+  - landslide majority
+  - won in a landslide
+  - wins in a landslide
+  - win in a landslide
+  - won by a landslide
+  - wins by a landslide
+  - win by a landslide
+  - elected in a landslide
+  - re-elected in a landslide
+  - vote in a landslide
+  # liquefied natural gas, not soil liquefaction
+  - liquefied natural gas
+  - lng liquefaction
+  - gas liquefaction
+  - liquefaction train
+  - liquefaction plant
+  - liquefaction capacity
+  - liquefaction project
+  - liquefaction expansion
+  - liquefaction cargo
+  # firms that "collapse" financially
+  - into administration
+  - insolvency
+  # market slumps ("Borsa, titolo frana")
+  - borsa
+  - piazza affari
+  # Japanese political and economic metaphors (地盤沈下, 液状化)
+  - 経済の地盤沈下
+  - 日本経済
+  - 野党
+  - 与党
+  - 政界
+  - 政権
+  - 自民党
+  # traffic pile-ups and piling into investments
+  - pile-up
+  - pile up
+  - piles up
+  - piling into
 
 # ---- Magazine cross-cutting themes (for sorting the digest) ------
 themes:
@@ -340,8 +402,8 @@ themes:
   # shorter words must match whole (dam does not match damage).
   # The English concept names from both keyword lists count here too, which is
   # how non-English stories land in the right theme.
-  "Sustainability & the Energy Transition": [low carbon, carbon, sustainab, energy, geothermal, hydrogen, storage, net zero, wind, offshore wind, solar, renewable, decarbon, circular, recycl, emission]
-  "Digital Geotechnics": [digital, ai, artificial intelligence, machine learning, sensor, monitoring, bim, twin, drone, satellite, insar, laser scanning, automat, robot, software, early warning]
+  "Sustainability & the Energy Transition": [low carbon, carbon, sustainab, energy, geothermal, hydrogen, storage, net zero, wind farm, wind turbine, wind power, wind energy, offshore wind, solar, renewable, decarbon, circular, recycl, emission]
+  "Digital Geotechnics": [digital, ai-powered, ai-driven, ai-based, artificial intelligence, machine learning, sensor, monitoring, bim, digital twin, drone, satellite, insar, laser scanning, automat, robot, software, early warning]
   "Hazards & Resilience": [landslide, landslip, rockfall, debris flow, liquefaction, earthquake, sinkhole, flood, collapse, failure, climate, resilience, subsidence, dam failure, tunnel collapse, erosion, disaster, hazard, emergency, evacuat, monsoon, rainfall, storm, cyclone, typhoon]
   "Ground Improvement & Innovation": [ground improvement, grouting, jet grouting, soil nailing, geosynthetic, geogrid, stabilis, stabiliz, compaction, innovation, dewatering, retaining wall, reinforced soil, new technique]
   "Infrastructure & the Underground City": [tunnel, tbm, tunnel boring machine, metro line, basement, excavation, diaphragm wall, pile, piling, foundation, railway, road, highway, bridge, embankment, earthworks, underground, station, motorway]

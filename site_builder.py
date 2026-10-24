@@ -653,7 +653,8 @@ def build(cfg):
         exports.write_workbook(
             DOCS / "exports" / f"{key}.xlsx", f"Geotechnical News · {w['win']['label']}",
             f"Issue window {w['win']['span']}", w["stories"], order, theme_color,
-            [(nice_date(d["date"]), len(d["stories"])) for d in reversed(w["digests"])], "daily digest")
+            [(nice_date(d["date"]), len(d["stories"])) for d in reversed(w["digests"])], "daily digest",
+            digest_count=len(w["digests"]), windows=[key])
         compact = [{"d": s["_digest"], "w": key, "t": s["title"], "te": s.get("title_en", ""), "l": s["link"],
                     "s": s["source"], "c": s["_region"], "p": (s.get("published") or "")[:10], "th": s["theme"],
                     "r": s.get("relevance") or 0, "u": s.get("use", ""), "a": s.get("angle", ""),
@@ -666,7 +667,8 @@ def build(cfg):
     exports.write_workbook(
         DOCS / "exports" / "geotech-news-archive.xlsx", "Geotechnical News · Whole archive",
         f"All {len(windows)} issue windows", [s for w in windows for s in w["stories"]], order, theme_color,
-        [(w["win"]["label"], len(w["stories"])) for w in reversed(windows)], "issue window")
+        [(w["win"]["label"], len(w["stories"])) for w in reversed(windows)], "issue window",
+        digest_count=len(digests), windows=[w["win"]["key"] for w in windows])
     report.write_report(DOCS / "reports" / "site-report.docx", cfg, digests, windows, theme_color,
                         site_url(cfg), CHANGELOG)
 
