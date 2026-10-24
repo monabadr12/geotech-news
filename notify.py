@@ -16,7 +16,9 @@ E-mail goes out by the first channel that is set up:
      config.yaml assistant: endpoint): it sends from the editor's Google account when the GitHub
      secret NOTIFY_TOKEN matches the script's NOTIFY_TOKEN property (recipients: its MAIL_TO
      property, or the account's own address);
-  3. neither: the log shows what would have been sent and how to set e-mail up.
+  3. neither: the log shows what would have been sent and how to set e-mail up. --auto still ends
+     without an error (it never fails a scan); --weekly and --test end with exit code 1, so their run
+     on GitHub (and the website's Send summary now) does not report an e-mail that was not sent.
 
 data/notify.json records what was sent, so nothing goes out twice:
     {"alerted": {story id (or "digest:<date>" for the daily digest): date sent},
@@ -382,6 +384,8 @@ class _Text(HTMLParser):
             self.links.append((a.get("href") or "", len(self.out)))
 
     def handle_endtag(self, tag):
+        if not any(name == tag for name, _ in self.stack):
+            return  # <br/>, <img/> or a stray end tag: nothing to close
         while self.stack:
             name, mark = self.stack.pop()
             if name in self.SKIP:
@@ -923,7 +927,7 @@ def main(argv=None, now=None):
         sent = try_send("Test e-mail", "Geotechnical News Desk: test e-mail",
                         m_shell("Geotechnical News Desk · test", "E-mail is working", "", body, cfg,
                                 "You receive this because someone ran the test from the news desk's workflow."), cfg, "error")
-        return 1 if sent is None else 0
+        return 0 if sent else 1  # nothing sent (failed, or e-mail not set up): the run fails
 
     digests = site_builder.load_digests()
     failed, changed = False, False
@@ -935,7 +939,7 @@ def main(argv=None, now=None):
         if sent:
             rec["weekly"][key] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes")
             save_record(rec, today)
-        return 1 if sent is None else 0
+        return 0 if sent else 1  # as --test: the website's Send summary now must not report an e-mail that did not go
 
     # --auto: (1) one alert for the new top-rated stories
     if not opts["story_alerts"]:
@@ -989,16 +993,18 @@ def main(argv=None, now=None):
 
 
 # ------------------------------------------------------------------ web pages (docs/weekly/)
-def status_text(W, rec):
+def status_text(W, rec, on=True):
     """(chip class, chip text, sentence) on the e-mail of a week; ("", "", "") when there is nothing to say
-    (an older week that was not e-mailed, perhaps from before e-mail was set up)."""
+    (an older week that was not e-mailed, perhaps from before e-mail was set up). on: the weekly summary
+    is switched on in config.yaml."""
     sent = rec["weekly"].get(W["key"])
     if sent:
         return "ok", "E-mailed", f"E-mailed to the editorial team on {when_sent(sent)}."
     day = dt.date.fromisoformat(W["send_on"])
     if W["in_progress"]:
-        return "", "In progress", f"The week is not over yet: its summary goes out on {day:%A} {short_date(day)}."
-    if day >= cairo_today():
+        return "", "In progress", (f"The week is not over yet: its summary goes out on {day:%A} {short_date(day)}."
+                                   if on else "The week is not over yet.")
+    if on and day >= cairo_today():
         return "", "Due", f"The summary goes out on {day:%A} {short_date(day)}, after the morning scan."
     return "", "", ""
 
@@ -1012,12 +1018,16 @@ def mail_card(W, rec, opts, last_key):
         which = f"e-mails the summary of the last full week ({esc(last)}), not this one"
     else:
         which = f"e-mails the summary of the last full week ({esc(last)})"
-    chip, label, sentence = status_text(W, rec) if W else ("", "", "")
+    chip, label, sentence = status_text(W, rec, opts["weekly_summary"]) if W else ("", "", "")
     status = (f"<p class='wk-status'><span class='wk-chip {chip}'>{esc(label)}</span>{esc(sentence)}</p>" if label else "")
+    level = "5 / 5" if opts["min_relevance"] >= 5 else f"{opts['min_relevance']} / 5 or higher"
+    plan = (f"The summary goes out every {opts['weekday']} after the morning scan" if opts["weekly_summary"]
+            else "The weekly summary is switched off in config.yaml (alerts: weekly_summary)")
+    plan += (f", and an alert follows any scan that finds a new story rated {level}." if opts["story_alerts"]
+             else "; alerts for new top-rated stories are switched off (alerts: story_alerts).")
     return (f"<section class='wk-mail' aria-label='E-mail'><div class='wk-mail-head'><span class='brief-mark'>{site_builder.icon('send')}</span>"
             f"<div><p class='eyebrow'>E-mail to the editorial team</p>{status}"
-            f"<p class='brief-meta'>The summary goes out every {opts['weekday']} after the morning scan, and an alert follows "
-            f"any scan that finds a new 5 / 5 story. <b>Send summary now</b> {which}, through its workflow on GitHub.</p></div></div>"
+            f"<p class='brief-meta'>{plan} <b>Send summary now</b> {which}, through its workflow on GitHub.</p></div></div>"
             f"<div class='actions'><button type='button' class='btn primary weekly-btn' id='weekly-btn' data-week='{esc(last_key)}'>{site_builder.icon('send')}<span>Send summary now</span></button></div>"
             "<details class='help wk-help'><summary>How e-mail is set up</summary><ol>"
             "<li><b>With the AI assistant's Google connector</b> (no mail server needed): paste the current "
@@ -1051,7 +1061,7 @@ def week_body(W, cfg, rec, opts, older, newer, last_key):
              + site_builder.stat(F["top"], "rated 5 / 5") + site_builder.stat(F["papers"], "research papers")
              + site_builder.stat(F["digests"], "daily digests"))
     lede = ("The week's geotechnical news for the editorial team: top stories, developing stories, regional coverage, "
-            "what is coming up and new research. " + esc(status_text(W, rec)[2]))
+            "what is coming up and new research. " + esc(status_text(W, rec, opts["weekly_summary"])[2]))
     out = [site_builder.hero(eyebrow, f"Week {W['week']} <span class='h1-sub'>{esc(W['span'])}</span>", lede, stats, strip(W["themes"]))]
     if not F["digests"]:
         out.append("<p class='empty'>No daily digests were saved in this week.</p>")
@@ -1142,7 +1152,7 @@ def index_body(summaries, cfg, rec, opts, last_key):
     root = "../"
     if not summaries:
         return (site_builder.hero(f"<a href='{root}archive.html'>Archive</a> · Weekly summaries", "Weekly summaries",
-                                  "Every Monday the news desk e-mails the editorial team a summary of the week before.")
+                                  f"Every {opts['weekday']} the news desk e-mails the editorial team a summary of the week before.")
                 + mail_card(None, rec, opts, last_key)
                 + "<p class='empty'>No weekly summaries yet. They appear here after the first scan.</p>")
     stats = (site_builder.stat(len(summaries), "weeks") + site_builder.stat(f"{sum(W['figures']['stories'] for W in summaries):,}", "stories")
