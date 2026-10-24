@@ -11,7 +11,7 @@ on:
   workflow_dispatch:   # "Run workflow" button on GitHub and the website's "Scan now" button
   push:                # rebuild the website (no scan) when its design or settings change
     branches: [main]
-    paths: [site_builder.py, exports.py, report.py, assets/**, config.yaml, data/changelog.yaml]
+    paths: [site_builder.py, exports.py, report.py, assets/**, config.yaml, data/changelog.yaml, sync_data.py]
 
 permissions:
   contents: write
@@ -35,6 +35,8 @@ jobs:
           echo "run=$run" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v4
         if: steps.gate.outputs.run == 'true'
+        with:
+          ref: ${{ github.ref }}   # the branch tip when the job starts, not the commit that queued it
       - uses: actions/setup-python@v5
         if: steps.gate.outputs.run == 'true'
         with:
@@ -51,15 +53,21 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           MAIL_TO: ${{ secrets.MAIL_TO }}
-      - name: Rebuild website only
-        if: steps.gate.outputs.run == 'true' && github.event_name == 'push'
-        run: python site_builder.py
       - name: Save digest and memory
         if: steps.gate.outputs.run == 'true'
         run: |
           git config user.name "news-scanner"
           git config user.email "news-scanner@users.noreply.github.com"
-          git add docs data
-          git diff --cached --quiet || git commit -m "Digest $(date -u +%F)"
-          git pull --rebase origin "${GITHUB_REF_NAME}"
-          git push
+          if [ "${{ github.event_name }}" = "push" ]; then msg="Rebuild website"; else msg="Digest $(date -u +%F)"; fi
+          # Put this run's data on the newest main and rebuild the site from it, so the
+          # save never clashes with changes made while the scan was running.
+          for attempt in 1 2 3; do
+            python sync_data.py "${GITHUB_REF_NAME}"
+            git add docs data
+            if git diff --cached --quiet; then echo "Nothing to save."; exit 0; fi
+            git commit -q -m "$msg"
+            if git push; then exit 0; fi
+            echo "The branch moved while saving; trying again ($attempt)."
+            git reset -q --soft HEAD~1
+          done
+          exit 1

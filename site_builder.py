@@ -94,9 +94,10 @@ def issue_window(date_str, start_month=1):
     last = (first + 1) % 12 + 1
     last_year = year + (1 if last < first else 0)
     n = offset // 3 + 1
+    cycle = d.year if d.month >= start_month else d.year - 1  # year the magazine's cycle began
     span = (f"{MONTHS[first - 1]} – {MONTHS[last - 1]} {year}" if last_year == year
             else f"{MONTHS[first - 1]} {year} – {MONTHS[last - 1]} {last_year}")
-    return {"key": f"{year}-Q{n}", "label": f"Q{n} {year}", "span": span}
+    return {"key": f"{cycle}-Q{n}", "label": f"Q{n} {cycle}", "span": span}
 
 
 def nice_date(iso, weekday=False):
@@ -117,6 +118,11 @@ def site_url(cfg):
 
 def repository(cfg):
     return os.environ.get("GITHUB_REPOSITORY") or (cfg.get("magazine") or {}).get("repository", "")
+
+
+def assistant_endpoint(cfg):
+    """Web address of the assistant connector (assistant/bridge.gs deployed in Google Apps Script)."""
+    return str((cfg.get("assistant") or {}).get("endpoint") or "").strip()
 
 
 _theme_colors = {}
@@ -160,43 +166,20 @@ def page(cfg, title, body, root, active, description=""):
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{root}assets/style.css">
-</head><body data-root="{root}" data-repo="{esc(repository(cfg))}">
+</head><body data-root="{root}" data-repo="{esc(repository(cfg))}" data-assistant="{esc(assistant_endpoint(cfg))}">
 <header class="masthead"><div class="wrap masthead-inner">
 <a class="brand" href="{root}index.html"><span class="brand-mark" aria-hidden="true">{FAVICON}</span>
 <span><span class="brand-name">Geotechnical News Desk</span><span class="brand-sub">{esc(mag)} · editorial monitoring</span></span></a>
 <nav class="nav">{links}</nav>
-<div class="mast-actions"><button type="button" class="scan-btn" id="scan-btn" title="Run a new scan now">{icon('scan')}<span>Scan now</span></button>
-<button type="button" class="icon-btn" id="settings-btn" title="Settings" aria-label="Settings">{icon('gear')}</button></div>
+<div class="mast-actions"><button type="button" class="scan-btn" id="scan-btn" title="Start a new scan on GitHub">{icon('scan')}<span>Scan now</span></button></div>
 </div></header>
 <main class="wrap">{body}</main>
 <footer class="foot"><div class="wrap foot-inner"><span>Headlines link to the original publishers. Treat every story as a lead and verify with the primary source before publishing.
 Ratings, themes and angles are machine-assisted suggestions for the editorial team.</span>
 <a href="{root}reports/site-report.docx" download>{icon('doc')} Website report (Word)</a></div></footer>
-{settings_dialog()}
 <div id="toast" class="toast" role="status" hidden></div>
 <script src="{root}assets/app.js"></script>
 </body></html>"""
-
-
-def settings_dialog():
-    return f"""<dialog id="settings" class="modal"><form method="dialog" class="modal-body">
-<h2>{icon('gear')} Settings</h2>
-<p class="hint">These are stored only in this browser, on this device. They are never saved to the website or the repository, so other visitors cannot use them.</p>
-<label class="field"><span>GitHub token — for the <b>Scan now</b> button</span><input type="password" id="set-gh" autocomplete="off" spellcheck="false" placeholder="github_pat_…"></label>
-<details class="help"><summary>How to create the token (2 minutes)</summary><ol>
-<li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com → Settings → Developer settings → Fine-grained tokens → Generate new token</a>.</li>
-<li>Name it <i>news scan button</i>, choose an expiry date, and under <b>Repository access</b> pick <b>Only select repositories</b> → <code>geotech-news</code>.</li>
-<li>Under <b>Permissions → Repository permissions</b> set <b>Actions</b> to <b>Read and write</b>. Nothing else is needed.</li>
-<li>Press <b>Generate token</b>, copy it and paste it above.</li></ol></details>
-<label class="field"><span>Anthropic API key — for the <b>AI assistant</b></span><input type="password" id="set-ak" autocomplete="off" spellcheck="false" placeholder="sk-ant-…"></label>
-<details class="help"><summary>About the key</summary><p>Create a key at <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a> → API Keys. A separate key for the website, with a monthly spend limit, is a sensible safeguard. The key is sent only to Anthropic, directly from this browser.</p></details>
-<label class="field"><span>Assistant model</span><select id="set-model">
-<option value="claude-opus-5-5">Claude Opus 5.5 — best answers</option>
-<option value="claude-sonnet-5-5">Claude Sonnet 5.5 — balanced speed and cost</option>
-<option value="claude-haiku-5-5">Claude Haiku 5.5 — fastest, lowest cost</option></select></label>
-<div class="actions modal-actions"><button type="button" class="btn ghost" id="set-clear">Clear all</button><span class="spacer"></span>
-<button value="cancel" class="btn">Cancel</button><button value="save" id="set-save" class="btn primary">Save</button></div>
-</form></dialog>"""
 
 
 def rating(s):
@@ -477,7 +460,11 @@ recommend stories and angles for the magazine, and read PDF or Word files you at
 <textarea id="chat-text" rows="1" placeholder="Ask about the news, or attach a PDF / Word document…" aria-label="Message"></textarea>
 <button class="btn primary send" type="submit">{icon('send')}<span>Send</span></button>
 </form>
-<div class="chat-foot"><span id="chat-status"></span><button type="button" id="chat-new" class="linkbtn">New conversation</button></div>
+<div class="chat-foot"><span id="chat-status"></span><span class="chat-opts"><label>Model <select id="chat-model">
+<option value="claude-opus-5-5">Claude Opus 5.5 — best answers</option>
+<option value="claude-sonnet-5-5">Claude Sonnet 5.5 — faster</option>
+<option value="claude-haiku-5-5">Claude Haiku 5.5 — fastest</option></select></label>
+<button type="button" id="chat-new" class="linkbtn">New conversation</button></span></div>
 </div>"""
 
 
@@ -491,7 +478,7 @@ def about_body(cfg, latest):
     n_ml = sum(len(v.get("terms", [])) for v in ml.values())
     ccfg = cfg.get("claude", {})
     themes = "".join(f"<li style='--tc:{theme_color(t)}'><b><span class='ticon sm'>{theme_icon(t)}</span>{esc(t)}</b>"
-                     f"<span>{esc(', '.join(w))}</span></li>" for t, w in cfg["themes"].items())
+                     f"<span>{esc(', '.join(w))}</span></li>" for t, w in cfg["themes"].items() if w)
     rows = "".join(
         f"<tr><td>{esc(f['name'])}</td><td>{esc(urlparse(f['url']).netloc.replace('www.', ''))}</td>"
         f"<td>{'+' + str(f['boost']) if f.get('boost') else '—'}</td></tr>" for f in feeds)
@@ -509,7 +496,7 @@ def about_body(cfg, latest):
                 stats, actions) + f"""
 <div class="prose">
 <h2 class="section-h">Each run</h2><ol class="steps">
-<li><b>Collect.</b> {len(feeds)} websites and {n_core * editions + n_extra} Google News searches ({n_core} core searches in {editions} English editions, plus {n_extra} further searches including {n_foreign} in other languages). The scan runs every day at 05:00 Cairo time, and on demand with the <b>Scan now</b> button. Each run looks back {cfg.get('lookback_hours', 60)} hours; stories already shown are remembered for 45 days and never repeated.</li>
+<li><b>Collect.</b> {len(feeds)} websites and {n_core * editions + n_extra} Google News searches ({n_core} core searches in {editions} English editions, plus {n_extra} further searches including {n_foreign} in other languages). The scan runs every day at 05:00 Cairo time, and on demand: <b>Scan now</b> opens the scan's page on GitHub, where you press <b>Run workflow</b>; the website then follows the scan and tells you when the new digest is ready. Each run looks back {cfg.get('lookback_hours', 60)} hours; stories already shown are remembered for 45 days and never repeated.</li>
 <li><b>Score and categorise.</b> Headlines and summaries are scored against {len(cfg['keywords'])} English keywords and {n_ml} terms in 11 other languages. Each foreign term counts as its English equivalent (for example <i>glissement de terrain</i>, <i>deslizamiento</i>, <i>longsor</i> and <i>انهيار أرضي</i> all count as “landslide”), so every story is filed under an English theme. Specialist sources earn bonus points, noise terms lose points, near-identical headlines are merged. A story needs {cfg.get('min_keyword_score', 3)} points to go forward.</li>
 <li><b>Triage.</b> Up to {ccfg.get('max_candidates', 80)} candidates go to Claude, which rates each 1–5 for geotechnical substance (below {ccfg.get('min_relevance', 3)} is dropped), confirms the theme, suggests a use, writes a one-sentence magazine angle, and translates non-English headlines.</li>
 <li><b>Publish & archive.</b> Up to {cfg.get('max_items', 40)} stories per digest. Every digest is stored permanently, grouped into three-month issue windows, and exported to Excel.</li></ol>
@@ -562,22 +549,31 @@ def write(path, text):
     path.write_text(text, encoding="utf-8")
 
 
+def csv_text(value):
+    """Spreadsheets run cells starting with = + - @ as formulas; keep feed text as text."""
+    return "'" + value if isinstance(value, str) and value[:1] in "=+-@" else value
+
+
 def export_rows(stories):
     for s in stories:
         yield {
             "Digest date": s["_digest"], "Issue window": s["_window"], "Theme": s["theme"],
             "Relevance (1-5)": s.get("relevance") or "", "Suggested use": s.get("use", ""),
-            "Headline (English)": s.get("title_en") or s["title"],
-            "Original headline": s["title"] if s.get("title_en") else "",
-            "Magazine angle": s.get("angle", ""), "Source": s["source"],
+            "Headline (English)": csv_text(s.get("title_en") or s["title"]),
+            "Original headline": csv_text(s["title"]) if s.get("title_en") else "",
+            "Magazine angle": csv_text(s.get("angle", "")), "Source": csv_text(s["source"]),
             "Google News edition": s["_region"], "Published": (s.get("published") or "")[:10], "Link": s["link"],
-            "Keywords": ", ".join(s.get("keywords", [])),
+            "Keywords": csv_text(", ".join(s.get("keywords", []))),
         }
 
 
 def build(cfg):
     use_list = USES
     digests = load_digests()
+    # themes found in the archive but no longer in config.yaml still get pages and rows
+    extra = sorted({s["theme"] for d in digests for s in d["stories"]} - set(theme_order(cfg)))
+    if extra:
+        cfg = dict(cfg, themes={**cfg["themes"], **{t: [] for t in extra}})
     sm = start_month(cfg)
     today_key = issue_window(dt.date.today().isoformat(), sm)["key"]
     order = theme_order(cfg)
@@ -618,7 +614,7 @@ def build(cfg):
         latest = None
         body = hero("Latest digest", "Welcome",
                     "The first digest will appear here after the first scan. Scans run automatically every morning "
-                    "at 05:00 Cairo time; press <b>Scan now</b> at the top of the page to run one immediately.")
+                    "at 05:00 Cairo time; press <b>Scan now</b> at the top of the page to start one on GitHub.")
     write(DOCS / "index.html", page(cfg, "Latest digest", body, "", "latest"))
 
     for w in windows:

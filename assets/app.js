@@ -1,4 +1,4 @@
-/* Geotechnical News Desk — filters, archive search, settings, Scan now button and AI assistant. */
+/* Geotechnical News Desk — filters, archive search, Scan now button and AI assistant. */
 (function () {
   "use strict";
   var root = document.body.getAttribute("data-root") || "";
@@ -9,12 +9,12 @@
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
   }
-  /* settings live only in this browser; storage can be unavailable (private mode) */
+  /* small per-browser preferences (no keys are stored); storage can be unavailable (private mode) */
   var store = {
     get: function (k) { try { return localStorage.getItem(k) || ""; } catch (e) { return ""; } },
     set: function (k, v) { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (e) { /* ignore */ } }
   };
-  var KEYS = { gh: "gnd_github_token", ak: "gnd_anthropic_key", model: "gnd_model", scan: "gnd_scan_started" };
+  var KEYS = { model: "gnd_model", scan: "gnd_scan_started", passcode: "gnd_passcode" };
 
   function fmt(iso) {
     if (!iso) return "";
@@ -27,106 +27,82 @@
   function toast(html, kind, sticky) {
     if (!toastEl) return;
     toastEl.className = "toast" + (kind ? " " + kind : "");
-    toastEl.innerHTML = html;
+    toastEl.innerHTML = html + "<button type='button' class='toast-x' aria-label='Close'>×</button>";
     toastEl.hidden = false;
     clearTimeout(toastTimer);
     if (!sticky) toastTimer = setTimeout(function () { toastEl.hidden = true; }, 9000);
   }
+  if (toastEl) toastEl.addEventListener("click", function (e) {
+    if (e.target.classList.contains("toast-x")) { toastEl.hidden = true; store.set(KEYS.scan, ""); }
+  });
 
-  /* ---------- settings dialog ---------- */
-  var dlg = document.getElementById("settings");
-  function openSettings() {
-    if (!dlg) return;
-    document.getElementById("set-gh").value = store.get(KEYS.gh);
-    document.getElementById("set-ak").value = store.get(KEYS.ak);
-    document.getElementById("set-model").value = store.get(KEYS.model) || "claude-opus-5-5";
-    if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
-  }
-  if (dlg) {
-    document.getElementById("settings-btn").addEventListener("click", openSettings);
-    dlg.addEventListener("close", function () {
-      if (dlg.returnValue !== "save") return;
-      store.set(KEYS.gh, document.getElementById("set-gh").value.trim());
-      store.set(KEYS.ak, document.getElementById("set-ak").value.trim());
-      store.set(KEYS.model, document.getElementById("set-model").value);
-      toast("Settings saved in this browser.", "ok");
-      document.dispatchEvent(new Event("gnd-settings"));
-    });
-    document.getElementById("set-clear").addEventListener("click", function () {
-      ["set-gh", "set-ak"].forEach(function (id) { document.getElementById(id).value = ""; });
-      [KEYS.gh, KEYS.ak, KEYS.model].forEach(function (k) { store.set(k, ""); });
-    });
-  }
-
-  /* ---------- Scan now ---------- */
+  /* ---------- Scan now ----------
+     Starting a GitHub workflow needs a signed-in GitHub user, so the button opens the
+     workflow's page on GitHub (where you are signed in) and this page then follows the
+     run through GitHub's public API and says when the new digest is ready. */
   var scanBtn = document.getElementById("scan-btn");
-  var GH = "https://api.github.com/repos/" + repo + "/actions/workflows/scan.yml";
   var ghPage = "https://github.com/" + repo + "/actions/workflows/scan.yml";
-  function ghHeaders() {
-    return { Authorization: "Bearer " + store.get(KEYS.gh), Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" };
-  }
+  var ghRuns = "https://api.github.com/repos/" + repo + "/actions/workflows/scan.yml/runs?per_page=5";
   function setRunning(on) { if (scanBtn) scanBtn.classList.toggle("running", on); }
 
-  function pollScan(started) {
+  function watchScan(started) {
     setRunning(true);
     var tick = function () {
-      fetch(GH + "/runs?per_page=5", { headers: ghHeaders() }).then(function (r) { return r.json(); }).then(function (j) {
-        var run = (j.workflow_runs || []).filter(function (x) { return new Date(x.created_at).getTime() >= started - 90000; }).pop();
-        var mins = Math.round((Date.now() - started) / 60000);
-        if (!run) { toast("Scan requested — waiting for GitHub to start it…", "", true); }
-        else if (run.status !== "completed") {
+      fetch(ghRuns, { headers: { Accept: "application/vnd.github+json" } }).then(function (r) {
+        if (!r.ok) throw new Error("status " + r.status);
+        return r.json();
+      }).then(function (j) {
+        if (!store.get(KEYS.scan)) { setRunning(false); return; }  // dismissed
+        var run = (j.workflow_runs || []).filter(function (x) {
+          return x.event === "workflow_dispatch" && new Date(x.created_at).getTime() >= started - 60000;
+        }).pop();
+        var mins = Math.max(0, Math.round((Date.now() - started) / 60000));
+        if (!run) {
+          if (Date.now() - started > 10 * 60000) {
+            store.set(KEYS.scan, ""); setRunning(false);
+            toast("No scan was started on GitHub. Press <b>Scan now</b> again, then <b>Run workflow</b> on the GitHub page.", "err", true);
+            return;
+          }
+          toast("On the GitHub tab, press <b>Run workflow</b> and then the green <b>Run workflow</b> button. " +
+            "This page will follow the scan and tell you when the new digest is ready. <a href='" + ghPage + "' target='_blank' rel='noopener'>Open GitHub again</a>", "", true);
+        } else if (run.status !== "completed") {
           toast("Scan " + (run.status === "queued" ? "queued" : "running") + " · " + mins + " min so far. It usually takes 3–4 minutes. " +
             "<a href='" + esc(run.html_url) + "' target='_blank' rel='noopener'>Watch on GitHub</a>", "", true);
         } else {
           store.set(KEYS.scan, "");
           setRunning(false);
           if (run.conclusion === "success") {
-            toast("Scan finished. The website refreshes about a minute later — <a href='#' id='reload-link'>reload the page</a>.", "ok", true);
-            var a = document.getElementById("reload-link");
-            if (a) a.addEventListener("click", function (e) { e.preventDefault(); location.reload(); });
+            toast("Scan finished. The website refreshes about a minute later — <a href='#' class='reload-link'>reload the page</a>.", "ok", true);
           } else {
             toast("The scan ended with “" + esc(run.conclusion) + "”. <a href='" + esc(run.html_url) + "' target='_blank' rel='noopener'>See the log on GitHub</a>.", "err", true);
           }
           return;
         }
-        if (Date.now() - started < 20 * 60000) setTimeout(tick, 10000);
+        if (Date.now() - started < 25 * 60000) setTimeout(tick, 20000);
         else { setRunning(false); store.set(KEYS.scan, ""); }
-      }).catch(function () { setTimeout(tick, 15000); });
+      }).catch(function () {
+        // GitHub allows 60 public API calls an hour; if they run out, stop following quietly
+        setRunning(false);
+        store.set(KEYS.scan, "");
+        toast("This page can't follow the scan right now. <a href='" + ghPage + "' target='_blank' rel='noopener'>Check its progress on GitHub</a>.", "", true);
+      });
     };
     tick();
   }
 
   if (scanBtn) {
     scanBtn.addEventListener("click", function () {
-      if (!store.get(KEYS.gh)) {
-        toast("To start scans from the website, add a GitHub token in Settings (one-time). " +
-          "<a href='" + ghPage + "' target='_blank' rel='noopener'>Or run it on GitHub →</a>", "", true);
-        openSettings();
-        return;
-      }
-      if (scanBtn.classList.contains("running")) return;
-      setRunning(true);
-      toast("Starting a scan…", "", true);
-      fetch(GH + "/dispatches", { method: "POST", headers: ghHeaders(), body: JSON.stringify({ ref: "main" }) }).then(function (r) {
-        if (r.status === 204) {
-          var started = Date.now();
-          store.set(KEYS.scan, String(started));
-          pollScan(started);
-          return;
-        }
-        setRunning(false);
-        var why = r.status === 401 ? "the GitHub token was not accepted (expired or mistyped)."
-          : (r.status === 403 || r.status === 404) ? "the token cannot run workflows in " + esc(repo) + ". Give it access to this repository with Actions: Read and write."
-          : "GitHub answered with error " + r.status + ".";
-        toast("Could not start the scan: " + why + " <a href='" + ghPage + "' target='_blank' rel='noopener'>Run it on GitHub instead</a>.", "err", true);
-      }).catch(function () {
-        setRunning(false);
-        toast("Could not reach GitHub. Check your connection and try again.", "err");
-      });
+      window.open(ghPage, "_blank", "noopener");
+      var started = Date.now();
+      store.set(KEYS.scan, String(started));
+      watchScan(started);
     });
     var pending = +store.get(KEYS.scan);
-    if (pending && Date.now() - pending < 20 * 60000 && store.get(KEYS.gh)) pollScan(pending);
+    if (pending && Date.now() - pending < 25 * 60000) watchScan(pending);
   }
+  document.addEventListener("click", function (e) {
+    if (e.target.classList && e.target.classList.contains("reload-link")) { e.preventDefault(); location.reload(); }
+  });
 
   /* ---------- filters on digest and issue pages ---------- */
   document.querySelectorAll(".js-filter").forEach(function (bar) {
@@ -264,14 +240,39 @@
     var MODEL_NAMES = { "claude-opus-5-5": "Claude Opus 5.5", "claude-sonnet-5-5": "Claude Sonnet 5.5", "claude-haiku-5-5": "Claude Haiku 5.5" };
     var STOP = "the and for with from that this what which about are was were have has into over under than then them they their there these those who why how can could would should will may might any all some most more best find show give tell list stories story news latest recent please quarter issue window themes theme magazine suggest recommend article articles also just like make need want get our you your".split(" ");
 
-    function model() { return store.get(KEYS.model) || "claude-opus-5-5"; }
-    function refreshStatus() {
-      statusEl.innerHTML = store.get(KEYS.ak)
-        ? "Model: " + esc(MODEL_NAMES[model()] || model()) + (archive ? " · " + archive.stories.length + " archived stories available" : " · loading archive…")
-        : "<b>Add your Anthropic API key in Settings (gear icon) to start.</b>";
+    var endpoint = document.body.getAttribute("data-assistant") || "";
+    var modelSel = document.getElementById("chat-model");
+    var bridge = null;  // health report from the bridge
+    if (modelSel) {
+      modelSel.value = store.get(KEYS.model) || "claude-opus-5-5";
+      modelSel.addEventListener("change", function () { store.set(KEYS.model, modelSel.value); refreshStatus(); });
     }
-    document.addEventListener("gnd-settings", refreshStatus);
+    function model() { return (modelSel && modelSel.value) || "claude-opus-5-5"; }
+    function refreshStatus() {
+      if (!endpoint) {
+        statusEl.innerHTML = "<b>The assistant is not connected yet.</b>";
+        return;
+      }
+      var parts = [];
+      if (bridge && bridge.ok) parts.push("Connected");
+      else if (bridge && bridge.problem) parts.push("<b>Connection problem:</b> " + esc(bridge.problem));
+      else parts.push("Connecting…");
+      if (bridge && bridge.dailyLimit) parts.push(Math.max(0, bridge.dailyLimit - bridge.usedToday) + " of " + bridge.dailyLimit + " questions left today");
+      parts.push(archive ? archive.stories.length + " archived stories" : "loading archive…");
+      statusEl.innerHTML = parts.join(" · ");
+    }
     refreshStatus();
+
+    if (!endpoint) {
+      addMsg("bot", "<p><b>Almost ready.</b> The assistant uses your Anthropic key through a small connector in your own Google account, " +
+        "so no key is ever typed into or stored on this website. Once the connector is set up (a one-time, 5-minute step described in the " +
+        "repository's README under <i>AI assistant</i>), questions can be asked here.</p>");
+      form.querySelector("textarea").disabled = true;
+      form.querySelector(".send").disabled = true;
+    } else {
+      fetch(endpoint).then(function (r) { return r.json(); }).then(function (j) { bridge = j; refreshStatus(); })
+        .catch(function () { bridge = { ok: false, problem: "the connector did not answer. Check that it is deployed with access for Anyone." }; refreshStatus(); });
+    }
 
     loadArchive().then(function (data) {
       archive = data;
@@ -417,28 +418,18 @@
       fileInput.value = "";
     });
 
-    /* talk to Claude directly from the browser, streaming the answer */
-    function callClaude(useFallback) {
-      var m = model();
-      var body = {
-        model: m, max_tokens: 8000, stream: true,
-        system: [{ type: "text", text: systemText, cache_control: { type: "ephemeral" } }],
-        messages: history
-      };
-      var headers = {
-        "content-type": "application/json", "x-api-key": store.get(KEYS.ak), "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true"
-      };
-      if (useFallback && m !== "claude-haiku-5-5") {
-        headers["anthropic-beta"] = "server-side-fallback-2026-07-01";
-        body.fallbacks = "default";
-      }
-      return fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: headers, body: JSON.stringify(body) });
+    /* questions go to the connector in the editor's Google account, which adds the key */
+    function askBridge(passcode) {
+      var payload = { model: model(), system: systemText, messages: history, passcode: passcode || store.get(KEYS.passcode) };
+      // sent as text/plain so the browser makes a simple request that Google's servers accept
+      return fetch(endpoint, { method: "POST", body: JSON.stringify(payload) }).then(function (r) {
+        if (!r.ok) throw new Error("The connector answered with error " + r.status + ".");
+        return r.json();
+      });
     }
 
     function send(question) {
-      if (busy) return;
-      if (!store.get(KEYS.ak)) { addMsg("bot", "Please add your Anthropic API key in <b>Settings</b> (the gear icon at the top right) first.", "err"); openSettings(); return; }
+      if (busy || !endpoint) return;
       if (!question && !pendingFiles.length) return;
       question = question || "Please read the attached document(s) and summarise what matters for the magazine.";
       busy = true;
@@ -456,58 +447,34 @@
       Object.defineProperty(ctx, "_ctx", { value: true, enumerable: false });
       content.push(ctx, { type: "text", text: question });
       history.push({ role: "user", content: content });
-      var bubble = addMsg("bot", "<span class='typing'><span></span><span></span><span></span></span>");
-      var answer = "", stop = "", frame = 0;
-      function paint() { frame = 0; bubble.innerHTML = md(answer) || "<span class='typing'><span></span><span></span><span></span></span>"; log.scrollTop = log.scrollHeight; }
+      var bubble = addMsg("bot", "<span class='typing'><span></span><span></span><span></span></span> <span class='wait'></span>");
+      var t0 = Date.now();
+      var timer = setInterval(function () {
+        var w = bubble.querySelector(".wait");
+        if (w) w.textContent = "Thinking… " + Math.round((Date.now() - t0) / 1000) + " s";
+      }, 1000);
 
-      function attempt(useFallback) {
-        return callClaude(useFallback).then(function (res) {
-          if (!res.ok) {
-            return res.json().catch(function () { return {}; }).then(function (j) {
-              var msg = (j.error && j.error.message) || ("HTTP " + res.status);
-              if (useFallback && res.status === 400 && /fallback/i.test(msg)) return attempt(false);
-              if (res.status === 401) msg = "The Anthropic API key was not accepted. Check it in Settings.";
-              throw new Error(msg);
-            });
-          }
-          var reader = res.body.getReader(), decoder = new TextDecoder(), buf = "";
-          function pump() {
-            return reader.read().then(function (r) {
-              if (r.done) return;
-              buf += decoder.decode(r.value, { stream: true });
-              var parts = buf.split("\n\n");
-              buf = parts.pop();
-              parts.forEach(function (evt) {
-                var data = evt.split("\n").filter(function (l) { return l.indexOf("data:") === 0; }).map(function (l) { return l.slice(5).trim(); }).join("");
-                if (!data) return;
-                var j;
-                try { j = JSON.parse(data); } catch (e) { return; }
-                if (j.type === "content_block_delta" && j.delta && j.delta.type === "text_delta") {
-                  answer += j.delta.text;
-                  if (!frame) frame = requestAnimationFrame(paint);
-                } else if (j.type === "message_delta" && j.delta) {
-                  stop = j.delta.stop_reason || stop;
-                } else if (j.type === "error") {
-                  throw new Error((j.error && j.error.message) || "The answer was interrupted.");
-                }
-              });
-              return pump();
-            });
-          }
-          return pump();
-        });
+      function finish(j) {
+        if (j.error === "passcode") {
+          var code = window.prompt("This assistant is protected by a passcode. Please enter it:");
+          if (!code) throw new Error("A passcode is needed to use the assistant.");
+          store.set(KEYS.passcode, code);
+          return askBridge(code).then(finish);
+        }
+        if (j.error) throw new Error(j.error);
+        var answer = j.text || "";
+        if (j.stop_reason === "refusal") answer += (answer ? "\n\n" : "") + "*The model declined to answer this request.*";
+        if (j.stop_reason === "max_tokens") answer += "\n\n*(The answer was cut short. Ask me to continue.)*";
+        bubble.innerHTML = md(answer) || "<p>(no answer)</p>";
+        history.push({ role: "assistant", content: answer || "(no answer)" });
+        if (bridge && typeof j.left === "number") { bridge.usedToday = bridge.dailyLimit - j.left; refreshStatus(); }
       }
 
-      attempt(true).then(function () {
-        if (stop === "refusal") answer += (answer ? "\n\n" : "") + "*The model declined to answer this request.*";
-        if (stop === "max_tokens") answer += "\n\n*(The answer was cut short. Ask me to continue.)*";
-        paint();
-        history.push({ role: "assistant", content: answer || "(no answer)" });
-      }).catch(function (err) {
+      askBridge().then(finish).catch(function (err) {
         bubble.classList.add("err");
         bubble.innerHTML = esc(err.message || String(err));
         history.pop();  // let the editor retry the same question
-      }).then(function () { busy = false; input.focus(); });
+      }).then(function () { clearInterval(timer); busy = false; input.focus(); log.scrollTop = log.scrollHeight; });
     }
 
     form.addEventListener("submit", function (e) {
