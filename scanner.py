@@ -158,22 +158,29 @@ WORD_START = r"(?<![a-z0-9\u00c0-\u024f\u1e00-\u1eff\u0370-\u03ff\u0400-\u052f])
 # "*" in a term stands for the rest of the word: оползн* finds оползень's
 # other forms оползня, оползни, оползневой
 WILDCARD = rf"(?:[^\W_]|[{MARKS}])*"
+# Korean writes spaces between words, so a Korean term must start a word:
+# 제방 (embankment) is not found in 규제방안 (regulatory measures)
+HANGUL = "\u1100-\u11ff\u3130-\u318f\uac00-\ud7af"
+HANGUL_CHAR = re.compile(f"[{HANGUL}]")
+HANGUL_START = f"(?<![{HANGUL}])"
 
 
 @functools.lru_cache(maxsize=None)
 def term_regex(term):
-    """Chinese, Japanese and Korean terms match anywhere, since those
-    languages put no spaces between words or attach particles to them. Other
-    terms must end where a word ends, with an optional plural s/es, so نفق
-    (tunnel) does not match inside نفقات (expenses); a "*" lets the word go on,
-    for languages that change a word's ending (Russian, Polish): 'подпорн* стен*'
-    is any form of подпорная стена (retaining wall). The start is checked
-    against Latin, Greek and Cyrillic letters only, so Arabic prefixes such as
-    ال (the) still match."""
+    """Chinese and Japanese terms match anywhere, since those languages put no
+    spaces between words. Korean terms must start a word but may go on, since
+    Korean attaches particles to the end of a word (산사태로, "by a landslide");
+    a leading "*" lets them start inside a word too: '*댐' finds 소양강댐 (Soyang
+    River Dam). Other terms must end where a word ends, with an optional plural
+    s/es, so نفق (tunnel) does not match inside نفقات (expenses); a "*" lets the
+    word go on, for languages that change a word's ending (Russian, Polish):
+    'подпорн* стен*' is any form of подпорная стена (retaining wall). The start
+    is checked against Latin, Greek and Cyrillic letters only, so Arabic
+    prefixes such as ال (the) still match."""
     t = fold(str(term))
     body = WILDCARD.join(re.escape(part) for part in t.split("*"))
     if NOSPACE_CHAR.search(t):
-        return re.compile(body)
+        return re.compile((HANGUL_START if HANGUL_CHAR.match(t) else "") + body)
     return re.compile(WORD_START + body + ("" if t.endswith("*") else r"(?:s|es)?") + WORD_END)
 
 
@@ -259,6 +266,18 @@ của và các những cho với được trong tại khi này một người đ
 برای این است شده بود خود های
 """.split()
 STOPWORDS = frozenset(fold(w) for w in STOPWORDS)  # folded like the headlines (في, على)
+# Words of every Korean disaster story (occurred, residents, evacuation, damage,
+# heavy rain...) and counters (50명, 3대). Korean has no capitals that tell
+# places apart, so two headlines must share another word to be one event:
+# '강원 정선 산사태 발생…주민 대피' and '경북 봉화 산사태 발생…주민 대피' are two.
+# A word that starts with one of these (주민들, 발생해) counts as that word.
+KOREAN_NEWS_WORDS = frozenset("""
+발생 주민 시민 이재민 대피 피해 사고 현장 정부 당국 경찰 소방 원인 조사 점검 우려 위험 비상 긴급 통제 복구 지원
+대책 추가 확인 사망 실종 부상 숨져 숨진 구조 수색 매몰 발견 출동 인근 일대 곳곳 지역 마을 도심 전국 오늘 어제 새벽
+오전 오후 밤사이 이틀째 사흘째 잇따라 속보 단독 종합 영상 포토 폭우 호우 집중호우 장마 태풍 강풍 폭설 기상청 특보
+경보 주의보 관계자 작업자 근로자 운전자 차량 건물 주택 아파트 공사 공사장 대형 가구 세대 명 곳 건 채 대 개
+""".split())
+KOREAN_STEMS = sorted((w for w in KOREAN_NEWS_WORDS if len(w) > 1), key=len, reverse=True)
 SCRIPT_RUNS = re.compile(f"[{NOSPACE}]+|[^{NOSPACE}]+")
 SENTENCE_BREAK = re.compile(r"[.!?¡¿|•]")
 NAME_TOKEN = re.compile(r"[^\W\d_][\w'’-]*")
@@ -276,13 +295,17 @@ def title_words(norm, topic=frozenset()):
     """The significant words of a normalised headline: no short words, numbers
     or stopwords; the first six letters stand for the word (deslizamiento and
     deslizamientos, destruyó and destruidas); Arabic ال (the) is dropped.
-    Chinese, Japanese and Korean give pairs of characters. Words of the keyword lists
+    Chinese, Japanese and Korean give pairs of characters (common Korean news
+    words stay whole). Words of the keyword lists
     (topic) are left out: every landslide story says landslide, while place
     names and details tell one event from another."""
     out = set()
     for word in norm.split():
         for run in SCRIPT_RUNS.findall(word):
-            if NOSPACE_CHAR.match(run):
+            stem = HANGUL_CHAR.match(run) and next((w for w in KOREAN_STEMS if run.startswith(w)), None)
+            if stem or run in KOREAN_NEWS_WORDS:
+                out.add(stem or run)
+            elif NOSPACE_CHAR.match(run):
                 out.update({run[i:i + 2] for i in range(len(run) - 1)} or {run})
             elif len(run) >= 3 and not run.isdigit() and run not in STOPWORDS:
                 if len(run) >= 5 and run.startswith("ال"):
@@ -323,8 +346,8 @@ def same_event(a, b):
     """a and b are (normalised title, significant words, names) of two headlines."""
     if a[2] and b[2] and (a[2] - b[2]) and (b[2] - a[2]):
         return False  # each names a place or person the other does not
-    if a[1] and b[1] and not a[1] & b[1]:
-        return False  # no significant word in common
+    if a[1] and b[1] and not (a[1] & b[1]) - KOREAN_NEWS_WORDS and a[0] != b[0]:
+        return False  # no significant word in common (common Korean news words do not count)
     shared = len(a[1] & b[1])
     if (shared >= (2 if a[2] and b[2] else 3)
             and shared >= SAME_EVENT_OVERLAP * min(len(a[1]), len(b[1]))):
@@ -572,13 +595,20 @@ Stories:
 CROSSREF = "https://api.crossref.org/journals/{issn}/works?"
 CROSSREF_FIELDS = "DOI,title,author,container-title,created,published,published-online,abstract,type"
 CROSSREF_ROWS = 50
-# notices, corrections and replies that Crossref files as journal articles
+# notices, corrections and replies that Crossref files as journal articles.
+# Discussions are titled 'Discussion of “…”' (ASCE), 'Discussion: …' (ICE) or
+# 'Discussion on “…”' (Elsevier); a paper may begin "Discussion on the …".
 NOT_RESEARCH = re.compile(
-    r"^(?:erratum|corrigendum|correction|retraction|retracted|expression of concern|editorial|editor'?s note|"
-    r"publisher'?s note|in memoriam|obituary|book review|reviewers|acknowledg|issue information|front matter|"
-    r"back matter|cover image|table of contents|call for papers|announcement|discussion of|closure to|"
-    r"reply to|response to|comment on)\b", re.I)
+    r"^(?:(?:erratum|corrigendum|correction|retraction|retracted|expression of concern|editorial|editor['’]?s note|"
+    r"publisher['’]?s note|in memoriam|obituary|book review|reviewers|acknowledg|issue information|front matter|"
+    r"back matter|cover image|table of contents|call for papers|announcement|discussion of|discussion by|"
+    r"closure to|reply to|response to|comment on|author(?:['’]?s|s['’])? (?:reply|response|closure))\b"
+    r"|(?:discussion|closure|reply|response)(?: on)?\s*[:“\"‘'«])", re.I)
 JATS_HEADING = re.compile(r"<jats:title[^>]*>.*?</jats:title>", re.I | re.S)
+# markup inside words and formulas (CO<sub>2</sub>, <scp>CPT</scp>‐based,
+# MathML), dropped without a space so the word stays whole
+INLINE_TAG = re.compile(r"</?(?:jats:)?(?:sub|sup|i|b|em|strong|u|sc|scp|italic|bold|underline|monospace|"
+                        r"span|inline-formula)\b[^>]*>|</?mml:[^>]*>", re.I)
 
 
 def research_cfg(cfg):
@@ -613,7 +643,7 @@ def shorten(text, limit):
 def plain_abstract(raw):
     """Crossref abstracts are JATS XML: drop the headings (Abstract, Purpose…)
     and the tags, keep the text."""
-    text = clean(JATS_HEADING.sub(" ", raw or ""))
+    text = clean(INLINE_TAG.sub("", JATS_HEADING.sub(" ", raw or "")))
     return shorten(re.sub(r"^(?:abstract|summary)\b[\s:.]*", "", text, flags=re.I), 800)
 
 
@@ -678,7 +708,7 @@ def fetch_papers(cfg, now, seen, compiled, failures):
             continue
         for it in items:
             doi = str(it.get("DOI") or "").strip()
-            title = clean(" ".join(it.get("title") or []))
+            title = clean(INLINE_TAG.sub("", " ".join(it.get("title") or [])))
             if not doi or not title or NOT_RESEARCH.match(title):
                 continue
             pid = hashlib.sha1(f"doi:{doi.lower()}".encode()).hexdigest()[:16]

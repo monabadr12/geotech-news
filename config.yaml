@@ -122,11 +122,15 @@ google_news:
     - {q: 'site:geoengineer.org', country: US, boost: 3}                                  # GeoEngineer
     - {q: '"geosynthetic" OR "geosynthetics" OR "geomembrane" OR "geogrid" OR "geotextile"', country: US}  # for Geosynthetica
     - {q: 'site:issmge.org', boost: 4}                                                    # ISSMGE
-    - {q: 'site:geoinstitute.org OR "Geo-Institute"', country: US, boost: 4}              # ASCE Geo-Institute
-    - {q: 'site:asce.org geotechnical OR "Geo-Institute" OR foundations OR tunnel OR landslide', country: US, boost: 2}
+    # The Geo-Institute and GEER publish rarely, so their searches (this one and
+    # GEER's below) also catch coverage of them elsewhere, and still find nothing
+    # on most days. ("site:" in an OR list finds nothing once a word is ANDed to it.)
+    - {q: '"Geo-Institute" OR "Geo-Congress" OR GeoStrata OR "Geo-Frontiers" OR "geotechnical engineering" ASCE', country: US, boost: 4}  # ASCE Geo-Institute
+    # -"job with" leaves out the job ads of ASCE's job board (-site: does not work in Google News)
+    - {q: 'site:asce.org geotechnical OR "Geo-Institute" OR foundations OR tunnel OR landslide -"job with"', country: US, boost: 2}
     - {q: 'site:ice.org.uk', boost: 2}                                                    # ICE
     - {q: 'site:highways.dot.gov OR site:fhwa.dot.gov', country: US, boost: 2}            # FHWA
-    - {q: 'site:geerassociation.org OR "GEER Association"', country: US, boost: 4}        # GEER
+    - {q: '"GEER" earthquake OR landslide OR reconnaissance OR liquefaction', country: US, boost: 4}  # GEER
     - {q: 'site:usgs.gov landslide OR landslides OR liquefaction OR subsidence OR sinkhole OR "ground failure"', country: US, boost: 3}  # USGS
     - {q: 'site:reliefweb.int landslide OR landslides OR mudslide OR "dam collapse"'}     # ReliefWeb
     - {q: 'site:railbusinessuk.com tunnel OR embankment OR earthworks OR cutting OR landslip OR geotechnical OR piling OR viaduct OR drainage'}
@@ -280,13 +284,18 @@ keywords:
 # of подпорная стена, osuwisk* osuwisko and osuwiska. Keep the part before
 # the "*" long enough not to start other words (skarp* would also find
 # skarpety, socks), and list the forms instead when it is not.
+# Korean terms must start a word (the particles after them still match:
+# 산사태로), so 제방 (embankment) is not found in 규제방안 (regulatory measures).
+# List the compounds that start with another word (하천제방, 대지진), or put
+# a "*" in front of a term, in quotes, when it also ends names and compounds
+# and is found in no other word: '*댐' finds 소양강댐 (Soyang River Dam).
 multilingual_keywords:
   geotechnical:
     weight: 5
     terms: [géotechnique, géotechnicien, geotecnia, geotécnico, geotécnica, geotecnico, geotecnica,
             geoteknik, geotechnik, geotechnisch, baugrundgutachten, baugrunduntersuchung, bodengutachten,
             भू-तकनीकी, 岩土工程, 岩土, 地盤工学, جيوتقني, جيوتقنية, جيوتكنيك,
-            địa kỹ thuật, ژئوتکنیک*, 지반공학, 지반 공학, геотехни*, geotechni*]
+            địa kỹ thuật, ژئوتکنیک*, '*지반공학', 지반 공학, геотехни*, geotechni*]
   soil mechanics:
     weight: 5
     terms: [mécanique des sols, mecánica de suelos, mecânica dos solos, meccanica dei terreni, zemin mekaniği,
@@ -324,7 +333,7 @@ multilingual_keywords:
     weight: 4
     terms: [effondrement karstique, fontis, doline, socavón, socavones, sumidero, dolina, cratera, voragine,
             obruk, erdfall, tanah ambles, amblesan, 天坑, 地面塌陷, 陥没, حفرة انهدامية, حفرة عميقة,
-            hố tử thần, hố sụt, فروچاله*, فرو چاله*, 싱크홀, 땅꺼짐, 땅 꺼짐, 지반 함몰, 지반함몰, 도로 함몰, 도로함몰, карстов* провал*,
+            hố tử thần, hố sụt, فروچاله*, فرو چاله*, '*싱크홀', 땅꺼짐, 땅 꺼짐, 지반 함몰, 지반함몰, 도로 함몰, 도로함몰, карстов* провал*,
             провал* грунт*, провал* асфальт*, zapadlisk*, zapadnięci* gruntu, zapadnięci* się gruntu,
             zapadnięci* jezdni, lej* krasow*]
   subsidence:
@@ -332,7 +341,7 @@ multilingual_keywords:
     terms: [affaissement, hundimiento del terreno, subsidencia, afundamento do solo, subsidenza,
             cedimento del terreno, zemin çökmesi, bodenabsenkung, penurunan tanah, धंसाव, भू-धंसाव, 地面沉降, 沉降, 地盤沈下,
             هبوط أرضي, هبوط التربة,
-            sụt lún, lún sụt, lún nứt, فرونشست*, 지반침하, 지반 침하, 침하, просадк* грунт*, проседани* грунт*, оседани* грунт*,
+            sụt lún, lún sụt, lún nứt, فرونشست*, 지반침하, 지반 침하, 침하, 부등침하, 압밀침하, 도로침하, просадк* грунт*, проседани* грунт*, оседани* грунт*,
             просел* грунт*, оседани* земн* поверхност*, osiadani* gruntu, osiadani* terenu, szkod* górnicz*,
             deformacj* terenu]
   foundation:
@@ -347,19 +356,19 @@ multilingual_keywords:
     weight: 4
     terms: [pieux, pilotis, pilotes de cimentación, hinca de pilotes, pilotaje, estacas, estaqueamento,
             pali di fondazione, kazık, pfähle, pfahlgründung, tiang pancang, 桩基, 打桩, 杭基礎, خوازيق,
-            cọc khoan nhồi, ép cọc, đóng cọc, cọc bê tông, móng cọc, شمع کوبی, شمعکوبی, شمع بتنی, شمع های بتنی, 말뚝, 항타,
+            cọc khoan nhồi, ép cọc, đóng cọc, cọc bê tông, móng cọc, شمع کوبی, شمعکوبی, شمع بتنی, شمع های بتنی, 말뚝, 강관말뚝, 항타,
             свая, сваи, свай, сваями, сваю, свайн*, pale fundamentowe, pal* wiercon*, pal* przemieszczeniow*,
             palowani*, wbijani* pali]
   retaining wall:
     weight: 4
     terms: [mur de soutènement, muro de contención, muro de contenção, muro di sostegno, istinat duvarı,
             stützmauer, dinding penahan tanah, talud, 挡土墙, 擁壁, جدار استنادي, جدار ساند,
-            tường chắn, tường chắn đất, دیوار حائل, دیوار نگهبان, سازه نگهبان, 옹벽, 흙막이, подпорн* стен*, ścian* oporow*,
+            tường chắn, tường chắn đất, دیوار حائل, دیوار نگهبان, سازه نگهبان, '*옹벽', 흙막이, подпорн* стен*, ścian* oporow*,
             mur* oporow*, ściank* szczeln*]
   tunnel:
     weight: 2
     terms: [túnel, tunel, tünel, terowongan, galleria, सुरंग, 隧道, 隧洞, トンネル, نفق, أنفاق,
-            đường hầm, hầm đường bộ, hầm chui, hầm metro, hầm xuyên núi, تونل*, 터널, тоннел*, туннел*, tunel*]
+            đường hầm, hầm đường bộ, hầm chui, hầm metro, hầm xuyên núi, تونل*, '*터널', тоннел*, туннел*, tunel*]
   tunnel boring machine:
     weight: 4
     terms: [tunnelier, tuneladora, tatuzão, talpa meccanica, tunnelbohrmaschine, tunnelvortrieb, 盾构, 盾构机,
@@ -370,7 +379,7 @@ multilingual_keywords:
     weight: 4
     terms: [tunnel collapse, effondrement de tunnel, derrumbe de túnel, desabamento de túnel, crollo della galleria,
             tünel çökmesi, tunneleinsturz, terowongan runtuh, 隧道坍塌, トンネル崩落, انهيار نفق,
-            sập hầm, sập đường hầm, ریزش تونل, 터널 붕괴, 터널붕괴, обрушени* тоннел*, обрушени* туннел*, обрушени* в тоннел*,
+            sập hầm, sập đường hầm, ریزش تونل, '*터널 붕괴', '*터널붕괴', обрушени* тоннел*, обрушени* туннел*, обрушени* в тоннел*,
             zawaleni* tunel*, zawalił się tunel, katastrof* w tunelu]
   excavation:
     weight: 2
@@ -381,21 +390,21 @@ multilingual_keywords:
     weight: 3
     terms: [remblai, digue, terraplén, aterro, rilevato ferroviario, rilevato stradale, rilevato arginale,
             argine, dolgu, damm, böschung, tanggul, timbunan, तटबंध, 路堤, 堤防, 盛土, سد ترابي,
-            đê điều, tuyến đê, thân đê, nền đắp, đất đắp, سیل بند, 제방, насыпь, насыпи, насыпью, дамб*, nasyp,
+            đê điều, tuyến đê, thân đê, nền đắp, đất đắp, سیل بند, 제방, 하천제방, 임시제방, насыпь, насыпи, насыпью, дамб*, nasyp,
             nasypu, nasypy, nasypie, wał* przeciwpowodziow*, pérdida de banca]
   dam failure:
     weight: 4
     terms: [dam failure, dam collapse, dam burst, rupture de barrage, rotura de presa, rompimento de barragem,
             crollo della diga, baraj yıkılması, dammbruch, bendungan jebol, tanggul jebol, बांध टूटना, 溃坝,
             決壊, انهيار سد,
-            vỡ đập, vỡ đê, sự cố đập, شکست سد, تخریب سد, شکستن سد, 댐 붕괴, 댐붕괴, 저수지 붕괴, 제방 붕괴, 제방붕괴, 제방 유실,
+            vỡ đập, vỡ đê, sự cố đập, شکست سد, تخریب سد, شکستن سد, '*댐 붕괴', '*댐붕괴', 저수지 붕괴, '*제방 붕괴', '*제방붕괴', '*제방 유실',
             прорыв* дамб*, прорыв* плотин*, разрушени* плотин*, разрушени* дамб*, przerwani* wału,
             przerwan* wał* przeciwpowodziow*, przerwani* tamy, przerwana tama, katastrof* zapory, pęknięci* tamy]
   dam:
     weight: 2
     terms: [presa, represa, barragem, diga, baraj, talsperre, staudamm, bendungan, बांध, 大坝, ダム, السد,
             đập thủy điện, đập thuỷ điện, đập thủy lợi, đập thuỷ lợi, hồ đập, سدهای, سد مخزنی, سد خاکی, دریاچه سد,
-            سدسازی, 댐, плотин*, zapor* wodn*, tama, tamy, tamie, tamą]
+            سدسازی, '*댐', плотин*, zapor* wodn*, tama, tamy, tamie, tamą]
   tailings:
     weight: 3
     terms: [résidus miniers, relaves, rejeitos, barragem de rejeitos, sterili minerari, atık barajı, 尾矿, 尾矿库,
@@ -419,7 +428,7 @@ multilingual_keywords:
     terms: [amélioration des sols, renforcement des sols, mejoramiento de suelos, melhoramento de solos,
             consolidamento del terreno, zemin iyileştirme, bodenverbesserung, perbaikan tanah, 地基处理, 地基加固,
             地盤改良, تحسين التربة,
-            xử lý nền đất yếu, xử lý nền, gia cố nền, بهسازی خاک, تثبیت خاک, بهسازی زمین, 지반개량, 지반 개량, 지반보강, 지반 보강,
+            xử lý nền đất yếu, xử lý nền, gia cố nền, بهسازی خاک, تثبیت خاک, بهسازی زمین, '*지반개량', 지반 개량, '*지반보강', 지반 보강,
             укреплени* грунт*, стабилизаци* грунт*, уплотнени* грунт*, wzmocnieni* podłoża, wzmocnieni* gruntu,
             stabilizacj* gruntu]
   grouting:
@@ -433,18 +442,18 @@ multilingual_keywords:
     terms: [étude de sol, étude géotechnique, reconnaissance géotechnique, estudio geotécnico, estudio de suelos,
             investigação geotécnica, indagini geotecniche, zemin etüdü, baugrunderkundung, penyelidikan tanah,
             sondir, 地质勘察, 勘察, 地盤調査, ボーリング調査, دراسة جيوتقنية, دراسة التربة, جسات,
-            khảo sát địa chất, khoan khảo sát, khảo sát địa kỹ thuật, مطالعات خاک, آزمایش خاک, 지반조사, 지반 조사, 시추조사, 지질조사,
+            khảo sát địa chất, khoan khảo sát, khảo sát địa kỹ thuật, مطالعات خاک, آزمایش خاک, '*지반조사', 지반 조사, 시추조사, 지질조사,
             инженерно-геологическ* изыскани*, инженерн* изыскани*, геологическ* изыскани*, badani* geotechniczn*,
             badani* podłoża, rozpoznani* geologiczn*, odwiert* geologiczn*]
   erosion:
     weight: 2
     terms: [érosion, erosión, erosão, erosione, erozyon, erosi, abrasi, 侵蚀, 冲刷, 浸食, 侵食, انجراف التربة,
-            xói lở, xói mòn đất, فرسایش خاک, 침식, 세굴, эрози*, размыв, размыва, размывом, размыло, erozj*, cárcava,
+            xói lở, xói mòn đất, فرسایش خاک, 침식, 해안침식, 세굴, эрози*, размыв, размыва, размывом, размыло, erozj*, cárcava,
             cárcavas, socavación]
   earthquake:
     weight: 2
     terms: [séisme, tremblement de terre, sismo, terremoto, deprem, erdbeben, gempa, भूकंप, 地震, زلزال,
-            động đất, زلزله, زمین لرزه, 지진, землетрясени*, trzęsieni* ziemi, wstrząs* sejsmiczn*, wstrząs* górnicz*]
+            động đất, زلزله, زمین لرزه, 지진, 대지진, 포항지진, 경주지진, землетрясени*, trzęsieni* ziemi, wstrząs* sejsmiczn*, wstrząs* górnicz*]
   permafrost:
     weight: 3
     terms: [pergélisol, 冻土, 永久凍土,
@@ -462,7 +471,7 @@ multilingual_keywords:
     weight: 1
     terms: [collapse, effondrement, colapso, derrumbe, desabamento, crollo, cedimento, çökme, göçük, einsturz,
             runtuh, ambruk, ढहना, 坍塌, 倒塌, 崩落, 崩壊, انهيار,
-            sụp đổ, đổ sập, bị sập, sập nhà, sập cầu, فروریزش, فرو ریخت*, ریزش ساختمان, آوار, 붕괴, 무너져, 무너진, обрушени*,
+            sụp đổ, đổ sập, bị sập, sập nhà, sập cầu, فروریزش, فرو ریخت*, ریزش ساختمان, آوار, '*붕괴', 무너져, 무너진, обрушени*,
             обрушил*, рухнул*, zawaleni*, zawalił*, zawaliła*, runął, runęła, katastrof* budowlan*]
   soil:
     weight: 1
@@ -480,7 +489,7 @@ multilingual_keywords:
             ścian* szczelinow*]
   earthworks:
     weight: 4
-    terms: [movimiento de tierras, terrassement, erdarbeiten, san lấp mặt bằng, عملیات خاکی, 토공사, земляны* работ*,
+    terms: [movimiento de tierras, terrassement, erdarbeiten, san lấp mặt bằng, عملیات خاکی, '*토공사', земляны* работ*,
             robot* ziemn*]
   jet grouting:
     weight: 5
@@ -502,8 +511,9 @@ multilingual_keywords:
             đường sắt, راه آهن, 철도, железн* дорог*, kolejow*, linii kolejowej]
 
 # Headlines containing these lose 5 points each (noise filter). Whole words
-# only ("election" does not touch "selection"); Chinese, Japanese and Korean
-# terms match anywhere; "*" works as in the keyword lists.
+# only ("election" does not touch "selection"); Chinese and Japanese terms
+# match anywhere, Korean ones at the start of a word; "*" works as in the
+# keyword lists.
 exclude:
   - share price
   - stock market
