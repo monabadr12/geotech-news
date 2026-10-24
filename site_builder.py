@@ -260,19 +260,21 @@ def rating(s):
     return f"<span class='rel rel-{rel}' title='Geotechnical relevance: {rel} of 5'>{'<i></i>' * 5}<b>{rel}/5</b></span>"
 
 
-def story_card(s, show_theme=False):
+def story_card(s, show_theme=False, root=None):
     shown = s.get("title_en") or s["title"]
     when = nice_date(s.get("published") or s.get("_digest", ""))
     region = COUNTRIES.get(s.get("region", ""), s.get("region", ""))
+    sl = s.get("_storyline")  # set by storylines.annotate() when the story belongs to a developing story
     search_text = " ".join([shown, s["title"], s.get("angle", ""), s["source"], region,
-                            " ".join(s.get("keywords", []))]).lower()
+                            " ".join(s.get("keywords", [])), sl["title"] if sl else ""]).lower()
     meta = [f"<span class='src'>{esc(s['source'])}</span>"]
     if when:
         meta.append(f"<time>{esc(when)}</time>")
     if region:
         meta.append(f"<span>{esc(region)} edition</span>")
     parts = [f"<article class='story' style='--tc:{theme_color(s['theme'])}' data-rel='{s.get('relevance') or 0}' "
-             f"data-use='{esc(s.get('use', ''))}' data-text='{esc(search_text)}'>",
+             f"data-use='{esc(s.get('use', ''))}' data-text='{esc(search_text)}'"
+             + (f" data-sl='{esc(sl['id'])}'" if sl else "") + ">",
              "<div class='story-top'>",
              f"<a class='story-title' href='{esc(s['link'])}' target='_blank' rel='noopener' dir='auto'>{esc(shown)}</a>",
              rating(s), "</div>"]
@@ -283,6 +285,14 @@ def story_card(s, show_theme=False):
     elif s.get("summary"):
         parts.append(f"<p class='summary'>{esc(s['summary'][:260])}…</p>")
     parts.append("<div class='story-meta'>")
+    if sl:
+        # "Developing story · 4 reports", and for a follow-up the stage it reports. Cards appear on pages at the
+        # top of the site and one folder down (digests/, issues/): without a root both links are written and
+        # style.css shows the one that fits the page (body data-root), so every existing call keeps working.
+        label = f"Developing story · {sl['size']} reports" + (f" · {sl['stage']}" if s.get("storyline") == sl["id"] else "")
+        for r, cls in ([(root, "")] if root is not None else [("", " sl-top"), ("../", " sl-up")]):
+            parts.append(f"<a class='sl-chip{cls}' href='{r}developing.html#{esc(sl['id'])}' "
+                         f"title='{esc(sl['title'])}'>{esc(label)}</a>")
     if s.get("use"):
         slug_ = s["use"].split()[0].lower().strip("-")
         parts.append(f"<span class='use use-{esc(slug_)}'>{esc(s['use'])}</span>")
@@ -1492,6 +1502,8 @@ def build(cfg):
 
     use_list = USES
     digests = load_digests()
+    import storylines  # developing stories (it imports this module, so not at the top)
+    storylines.annotate(digests)  # every story of a developing story gets "_storyline" for its card
     briefs, brief_opts = load_briefs(), brief.settings(cfg)
     # themes found in the archive but no longer in config.yaml still get pages and rows
     extra = sorted({s["theme"] for d in digests for s in d["stories"] + d["papers"]} - set(theme_order(cfg)))

@@ -684,7 +684,21 @@ map:
 # ---- Developing stories (developing.html) --------------------------------
 # Follow-up reports (an inquiry, a repair, a court case) are linked to the
 # earlier story about the same event, so long-running events can be followed.
-storylines: {}
+# Each scan, Claude compares the day's stories with the closest archived stories
+# of the last lookback_days and links a story only when both are about the same
+# event, project or site, naming the stage it reports (event, response and
+# recovery, investigation, repair, legal and policy, update). It uses the same
+# ANTHROPIC_API_KEY secret as the triage, once per scan. Without the key, or
+# when Claude cannot be reached, a cautious headline match links stories from
+# the last heuristic_days. Story cards then carry a "Developing story" chip.
+storylines:
+  enabled: true            # false: no new links (developing.html keeps those already made)
+  model: claude-opus-5-5   # telling one event from a similar one is judgement work
+  effort: low              # low | medium | high — how hard Claude thinks about the links
+  lookback_days: 365       # how far back earlier stories are compared
+  max_candidates: 400      # earlier stories Claude reads per scan, at most (the closest matches)
+  heuristic_days: 30       # without Claude: earlier stories from the last 30 days only
+  active_days: 90          # developing.html: "active" means a new report in the last 90 days
 
 # ---- Events calendar (events.html) ----------------------------------------
 # Conferences and call-for-papers deadlines: data/events.yaml (kept by the
