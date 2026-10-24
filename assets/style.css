@@ -773,3 +773,158 @@ body[data-root="../"] .sl-chip.sl-up { display: inline-flex; }
   .sl-item[hidden] { display: grid !important; }
   .sl-card { box-shadow: none; break-inside: avoid-page; }
 }
+
+/* ---------- Events calendar ---------- */
+/* events.html (cards grouped by month, open calls for papers, subscription) and the
+   "Upcoming events & deadlines" panel that other pages show. Each kind of event has its
+   own ink and tint (--kc, --kb), checked for contrast in light and dark mode. */
+:root {
+  --ev-conf: #7d5a0c; --ev-conf-bg: #fbf3dc; --ev-supp: #0a6d78; --ev-supp-bg: #dff3f5;
+  --ev-other: #36506c; --ev-other-bg: #e8eef5; --ev-course: #5137b0; --ev-course-bg: #ece7fb;
+  --ev-urgent: #b4321b; --ev-urgent-bg: #fdecea; --ev-soon: #8a5a00; --ev-soon-bg: #fdefcf; --ev-open: #146c40;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ev-conf: #e8c25a; --ev-conf-bg: #2a2416; --ev-supp: #72d2dc; --ev-supp-bg: #10323a;
+    --ev-other: #a9bdd3; --ev-other-bg: #1d2a39; --ev-course: #c3b4ff; --ev-course-bg: #2a2346;
+    --ev-urgent: #ff9a88; --ev-urgent-bg: #3a1c18; --ev-soon: #f2c96a; --ev-soon-bg: #3a2c0d; --ev-open: #8fdcb2;
+  }
+}
+.k-conf { --kc: var(--ev-conf); --kb: var(--ev-conf-bg); }
+.k-supp { --kc: var(--ev-supp); --kb: var(--ev-supp-bg); }
+.k-other { --kc: var(--ev-other); --kb: var(--ev-other-bg); }
+.k-course { --kc: var(--ev-course); --kb: var(--ev-course-bg); }
+.events-btn.running .ico { animation: spin 1.1s linear infinite; }
+
+/* event card: date tile, then what, where, who, deadlines and links */
+.ev-card { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 16px; background: var(--surface); border: 1px solid var(--line);
+  border-left: 4px solid var(--kc); border-radius: var(--radius); padding: 15px 18px; margin: 0 0 10px; box-shadow: var(--shadow);
+  scroll-margin-top: 90px; transition: transform .15s, box-shadow .15s; }
+.ev-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.ev-card:target { outline: 2px solid var(--kc); outline-offset: 2px; }
+.ev-date { align-self: start; display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center;
+  background: var(--kb); color: var(--kc); border-radius: 10px; padding: 10px 4px 9px; }
+.ev-date b { font: 700 21px/1.1 var(--serif); white-space: nowrap; }
+.ev-date span { font: 700 10.5px/1.2 var(--sans); letter-spacing: .07em; text-transform: uppercase; }
+.ev-date small { font-size: 10.5px; font-weight: 600; opacity: .85; }
+.ev-main { min-width: 0; }
+.ev-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ev-kind { display: inline-flex; align-items: center; font: 700 10.5px var(--sans); letter-spacing: .06em; text-transform: uppercase;
+  color: var(--kc); background: var(--kb); border-radius: 6px; padding: 3px 8px; }
+.ev-flag { font: 600 11.5px var(--sans); color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; }
+.ev-flag.live { color: var(--ev-open); border-color: color-mix(in srgb, var(--ev-open) 45%, transparent); }
+.ev-short { font: 700 12.5px var(--sans); color: var(--muted); }
+.ev-title { margin: 6px 0 5px; font: 650 17px/1.35 var(--sans); }
+.ev-title a { color: var(--ink); text-decoration: none; overflow-wrap: anywhere; }
+.ev-title a:hover { color: var(--link); text-decoration: underline; }
+.ev-meta { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 0; font-size: 13.5px; color: var(--muted); }
+.ev-meta span { display: inline-flex; align-items: center; gap: 6px; }
+.ev-meta .ico { width: 15px; height: 15px; color: var(--kc); }
+.ev-meta .ev-org { color: var(--ink); font-weight: 500; }
+.ev-dls { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin: 11px 0 0; padding: 0; }
+.ev-dl { display: inline-flex; align-items: baseline; flex-wrap: wrap; gap: 3px 8px; font-size: 12.5px; background: var(--surface-2);
+  border: 1px solid var(--line); border-radius: 8px; padding: 4px 10px; }
+.ev-dl-l { font-weight: 700; }
+.ev-dl em, .ev-left { font-style: normal; font-weight: 700; font-size: 12px; white-space: nowrap; color: var(--ev-open); }
+.ev-dl.soon { background: var(--ev-soon-bg); border-color: color-mix(in srgb, var(--ev-soon) 35%, transparent); }
+.ev-dl.urgent { background: var(--ev-urgent-bg); border-color: color-mix(in srgb, var(--ev-urgent) 40%, transparent); }
+.ev-dl.soon em, .soon .ev-left { color: var(--ev-soon); }
+.ev-dl.urgent em, .urgent .ev-left { color: var(--ev-urgent); }
+.ev-dl.passed { background: transparent; border-style: dashed; color: var(--muted); }
+.ev-dl.passed .ev-dl-l, .ev-dl.passed time { text-decoration: line-through; text-decoration-thickness: 1px; }
+.ev-dl.passed em { color: var(--muted); font-weight: 600; }
+.ev-notes { margin: 10px 0 0; font-size: 13.5px; color: var(--muted); }
+.ev-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
+.ev-foot .btn { padding: 6px 12px; font-size: 13px; }
+.ev-foot .ico { width: 15px; height: 15px; }
+.ev-src { margin-left: auto; font-size: 12px; color: var(--muted); text-align: right; }
+.ev-card.past { box-shadow: none; }
+.ev-card.past .ev-date { background: var(--surface-2); color: var(--muted); }
+
+/* months */
+.ev-month-h { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; font: 700 19px var(--serif); margin: 26px 0 10px; }
+.ev-month:first-child .ev-month-h { margin-top: 6px; }
+.ev-month-h .count { font: 700 12px var(--sans); color: #fff; background: var(--brand-2); border-radius: 99px; padding: 2px 9px; }
+.ev-q { margin-left: auto; font: 600 11px var(--sans); letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.ev-check { display: inline-flex; align-items: center; gap: 7px; font: 600 13.5px var(--sans); color: var(--ink); padding-bottom: 8px; cursor: pointer; }
+.ev-check input { width: 16px; height: 16px; accent-color: var(--brand-2); margin: 0; }
+
+/* open calls for papers */
+.ev-calls-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(440px, 100%), 1fr)); gap: 8px; }
+.ev-calls-list a { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; align-items: center; gap: 12px; height: 100%;
+  background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--ev-open); border-radius: 10px;
+  padding: 10px 14px 10px 10px; color: var(--ink); text-decoration: none; box-shadow: var(--shadow); transition: transform .15s; }
+.ev-calls-list a:hover { transform: translateY(-1px); }
+.ev-calls-list .soon a { border-left-color: var(--accent); }
+.ev-calls-list .urgent a { border-left-color: var(--ev-urgent); }
+.ev-calls-list .passed { opacity: .6; }
+.ev-cd, .ev-side-date { text-align: center; font: 700 10.5px/1.2 var(--sans); letter-spacing: .05em; text-transform: uppercase;
+  color: var(--muted); background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 5px 0; }
+.ev-cd b, .ev-side-date b { display: block; font: 700 18px/1.1 var(--serif); letter-spacing: 0; text-transform: none; color: var(--ink); }
+.ev-ct { min-width: 0; font-size: 14px; line-height: 1.4; }
+.ev-ct small { display: block; color: var(--muted); font-size: 12.5px; overflow-wrap: anywhere; }
+.ev-calls.none .empty { padding: 18px; }
+
+/* folded sections: further ahead, past events */
+.ev-fold { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); margin: 22px 0 0; }
+.ev-fold > summary { cursor: pointer; padding: 12px 16px; font: 700 15px var(--sans); }
+.ev-fold-body { padding: 2px 14px 6px; }
+.ev-fold .ev-card { box-shadow: none; }
+
+/* using the calendar */
+.ev-use-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(290px, 100%), 1fr)); gap: 12px; }
+.ev-use-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 18px; min-width: 0; }
+.ev-use-card h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font: 700 16px var(--sans); }
+.ev-use-card h3 .ico { color: var(--teal); }
+.ev-use-card p { margin: 0 0 10px; font-size: 14px; color: var(--muted); }
+.ev-use-card .actions { margin-top: 10px; }
+.ev-use-card code { font-size: 12.5px; }
+.ev-feed { display: flex; gap: 6px; margin: 0 0 10px; }
+.ev-feed input { flex: 1; min-width: 0; font: 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--ink);
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+.ev-feed .btn { padding: 7px 12px; }
+.ev-use-card p.ev-how { font-size: 12.5px; }
+
+.ev-warn { display: flex; gap: 12px; align-items: flex-start; background: var(--ev-urgent-bg); border: 1px solid color-mix(in srgb, var(--ev-urgent) 30%, transparent);
+  border-left: 5px solid var(--ev-urgent); border-radius: var(--radius); padding: 13px 16px; margin: 0 0 20px; font-size: 14px; }
+.ev-warn > .ico { color: var(--ev-urgent); width: 22px; height: 22px; margin-top: 1px; }
+.ev-warn ul { margin: 6px 0 0; padding-left: 18px; font-size: 13.5px; }
+
+/* "Upcoming events & deadlines" panel on other pages */
+.ev-side { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); padding: 14px 16px 16px; margin: 0 0 22px; }
+.ev-side-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; margin: 0 0 10px; }
+.ev-side-head h2 { display: flex; align-items: center; gap: 8px; margin: 0; font: 700 16px var(--sans); }
+.ev-side-head h2 .ico { color: var(--teal); }
+.ev-side-head a { font-size: 13px; font-weight: 600; text-decoration: none; }
+.ev-side-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 12px 18px; }
+.ev-side-cols h3 { margin: 0 0 6px; font: 700 11px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.ev-side-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.ev-side-list li { display: flex; gap: 10px; align-items: flex-start; min-width: 0; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px 8px 8px; }
+.ev-side-date { flex: none; width: 44px; background: var(--surface); }
+.ev-side-dl .ev-side-date { color: var(--ev-open); }
+.ev-side-dl.ev-urgent .ev-side-date { color: var(--ev-urgent); }
+.ev-side-txt { min-width: 0; }
+.ev-side-txt a { font-weight: 600; font-size: 13.5px; line-height: 1.35; color: var(--ink); text-decoration: none; overflow-wrap: anywhere; }
+.ev-side-txt a:hover { color: var(--link); text-decoration: underline; }
+.ev-side-txt small { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; }
+
+@media (min-width: 900px) {
+  .ev-use-grid { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) minmax(0, 1fr); }
+}
+@media (max-width: 720px) {
+  /* the date tile becomes a chip above the card, so the text and buttons get the full width */
+  .ev-card { grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 13px 14px; }
+  .ev-date { flex-direction: row; flex-wrap: wrap; align-items: baseline; justify-self: start; gap: 2px 7px; padding: 4px 10px; }
+  .ev-date b { font-size: 15px; }
+  .ev-title { font-size: 16px; }
+  .ev-src { margin-left: 0; text-align: left; flex-basis: 100%; }
+  .ev-q { margin-left: 0; flex-basis: 100%; }
+  .ev-calls-list a { grid-template-columns: 44px minmax(0, 1fr); }
+  .ev-calls-list .ev-left { grid-column: 2; }
+  .ev-feed { flex-wrap: wrap; }
+}
+@media print {
+  .ev-tools, .ev-foot .btn, .ev-use, .ev-warn { display: none !important; }
+  .ev-card, .ev-calls-list a { box-shadow: none; break-inside: avoid; }
+  .ev-fold { border: 0; }
+}
