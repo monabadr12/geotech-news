@@ -222,10 +222,17 @@ def theme_icon(theme):
 def feature(module, name):
     """A function of one of the feature modules (geomap, storylines, events, notify), or None when it
     is missing. They import this module, so they are imported here only when a page needs them."""
+    if module in _unloadable:
+        return None
     try:
         return getattr(__import__(module), name, None)
-    except ImportError:
+    except Exception as ex:  # a module that cannot even be imported leaves its parts out (said once)
+        _unloadable.add(module)
+        print(f"{module}.py could not be loaded ({type(ex).__name__}: {ex}); its parts of the pages are left out.")
         return None
+
+
+_unloadable = set()
 
 
 def optional(module, name, *args, default=None, **kw):
@@ -634,8 +641,9 @@ def weeks_of(digests):
         w = by_key[key]
         w["digests"] += 1
         for s in d["stories"]:
-            if s["id"] not in w["ids"]:
-                w["ids"].add(s["id"])
+            sid = s.get("id") or id(s)  # a hand-edited story may have lost its id
+            if sid not in w["ids"]:
+                w["ids"].add(sid)
                 w["top"] += s.get("relevance") == 5
     for w in out:
         w["stories"] = len(w.pop("ids"))
