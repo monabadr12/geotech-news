@@ -634,7 +634,67 @@ storylines: {}
 # ---- Events calendar (events.html) ----------------------------------------
 # Conferences and call-for-papers deadlines: data/events.yaml (kept by the
 # editors) plus the events Claude finds on the organisers' calendars each week.
-events: {}
+# The daily scan refreshes the calendar when it is refresh_days old, and the
+# Events page's "Refresh calendar" button refreshes it at any time. Claude reads
+# the calendars below with Anthropic's web search and web fetch tools, which run
+# on Anthropic's servers (issmge.org and most organiser sites cannot be read from
+# GitHub). They must be turned on for the organisation that owns the
+# ANTHROPIC_API_KEY, in the Claude Console. A refresh that fails keeps the calendar.
+events:
+  model: claude-opus-5-5   # Claude Opus: reads the organisers' pages and judges what is a real event
+  effort: medium           # low | medium | high — how hard Claude works through the calendars
+  extract_effort: low      # effort for turning Claude's notes into calendar entries
+  refresh_days: 7          # the daily scan refreshes the calendar when it is 7 days old
+  months_ahead: 24         # events starting in the next 24 months
+  deadline_days: 90        # "Open calls for papers": deadlines in the next 90 days
+  keep_days: 7             # events found by a refresh stay 7 days after they end
+  max_searches: 10         # web searches per refresh
+  max_fetches: 15          # pages Claude opens per refresh
+  calendars:               # where Claude looks first; it also searches the web for more
+    - name: ISSMGE events
+      url: https://www.issmge.org/events
+    - name: ISSMGE news (calls for abstracts, TC symposia)
+      url: https://www.issmge.org/news
+    - name: ITA-AITES future events (tunnelling)
+      url: https://about.ita-aites.org/future-events
+    - name: ASCE Geo-Institute conferences and events
+      url: https://www.asce.org/communities/institutes-and-technical-groups/geo-institute/conferences-and-events
+    - name: GeoEngineer.org events
+      url: https://www.geoengineer.org/events
+    - name: ISRM conferences (rock mechanics; the conference list on the home page)
+      url: https://www.isrm.net/
+    - name: International Geosynthetics Society (IGS) calendar
+      url: https://www.geosyntheticssociety.org/
+    - name: Deep Foundations Institute (DFI) events
+      url: https://dfi.org/
+    - name: British Geotechnical Association (BGA) events
+      url: https://www.britishgeotech.org/events
+    - name: Institution of Civil Engineers (ICE) events
+      url: https://www.ice.org.uk/events
+  blocked_domains:         # predatory, mass-produced "International Conference on ..." series: never listed
+    - waset.org
+    - conferenceindex.org
+    - conferenceseries.com
+    - omicsonline.org
+    - iser.co
+    - iier.org
+    - theiier.org
+    - iraj.in
+    - academicsworld.org
+    - researchfora.com
+    - technoarete.org
+    - allconferencealert.com
+    - internationalconferencealerts.com
+    - conferencealerts.co.in
+    - worldresearchlibrary.org
+    - scientificfederation.com
+  blocked_organisers:      # organisers never listed (words in the name or organiser)
+    - World Academy of Science, Engineering and Technology
+    - WASET
+    - OMICS
+    - Conference Series LLC
+    - Institute for Educational Research (IIER)
+    - Institute of Research and Journals (IRAJ)
 
 # ---- Alerts and weekly summary (e-mail) -----------------------------------
 # An e-mail when a 5/5 story appears and a Monday summary for the editorial team.

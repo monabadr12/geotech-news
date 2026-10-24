@@ -1,0 +1,124 @@
+# ============================================================
+#  Events calendar — the editors' list (shown on the Events page)
+#  Edit this file on GitHub (pencil icon); the website is rebuilt
+#  a minute or two after you save ("Commit changes").
+# ============================================================
+#
+# Each event starts with "- name:" and has these lines (only name, start and url
+# are needed; leave out any line you do not know):
+#
+#   - name: 2nd International Symposium on Ground Improvement   full official name
+#     short: IS-GI 2027              acronym shown on the cards and in calendar apps
+#     start: 2027-04-12              first day, YYYY-MM-DD (or YYYY-MM if only the month is known)
+#     end: 2027-04-14                last day (leave out for a one-day event)
+#     city: Lyon
+#     country: FR                    two-letter country code (FR, GB, US, TH ...); leave out if online
+#     online: false                  true for an event held online only
+#     organiser: ISSMGE TC211
+#     kind: ISSMGE-supported         one of: ISSMGE conference / ISSMGE-supported /
+#                                    Other conference / Course / webinar
+#     issmge: true                   only needed to count another kind (an ISSMGE webinar,
+#                                    a member society's conference) as an ISSMGE event
+#     url: https://...               the event's web page (where readers register)
+#     deadlines:                     calls for abstracts or papers, registration ...
+#       - label: Abstracts
+#         date: 2026-05-15
+#       - label: Full papers
+#         date: 2026-11-30
+#     notes: Official site www.example.org   one line for the editors (optional)
+#
+# Kinds: "ISSMGE conference" is organised by ISSMGE or held under its auspices (the
+# International Conference, the regional conferences); "ISSMGE-supported" is a
+# technical committee (TC) symposium or another event ISSMGE supports; "Other
+# conference" is everything else (ITA-AITES, ASCE, ISRM, IGS, DFI ...); "Course /
+# webinar" is a short course, workshop or online lecture. ISSMGE events can be
+# shown on their own with the "ISSMGE only" filter.
+#
+# Tips
+# * Keep the indentation (two spaces) and the "- " in front of each event and each
+#   deadline. Put text containing a colon in quotes: notes: "Venue: METU campus".
+# * Passed deadlines stay on the card, struck through; past events move to "Past
+#   events" at the bottom of the page by themselves, so there is no need to delete them.
+# * The weekly calendar refresh adds events it finds on the organisers' websites.
+#   An event listed here always wins over the same event found by the refresh, so
+#   this file is the place to correct a date or a link.
+# * If something in this file cannot be read, the Events page says what and where.
+
+- name: ITA-AITES World Tunnel Congress 2027
+  short: WTC 2027
+  start: 2027-04-23
+  end: 2027-04-29
+  city: Antwerp
+  country: BE
+  organiser: ITA-AITES with the Belgian Tunnel Association
+  kind: Other conference
+  url: https://about.ita-aites.org/future-events/2350/world-tunnel-congress-wtc-2027
+  deadlines:
+    - label: Abstracts
+      date: 2026-06-10
+  notes: Official congress website www.wtc2027.com
+
+- name: Geo-Congress 2027, part of ASCE2027
+  short: Geo-Congress 2027
+  start: 2027-03-01
+  end: 2027-03-05
+  city: Philadelphia
+  country: US
+  organiser: ASCE Geo-Institute
+  kind: Other conference
+  url: https://geoinstitute.org/news/call-abstract-geo-congress-2027-part-asce2027
+  deadlines:
+    - label: Abstracts
+      date: 2026-03-04
+  notes: Held within ASCE2027, the American Society of Civil Engineers' combined convention
+
+- name: 2nd International Symposium on Ground Improvement
+  short: IS-GI 2027
+  start: 2027-04-12
+  end: 2027-04-14
+  city: Lyon
+  country: FR
+  organiser: ISSMGE TC211
+  kind: ISSMGE-supported
+  url: https://www.issmge.org/news/2nd-is-gi-2027-lyon-call-for-abstracts
+  deadlines:
+    - label: Abstracts
+      date: 2026-05-15
+
+- name: International Conference on Sustainability in Geotechnical Engineering
+  short: ICSGE 2027
+  start: 2027-06-28
+  end: 2027-07-01
+  city: Lisbon
+  country: PT
+  organiser: ISSMGE TC307 and LNEC
+  kind: ISSMGE-supported
+  url: https://www.issmge.org/news/tc223-june-news-update
+  deadlines:
+    - label: Abstracts
+      date: 2026-07-15
+
+- name: 9th International Symposium on Deformation Characteristics of Geomaterials
+  short: IS-Ankara 2027
+  start: 2027-09-14
+  end: 2027-09-17
+  city: Ankara
+  country: TR
+  organiser: ISSMGE TC101, Middle East Technical University (METU)
+  kind: ISSMGE-supported
+  url: https://www.issmge.org/news/tc223-june-news-update
+  deadlines:
+    - label: Abstracts
+      date: 2026-09-21
+  notes: Held at METU, Ankara
+
+- name: 18th Asian Regional Conference on Soil Mechanics and Geotechnical Engineering
+  short: 18ARC
+  start: 2027-11-09
+  end: 2027-11-13
+  city: Bangkok
+  country: TH
+  organiser: Thai Geotechnical Society, under the auspices of ISSMGE
+  kind: ISSMGE conference
+  url: https://www.issmge.org/events/18arc
+  notes: Call-for-papers deadlines not yet published
