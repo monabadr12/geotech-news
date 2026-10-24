@@ -551,7 +551,7 @@ table.heat thead th:first-child { position: sticky; left: 0; z-index: 1; }  /* t
 }
 .map-tools .field select { max-width: 320px; }
 .map-kpis { margin: 0 0 16px; }
-.map-fig { padding-bottom: 14px; }
+.map-fig { padding-bottom: 14px; scroll-margin-top: 112px; }  /* "Show on map" scrolls it clear of the sticky filters */
 .map-zoom { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
 .map-zoom button { font: 600 12px var(--sans); color: var(--muted); background: var(--surface); border: 1px solid var(--line);
   border-radius: 999px; padding: 4px 11px; cursor: pointer; }
@@ -657,6 +657,7 @@ table.heat thead th:first-child { position: sticky; left: 0; z-index: 1; }  /* t
   .map-panel { border-left: 0; border-top: 1px solid var(--line); padding: 14px 0 0; max-height: none; }
   .map-regions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+@media (max-width: 720px) { .map-fig { scroll-margin-top: 16px; } }  /* the filters no longer stick here */
 @media (max-width: 640px) {
   .map-zoom { display: none; }
   .map-zoom-sel { display: flex; }
