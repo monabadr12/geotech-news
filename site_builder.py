@@ -15,7 +15,7 @@ import os
 import re
 import shutil
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 import yaml
 
@@ -37,7 +37,8 @@ COUNTRIES = {
     "ZA": "South Africa", "SG": "Singapore", "AE": "United Arab Emirates", "FR": "France",
     "SN": "Senegal", "EG": "Egypt", "ES": "Spain", "MX": "Mexico", "BR": "Brazil",
     "DE": "Germany", "IT": "Italy", "TR": "Türkiye", "ID": "Indonesia", "CN": "China",
-    "JP": "Japan",
+    "JP": "Japan", "VN": "Vietnam", "IR": "Iran", "KR": "South Korea", "RU": "Russia",
+    "PL": "Poland", "CO": "Colombia", "CL": "Chile", "PE": "Peru", "AR": "Argentina",
 }
 CSV_FIELDS = ["Digest date", "Issue window", "Theme", "Relevance (1-5)", "Suggested use",
               "Headline (English)", "Original headline", "Magazine angle", "Source",
@@ -77,6 +78,7 @@ ICONS = {
     "send": "<path d='m22 2-7 20-4-9-9-4z'/><path d='M22 2 11 13'/>",
     "print": "<path d='M6 9V2h12v7'/><rect x='6' y='14' width='12' height='8'/><path d='M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2'/>",
     "search": "<circle cx='11' cy='11' r='7'/><path d='m21 21-4.3-4.3'/>",
+    "book": "<path d='M4 19.5A2.5 2.5 0 0 1 6.5 17H20'/><path d='M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'/>",
 }
 FAVICON = (ASSETS / "favicon.svg").read_text(encoding="utf-8") if (ASSETS / "favicon.svg").exists() else ""
 
@@ -107,6 +109,7 @@ def load_digests():
     out = [json.loads(p.read_text(encoding="utf-8")) for p in DIGESTS.glob("*.json")]
     for d in out:
         d["stories"] = [tidy(s) for s in d.get("stories", [])]
+        d["papers"] = [tidy(p) for p in d.get("papers", [])]
     return sorted(out, key=lambda d: d["date"], reverse=True)
 
 
@@ -318,6 +321,60 @@ def theme_sections(stories, order=None, show_theme=False):
     return "".join(out)
 
 
+A2I = "Academia-to-Industry topic"
+
+
+def doi_of(link):
+    """The DOI in a https://doi.org/... link ('' for other links)."""
+    return unquote(link.split("doi.org/", 1)[1]) if "doi.org/" in link else ""
+
+
+def paper_rank(p):
+    """Claude's rating for practice first, then the number of keyword concepts."""
+    return (p.get("relevance") or 0) * 100 + len(p.get("keywords", []))
+
+
+def paper_card(p):
+    rel = p.get("relevance") or 0
+    rating_ = (f"<span class='rel rel-{rel}' title='Use in practice: {rel} of 5'>{'<i></i>' * 5}<b>{rel}/5</b></span>"
+               if rel else "<span class='rel rel-kw' title='Not AI-rated; ranked by keyword score'>Not rated</span>")
+    parts = [f"<article class='story paper' style='--tc:{theme_color(p['theme'])}'>",
+             "<div class='story-top'>",
+             f"<a class='story-title' href='{esc(p['link'])}' target='_blank' rel='noopener' dir='auto'>{esc(p['title'])}</a>",
+             rating_, "</div>"]
+    if p.get("authors"):
+        parts.append(f"<div class='orig' dir='auto'>{esc(p['authors'])}</div>")
+    if p.get("angle"):
+        parts.append(f"<p class='angle'><span>Why it matters in practice</span>{esc(p['angle'])}</p>")
+    elif p.get("abstract"):
+        parts.append(f"<p class='summary'>{esc(p['abstract'][:300])}…</p>")
+    meta = [f"<span class='src'>{esc(p.get('journal', ''))}</span>"]
+    if p.get("published"):
+        meta.append(f"<time>{esc(nice_date(p['published']))}</time>")
+    doi = doi_of(p["link"])
+    if doi:
+        meta.append(f"<a href='{esc(p['link'])}' target='_blank' rel='noopener'>doi:{esc(doi)}</a>")
+    parts.append(f"<div class='story-meta'><span class='use use-academia'>Academia-to-Industry</span>"
+                 f"<span class='theme-tag'>{theme_icon(p['theme'])}{esc(p['theme'])}</span>" + " · ".join(meta) + "</div>")
+    if p.get("keywords"):
+        parts.append("<div class='kw'>" + "".join(f"<span>{esc(k)}</span>" for k in p["keywords"][:5]) + "</div>")
+    parts.append("</article>")
+    return "".join(parts)
+
+
+def research_section(papers, hint, limit=None):
+    """'New research': papers best rated for practice first, then newest. Kept
+    outside the theme sections, so the story filters leave it alone."""
+    if not papers:
+        return ""
+    ordered = sorted(papers, key=lambda p: p.get("published") or "", reverse=True)
+    ordered.sort(key=lambda p: -(p.get("relevance") or 0))
+    shown = ordered[:limit] if limit else ordered
+    return (f"<section class='research' id='research'><h2 class='section-h'>New research "
+            f"<span class='h1-sub'>{len(papers)} {'paper' if len(papers) == 1 else 'papers'}</span></h2>"
+            f"<p class='hint'>{hint}</p>" + "".join(paper_card(p) for p in shown) + "</section>")
+
+
 def slug(text):
     return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
 
@@ -347,12 +404,14 @@ def theme_strip(stories, order):
 # ------------------------------------------------------------------ pages
 def digest_body(d, cfg, root, uses, prev_d=None, next_d=None, latest=False, brief=None):
     win = issue_window(d["date"], start_month(cfg))
-    stories = d["stories"]
+    stories, papers = d["stories"], d.get("papers", [])
     themes = len({s["theme"] for s in stories})
     eyebrow = (f"{'Latest digest' if latest else 'Daily digest'} · "
                f"<a href='{root}issues/{win['key']}.html'>{win['label']} issue window</a>")
     stats = (stat(len(stories), "stories selected") + stat(d.get("new_items", 0), "new items scanned")
              + stat(themes, "themes") + stat("AI" if d.get("ai_used") else "Keywords", "triage method"))
+    if papers:
+        stats += stat(len(papers), "new research papers")
     extra = theme_strip(stories, theme_order(cfg))
     head = [hero(eyebrow, esc(nice_date(d["date"], weekday=True)), stats=stats, extra=extra)]
     if latest:
@@ -366,6 +425,9 @@ def digest_body(d, cfg, root, uses, prev_d=None, next_d=None, latest=False, brie
     else:
         head.append(filter_bar(uses))
         head.append(theme_sections(stories))
+    head.append(research_section(
+        papers, "Papers that geotechnical journals published in the last few days, for the Academia-to-Industry "
+                "pages, best rated for use in practice first. Titles open the paper through its DOI."))
     pager = ["<nav class='pager'>"]
     pager.append(f"<a href='{root}digests/{prev_d}.html'>← {esc(nice_date(prev_d))}</a>" if prev_d else "<span></span>")
     pager.append(f"<a href='{root}archive.html'>All digests</a>")
@@ -451,23 +513,25 @@ def brief_card(win, b, cfg, current, root, opts):
             f"Issue brief (Word)</a>{gen}</div></section>")
 
 
-def issue_body(win, stories, digests, cfg, uses, current, brief=None, brief_opts=None):
+def issue_body(win, stories, digests, cfg, uses, current, brief=None, brief_opts=None, papers=()):
     root = "../"
     order = theme_order(cfg)
     summ = window_summary(stories)
     counts = {}
     for s in stories:
-        c = counts.setdefault(s["theme"], {"n": 0, "r5": 0, "r4": 0, "fl": 0, "a2i": 0})
+        c = counts.setdefault(s["theme"], {"n": 0, "r5": 0, "r4": 0, "fl": 0, "a2i": 0, "papers": 0})
         c["n"] += 1
         c["r5"] += s.get("relevance") == 5
         c["r4"] += s.get("relevance") == 4
         c["fl"] += s.get("use") == "Feature lead"
         c["a2i"] += s.get("use") == "Academia-to-Industry topic"
-    peak = max((c["n"] for c in counts.values()), default=1)
+    for p in papers:
+        counts.setdefault(p["theme"], {"n": 0, "r5": 0, "r4": 0, "fl": 0, "a2i": 0, "papers": 0})["papers"] += 1
+    peak = max((c["n"] for c in counts.values()), default=1) or 1
     rows = "".join(
         f"<tr style='--tc:{theme_color(t)}'><th scope='row'><a href='#{slug(t)}'><span class='ticon sm'>{theme_icon(t)}</span>{esc(t)}</a></th>"
         f"<td><span class='cellbar'><i style='width:{c['n'] / peak * 100:.0f}%'></i></span><b>{c['n']}</b></td><td>{c['r5']}</td>"
-        f"<td>{c['r4']}</td><td>{c['fl']}</td><td>{c['a2i']}</td></tr>"
+        f"<td>{c['r4']}</td><td>{c['fl']}</td><td>{c['a2i']}</td>" + (f"<td>{c['papers']}</td>" if papers else "") + "</tr>"
         for t in order if (c := counts.get(t)))
     best = sorted((s for s in stories if s.get("relevance") == 5 or s.get("use") == "Feature lead"),
                   key=lambda s: -s["rank"])[:12]
@@ -477,6 +541,14 @@ def issue_body(win, stories, digests, cfg, uses, current, brief=None, brief_opts
                + (" · <span class='badge'>In progress</span>" if current else ""))
     stats = (stat(summ["stories"], "stories") + stat(len(digests), "daily digests")
              + stat(summ["top"], "rated 5 / 5") + stat(summ["features"], "feature leads"))
+    if papers:
+        stats += stat(len(papers), "research papers")
+    journals = len({p.get("journal") for p in papers})
+    research = research_section(
+        papers, f"{len(papers)} {'paper' if len(papers) == 1 else 'papers'} from {journals} "
+                f"{'journal' if journals == 1 else 'journals'} in this window, for the Academia-to-Industry pages. "
+                f"{'The 24 best rated for use in practice are shown; all' if len(papers) > 24 else 'All'} of them are "
+                "in the Excel workbook (Research sheet) and on the Search page.", limit=24)
     actions = (f"<div class='actions'><a class='btn primary' href='{root}exports/{win['key']}.xlsx' download>{icon('sheet')}Excel workbook</a>"
                f"<a class='btn light' href='{root}exports/{win['key']}.csv' download>{icon('download')}CSV</a>"
                f"<a class='btn light' href='{root}search.html?q_window={win['key']}'>{icon('search')}Search this window</a>"
@@ -487,12 +559,13 @@ def issue_body(win, stories, digests, cfg, uses, current, brief=None, brief_opts
                  stats, theme_strip(stories, order) + actions)]
     if not stories:
         body.append("<p class='empty'>No stories yet in this window.</p>")
-        return "".join(body)
+        return "".join(body) + research
     if brief_opts:
         body.append(brief_card(win, brief, cfg, current, root, brief_opts))
     body.append("<h2 class='section-h'>Theme overview</h2><div class='table-wrap'><table class='overview'>"
                 "<thead><tr><th scope='col'>Theme</th><th scope='col'>Stories</th><th scope='col'>Rated 5</th>"
-                "<th scope='col'>Rated 4</th><th scope='col'>Feature leads</th><th scope='col'>Academia-to-Industry</th></tr></thead>"
+                "<th scope='col'>Rated 4</th><th scope='col'>Feature leads</th><th scope='col'>Academia-to-Industry</th>"
+                + ("<th scope='col'>Research papers</th>" if papers else "") + "</tr></thead>"
                 f"<tbody>{rows}</tbody></table></div>")
     if best:
         body.append("<h2 class='section-h'>Strongest leads</h2><p class='hint'>Stories rated 5 / 5 or suggested as feature leads.</p>"
@@ -500,6 +573,7 @@ def issue_body(win, stories, digests, cfg, uses, current, brief=None, brief_opts
     body.append("<h2 class='section-h'>All stories by theme</h2>")
     body.append(filter_bar(uses))
     body.append(theme_sections(stories, order=order))
+    body.append(research)
     body.append(f"<h2 class='section-h'>Daily digests in this window</h2><ul class='digest-list'>{dlist}</ul>")
     return "".join(body)
 
@@ -543,7 +617,8 @@ def archive_body(windows, cfg, current_key, briefs=None):
             f"<section class='window'><div class='window-head'><div><h2>{win['label']}"
             f"{' <span class=badge>In progress</span>' if win['key'] == current_key else ''}</h2>"
             f"<p>{esc(win['span'])} · {summ['stories']} stories · {len(digests)} digests · "
-            f"{summ['top']} rated 5 / 5 · {summ['features']} feature leads</p></div>"
+            f"{summ['top']} rated 5 / 5 · {summ['features']} feature leads"
+            + (f" · {len(w['papers'])} research papers" if w.get("papers") else "") + "</p></div>"
             f"<div class='actions'><a class='btn primary' href='{root}issues/{win['key']}.html'>Open issue collection</a>"
             f"<a class='btn' href='{root}exports/{win['key']}.xlsx' download>{icon('sheet')}Excel</a>{brief_link}</div></div>"
             f"{theme_strip(stories, order)}"
@@ -606,9 +681,24 @@ def about_body(cfg, latest, brief_opts):
     editions = len(g.get("editions") or [1])
     n_core, n_extra = len(g.get("core_queries", [])), len(g.get("extra_queries", []))
     n_foreign = sum(1 for q in g.get("extra_queries", []) if isinstance(q, dict) and q.get("language", "en") != "en")
+    # languages other than English: of the searches and of the websites that name one (es-419 is Spanish)
+    languages = {str(q.get("language")).split("-")[0] for q in [*g.get("extra_queries", []), *feeds]
+                 if isinstance(q, dict) and q.get("language")} - {"en"}
     ml = cfg.get("multilingual_keywords") or {}
     n_ml = sum(len(v.get("terms", [])) for v in ml.values())
     ccfg = cfg.get("claude", {})
+    rcfg = cfg.get("research") or {}
+    journals = (rcfg.get("journals") or []) if rcfg.get("enabled") is not False else []
+    jrows = "".join(f"<tr><td>{esc(j['name'])}</td><td>{esc(str(j['issn']))}</td></tr>" for j in journals)
+    research_step = (f"<li><b>Research.</b> New papers from {len(journals)} geotechnical journals, read from Crossref's "
+                     f"free index (papers registered in the last {rcfg.get('lookback_days', 4)} days, each shown once). "
+                     f"They are scored and themed with the same keywords; Claude rates each 1–5 for its use in practice "
+                     f"and writes one sentence on why it matters to practitioners. Up to {rcfg.get('max_papers', 20)} "
+                     "papers per digest appear under <b>New research</b>, for the Academia-to-Industry pages.</li>"
+                     if journals else "")
+    jtable = (f"<h2 class='section-h'>Journals read for new research</h2><div class='table-wrap'><table class='overview'>"
+              f"<thead><tr><th>Journal</th><th>ISSN</th></tr></thead><tbody>{jrows}</tbody></table></div>"
+              if journals else "")
     themes = "".join(f"<li style='--tc:{theme_color(t)}'><b><span class='ticon sm'>{theme_icon(t)}</span>{esc(t)}</b>"
                      f"<span>{esc(', '.join(w))}</span></li>" for t, w in cfg["themes"].items() if w)
     rows = "".join(
@@ -629,12 +719,14 @@ def about_body(cfg, latest, brief_opts):
 <div class="prose">
 <h2 class="section-h">Each run</h2><ol class="steps">
 <li><b>Collect.</b> {len(feeds)} websites and {n_core * editions + n_extra} Google News searches ({n_core} core searches in {editions} English editions, plus {n_extra} further searches including {n_foreign} in other languages). The scan runs every day at 05:00 Cairo time, and on demand: <b>Scan now</b> opens the scan's page on GitHub, where you press <b>Run workflow</b>; the website then follows the scan and tells you when the new digest is ready. Each run looks back {cfg.get('lookback_hours', 60)} hours; stories already shown are remembered for 45 days and never repeated.</li>
-<li><b>Score and categorise.</b> Headlines and summaries are scored against {len(cfg['keywords'])} English keywords and {n_ml} terms in 11 other languages. Each foreign term counts as its English equivalent (for example <i>glissement de terrain</i>, <i>deslizamiento</i>, <i>longsor</i> and <i>انهيار أرضي</i> all count as “landslide”), so every story is filed under an English theme. Specialist sources earn bonus points, noise terms lose points, near-identical headlines are merged. A story needs {cfg.get('min_keyword_score', 3)} points to go forward.</li>
+<li><b>Score and categorise.</b> Headlines and summaries are scored against {len(cfg['keywords'])} English keywords and {n_ml} terms in {len(languages)} other languages. Each foreign term counts as its English equivalent (for example <i>glissement de terrain</i>, <i>deslizamiento</i>, <i>longsor</i> and <i>انهيار أرضي</i> all count as “landslide”), so every story is filed under an English theme. Specialist sources earn bonus points, noise terms lose points, near-identical headlines are merged. A story needs {cfg.get('min_keyword_score', 3)} points to go forward.</li>
 <li><b>Triage.</b> Up to {ccfg.get('max_candidates', 80)} candidates go to Claude, which rates each 1–5 for geotechnical substance (below {ccfg.get('min_relevance', 3)} is dropped), confirms the theme, suggests a use, writes a one-sentence magazine angle, and translates non-English headlines.</li>
+{research_step}
 <li><b>Publish & archive.</b> Up to {cfg.get('max_items', 40)} stories per digest. Every digest is stored permanently, grouped into three-month issue windows, and exported to Excel.</li>
 <li><b>Issue brief.</b> In the last {brief_opts['days_before_end']} days of each quarter Claude reads the quarter's stories rated {brief_opts['min_relevance']} / 5 or higher (at most {brief_opts['max_per_theme']} per theme) and any research papers, and drafts the brief for the editorial meeting as a Word document: an overview, a proposed line-up per theme, feature leads with the kinds of experts to approach, Academia-to-Industry topics, a regional-balance check, gaps worth covering and a watch list. The draft is refreshed every {count(brief_opts['refresh_days'], 'day')} and the final brief is written the day after the quarter closes. <b>Generate / update brief</b> on an issue page starts one on GitHub at any time.</li></ol>
 <h2 class="section-h">Magazine themes</h2><p class="hint">Words that suggest each theme (English keywords found in any language count too).</p><ul class="theme-list">{themes}</ul>
-<h2 class="section-h">Websites read directly</h2><div class="table-wrap"><table class="overview"><thead><tr><th>Source</th><th>Site</th><th>Bonus</th></tr></thead><tbody>{rows}</tbody></table></div>
+<h2 class="section-h">Websites read directly</h2><p class="hint">Sites that block feed readers or publish no feed (among them ISSMGE, ICE, GEER, USGS and GeoEngineer) are read through Google News searches limited to the site.</p><div class="table-wrap"><table class="overview"><thead><tr><th>Source</th><th>Site</th><th>Bonus</th></tr></thead><tbody>{rows}</tbody></table></div>
+{jtable}
 {failed}
 <h2 class="section-h">Known limits</h2><p>Coverage of a country depends on what its press publishes online in a language covered here. Google News favours recency and mainstream outlets, so a major landslide is picked up readily while a quiet technical advance may not be — which is why society and institutional feeds are read directly.</p>
 </div>"""
@@ -658,6 +750,19 @@ def render_email(d, cfg):
                 f"<div style='font:12px Arial,sans-serif;color:#5b6573;margin-top:2px'>{rel}{esc(s.get('use') or '')}"
                 f"{' · ' if s.get('use') else ''}{esc(s['source'])}</div>"
                 + (f"<div style='font:italic 14px Georgia,serif;color:#333;margin-top:4px'>{esc(s['angle'])}</div>" if s.get("angle") else "")
+                + "</div>")
+    papers = sorted(d.get("papers", []), key=lambda p: -paper_rank(p))[:8]
+    if papers:
+        rows.append("<h2 style='font:600 15px Arial,sans-serif;color:#5137b0;border-bottom:2px solid #5137b0;"
+                    "padding-bottom:4px;margin:26px 0 8px'>New research (Academia-to-Industry)</h2>")
+        for p in papers:
+            rel = f"{p['relevance']}/5 for practice · " if p.get("relevance") else ""
+            rows.append(
+                "<div style='margin:0 0 14px'>"
+                f"<a href='{esc(safe_url(p['link']))}' style='font:600 15px Arial,sans-serif;color:#1b2430'>{esc(p['title'])}</a>"
+                f"<div style='font:12px Arial,sans-serif;color:#5b6573;margin-top:2px'>{rel}{esc(p.get('journal', ''))}"
+                f"{' · ' + esc(p['authors']) if p.get('authors') else ''}</div>"
+                + (f"<div style='font:italic 14px Georgia,serif;color:#333;margin-top:4px'>{esc(p['angle'])}</div>" if p.get("angle") else "")
                 + "</div>")
     link = (f"<p style='font:13px Arial,sans-serif'><a href='{url}digests/{d['date']}.html'>Open this digest on the website</a> · "
             f"<a href='{url}archive.html'>Archive</a></p>") if url else ""
@@ -707,7 +812,7 @@ def build(cfg):
     digests = load_digests()
     briefs, brief_opts = load_briefs(), brief.settings(cfg)
     # themes found in the archive but no longer in config.yaml still get pages and rows
-    extra = sorted({s["theme"] for d in digests for s in d["stories"]} - set(theme_order(cfg)))
+    extra = sorted({s["theme"] for d in digests for s in d["stories"] + d["papers"]} - set(theme_order(cfg)))
     if extra:
         cfg = dict(cfg, themes={**cfg["themes"], **{t: [] for t in extra}})
     sm = start_month(cfg)
@@ -719,13 +824,15 @@ def build(cfg):
     for d in digests:
         win = issue_window(d["date"], sm)
         if win["key"] not in by_key:
-            by_key[win["key"]] = {"win": win, "digests": [], "stories": []}
+            by_key[win["key"]] = {"win": win, "digests": [], "stories": [], "papers": []}
             windows.append(by_key[win["key"]])
         w = by_key[win["key"]]
         w["digests"].append(d)
         for s in d["stories"]:
             w["stories"].append(dict(s, _digest=d["date"], _window=win["key"],
                                      _region=COUNTRIES.get(s.get("region", ""), s.get("region", ""))))
+        for p in d["papers"]:
+            w["papers"].append(dict(p, _digest=d["date"], _window=win["key"]))
 
     # fresh output folder (the archive itself lives in data/digests/)
     for sub in ("digests", "issues", "exports", "assets", "reports", "briefs"):
@@ -769,7 +876,7 @@ def build(cfg):
         write(DOCS / "issues" / f"{key}.html",
               page(cfg, f"{w['win']['label']} issue window",
                    issue_body(w["win"], w["stories"], w["digests"], cfg, use_list, key == today_key,
-                              briefs.get(key), brief_opts), "../", "archive"))
+                              briefs.get(key), brief_opts, w["papers"]), "../", "archive"))
         ordered = sorted(w["stories"], key=lambda s: (s["theme"], -s["rank"]))
         with open(DOCS / "exports" / f"{key}.csv", "w", newline="", encoding="utf-8-sig") as f:
             writer = csv.DictWriter(f, fieldnames=CSV_FIELDS)
@@ -779,21 +886,30 @@ def build(cfg):
             DOCS / "exports" / f"{key}.xlsx", f"Geotechnical News · {w['win']['label']}",
             f"Issue window {w['win']['span']}", w["stories"], order, theme_color,
             [(nice_date(d["date"]), len(d["stories"])) for d in reversed(w["digests"])], "daily digest",
-            digest_count=len(w["digests"]), windows=[key])
+            digest_count=len(w["digests"]), windows=[key], papers=w["papers"])
         compact = [{"d": s["_digest"], "w": key, "t": s["title"], "te": s.get("title_en", ""), "l": s["link"],
                     "s": s["source"], "c": s["_region"], "p": (s.get("published") or "")[:10], "th": s["theme"],
                     "r": s.get("relevance") or 0, "u": s.get("use", ""), "a": s.get("angle", ""),
                     "k": s.get("keywords", []), "x": s.get("summary", "")[:200] if not s.get("angle") else "",
                     "rk": s["rank"]}
                    for s in w["stories"]]
+        # research papers in the same shape (source = journal), marked kind "paper", with their authors
+        compact += [{"d": p["_digest"], "w": key, "t": p["title"], "te": "", "l": p["link"],
+                     "s": p.get("journal", ""), "c": "", "p": (p.get("published") or "")[:10], "th": p["theme"],
+                     "r": p.get("relevance") or 0, "u": A2I, "a": p.get("angle", ""), "k": p.get("keywords", []),
+                     "x": p.get("abstract", "")[:200] if not p.get("angle") else "", "rk": paper_rank(p),
+                     "kind": "paper", "au": p.get("authors", "")}
+                    for p in w["papers"]]
         write(DOCS / "exports" / f"{key}.json", json.dumps(compact, ensure_ascii=False, separators=(",", ":")))
     write(DOCS / "exports" / "index.json",
-          json.dumps([w["win"] | {"stories": len(w["stories"])} for w in windows], ensure_ascii=False))
+          json.dumps([w["win"] | {"stories": len(w["stories"]), "papers": len(w["papers"])} for w in windows],
+                     ensure_ascii=False))
     exports.write_workbook(
         DOCS / "exports" / "geotech-news-archive.xlsx", "Geotechnical News · Whole archive",
         f"All {len(windows)} issue windows", [s for w in windows for s in w["stories"]], order, theme_color,
         [(w["win"]["label"], len(w["stories"])) for w in reversed(windows)], "issue window",
-        digest_count=len(digests), windows=[w["win"]["key"] for w in windows])
+        digest_count=len(digests), windows=[w["win"]["key"] for w in windows],
+        papers=[p for w in windows for p in w["papers"]])
     report.write_report(DOCS / "reports" / "site-report.docx", cfg, digests, windows, theme_color,
                         site_url(cfg), CHANGELOG)
 
