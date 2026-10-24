@@ -624,7 +624,62 @@ brief:
 # ---- World map (map.html) -------------------------------------------
 # Stories are plotted by the country Claude reads in each story. The ISSMGE
 # regions and their member-society countries show where coverage is thin.
-map: {}
+# Stories saved before the country was read (and any whose AI triage failed) are
+# located by Claude after each scan, newest first, up to locate_per_run at a time.
+map:
+  model: claude-haiku-5-5   # locates archived stories (country and place); empty = the triage model above
+  effort: low               # low | medium | high
+  locate_per_run: 300       # archived stories located per scan at most
+  embed_limit: 1500         # the default period's stories are built into the page up to this many;
+                            # beyond it the page reads them from the issue window's export when needed
+  # ISSMGE regions and the countries of their member societies (ISO 3166-1 codes).
+  # Source: https://www.issmge.org/member-societies (one page per region).
+  # Transnational societies have no single country: they are named on the page, not mapped.
+  # Lists marked to_check: true could not be read in full and still need checking
+  # against the ISSMGE pages; the page notes this under the region.
+  regions:
+    Africa:
+      societies: 13          # member societies at the 2019 council
+      to_check: true         # only these are known here; check issmge.org/member-societies/africa
+      members: [EG, KE, MA, NG, ZA, TN, ZW, ZM]
+      transnational: ["CTGA (Comité Transnational des Géotechniciens d'Afrique)"]
+    Asia:
+      societies: 27          # issmge.org/member-societies/asia, October 2026 (TW is Chinese Taipei)
+      members: [BD, CN, TW, HK, IN, ID, IR, IQ, JP, KZ, KG, MN, PH, VN, UZ, TH, TJ, SY, LK, KR, SG, PK, NP, MY, LB, AE]
+      transnational: ["SEAGS (South East Asian Geotechnical Society)"]
+    Australasia:
+      societies: 2
+      members: [AU, NZ]
+    Europe:
+      societies: 38          # ISSMGE lists 38; one is missing below
+      to_check: true         # check issmge.org/member-societies/europe ("NO" is quoted: YAML reads NO as "false")
+      members: [AT, BE, BA, BG, HR, CY, CZ, DK, EE, FI, FR, GE, DE, GR, HU, IS, IE, IL, IT, LV, LT, NL, MK, "NO",
+                PL, PT, RO, RU, RS, SK, SI, ES, SE, CH, TR, UA, GB]
+    North America:
+      societies: 3
+      members: [US, MX, CA]
+    South America:           # ISSMGE's South America region also covers Central America and the Caribbean
+      societies: 11          # issmge.org/member-societies/south-america
+      members: [VE, PY, GT, CU, CR, CO, CL, BR, AR, PE, BO]
+  # Countries without a member society belong to the region of their continent, as
+  # Natural Earth gives it (North America split into its subregions). The Middle East
+  # and Central Asia are in Asia, Egypt in Africa, Oceania in Australasia.
+  continents:
+    Africa: Africa
+    Asia: Asia
+    Europe: Europe
+    Oceania: Australasia
+    South America: South America
+    Northern America: North America
+    Central America: South America
+    Caribbean: South America
+  regions_of:                # exceptions to the continent rule (a member country follows its list above)
+    IL: Europe               # ISSMGE places Israel, Türkiye, Cyprus, Russia and Georgia in Europe
+    TR: Europe
+    CY: Europe
+    RU: Europe
+    GE: Europe
+    HM: Australasia          # Heard and McDonald Islands (Australian)
 
 # ---- Developing stories (developing.html) --------------------------------
 # Follow-up reports (an inquiry, a repair, a court case) are linked to the
