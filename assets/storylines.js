@@ -56,7 +56,8 @@
   /* a link to one developing story (developing.html#sl-…) shows it even when a filter hides it,
      and lands on it again once the folding above has changed the page's height */
   function reveal() {
-    var id = decodeURIComponent(location.hash.slice(1));
+    var id;
+    try { id = decodeURIComponent(location.hash.slice(1)); } catch (e) { return; }  /* a malformed link: stay put */
     var card = id && document.getElementById(id);
     if (!card || !card.classList.contains("sl-card")) return;
     if (card.hidden && app) {

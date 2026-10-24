@@ -56,7 +56,7 @@ def settings(cfg):
         elif isinstance(default, bool):
             out[name] = value if isinstance(value, bool) else str(value).strip().lower() not in ("false", "no", "off", "0")
         elif isinstance(default, str):
-            out[name] = str(value).strip() or default
+            out[name] = (str(value).strip().lower() if name == "effort" else str(value).strip()) or default
         else:
             try:
                 if isinstance(value, bool):
@@ -135,21 +135,24 @@ def marks(s, topic):
             "country": scanner.country_code(s.get("country")), "variants": variants}
 
 
-def conflict(a, b):
-    """Both stories are located and their countries or named places differ."""
+def conflict(a, b, places=True):
+    """Both stories are located and their countries (or, with places, their named places) differ."""
     if a["country"] and b["country"] and a["country"] != b["country"]:
         return True
-    return bool(a["place"] and b["place"] and not a["place"] & b["place"])
+    return places and bool(a["place"] and b["place"] and not a["place"] & b["place"])
 
 
 def closeness(a, b, idf):
-    """How much two stories have in common, rare words counting most; 0 when they have
-    nothing to go on (a single common word in common)."""
+    """How much two stories have in common, rare words counting most; 0 when they are in
+    different countries or have nothing to go on: a single common word in common or, when
+    their named places differ, no shared name or rare word. (Claude names a place at any
+    scale, a town, a region or a site: Amersham and the Chiltern Tunnel can be one story.)"""
     shared = a["words"] & b["words"]
-    if not shared or conflict(a, b):
+    if not shared or conflict(a, b, places=False):
         return 0
     rare = any(idf.get(w, 0) >= idf.get("", 0) for w in shared)
-    if len(shared) < 2 and not shared & (a["names"] | b["names"] | a["place"] | b["place"]) and not rare:
+    named = shared & (a["names"] | b["names"] | a["place"] | b["place"])
+    if not (named or rare) and (len(shared) < 2 or conflict(a, b)):
         return 0
     return sum(idf.get(w, 1) * (1.5 if w in a["place"] or w in b["place"] else 1) for w in shared)
 
@@ -319,7 +322,7 @@ def mark(s, earlier, stage, title, titles):
     sl = storyline_of(earlier)
     s["storyline"] = sl
     s["stage"] = stage if stage in STAGES else "Update"
-    s["storyline_title"] = clip(title, 90) or titles.get(sl) or default_title(earlier)
+    s["storyline_title"] = clip(title if isinstance(title, str) else "", 90) or titles.get(sl) or default_title(earlier)
 
 
 def claude_links(new, idx, earlier, picks, titles, today, opts, key, raw):
@@ -469,7 +472,7 @@ def annotate(digests):
         info = {"id": sl, "title": _title(sl, reports), "size": len(reports)}
         for s, _ in items:
             own = s.get("storyline")
-            if own and own != sl and own in found:
+            if isinstance(own, str) and own != sl and own in found:
                 continue  # a story that names another developing story belongs to that one
             s["_storyline"] = dict(info, stage=_stage(s, sl))
 
@@ -584,8 +587,8 @@ def storyline_card(g, period):
             f"<p class='sl-where'>" + (f"<span class='sl-place'>{esc(where)}</span>" if where else "")
             + f"<span class='theme-tag'>{site_builder.theme_icon(theme)}{esc(theme)}</span></p></div></header>"
             f"<dl class='sl-facts'>{facts}</dl>"
-            f"<p class='sl-stages' aria-label='Stages reported'>"
-            + "".join(f"<span class='sl-stage {stage_class(st)}'>{esc(st)}</span>" for st in stages) + "</p>"
+            f"<div class='sl-stages' role='group' aria-label='Stages reported'>"
+            + "".join(f"<span class='sl-stage {stage_class(st)}'>{esc(st)}</span>" for st in stages) + "</div>"
             f"<ol class='sl-timeline'>{''.join(items)}</ol></article>")
 
 
