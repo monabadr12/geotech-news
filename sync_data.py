@@ -3,13 +3,15 @@
 Save step of the scan workflow.
 
 Carries this run's new data (the day's digest, the seen-stories memory and any
-issue brief) onto the newest version of the branch, then rebuilds the website
-from it. Generated files in docs/ are never merged line by line, they are
-rebuilt, so a scan cannot clash with a site update or another run that finished
-in the meantime (or with a re-run that started from an older commit).
+issue brief, unless the branch already holds a newer brief for that window) onto
+the newest version of the branch, then rebuilds the website from it. Generated
+files in docs/ are never merged line by line, they are rebuilt, so a scan cannot
+clash with a site update or another run that finished in the meantime (or with
+a re-run that started from an older commit).
 
     python sync_data.py <branch>
 """
+import datetime as dt
 import json
 import subprocess
 import sys
@@ -43,6 +45,15 @@ def committed(name):
         return None
 
 
+def generated(text):
+    """When a brief (its JSON text) was written, or None when that cannot be read."""
+    try:
+        when = dt.datetime.fromisoformat(str(json.loads(text).get("generated", "")))
+    except (ValueError, TypeError, AttributeError):
+        return None
+    return when if when.tzinfo else when.replace(tzinfo=dt.timezone.utc)
+
+
 def merge_digest(theirs, ours):
     """Union of the day's stories (this run's version of a story wins); the
     caller re-balances it."""
@@ -65,7 +76,7 @@ def main():
     our_seen = load(SEEN_FILE) or {}
     ours = {name: load(DIGESTS / name) for name in changed("digests")}
     base = {name: committed(name) for name in ours}
-    briefs = {name: (BRIEFS / name).read_text(encoding="utf-8") for name in changed("briefs")}
+    briefs = {name: (BRIEFS / name).read_text(encoding="utf-8") for name in changed("briefs") if (BRIEFS / name).exists()}
 
     git("fetch", "--quiet", "origin", branch)
     git("reset", "--quiet", "--hard", f"origin/{branch}")
@@ -90,15 +101,24 @@ def main():
             merged = merge_digest(theirs, digest)  # another run saved the same day meanwhile
             rebalance.append(name)
         path.write_text(json.dumps(merged, ensure_ascii=False, indent=1), encoding="utf-8")
-    for name, text in briefs.items():  # issue briefs: this run's version wins
+    saved = 0
+    for name, text in briefs.items():  # issue briefs: this run's version, unless the branch has a newer one
+        path = BRIEFS / name
+        theirs = generated(path.read_text(encoding="utf-8")) if path.exists() else None
+        mine = generated(text)
+        if theirs and (mine is None or theirs > mine):  # e.g. a brief saved by another run meanwhile
+            print(f"Issue brief {name} not saved: the branch already has a newer one "
+                  f"(written {theirs.astimezone(dt.timezone.utc):%Y-%m-%d %H:%M} UTC).")
+            continue
         BRIEFS.mkdir(parents=True, exist_ok=True)
-        (BRIEFS / name).write_text(text, encoding="utf-8")
+        path.write_text(text, encoding="utf-8")
+        saved += 1
     if rebalance:
         subprocess.run([sys.executable, str(ROOT / "scanner.py"), "--rebalance", *rebalance], cwd=ROOT, check=True)
 
     # rebuild with the newest code, in a fresh process (this one has the old modules loaded)
     subprocess.run([sys.executable, str(ROOT / "site_builder.py")], cwd=ROOT, check=True)
-    print(f"Synced {len(ours)} digest(s) and {len(briefs)} brief(s) onto origin/{branch} and rebuilt the website.")
+    print(f"Synced {len(ours)} digest(s) and {saved} brief(s) onto origin/{branch} and rebuilt the website.")
 
 
 if __name__ == "__main__":
