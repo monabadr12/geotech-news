@@ -295,6 +295,7 @@ def main():
             score += src.get("bonus", 0)
             items.append(dict(id=uid, title=title, link=link, source=source, summary=summary,
                               time=when, region=src.get("region", ""), score=score, hits=hits,
+                              bonus=src.get("bonus", 0),
                               theme=guess_theme(text, cfg["themes"]),
                               relevance=0, use="", angle="", title_en=""))
         time.sleep(0.3)
@@ -315,6 +316,12 @@ def main():
     if ai_used:
         minrel = cfg["claude"].get("min_relevance", 3)
         candidates = [i for i in candidates if i["relevance"] >= minrel or i["relevance"] == 0]
+    else:
+        # the language bonus only exists to get foreign headlines in front of
+        # Claude; without Claude, rank everything on its keywords alone
+        for i in candidates:
+            i["score"] -= i["bonus"]
+        candidates = [i for i in candidates if i["score"] >= cfg.get("min_keyword_score", 3)]
     for i in candidates:
         i["rank"] = i["relevance"] * 100 + i["score"]
     selected = sorted(candidates, key=lambda i: -i["rank"])[: cfg.get("max_items", 40)]
