@@ -1,0 +1,39 @@
+name: Geotechnical news scan
+
+on:
+  schedule:
+    # Every day at 05:00 UTC (about 07:00-08:00 Cairo time).
+    # For every two days instead, change the line below to:  - cron: "0 5 */2 * *"
+    - cron: "0 5 * * *"
+  workflow_dispatch:   # adds a "Run workflow" button for a manual scan
+
+permissions:
+  contents: write
+
+concurrency: news-scan
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - name: Scan sources and build digest
+        run: python scanner.py
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+      - name: Save digest and memory
+        run: |
+          git config user.name "news-scanner"
+          git config user.email "news-scanner@users.noreply.github.com"
+          git add docs data
+          git diff --cached --quiet || git commit -m "Digest $(date -u +%F)"
+          git push
