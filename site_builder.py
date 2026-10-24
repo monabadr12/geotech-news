@@ -80,8 +80,31 @@ FAVICON = (ASSETS / "favicon.svg").read_text(encoding="utf-8") if (ASSETS / "fav
 
 
 # ------------------------------------------------------------------ data
+CONTROL_CHARS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
+
+
+def safe_url(url):
+    """Only web links are published; anything else (javascript:, data:, ...) becomes '#'."""
+    url = str(url or "").strip()
+    return url if re.match(r"https?://", url, re.I) else "#"
+
+
+def tidy(story):
+    """Feed text is untrusted: strip control characters (they break the Excel and Word files)
+    and neutralise non-web links before anything is built from it."""
+    for k, v in story.items():
+        if isinstance(v, str):
+            story[k] = CONTROL_CHARS.sub("", v)
+        elif isinstance(v, list):
+            story[k] = [CONTROL_CHARS.sub("", x) if isinstance(x, str) else x for x in v]
+    story["link"] = safe_url(story.get("link"))
+    return story
+
+
 def load_digests():
     out = [json.loads(p.read_text(encoding="utf-8")) for p in DIGESTS.glob("*.json")]
+    for d in out:
+        d["stories"] = [tidy(s) for s in d.get("stories", [])]
     return sorted(out, key=lambda d: d["date"], reverse=True)
 
 
