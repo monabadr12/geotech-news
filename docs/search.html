@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Search the archive · Geotechnical News Desk</title>
+<meta name="description" content="Geotechnical news digest for the ISSMGE Magazine">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head><body data-root="">
+<header class="masthead"><div class="wrap masthead-inner">
+<a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true"></span>
+<span><span class="brand-name">Geotechnical News Desk</span><span class="brand-sub">ISSMGE Magazine · editorial monitoring</span></span></a>
+<nav class="nav"><a href='index.html'>Latest</a><a href='archive.html'>Archive</a><a href='search.html' class='active' aria-current='page'>Search</a><a href='about.html'>Method & sources</a></nav></div></header>
+<main class="wrap"><div class="page-head"><p class="eyebrow">Archive search</p><h1>Search every story</h1>
+<p class="lede">Search across all archived digests. Combine filters, then export the result as a spreadsheet.</p></div>
+<div id="search-app" class="toolbar search-tools">
+<label class="field grow"><span>Search</span><input type="search" id="q" placeholder="e.g. liquefaction, Riyadh, monopile, TBM…" autofocus></label>
+<label class="field"><span>Issue window</span><select id="q_window"><option value="">All windows</option></select></label>
+<label class="field"><span>Theme</span><select id="q_theme"><option value="">All themes</option><option>Sustainability &amp; the Energy Transition</option><option>Digital Geotechnics</option><option>Hazards &amp; Resilience</option><option>Ground Improvement &amp; Innovation</option><option>Infrastructure &amp; the Underground City</option><option>Offshore, Coasts &amp; Water</option><option>Characterisation &amp; Modelling</option><option>Geotechnics &amp; Society</option><option>General</option></select></label>
+<label class="field"><span>Suggested use</span><select id="q_use"><option value="">All uses</option><option>News brief</option><option>Feature lead</option><option>Academia-to-Industry topic</option><option>Regional insight</option><option>Watch only</option></select></label>
+<label class="field"><span>Minimum rating</span><select id="q_rel"><option value="0">Any</option><option value="3">3 / 5+</option><option value="4">4 / 5+</option><option value="5">5 / 5</option></select></label>
+<label class="field"><span>Sort</span><select id="q_sort"><option value="rel">Relevance</option><option value="new">Newest first</option></select></label>
+</div>
+<div class="result-bar"><span id="result-count" aria-live="polite">Loading archive…</span>
+<button class="btn" type="button" id="export">Export results (CSV)</button></div>
+<div id="results"></div><div class="more-wrap"><button class="btn" type="button" id="more" hidden>Show more</button></div></main>
+<footer class="foot"><div class="wrap">Headlines link to the original publishers. Treat every story as a lead and verify with the primary source before publishing.
+Ratings, themes and angles are machine-assisted suggestions for the editorial team.</div></footer>
+<script src="assets/app.js"></script>
+</body></html>

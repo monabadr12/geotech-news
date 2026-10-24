@@ -7,6 +7,15 @@
 # daily run and also covers a run every two days.
 lookback_hours: 60
 
+# ---- Magazine and archive ---------------------------------------
+# The archive groups digests into three-month "issue windows" that follow
+# the magazine's quarterly cycle. issue_start_month is the month the first
+# window of the year begins: 1 gives Jan–Mar, Apr–Jun, Jul–Sep, Oct–Dec;
+# 2 gives Feb–Apr, May–Jul, and so on.
+magazine:
+  name: ISSMGE Magazine
+  issue_start_month: 1
+
 # Maximum stories shown in one digest.
 max_items: 60
 
@@ -205,6 +214,7 @@ themes:
 
 # ---- Optional AI triage (used only if ANTHROPIC_API_KEY is set) ---
 claude:
-  model: claude-haiku-4-5-20251001
+  model: claude-haiku-5-5   # Claude Haiku: the lowest-cost model, ample for this triage
+  effort: low               # low | medium | high — how hard Claude thinks per batch
   max_candidates: 130     # best-scoring stories sent to Claude per run
   min_relevance: 3       # keep stories Claude rates 3/5 or higher

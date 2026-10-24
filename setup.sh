@@ -39,7 +39,7 @@ fi
 git add -A
 git -c user.name="setup" -c user.email="setup@local" commit -qm "Geotechnical news scanner" || echo "Nothing new to commit."
 git branch -M main
-git push -u origin main --force
+git push -u origin main   # never --force: it would erase the digest archive
 say "Files uploaded"
 
 # ---------------------------------------------------------------- permissions
