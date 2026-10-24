@@ -153,6 +153,24 @@
     });
   });
 
+  /* heat tables run oldest to newest issue window, then Total: where they scroll sideways (phones), open them
+     at the right end, so the current window and the totals show first. Redone once the web fonts are in,
+     unless the reader has scrolled the table meanwhile. */
+  var wraps = [];
+  document.querySelectorAll("table.heat").forEach(function (t) {
+    var w = t.closest(".table-wrap");
+    if (w) wraps.push(w);
+  });
+  function toEnd() {
+    wraps.forEach(function (w) {
+      if (w._end != null && w.scrollLeft !== w._end) return;  // moved by the reader
+      w.scrollLeft = w.scrollWidth;
+      w._end = w.scrollLeft;
+    });
+  }
+  toEnd();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(toEnd);
+
   /* chart / table switch */
   document.querySelectorAll(".viz-toggle").forEach(function (t) {
     var fig = t.closest(".viz");
