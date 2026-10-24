@@ -1,9 +1,26 @@
 {
  "date": "2026-10-24",
- "generated": "2026-10-24T13:02+00:00",
+ "generated": "2026-10-24T13:41+00:00",
  "ai_used": true,
- "new_items": 752,
+ "new_items": 789,
  "stories": [
+  {
+   "id": "c361561c489ba8fe",
+   "title": "标签稀缺条件下基于跨域迁移学习的无人机岩体裂隙网络自动分割方法",
+   "title_en": "Automatic segmentation of rock mass fracture networks from UAV imagery using cross-domain transfer learning under scarce labels.",
+   "link": "https://news.google.com/rss/articles/CBMibkFVX3lxTE8wdVhYVXYyQ3RwMHAtOTNnUkh5TnhCcEtVem9XenhDMFo2UVFHbWtIaGIzVHhLb1BFQmd2akRLZkFMd1pQNWJDRElESUY1SUdvLWFfd1ZaUW5tZ0ZFcmIxckZxbXg1Z1RrbXI5V0Zn?oc=5",
+   "source": "生物通",
+   "region": "CN",
+   "summary": "",
+   "published": "2026-10-23T07:13+00:00",
+   "theme": "Digital Geotechnics",
+   "relevance": 5,
+   "use": "Academia-to-Industry topic",
+   "angle": "Can transfer learning from related image domains reliably segment rock fracture networks in UAV imagery when labelled data are scarce, and how accurate are the results?",
+   "keywords": [],
+   "score": 0,
+   "rank": 500
+  },
   {
    "id": "88f86675941c5f34",
    "title": "Tanggul pencegah tanah longsor 'mengancam' kawasan permukiman.",
@@ -102,25 +119,6 @@
    "rank": 410
   },
   {
-   "id": "02a7e4fde541118e",
-   "title": "Valmontone – Frana vicino ad abitazioni per maltempo, chiusura parziale della strada",
-   "title_en": "Valmontone – Landslide near homes due to bad weather, partial road closure",
-   "link": "https://news.google.com/rss/articles/CBMivAFBVV95cUxPVnZwX2NIbW5ha096Sy1UbWpwVHYtN2llMVhrQ1NYVWlBWkhGRHZyd2dtemZMTnhqVTVrd0ZiOEVCN1ROM1hGLTh4OVB1cjJvQzliNHVSRmNhNWszM012aWpncjBmWEJoUHRiWUh0M0drVlU3Sk10SUdCTmxnbV85eHhUNUFiSnJkaTczZERERFFia0xBNUdXM0o3SHhMNWNSOEZxdFROMXBzb2dKUV81Tm5PRGRCOVQ0QkFvVA?oc=5",
-   "source": "lacronaca24.it",
-   "region": "IT",
-   "summary": "",
-   "published": "2026-10-24T11:44+00:00",
-   "theme": "Hazards & Resilience",
-   "relevance": 4,
-   "use": "News brief",
-   "angle": "What slope failure mechanism threatens homes near this Valmontone landslide, and what monitoring is needed before residents return?",
-   "keywords": [
-    "landslide"
-   ],
-   "score": 10,
-   "rank": 410
-  },
-  {
    "id": "6174bee9ee10a0a2",
    "title": "La frana del Cencione Tra fango e polemiche Le ruspe sono al lavoro",
    "title_en": "",
@@ -152,6 +150,25 @@
    "relevance": 4,
    "use": "News brief",
    "angle": "What role can emergency response and rapid geotechnical assessment play after a landslide in a mountainous Indonesian village?",
+   "keywords": [
+    "landslide"
+   ],
+   "score": 10,
+   "rank": 410
+  },
+  {
+   "id": "02a7e4fde541118e",
+   "title": "Valmontone – Frana vicino ad abitazioni per maltempo, chiusura parziale della strada",
+   "title_en": "Valmontone – Landslide near homes due to bad weather, partial road closure",
+   "link": "https://news.google.com/rss/articles/CBMivAFBVV95cUxPVnZwX2NIbW5ha096Sy1UbWpwVHYtN2llMVhrQ1NYVWlBWkhGRHZyd2dtemZMTnhqVTVrd0ZiOEVCN1ROM1hGLTh4OVB1cjJvQzliNHVSRmNhNWszM012aWpncjBmWEJoUHRiWUh0M0drVlU3Sk10SUdCTmxnbV85eHhUNUFiSnJkaTczZERERFFia0xBNUdXM0o3SHhMNWNSOEZxdFROMXBzb2dKUV81Tm5PRGRCOVQ0QkFvVA?oc=5",
+   "source": "lacronaca24.it",
+   "region": "IT",
+   "summary": "",
+   "published": "2026-10-24T11:44+00:00",
+   "theme": "Hazards & Resilience",
+   "relevance": 4,
+   "use": "News brief",
+   "angle": "What slope failure mechanism threatens homes near this Valmontone landslide, and what monitoring is needed before residents return?",
    "keywords": [
     "landslide"
    ],
@@ -214,6 +231,44 @@
    "rank": 405
   },
   {
+   "id": "d4302596028488f8",
+   "title": "Primeval forest grows at bottom of 120-meter-deep sinkhole in central Vietnam",
+   "title_en": "",
+   "link": "https://news.google.com/rss/articles/CBMizAFBVV95cUxNd2dFendqYTRDcVVfLTVONjFFenlXV3pwTHVkVEJhb2ZfYzdKbF9XTDgxVXJqY1d4QWo3bi1CR250aUV6Y2FmQTktNUtTbU1FRnA2WUVzdFRiU2lRa3M1VzdwRUxzbWF0eUJmMER5Y2Yxb1V2aVdta0M4OGpjWmV6VGFnUVFLNjlQand3S3hSaTBFTUJZQ0JfNVBvZmF6NVpLSkdEMVlBLWt5VW5wYlhSOHBrdHVjU1FVMm41cW4tN0MwbTZ2Z2dULUZJemk?oc=5",
+   "source": "VnExpress International",
+   "region": "GB",
+   "summary": "",
+   "published": "2026-10-24T13:00+00:00",
+   "theme": "Characterisation & Modelling",
+   "relevance": 4,
+   "use": "Feature lead",
+   "angle": "How do karst collapse sinkholes form in limestone terrain, and what do such deep features reveal about cave ground stability and hazard mapping?",
+   "keywords": [
+    "sinkhole"
+   ],
+   "score": 4,
+   "rank": 404
+  },
+  {
+   "id": "790e588e0a4ad2ad",
+   "title": "Más de 300 barrios en riesgo por las lluvias, socavón en la Eloy Alfaro pone en duda la infraestructura subterránea de Quito",
+   "title_en": "More than 300 neighbourhoods at risk from rains; sinkhole on Eloy Alfaro casts doubt on Quito's underground infrastructure",
+   "link": "https://news.google.com/rss/articles/CBMi_AJBVV95cUxQQ3p2THhYWmNjejMwUW5mdmI0RzhkWWxJQ2F6aEIxd0pCLUNsSExLWDB3MHBlMGMwT1l2MlpfYWEzQmZxbHkyc0Mwc2xkLWJMMGRuZ2NkeEtmNlpJUF9YZllSZU42elZTRG5wYzhrSUo2NWxZV3J3UEkwbWZ2bmVEczJTeWFNbzhqbnZ5UlMyM3NnZ25MalJwY3Q2UDRCR0FXWFNXcTRaWURzXzZhcTVjWW85SERYeE1RelFwdF9sa1dkUVF5dldKcTVncy1VZzZhc19PQlYtbU5KRFphYmt1a2JFT0lFTURCNTBxM1J6bWhsY2hwdjJXaktBWGVsYkFkMzVEbHZSQ0lVRjRVX2NHVUFlS0Y4SzU5V05DNWRlTWxhVThGSnFKQ2l1SnJ5LXRCZmJfTHBJSzZTQUV3QkVyRjVISUpkSm0weHBSSUo3RjB6QUJOSkUtdG5mMGZQWlhzekZZVC0wb25qOHA5eVQ3b3lCWU5oT21rN1JsR9IB_AJBVV95cUxQQ3p2THhYWmNjejMwUW5mdmI0RzhkWWxJQ2F6aEIxd0pCLUNsSExLWDB3MHBlMGMwT1l2MlpfYWEzQmZxbHkyc0Mwc2xkLWJMMGRuZ2NkeEtmNlpJUF9YZllSZU42elZTRG5wYzhrSUo2NWxZV3J3UEkwbWZ2bmVEczJTeWFNbzhqbnZ5UlMyM3NnZ25MalJwY3Q2UDRCR0FXWFNXcTRaWURzXzZhcTVjWW85SERYeE1RelFwdF9sa1dkUVF5dldKcTVncy1VZzZhc19PQlYtbU5KRFphYmt1a2JFT0lFTURCNTBxM1J6bWhsY2hwdjJXaktBWGVsYkFkMzVEbHZSQ0lVRjRVX2NHVUFlS0Y4SzU5V05DNWRlTWxhVThGSnFKQ2l1SnJ5LXRCZmJfTHBJSzZTQUV3QkVyRjVISUpkSm0weHBSSUo3RjB6QUJOSkUtdG5mMGZQWlhzekZZVC0wb25qOHA5eVQ3b3lCWU5oT21rN1JsRw?oc=5",
+   "source": "El Universo",
+   "region": "MX",
+   "summary": "",
+   "published": "2026-10-23T11:15+00:00",
+   "theme": "Infrastructure & the Underground City",
+   "relevance": 4,
+   "use": "Feature lead",
+   "angle": "How can cities detect and prevent sinkholes caused by leaking pipes and eroded soils in urban ground, and what does Quito's case reveal about underground infrastructure monitoring?",
+   "keywords": [
+    "sinkhole"
+   ],
+   "score": 4,
+   "rank": 404
+  },
+  {
    "id": "2cff2e47ef5dc000",
    "title": "Giant sinkhole discovered in Phong Nha-Ke Bang National Park",
    "title_en": "Giant sinkhole discovered in Phong Nha-Ke Bang National Park",
@@ -228,6 +283,82 @@
    "angle": "How are giant karst sinkholes detected and characterised in limestone terrain, and what hazards do they pose to park access and infrastructure?",
    "keywords": [
     "sinkhole"
+   ],
+   "score": 4,
+   "rank": 404
+  },
+  {
+   "id": "df7d39b01de54205",
+   "title": "【特集】台風25号で土砂崩れ多発 千葉・房総半島の地形に潜む危険 「谷密度が高い」（チバテレ）",
+   "title_en": "Special feature: Typhoon No. 25 triggers many landslides; dangers hidden in Chiba's Boso Peninsula terrain, 'high valley density'.",
+   "link": "https://news.google.com/rss/articles/CBMif0FVX3lxTE9paXItcTdLR3g0R0hhZGZwQVFjNHJEOWJJRF84Rzdfa0tRQ0taaTVxd19rWFBLOHNuUkU2N081UDJIWVZNQ09NUDJBQ0p2V0FwS1lNV213UnNvV0xvcU1zTUpWWG1iTnFMclFRVjh4SUNoREdra2loMWh0ZGVIN0E?oc=5",
+   "source": "Yahoo!ニュース",
+   "region": "JP",
+   "summary": "",
+   "published": "2026-10-23T11:29+00:00",
+   "theme": "Hazards & Resilience",
+   "relevance": 4,
+   "use": "Feature lead",
+   "angle": "Why does high valley density amplify landslide susceptibility in the Boso Peninsula, and how do weathered sedimentary slopes respond to intense typhoon rainfall?",
+   "keywords": [
+    "landslide"
+   ],
+   "score": 4,
+   "rank": 404
+  },
+  {
+   "id": "680b3d28aa0d9747",
+   "title": "M4 to be shut and speed limits put in place after landslide",
+   "title_en": "",
+   "link": "https://news.google.com/rss/articles/CBMikwFBVV95cUxOYkdTUURQN0hOX2VUcUZ1Rk5ZS1R4alNNVkRLOFJoMHpqUlFxLS1HQ3U5clQtcG9UeWNmd3dYRHFNYnJmSjBHR25QWlZjRUM0Z0RVWnMwbUdsTmZKRE5iZ3NzNGgxbkY5cnFzam9Ub05aYlRKb292ODJEX284ZmdsLXFIVzNZcTdIakNIVjJUR1ZvMEE?oc=5",
+   "source": "South West Farmer",
+   "region": "GB",
+   "summary": "",
+   "published": "2026-10-22T11:04+00:00",
+   "theme": "Hazards & Resilience",
+   "relevance": 4,
+   "use": "News brief",
+   "angle": "What likely caused the M4 landslide, and how should highway embankments and cuttings be assessed for failure after heavy rainfall?",
+   "keywords": [
+    "landslide"
+   ],
+   "score": 4,
+   "rank": 404
+  },
+  {
+   "id": "6d20330351fd9461",
+   "title": "Nilgiris Landslides: bus driver killed, Schoolchildren among 300 rescued",
+   "title_en": "",
+   "link": "https://news.google.com/rss/articles/CBMivwFBVV95cUxOdTlOSzlWSmNZWUlrbUJCNEsxMzNVOFd2NWFGRThtXzZjRHR1V2gxZDFvREd5ckoyQ0NZVzdYWldycGN2SUhDYVZfRHF0UjdWaU9wdUZRbTJMdVhWektCZl9HTHMxdF9rcTdTSk1PMnhJcmFGZ0t1SFFlZzlFdVFXejVkZ3ppbnN5cEJtMldLUjZNOTRHVUtzUW1jb3pTWmtLa0dNS1daaXBRRnRKajlObjZtUGVzSlAwTkhId0Y3RdIBxgFBVV95cUxNYXR2aFZPcUlLdkRSRE9pLU1TdW9IbTFXZklLRVBjTWJjMURUTFNCVERtSXdrLUNnRnBBNXJpNEFiQ3l3bFZfNm96d3N3TW56eUVscDZ1S2NTdmFqWWdxN0ZxSVBwSUk1OFI5TEx4MjB5ZWVfQnNvZ1FWbDFZa3lDck5FVW9nZ1QtZ2RTTGtNZ21pUWxyYjd3c3RUVnhwRUhncnp3cGhMaS02RzBNeUJtQWtaWng4UUQ0cG1pbkFGclZEMW5IU1E?oc=5",
+   "source": "The Hindu",
+   "region": "GB",
+   "summary": "",
+   "published": "2026-10-24T13:15+00:00",
+   "theme": "Hazards & Resilience",
+   "relevance": 4,
+   "use": "News brief",
+   "angle": "What triggered the Nilgiris landslides, and what early-warning and slope-stability measures could reduce fatalities on hill-region roads?",
+   "keywords": [
+    "landslide"
+   ],
+   "score": 4,
+   "rank": 404
+  },
+  {
+   "id": "ef93c1560457b8e8",
+   "title": "Tamil Nadu landslide kills government bus driver after 50 passengers evacuated near Parliyar",
+   "title_en": "",
+   "link": "https://news.google.com/rss/articles/CBMiuwFBVV95cUxQbU93M0hrSW4zTW1qTEQtSGtzZmRYcEJVMlc1UDQ1ZVRrRGhCYXcxaEpuTFNRLXZHdlozOXFvUzJzdzBWNVZFQW1xdXpOcThIVGN3T204N1JrOTcxOGQyT1VRRHBPSlZsWUREOXZXbTRJV29wWmtZUFhlZFFtWkRhRHRnYmRnMDQ2RTJ5VDVWUG9DaW04b0xoOGxhQTVnV2kwVkQyckVuYlVsaGdNenM0OHdGN2N6Tkw2azRR?oc=5",
+   "source": "Telangana Today",
+   "region": "US",
+   "summary": "",
+   "published": "2026-10-24T09:59+00:00",
+   "theme": "Hazards & Resilience",
+   "relevance": 4,
+   "use": "News brief",
+   "angle": "What ground and rainfall conditions caused the Parliyar landslide that hit a bus, and how can hill-road slopes be screened for similar risk?",
+   "keywords": [
+    "landslide"
    ],
    "score": 4,
    "rank": 404
@@ -250,6 +381,60 @@
    ],
    "score": 4,
    "rank": 404
+  },
+  {
+   "id": "1fbbab138452209f",
+   "title": "西藏那曲市巴青縣7級地震 部分房屋裂縫倒塌",
+   "title_en": "Magnitude 7 earthquake in Biru County, Nagqu, Tibet; some houses cracked and collapsed.",
+   "link": "https://news.google.com/rss/articles/CBMiYEFVX3lxTE9wT0pNRFh5RUpiWk5oQnFGVUlNaGRvbE00QWtoWnQyd2RnWmxDX1JfcTFDRGdZV3R4NV8wM3JnQlhqQlpBdXZOVkQ1SkN1cGpCbEdxQWlyTGVEU3FtOWgzLdIBZkFVX3lxTE43YnlEYmJuNUtFaV9Wblc4S1VBbE5vbFRXSGNlaXhIcjlxYTRtYllySjdLSVUxNk1RTGVmZXRSbXkzUWxsWHR5djNic00yTWw1cVBUQXc2bG9PcUJ3NVlOMGFGQkI0UQ?oc=5",
+   "source": "新唐人電視台",
+   "region": "CN",
+   "summary": "",
+   "published": "2026-10-23T12:40+00:00",
+   "theme": "Hazards & Resilience",
+   "relevance": 4,
+   "use": "Feature lead",
+   "angle": "How do high-altitude site conditions and local soils influence seismic damage to rural houses, and what design measures suit such regions?",
+   "keywords": [
+    "earthquake",
+    "collapse"
+   ],
+   "score": 3,
+   "rank": 403
+  },
+  {
+   "id": "1836280fcdd42ab9",
+   "title": "تم اكتشاف حفرة عملاقة في منتزه فونغ نها-كي بانغ الوطني",
+   "title_en": "Giant hole discovered in Phong Nha-Ke Bang National Park.",
+   "link": "https://news.google.com/rss/articles/CBMijgFBVV95cUxOUnpVR19vMWtXdWRZRlhOcXE4MTNMakhRWnhFZTVUd3lPYWh6NFJjejFkcS1mbENUSDQtMmdxaVlDNDlLdjBrNktTOEJLR3ZyWXBCbFhjVzk5NVA3b2puWXozVWhYWHlkQXZIYkdkanZYanZ6aVNNSXFiZUR6SnZKcFVGT0ZrbjFLMkt3a3F3?oc=5",
+   "source": "Vietnam.vn",
+   "region": "EG",
+   "summary": "",
+   "published": "2026-10-23T11:52+00:00",
+   "theme": "Characterisation & Modelling",
+   "relevance": 4,
+   "use": "Feature lead",
+   "angle": "What geological processes produced this giant hole in karst terrain, and how should such features be investigated and mapped within protected national parks?",
+   "keywords": [],
+   "score": 0,
+   "rank": 400
+  },
+  {
+   "id": "7386da511bf675ee",
+   "title": "弹性介质中圆柱形空腔受三角形脉冲冲击载荷的三维瞬态动力响应解析研究",
+   "title_en": "Analytical study of 3D transient dynamic response of a cylindrical cavity in an elastic medium under triangular pulse load.",
+   "link": "https://news.google.com/rss/articles/CBMibkFVX3lxTE5PclBzMHZTYkNxbkRYVWFacWgzMjRTdE1JdmNYSi1xbTlBaVZLRTVjTHpCTlQ4c2lEQ2xoMk9kcEdROGxBOFI4Zk9YV3JGSXdUZDg1blVlelJzbU54VjkzTkUySEV5Z2x2aHY5R0xB?oc=5",
+   "source": "生物通",
+   "region": "CN",
+   "summary": "",
+   "published": "2026-10-23T07:13+00:00",
+   "theme": "Characterisation & Modelling",
+   "relevance": 4,
+   "use": "Academia-to-Industry topic",
+   "angle": "How do analytical solutions for a cylindrical cavity under triangular pulse loads inform the validation of numerical models for underground openings under impact?",
+   "keywords": [],
+   "score": 0,
+   "rank": 400
   },
   {
    "id": "c76694b36522f8bb",
@@ -290,23 +475,6 @@
    "rank": 310
   },
   {
-   "id": "2d43058abac39bda",
-   "title": "Au col de Khanh Le, les véhicules sont arrêtés par groupes pour faire face au risque de chutes de pierres.",
-   "title_en": "At Khanh Le pass, vehicles are stopped in groups to face rockfall risk",
-   "link": "https://news.google.com/rss/articles/CBMihgFBVV95cUxPWEJjZzVNcHVub2RyNTNCN3huS0djNHpyQnA4YVJGdEtQSG9jTzdtMkRoR2lveGlsSmlZcmE0UGZsMVdnYThVT2phYU0zdjBoeDM1VkJlUUlGOUNQSmVoOFYyLVBRSF9manVQWW5jdUZsQThDUm5fU0J0NDBHT3VfV0lYNEwwdw?oc=5",
-   "source": "Vietnam.vn",
-   "region": "FR",
-   "summary": "",
-   "published": "2026-10-22T11:48+00:00",
-   "theme": "Hazards & Resilience",
-   "relevance": 3,
-   "use": "Regional insight",
-   "angle": "How should rockfall risk on mountain roads be assessed and mitigated, and when is traffic control sufficient versus slope engineering?",
-   "keywords": [],
-   "score": 6,
-   "rank": 306
-  },
-  {
    "id": "28717aa79ce46d7d",
    "title": "Apa saja pilihan yang tersedia untuk Gunung Mot di Quy Nhon: meratakannya atau melestarikan situs bersejarah tersebut?",
    "title_en": "What options exist for Mot Mountain in Quy Nhon: levelling it or preserving the historic site?",
@@ -324,20 +492,37 @@
    "rank": 306
   },
   {
-   "id": "4976ae0bc818eca4",
-   "title": "From landslide alerts to drone safety, young innovators showcase AI solutions at IIT Guwahati",
-   "title_en": "",
-   "link": "https://news.google.com/rss/articles/CBMitgFBVV95cUxQdzVvaE1CeTVyMmlqMWE0TXIyR0EzRmVxUm9GWlFTTnBaU19KQlNvRWU0SVlEaUhnRll3UkljQ0hmZDM0aksxQ0hMN3FxWlJfYk9jelcwSFJqUEpvbW5IcndXTXRMQzJ1T2hOMmdzN0J3aENBMExBRXdycnZYRnVnVjd1WmZRZzR1MmlybDhiZnpXdFE0Z0JEZUFacVJFWDdxVlA5WGljaHBqeHNFZGwtb0FLNEkwQQ?oc=5",
-   "source": "Hub News",
-   "region": "IN",
+   "id": "2d43058abac39bda",
+   "title": "Au col de Khanh Le, les véhicules sont arrêtés par groupes pour faire face au risque de chutes de pierres.",
+   "title_en": "At Khanh Le pass, vehicles are stopped in groups to face rockfall risk",
+   "link": "https://news.google.com/rss/articles/CBMihgFBVV95cUxPWEJjZzVNcHVub2RyNTNCN3huS0djNHpyQnA4YVJGdEtQSG9jTzdtMkRoR2lveGlsSmlZcmE0UGZsMVdnYThVT2phYU0zdjBoeDM1VkJlUUlGOUNQSmVoOFYyLVBRSF9manVQWW5jdUZsQThDUm5fU0J0NDBHT3VfV0lYNEwwdw?oc=5",
+   "source": "Vietnam.vn",
+   "region": "FR",
    "summary": "",
-   "published": "2026-10-24T12:32+00:00",
+   "published": "2026-10-22T11:48+00:00",
    "theme": "Hazards & Resilience",
    "relevance": 3,
-   "use": "Academia-to-Industry topic",
-   "angle": "Can low-cost AI and sensor systems from student innovators provide reliable landslide early warning for practitioners?",
+   "use": "Regional insight",
+   "angle": "How should rockfall risk on mountain roads be assessed and mitigated, and when is traffic control sufficient versus slope engineering?",
+   "keywords": [],
+   "score": 6,
+   "rank": 306
+  },
+  {
+   "id": "e349d6a1b6dbfde4",
+   "title": "Benjamin Banneker Middle School open following water main break, sinkhole repairs",
+   "title_en": "",
+   "link": "https://news.google.com/rss/articles/CBMihwFBVV95cUxQTm9rZVd2Tm9uUHpadkRIeXVwdkhhLTIyVjNESDJYOFBRWS1oUVlQaHRVVkE2cDJ6ekVwQ2pNRVZma25ySjJHQjU5ZHJMT0UtOHVCMnN5dlpJR2p2dUpzVXY5R2hkdFhFX2xBUlhQb1VCN3BxUEozeVJlek1pcWpDbkpheUxxcm8?oc=5",
+   "source": "AOL.com",
+   "region": "GB",
+   "summary": "",
+   "published": "2026-10-22T12:45+00:00",
+   "theme": "Infrastructure & the Underground City",
+   "relevance": 3,
+   "use": "News brief",
+   "angle": "How do water main breaks undermine shallow soils and cause sinkholes, and what ground investigation would prevent school-site reopening delays?",
    "keywords": [
-    "landslide"
+    "sinkhole"
    ],
    "score": 4,
    "rank": 304
@@ -362,6 +547,25 @@
    "rank": 304
   },
   {
+   "id": "4976ae0bc818eca4",
+   "title": "From landslide alerts to drone safety, young innovators showcase AI solutions at IIT Guwahati",
+   "title_en": "",
+   "link": "https://news.google.com/rss/articles/CBMitgFBVV95cUxQdzVvaE1CeTVyMmlqMWE0TXIyR0EzRmVxUm9GWlFTTnBaU19KQlNvRWU0SVlEaUhnRll3UkljQ0hmZDM0aksxQ0hMN3FxWlJfYk9jelcwSFJqUEpvbW5IcndXTXRMQzJ1T2hOMmdzN0J3aENBMExBRXdycnZYRnVnVjd1WmZRZzR1MmlybDhiZnpXdFE0Z0JEZUFacVJFWDdxVlA5WGljaHBqeHNFZGwtb0FLNEkwQQ?oc=5",
+   "source": "Hub News",
+   "region": "IN",
+   "summary": "",
+   "published": "2026-10-24T12:32+00:00",
+   "theme": "Hazards & Resilience",
+   "relevance": 3,
+   "use": "Academia-to-Industry topic",
+   "angle": "Can low-cost AI and sensor systems from student innovators provide reliable landslide early warning for practitioners?",
+   "keywords": [
+    "landslide"
+   ],
+   "score": 4,
+   "rank": 304
+  },
+  {
    "id": "c1537c2541ec5f38",
    "title": "Gas Leak, Sinkhole Shut Down Businesses Near Riverview Plaza",
    "title_en": "",
@@ -379,6 +583,40 @@
    ],
    "score": 4,
    "rank": 304
+  },
+  {
+   "id": "fd921f5790c30aeb",
+   "title": "رئيس اللجنة الشعبية لمقاطعة جيا لاي يتحدث عن اقتراح تسوية جبل موت.",
+   "title_en": "Gia Lai province People's Committee chairman discusses proposal to level Mot Mountain.",
+   "link": "https://news.google.com/rss/articles/CBMijgFBVV95cUxNdzRhVnVlVUVUU1k4S3pUQVo2RFJENXlEM1V6Z2FrVzRMQ2cxb0pZNkJpWUY5UWFHd1ZIUEZmU2x4SGtydEtXN3k2bTBIYWQ3VmZNZkNTRkhfRFctd3JZdThkRW1HTWIxYmVXRDZsazFZVTJsUzVjTWk0R2FIUElZRG5lLUpaeXpHRlZSdFBn?oc=5",
+   "source": "Vietnam.vn",
+   "region": "EG",
+   "summary": "",
+   "published": "2026-10-23T15:24+00:00",
+   "theme": "Geotechnics & Society",
+   "relevance": 3,
+   "use": "Regional insight",
+   "angle": "What are the geotechnical feasibility issues of levelling a hill, including rock quality, slope excavation and stability, compared with preservation?",
+   "keywords": [],
+   "score": 0,
+   "rank": 300
+  },
+  {
+   "id": "65851446a693de84",
+   "title": "Quais são as opções para o Monte Mot em Quy Nhon: nivelá-lo ou preservar o sítio histórico?",
+   "title_en": "What are the options for Mot Mountain in Quy Nhon: level it or preserve the historic site?",
+   "link": "https://news.google.com/rss/articles/CBMilgFBVV95cUxNS29sd2RXaDlmWXJYMzNQSnJKZGpCWmJpOE9kVEdWQ2RFcUd0UHBGdHdRczJLbFRwTHFDb0ZPY1lHOHNsRGtTLXhTb081eGdyWF9YcmcxZkFrc2VNNzBJOUxNU1ppYnZtWlZBTTlZcXNfa2xNVUZWRTUyMkRlTHRUMmJ4Nk95a1kybUNTTmVPaklQSHktWUE?oc=5",
+   "source": "Vietnam.vn",
+   "region": "BR",
+   "summary": "",
+   "published": "2026-10-24T07:13+00:00",
+   "theme": "Geotechnics & Society",
+   "relevance": 3,
+   "use": "Regional insight",
+   "angle": "What geotechnical assessments would be needed to compare levelling Mot Mountain with conserving its historic site, including rock stability and foundation implications?",
+   "keywords": [],
+   "score": 0,
+   "rank": 300
   },
   {
    "id": "c848ef475254ad93",
