@@ -23,7 +23,7 @@ magazine:
 # deployed as a web app in your Google account (see README, "AI assistant").
 # It holds the Anthropic key, so the website itself never needs one.
 assistant:
-  endpoint: ""
+  endpoint: "https://script.google.com/macros/s/AKfycbyUs--oM5Ig49YssyB8cf-wOK5DlVxGwLvtHAKNL9dXTon8xVSzQsI8_w2JgQOPpeh-/exec"
 
 
 # Maximum stories shown in one digest.
