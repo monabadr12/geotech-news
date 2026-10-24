@@ -4,7 +4,7 @@ ISSMGE Magazine — Geotechnical News Scanner
 Reads trade-site feeds and Google News searches, scores stories for
 geotechnical relevance, (optionally) asks Claude to triage them, saves the
 digest to data/digests/ (the permanent archive) and rebuilds the website in
-docs/ (GitHub Pages). Optionally e-mails the digest.
+docs/ (GitHub Pages). E-mail (alerts and the weekly summary) is sent by notify.py.
 """
 import calendar
 import datetime as dt
@@ -16,13 +16,9 @@ import json
 import math
 import os
 import re
-import smtplib
-import ssl
 import sys
 import time
 import unicodedata
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 from pathlib import Path
 from urllib.parse import quote, quote_plus, urlencode, urljoin
 
@@ -836,24 +832,6 @@ def research_papers(cfg, now, seen, compiled, failures, notes):
     papers = select_papers(found, cfg, compiled)
     print(f"Research papers: {len(papers)} selected for the digest.")
     return [{k: p[k] for k in PAPER_FIELDS} for p in papers]
-
-
-# ------------------------------------------------------------------ e-mail
-def send_email(subject, body_html):
-    host, to = os.environ.get("SMTP_HOST", "").strip(), os.environ.get("MAIL_TO", "").strip()
-    if not host or not to:
-        return "E-mail not configured (optional)."
-    user, pwd = os.environ.get("SMTP_USER", ""), os.environ.get("SMTP_PASSWORD", "")
-    port = int(os.environ.get("SMTP_PORT", "587") or 587)
-    msg = MIMEMultipart("alternative")
-    msg["Subject"], msg["From"], msg["To"] = subject, user or to, to
-    msg.attach(MIMEText(body_html, "html", "utf-8"))
-    with smtplib.SMTP(host, port, timeout=60) as s:
-        s.starttls(context=ssl.create_default_context())  # verify the mail server's certificate
-        if user:
-            s.login(user, pwd)
-        s.sendmail(msg["From"], [a.strip() for a in to.split(",")], msg.as_string())
-    return f"E-mail sent to {to}."
 
 
 # ------------------------------------------------------------------ archive

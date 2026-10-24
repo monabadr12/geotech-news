@@ -638,4 +638,20 @@ events: {}
 
 # ---- Alerts and weekly summary (e-mail) -----------------------------------
 # An e-mail when a 5/5 story appears and a Monday summary for the editorial team.
-alerts: {}
+# After each daily scan, notify.py sends at most one alert listing the new top-rated
+# stories, and on the weekday below the summary of the last full week (Monday to
+# Sunday): top stories, developing stories, regional coverage, events and research.
+# The summaries are also on the website (weekly/index.html). E-mail goes out through
+# the AI assistant's Google connector (assistant/bridge.gs: Script property and
+# GitHub secret NOTIFY_TOKEN) or a mail server (GitHub secrets SMTP_HOST, SMTP_PORT,
+# SMTP_USER, SMTP_PASSWORD, MAIL_TO); without either, the log shows what would have
+# been sent. Test it with the "Events calendar and weekly summary" workflow.
+alerts:
+  story_alerts: true       # e-mail when a scan finds a new top-rated story
+  min_relevance: 5         # the rating that triggers an alert (5 = only 5/5 stories)
+  weekly_summary: true     # the weekly summary for the editorial team
+  weekday: Monday          # the day it goes out, after the morning scan (Cairo time)
+  catch_up_days: 1         # if it could not be sent that day, try again on the next day(s)
+  max_stories: 8           # stories per section of the summary (top stories, 5/5, developing)
+  events_days: 60          # events and call-for-papers deadlines in the next 60 days
+  daily_digest: false      # true: also e-mail the whole daily digest after each scan
