@@ -55,7 +55,7 @@
         if (!store.get(KEYS.scan)) { setRunning(false); return; }  // dismissed
         var run = (j.workflow_runs || []).filter(function (x) {
           return x.event === "workflow_dispatch" && new Date(x.created_at).getTime() >= started - 60000;
-        }).pop();
+        })[0];  // newest first
         var mins = Math.max(0, Math.round((Date.now() - started) / 60000));
         if (!run) {
           if (Date.now() - started > 10 * 60000) {
@@ -154,7 +154,8 @@
     if (s.c) meta.push("<span>" + esc(s.c) + " edition</span>");
     var useSlug = s.u ? s.u.split(" ")[0].toLowerCase().replace(/-+$/, "") : "";
     var tc = THEME_COLORS[s.th] || "#64748b";
-    return "<article class='story' style='--tc:" + tc + "'><div class='story-top'><a class='story-title' dir='auto' href='" + esc(s.l) + "' target='_blank' rel='noopener'>" +
+    var href = /^https?:\/\//i.test(s.l || "") ? s.l : "#";
+    return "<article class='story' style='--tc:" + tc + "'><div class='story-top'><a class='story-title' dir='auto' href='" + esc(href) + "' target='_blank' rel='noopener'>" +
       esc(title) + "</a>" + rel + "</div>" +
       (s.te ? "<div class='orig' dir='auto'>Original: " + esc(s.t) + "</div>" : "") +
       (s.a ? "<p class='angle'><span>Magazine angle</span>" + esc(s.a) + "</p>" : (s.x ? "<p class='summary'>" + esc(s.x) + "…</p>" : "")) +
@@ -206,7 +207,11 @@
       results.innerHTML = matches.length ? matches.slice(0, limit).map(card).join("") : "<p class='empty'>No stories match these filters.</p>";
       moreBtn.hidden = matches.length <= limit;
     }
-    function csvCell(v) { v = String(v == null ? "" : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+    function csvCell(v) {
+      v = String(v == null ? "" : v);
+      if (/^[=+\-@]/.test(v)) v = "'" + v;  // spreadsheets would run it as a formula
+      return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+    }
     exportBtn.addEventListener("click", function () {
       var head = ["Digest date", "Issue window", "Theme", "Relevance (1-5)", "Suggested use", "Headline (English)", "Original headline",
         "Magazine angle", "Source", "Google News edition", "Published", "Link", "Keywords"];
@@ -236,7 +241,8 @@
     var log = document.getElementById("chat-log"), form = document.getElementById("chat-form");
     var input = document.getElementById("chat-text"), fileInput = document.getElementById("chat-file");
     var filesEl = document.getElementById("chat-files"), statusEl = document.getElementById("chat-status");
-    var history = [], pendingFiles = [], busy = false, archive = null, systemText = "";
+    var history = [], pendingFiles = [], reading = [], busy = false, archive = null, systemText = "", conversation = 0;
+    var MAX_FILE_MB = 15, MAX_TOTAL_MB = 18;  // the connector accepts 25 MB per question and PDFs grow by a third when encoded
     var MODEL_NAMES = { "claude-opus-5-5": "Claude Opus 5.5", "claude-sonnet-5-5": "Claude Sonnet 5.5", "claude-haiku-5-5": "Claude Haiku 5.5" };
     var STOP = "the and for with from that this what which about are was were have has into over under than then them they their there these those who why how can could would should will may might any all some most more best find show give tell list stories story news latest recent please quarter issue window themes theme magazine suggest recommend article articles also just like make need want get our you your".split(" ");
 
@@ -380,7 +386,7 @@
     /* attachments */
     function readFile(file) {
       var name = file.name, lower = name.toLowerCase();
-      if (file.size > 25 * 1024 * 1024) return Promise.reject(new Error(name + " is larger than 25 MB."));
+      if (file.size > MAX_FILE_MB * 1024 * 1024) return Promise.reject(new Error(name + " is larger than " + MAX_FILE_MB + " MB."));
       if (lower.endsWith(".pdf")) {
         return file.arrayBuffer().then(function (buf) {
           var bytes = new Uint8Array(buf), bin = "";
@@ -406,6 +412,8 @@
       return mammothPromise || (mammothPromise = new Promise(function (ok, fail) {
         var s = document.createElement("script");
         s.src = "https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js";
+        s.integrity = "sha384-/cXAMbzovUIKbBERjPmR3SnPTh8siWr5lsvFYj1Uq4XP0yaJUZJmsh0YXyGv5P0y";
+        s.crossOrigin = "anonymous";
         s.onload = ok;
         s.onerror = function () { mammothPromise = null; fail(new Error("Could not load the Word reader. Check your connection.")); };
         document.head.appendChild(s);
@@ -419,10 +427,22 @@
     filesEl.addEventListener("click", function (e) {
       if (e.target.dataset.i) { pendingFiles.splice(+e.target.dataset.i, 1); drawFiles(); }
     });
+    function attachedMB() {
+      return pendingFiles.reduce(function (n, f) { return n + JSON.stringify(f.block).length; }, 0) / (1024 * 1024);
+    }
     fileInput.addEventListener("change", function () {
+      var mine = conversation;
       Array.prototype.forEach.call(fileInput.files, function (file) {
-        readFile(file).then(function (f) { pendingFiles.push(f); drawFiles(); })
-          .catch(function (err) { addMsg("bot", esc(err.message), "err"); });
+        var job = readFile(file).then(function (f) {
+          if (mine !== conversation) return;
+          if (attachedMB() + JSON.stringify(f.block).length / (1024 * 1024) > MAX_TOTAL_MB) {
+            throw new Error(f.name + " was not attached: the files for one question must stay under " + MAX_TOTAL_MB + " MB in total.");
+          }
+          pendingFiles.push(f);
+          drawFiles();
+        }).catch(function (err) { addMsg("bot", esc(err.message), "err"); });
+        reading.push(job);
+        job.then(function () { reading.splice(reading.indexOf(job), 1); });
       });
       fileInput.value = "";
     });
@@ -438,10 +458,19 @@
     }
 
     function send(question) {
-      if (busy || !endpoint) return;
-      if (!question && !pendingFiles.length) return;
-      question = question || "Please read the attached document(s) and summarise what matters for the magazine.";
+      if (busy || !endpoint) return false;
+      if (!question && !pendingFiles.length && !reading.length) return false;
       busy = true;
+      var mine = conversation;
+      // wait for attachments still being read and for the archive, so neither is left out
+      Promise.all(reading.concat([loadArchive().catch(function () { return null; })])).then(function () {
+        if (mine === conversation) ask(question, mine);
+      });
+      return true;
+    }
+
+    function ask(question, mine) {
+      question = question || "Please read the attached document(s) and summarise what matters for the magazine.";
       var files = pendingFiles.splice(0);
       drawFiles();
       addMsg("user", esc(question).replace(/\n/g, "<br>") + (files.length ? "<div class='files'>📎 " + files.map(function (f) { return esc(f.name); }).join(", ") + "</div>" : ""));
@@ -464,6 +493,7 @@
       }, 1000);
 
       function finish(j) {
+        if (mine !== conversation) return;  // the editor started a new conversation meanwhile
         if (j.error === "passcode") {
           var code = window.prompt("This assistant is protected by a passcode. Please enter it:");
           if (!code) throw new Error("A passcode is needed to use the assistant.");
@@ -480,6 +510,7 @@
       }
 
       askBridge().then(finish).catch(function (err) {
+        if (mine !== conversation) return;
         bubble.classList.add("err");
         bubble.innerHTML = esc(err.message || String(err));
         history.pop();  // let the editor retry the same question
@@ -488,10 +519,10 @@
 
     form.addEventListener("submit", function (e) {
       e.preventDefault();
-      var q = input.value.trim();
-      input.value = "";
-      input.style.height = "";
-      send(q);
+      if (send(input.value.trim())) {  // keep the typed question if it could not be sent yet
+        input.value = "";
+        input.style.height = "";
+      }
     });
     input.addEventListener("keydown", function (e) {
       if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); }
@@ -502,6 +533,8 @@
       if (q) send(q.dataset.q);
     });
     document.getElementById("chat-new").addEventListener("click", function () {
+      conversation++;
+      busy = false;
       history = [];
       pendingFiles = [];
       drawFiles();
