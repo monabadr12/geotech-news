@@ -620,3 +620,22 @@ brief:
   max_papers: 40           # best research papers that Claude reads
   days_before_end: 21      # automatic draft in the last 21 days of the quarter
   refresh_days: 7          # the draft is rewritten when it is 7 days old
+
+# ---- World map (map.html) -------------------------------------------
+# Stories are plotted by the country Claude reads in each story. The ISSMGE
+# regions and their member-society countries show where coverage is thin.
+map: {}
+
+# ---- Developing stories (developing.html) --------------------------------
+# Follow-up reports (an inquiry, a repair, a court case) are linked to the
+# earlier story about the same event, so long-running events can be followed.
+storylines: {}
+
+# ---- Events calendar (events.html) ----------------------------------------
+# Conferences and call-for-papers deadlines: data/events.yaml (kept by the
+# editors) plus the events Claude finds on the organisers' calendars each week.
+events: {}
+
+# ---- Alerts and weekly summary (e-mail) -----------------------------------
+# An e-mail when a 5/5 story appears and a Monday summary for the editorial team.
+alerts: {}

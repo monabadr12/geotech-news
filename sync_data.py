@@ -2,7 +2,8 @@
 """
 Save step of the scan workflow.
 
-Carries this run's new data (the day's digest, the seen-stories memory and any
+Carries this run's new data (the day's digest and any archived digest it updated,
+the seen-stories memory, the events calendar, the record of e-mails sent and any
 issue brief, unless the branch already holds a newer brief for that window) onto
 the newest version of the branch, then rebuilds the website from it. Generated
 files in docs/ are never merged line by line, they are rebuilt, so a scan cannot
@@ -21,6 +22,8 @@ ROOT = Path(__file__).resolve().parent
 DIGESTS = ROOT / "data" / "digests"
 BRIEFS = ROOT / "data" / "briefs"
 SEEN_FILE = ROOT / "data" / "seen.json"
+EVENTS_FILE = ROOT / "data" / "events.json"   # events found by events.py: {"updated": iso, "events": [...]}
+NOTIFY_FILE = ROOT / "data" / "notify.json"   # e-mails sent by notify.py: {"alerted": {id: date}, "weekly": {week: iso}}
 
 
 def git(*args):
@@ -54,6 +57,31 @@ def generated(text):
     return when if when.tzinfo else when.replace(tzinfo=dt.timezone.utc)
 
 
+def changed_file(path):
+    """This run's version of a data file it created or changed, else None."""
+    out = git("status", "--porcelain", "--untracked-files=all", "--", str(path.relative_to(ROOT)))
+    return load(path) if out.strip() and path.exists() else None
+
+
+def merge_events(theirs, ours):
+    """The calendar refreshed last wins (two refreshes at once are rare)."""
+    if not theirs:
+        return ours
+    return ours if str(ours.get("updated", "")) >= str(theirs.get("updated", "")) else theirs
+
+
+def merge_notify(theirs, ours):
+    """Every e-mail either run sent stays recorded, so none is sent twice."""
+    merged = dict(theirs or {})
+    for key in ("alerted", "weekly"):
+        both = dict((theirs or {}).get(key) or {})
+        for k, v in (ours.get(key) or {}).items():
+            if str(v) > str(both.get(k, "")):
+                both[k] = v
+        merged[key] = both
+    return merged
+
+
 def merge_digest(theirs, ours):
     """Union of the day's stories (this run's version of a story wins); the
     caller re-balances it."""
@@ -77,6 +105,7 @@ def main():
     ours = {name: load(DIGESTS / name) for name in changed("digests")}
     base = {name: committed(name) for name in ours}
     briefs = {name: (BRIEFS / name).read_text(encoding="utf-8") for name in changed("briefs") if (BRIEFS / name).exists()}
+    extras = {path: (merge, changed_file(path)) for path, merge in ((EVENTS_FILE, merge_events), (NOTIFY_FILE, merge_notify))}
 
     git("fetch", "--quiet", "origin", branch)
     git("reset", "--quiet", "--hard", f"origin/{branch}")
@@ -88,6 +117,9 @@ def main():
                 seen[key] = day
         SEEN_FILE.parent.mkdir(parents=True, exist_ok=True)
         SEEN_FILE.write_text(json.dumps(seen, indent=0))
+    for path, (merge, mine) in extras.items():
+        if mine is not None:
+            path.write_text(json.dumps(merge(load(path), mine), ensure_ascii=False, indent=1), encoding="utf-8")
     rebalance = []
     for name, digest in ours.items():
         if digest is None:

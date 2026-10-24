@@ -1,0 +1,66 @@
+name: Events calendar and weekly summary
+
+on:
+  workflow_dispatch:   # "Run workflow" on GitHub, and the Events and Weekly summary pages' buttons
+    inputs:
+      task:
+        description: "What to do"
+        type: choice
+        default: refresh the events calendar
+        options:
+          - refresh the events calendar
+          - send the weekly summary now
+          - send a test e-mail
+
+permissions:
+  contents: write
+
+concurrency: news-scan   # shared with the scan, so the two never save at the same time
+
+jobs:
+  extras:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}   # the branch tip when the job starts, not the commit that queued it
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - name: Refresh the events calendar
+        if: inputs.task == 'refresh the events calendar'
+        timeout-minutes: 20
+        run: python events.py --refresh
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      - name: Send e-mail
+        if: inputs.task != 'refresh the events calendar'
+        timeout-minutes: 10
+        run: |
+          if [ "$TASK" = "send a test e-mail" ]; then python notify.py --test; else python notify.py --weekly; fi
+        env:
+          TASK: ${{ inputs.task }}
+          NOTIFY_TOKEN: ${{ secrets.NOTIFY_TOKEN }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+      - name: Save
+        run: |
+          git config user.name "news-scanner"
+          git config user.email "news-scanner@users.noreply.github.com"
+          msg="Events calendar and e-mail ($(date -u +%F))"
+          # Put the results on the newest main and rebuild the site from it, exactly as the
+          # scan's save step does, so the save never clashes with a scan saved meanwhile.
+          for attempt in 1 2 3; do
+            python sync_data.py "${GITHUB_REF_NAME}"
+            git add docs data
+            if git diff --cached --quiet; then echo "Nothing to save."; exit 0; fi
+            git commit -q -m "$msg"
+            if git push; then exit 0; fi
+            echo "The branch moved while saving; trying again ($attempt)."
+            git reset -q --soft HEAD~1
+          done
+          exit 1

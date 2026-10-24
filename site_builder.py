@@ -218,8 +218,9 @@ def theme_icon(theme):
 def page(cfg, title, body, root, active, description="", head=""):
     mag = (cfg.get("magazine") or {}).get("name", "ISSMGE Magazine")
     nav = [("index.html", "Latest", "latest"), ("archive.html", "Archive", "archive"),
-           ("search.html", "Search", "search"), ("trends.html", "Trends", "trends"),
-           ("assistant.html", "AI assistant", "assistant"),
+           ("search.html", "Search", "search"), ("developing.html", "Developing stories", "developing"),
+           ("map.html", "World map", "map"), ("events.html", "Events", "events"),
+           ("trends.html", "Trends", "trends"), ("assistant.html", "AI assistant", "assistant"),
            ("about.html", "Method & sources", "about")]
     current = " class='active' aria-current='page'"
     links = "".join(f"<a href='{root}{href}'{current if key == active else ''}>{label}</a>"
@@ -1516,7 +1517,7 @@ def build(cfg):
             w["papers"].append(dict(p, _digest=d["date"], _window=win["key"]))
 
     # fresh output folder (the archive itself lives in data/digests/)
-    for sub in ("digests", "issues", "exports", "assets", "reports", "briefs"):
+    for sub in ("digests", "issues", "exports", "assets", "reports", "briefs", "weekly"):
         shutil.rmtree(DOCS / sub, ignore_errors=True)
     shutil.copytree(ASSETS, DOCS / "assets")
     (DOCS / "exports").mkdir()
@@ -1572,7 +1573,10 @@ def build(cfg):
                     "s": s["source"], "c": s["_region"], "p": (s.get("published") or "")[:10], "th": s["theme"],
                     "r": s.get("relevance") or 0, "u": s.get("use", ""), "a": s.get("angle", ""),
                     "k": s.get("keywords", []), "x": s.get("summary", "")[:200] if not s.get("angle") else "",
-                    "rk": s["rank"]}
+                    "rk": s["rank"], "id": s["id"],
+                    # where it happened (ISO code, "" = global) and the developing story it belongs to
+                    "cc": s.get("country", ""), "pl": s.get("place", ""), "sl": s.get("storyline", ""),
+                    "sg": s.get("stage", "")}
                    for s in w["stories"]]
         # research papers in the same shape (source = journal), marked kind "paper", with their authors
         compact += [{"d": p["_digest"], "w": key, "t": p["title"], "te": "", "l": p["link"],
@@ -1604,6 +1608,14 @@ def build(cfg):
                                      head="<script src='assets/trends.js' defer></script>"))
     write(DOCS / "assistant.html", page(cfg, "AI assistant", assistant_body(cfg), "", "assistant"))
     write(DOCS / "about.html", page(cfg, "Method & sources", about_body(cfg, latest, brief_opts), "", "about"))
+
+    # pages of their own modules (they import this one, so not at the top): the world map,
+    # developing stories, the events calendar and the weekly summaries
+    import events, geomap, notify, storylines
+    ctx = {"cfg": cfg, "digests": digests, "windows": windows, "order": order, "today_key": today_key,
+           "start_month": sm}
+    for module in (geomap, storylines, events, notify):
+        module.build(ctx)
 
 
 if __name__ == "__main__":

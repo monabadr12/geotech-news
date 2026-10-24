@@ -14,7 +14,8 @@
     get: function (k) { try { return localStorage.getItem(k) || ""; } catch (e) { return ""; } },
     set: function (k, v) { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (e) { /* ignore */ } }
   };
-  var KEYS = { model: "gnd_model", scan: "gnd_scan_started", brief: "gnd_brief_started", passcode: "gnd_passcode" };
+  var KEYS = { model: "gnd_model", scan: "gnd_scan_started", brief: "gnd_brief_started", passcode: "gnd_passcode",
+    events: "gnd_events_started", weekly: "gnd_weekly_started" };
 
   function fmt(iso) {
     if (!iso) return "";
@@ -48,7 +49,13 @@
       done: "Scan finished. The website refreshes about a minute later — <a href='#' class='reload-link'>reload the page</a>." },
     brief: { file: "brief.yml", key: KEYS.brief, button: "Generate / update brief", noun: "issue brief", minutes: "3–6",
       wait: "This page will follow Claude while it drafts the brief and tell you when the Word file is ready.",
-      done: "The issue brief is ready. The website refreshes about a minute later — <a href='#' class='reload-link'>reload the page</a> to download it." }
+      done: "The issue brief is ready. The website refreshes about a minute later — <a href='#' class='reload-link'>reload the page</a> to download it." },
+    events: { file: "extras.yml", key: KEYS.events, button: "Refresh calendar", noun: "calendar refresh", minutes: "3–6",
+      wait: "This page will follow Claude while it reads the organisers' calendars and tell you when the calendar is updated.",
+      done: "The events calendar is updated. The website refreshes about a minute later — <a href='#' class='reload-link'>reload the page</a>." },
+    weekly: { file: "extras.yml", key: KEYS.weekly, button: "Send summary now", noun: "weekly summary", minutes: "1–2",
+      wait: "This page will follow the run and tell you when the e-mail has gone.",
+      done: "The weekly summary was sent. The website refreshes about a minute later — <a href='#' class='reload-link'>reload the page</a>." }
   };
   function ghPage(w) { return "https://github.com/" + repo + "/actions/workflows/" + w.file; }
 
@@ -114,6 +121,8 @@
   startButton(WORKFLOWS.brief, briefBtn, !briefBtn ? "enter the issue window unless it is the current quarter"
     : briefBtn.getAttribute("data-current") ? "leave <b>Issue window</b> empty for the current quarter"
     : "type <b>" + esc(briefBtn.getAttribute("data-window")) + "</b> under <b>Issue window</b> (and tick <b>Final</b> if the quarter has closed)");
+  startButton(WORKFLOWS.events, document.getElementById("events-btn"), "choose <b>refresh the events calendar</b> under <b>What to do</b>");
+  startButton(WORKFLOWS.weekly, document.getElementById("weekly-btn"), "choose <b>send the weekly summary now</b> under <b>What to do</b>");
   document.addEventListener("click", function (e) {
     if (e.target.classList && e.target.classList.contains("reload-link")) { e.preventDefault(); location.reload(); }
   });
