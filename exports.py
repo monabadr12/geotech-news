@@ -1267,7 +1267,8 @@ def _start_sheet(ws, ctx, anchors):
          "theme × use heat map and a timeline. Choose what it shows with the yellow selectors at the top.",
          {"font": link_font, "link": ("Dashboard", "A1")}),
         ("Stories →", "Every story as a filterable Excel table, newest digest first; click a headline to open the "
-         "article. The gold columns – Status, Assigned to and Editor notes – are for you to fill in.",
+         "article. The gold columns – Status, Assigned to and Editor notes – are for you to fill in. Further right: "
+         "where each story happened (Country, Place) and the Developing story it belongs to.",
          {"font": link_font, "link": ("Stories", "A1")}),
         ("By theme →", "A read-only reading view: one section per theme, best stories first. Collapse or expand "
          "sections with the − / + buttons in the left margin.", {"font": link_font, "link": ("By theme", "A1")}),
