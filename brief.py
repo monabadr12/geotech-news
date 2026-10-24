@@ -48,13 +48,30 @@ class BriefError(Exception):
     """A brief could not be drafted; the message says why, for the log."""
 
 
+DEFAULTS = {"model": "claude-opus-5-5", "effort": "high", "min_relevance": 3, "max_per_theme": 40,
+            "max_papers": 40, "days_before_end": 21, "refresh_days": 7}
+
+
 def settings(cfg):
-    """The brief: section of config.yaml, with defaults."""
-    b = cfg.get("brief") or {}
-    return {"model": str(b.get("model") or "claude-opus-5-5"), "effort": str(b.get("effort") or "high"),
-            "min_relevance": int(b.get("min_relevance", 3)), "max_per_theme": int(b.get("max_per_theme", 40)),
-            "max_papers": int(b.get("max_papers", 40)), "days_before_end": int(b.get("days_before_end", 21)),
-            "refresh_days": int(b.get("refresh_days", 7))}
+    """The brief: section of config.yaml, with defaults. A number that cannot be read
+    (max_per_theme: forty) is reported and its default used, so a typo there never
+    stops the site from being built."""
+    b = cfg.get("brief")
+    b = b if isinstance(b, dict) else {}
+    out = {}
+    for name, default in DEFAULTS.items():
+        value = b.get(name)
+        if isinstance(default, str):
+            out[name] = str(value or default)
+            continue
+        try:
+            if isinstance(value, bool):
+                raise ValueError
+            out[name] = default if value is None else int(value)
+        except (TypeError, ValueError):
+            print(f"config.yaml, brief: {name}: {value!r} is not a whole number; using {default}.")
+            out[name] = default
+    return out
 
 
 def clip(text, n):
@@ -342,11 +359,18 @@ def draft(key, status, cfg, opts, digests, now, api_key, raw_key):
 
 
 # ------------------------------------------------------------------ when --auto writes a brief
-def age(brief, today):
+def generated_on(brief):
+    """The day (UTC) a brief was written, or None when it carries no readable date."""
     try:
-        return (today - dt.date.fromisoformat(str(brief.get("generated", ""))[:10])).days
+        when = dt.datetime.fromisoformat(str(brief.get("generated", "")))
     except ValueError:
-        return 10 ** 6  # no readable date: treat as stale
+        return None
+    return (when.astimezone(dt.timezone.utc) if when.tzinfo else when).date()
+
+
+def age(brief, today):
+    day = generated_on(brief)
+    return (today - day).days if day else 10 ** 6  # no readable date: treat as stale
 
 
 def due(today, sm, briefs, filled, opts):
@@ -354,9 +378,13 @@ def due(today, sm, briefs, filled, opts):
     window gets no draft today (for the log). filled: keys of windows with stories."""
     cur = site_builder.issue_window(today.isoformat(), sm)
     first, last = site_builder.window_range(cur["key"], sm)
-    prev = site_builder.issue_window((first - dt.timedelta(days=1)).isoformat(), sm)["key"]
+    closed = first - dt.timedelta(days=1)  # the last day of the previous window
+    prev = site_builder.issue_window(closed.isoformat(), sm)["key"]
+    last_brief = briefs.get(prev) or {}
+    # a brief marked final while its quarter was still running misses the rest of the quarter
+    done = last_brief.get("status") == "final" and (generated_on(last_brief) or dt.date.min) > closed
     jobs = []
-    if prev in filled and (briefs.get(prev) or {}).get("status") != "final":
+    if prev in filled and not done:
         jobs.append((prev, "final"))  # the quarter has just closed (or its final brief failed so far)
     start = last - dt.timedelta(days=opts["days_before_end"] - 1)
     old = briefs.get(cur["key"]) or {}
@@ -367,7 +395,7 @@ def due(today, sm, briefs, filled, opts):
     elif cur["key"] not in filled:
         why = f"{cur['label']} has no stories yet"
     elif old.get("status") == "final":
-        why = f"{cur['label']} already has a final brief"
+        why = f"{cur['label']} already has a final brief (it is written again once the quarter closes)"
     elif old and age(old, today) < opts["refresh_days"]:
         why = (f"the {cur['label']} draft of {site_builder.nice_date(old['generated'])} is less than "
                f"{site_builder.count(opts['refresh_days'], 'day')} old")
@@ -391,9 +419,10 @@ def annotate(level, text):
 
 
 def window_key(text):
-    if not site_builder.WINDOW_KEY.match(text.strip()):
+    key = text.strip().upper()  # 2026-q4 is fine too
+    if not site_builder.WINDOW_KEY.match(key):
         raise argparse.ArgumentTypeError("give the issue window as year-Qn, for example 2026-Q4")
-    return text.strip()
+    return key
 
 
 def main(argv=None):
@@ -630,7 +659,10 @@ def hint(doc, text):
 
 
 def lineup_table(doc, lineup, theme_color):
-    """One table for the whole line-up: the theme cell spans its picks and carries its colour."""
+    """One table for the whole line-up. Every row names its theme in the theme's colour (the
+    first in bold), so a pick carried over to the next page still says which theme it is for;
+    Word and LibreOffice also keep a theme's picks together on one page. (A theme cell merged
+    across its picks would stop that in LibreOffice, and is blank on a page it runs over to.)"""
     widths = [3.1, 6.5, 2.4, 5.0]
     t = doc.add_table(rows=1, cols=4)
     t.alignment = WD_TABLE_ALIGNMENT.CENTER
@@ -647,13 +679,15 @@ def lineup_table(doc, lineup, theme_color):
     for entry in lineup:
         theme, color = entry.get("theme", "General"), theme_color(entry.get("theme", "General"))
         picks = [p for p in entry.get("picks") or [] if p.get("story")]
-        first = len(t.rows)
-        for pick in picks or [None]:
+        rows = []
+        for i, pick in enumerate(picks or [None]):
             row = t.add_row()
+            rows.append(row)
             row_flag(row, "w:cantSplit")
             row_widths(row, widths)
             cells = row.cells
             report.shade(cells[0], report.tint(color))
+            add(cells[0].paragraphs[0], theme, 9.5 if i == 0 else 8.5, bold=i == 0, color=color)
             if pick is None:
                 gap = cells[1].merge(cells[3])
                 add(gap.paragraphs[0], "No strong story this quarter: see Gaps worth covering.", 9, italic=True,
@@ -665,8 +699,10 @@ def lineup_table(doc, lineup, theme_color):
             add(cells[3].paragraphs[0], pick.get("angle", ""), 9.5)
             if pick.get("why"):
                 add(cells[3].add_paragraph(), "Why: " + pick["why"], 8.5, italic=True, color=report.MUTED)
-        cell = t.cell(first, 0).merge(t.cell(len(t.rows) - 1, 0)) if len(t.rows) - 1 > first else t.cell(first, 0)
-        add(cell.paragraphs[0], theme, 9.5, bold=True, color=color)
+        for row in rows[:-1]:  # keep-with-next on a row's paragraphs keeps it with the next row
+            for cell in row.cells:
+                for p in cell.paragraphs:
+                    p.paragraph_format.keep_with_next = True
     doc.add_paragraph()
 
 
@@ -784,6 +820,8 @@ def write_docx(path, b, cfg, theme_color):
 
     # ---- 7. watch list
     report.heading(doc, "7. Watch list")
+    if not b.get("watch_list"):
+        hint(doc, "No developing stories were flagged.")
     for w in b.get("watch_list") or []:
         p = doc.add_paragraph(style="List Bullet")
         add(p, w.get("topic", ""), bold=True)
