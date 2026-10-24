@@ -17,6 +17,7 @@ import math
 import os
 import re
 import smtplib
+import ssl
 import sys
 import time
 import unicodedata
@@ -39,10 +40,18 @@ USES = site_builder.USES
 
 
 # ------------------------------------------------------------------ fetching
+MAX_FEED_BYTES = 15 * 1024 * 1024
+
+
 def fetch(url):
-    r = requests.get(url, headers=HEADERS, timeout=25)
-    r.raise_for_status()
-    return r.content
+    with requests.get(url, headers=HEADERS, timeout=25, stream=True) as r:
+        r.raise_for_status()
+        body = b""
+        for chunk in r.iter_content(65536):
+            body += chunk
+            if len(body) > MAX_FEED_BYTES:
+                raise ValueError("response larger than 15 MB")
+        return body
 
 
 FEED_TAG = re.compile(r"<link[^>]+type=[\"']application/(?:rss|atom)\+xml[\"'][^>]*>", re.I)
@@ -512,7 +521,7 @@ def send_email(subject, body_html):
     msg["Subject"], msg["From"], msg["To"] = subject, user or to, to
     msg.attach(MIMEText(body_html, "html", "utf-8"))
     with smtplib.SMTP(host, port, timeout=60) as s:
-        s.starttls()
+        s.starttls(context=ssl.create_default_context())  # verify the mail server's certificate
         if user:
             s.login(user, pwd)
         s.sendmail(msg["From"], [a.strip() for a in to.split(",")], msg.as_string())
@@ -564,7 +573,9 @@ def main():
                 failures.append((src["name"], str(ex)[:140]))
             continue
         for e in entries:
-            link, title = e.get("link"), clean(e.get("title"))
+            link, title = str(e.get("link") or "").strip(), clean(e.get("title"))
+            if not re.match(r"https?://", link, re.I):
+                link = ""  # only web links are kept
             if not link or not title:
                 continue
             uid = hashlib.sha1(link.encode()).hexdigest()[:16]
