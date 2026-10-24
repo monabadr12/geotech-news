@@ -1,0 +1,29 @@
+name: Check feeds
+
+# Tests candidate feed addresses from GitHub's network, without scanning or
+# saving anything. Paste a JSON object such as
+#   {"Railway Gazette": ["https://www.railwaygazette.com/rss", "https://www.railwaygazette.com/feed"]}
+# into the input; the log lists each address as OK or FAIL.
+on:
+  workflow_dispatch:
+    inputs:
+      feeds:
+        description: 'JSON: {"Source name": ["candidate URL", ...]}'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - name: Check candidate addresses
+        run: python check_feeds.py
+        env:
+          FEEDS: ${{ inputs.feeds }}
