@@ -3,6 +3,16 @@
 
 changes:
   - date: 2026-10-24
+    title: Balanced digests, same-event merging, interactive Excel workbook
+    items:
+      - Every digest now spans the magazine's themes. No theme may take more than 30 % of the stories, and themes take turns, so a flood of one kind of story (on 24 October, landslides) can no longer fill the whole digest. A re-scan on the same day re-balances the morning's digest.
+      - Several outlets reporting the same event (for example eight reports of one landslide in Moniquirá, Colombia) are merged into one story.
+      - Chinese, Japanese, Arabic and Hindi headlines are no longer thrown away as false duplicates of each other.
+      - English stories are no longer crowded out by foreign-language results; the language bonus only helps foreign headlines reach Claude.
+      - Keyword false matches removed after review - election "landslides", LNG "liquefaction", market slumps (Italian frana, Chinese 滑坡), insolvencies, pile-ups, building land (German Baugrund) and other false friends - and inflected forms such as tunnelling, frane and Erdrutsche added.
+      - If Anthropic rejects the API key, the digest notes now say why (for example a key that is cut short, an admin key or a subscription token) without showing the key.
+      - The Excel workbooks were redesigned - a Start here sheet, an interactive dashboard whose figures, charts and Top 10 follow dropdown selectors, planning columns (Status, Assigned to, Editor notes), a By theme reading view with collapsible sections, and a Sources sheet.
+  - date: 2026-10-24
     title: No more key prompts; clash-proof saving
     items:
       - The website no longer asks for a GitHub token or an Anthropic key. Scan now opens the scan's page on GitHub, where you press Run workflow, and the website then follows the scan and says when the new digest is ready.

@@ -31,11 +31,14 @@ max_items: 60
 
 # Largest share of the digest one magazine theme may take: 0.3 = 30 %, i.e.
 # at most 18 of 60 stories. Themes take turns, the theme with the best story
-# first, so every theme that has candidates is represented. Places left over
-# when the other themes have run out go to the best remaining stories, whatever
-# their theme. The same share caps each theme among the stories sent to Claude
-# (claude: max_candidates below).
+# first, so every theme that has candidates is represented. The same share caps
+# each theme among the stories sent to Claude (claude: max_candidates below).
 max_share_per_theme: 0.3
+
+# When the other themes run out of stories, should the free places go to more
+# stories from the big themes (true), or should the digest stay shorter and
+# balanced (false)?
+fill_leftover_places: false
 
 # Stories need at least this keyword score to be considered.
 min_keyword_score: 3

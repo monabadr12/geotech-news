@@ -37,12 +37,25 @@ even when Claude is not available. When Claude triage runs, it confirms or corre
 After changing the keyword or theme lists, `python scanner.py --reclassify` re-files the stories already archived.
 
 ### Excel workbooks
-Each issue window has a workbook (`docs/exports/2026-Q4.xlsx`), and there is one for the whole archive
-(`geotech-news-archive.xlsx`). Each contains:
-* **Dashboard** — key figures, colour-coded tables and charts: stories by theme, suggested use, relevance,
-  stories per digest, and a theme × use heat map.
-* **Stories** — every story as a filterable Excel table, colour-coded by theme and rating, with clickable links.
+Each issue window has a workbook (`docs/exports/2026-Q4.xlsx`, button **Excel workbook** on the issue page), and there
+is one for the whole archive (`geotech-news-archive.xlsx`, on the Archive page). Each contains:
+* **Start here** — what each sheet is for, how to use the selectors, colour keys, and links to every sheet and theme.
+* **Dashboard (interactive)** — yellow dropdowns for *Theme*, *Suggested use*, *Minimum relevance* and, in the archive
+  workbook, *Issue window*. Every key figure, table, chart, the theme × use heat map and the **Top 10 stories** list
+  recalculate for the selection.
+* **Stories** — every story as a filterable Excel table, colour-coded by theme and rating, with the headline linked to the
+  article. Planning columns let you work in the file: **Status** (To review / Shortlisted / Commissioned / Published /
+  Not used), **Assigned to** and **Editor notes**; the dashboard's planning chart follows the statuses you set.
+* **By theme** — a tidy reading view, one collapsible section per theme, best stories first.
 * **Sources** — which outlets contributed and how relevant their stories were.
+
+Tips: downloaded files open in Protected View, so press **Enable Editing** to see the figures. The workbook is rebuilt
+after every scan, so save your own copy for the planning columns.
+
+### How the digest is balanced
+No theme may take more than 30 % of a digest (`max_share_per_theme` in `config.yaml`; 18 of 60 stories). Themes take
+turns, the theme with the best story first, so every theme that has stories is represented. Several outlets reporting the
+same event are merged into one story. A second scan on the same day merges with the morning's digest and re-balances it.
 
 ### Website report (Word)
 `docs/reports/site-report.docx` is regenerated after every scan: status at a glance, an automatic review of the

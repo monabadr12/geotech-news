@@ -311,14 +311,18 @@ def theme_share(cfg):
     return min(max(share, 0.0), 1.0)
 
 
-def balanced(items, limit, share, rank):
+def fill_leftovers(cfg):
+    return bool(cfg.get("fill_leftover_places", False))
+
+
+def balanced(items, limit, share, rank, fill=True):
     """Up to `limit` items spread across the magazine themes. Themes take
     turns, the theme with the best story first, each giving its best remaining
-    story, until it runs out or reaches its cap of ceil(limit * share). Places
-    still free when every theme is capped or empty go to the best remaining
-    stories, whatever their theme."""
+    story, until it runs out or reaches its cap of ceil(limit * share). With
+    fill, places still free when every theme is capped or empty go to the best
+    remaining stories, whatever their theme; without it the cap is strict."""
     order = sorted(items, key=lambda i: -rank(i))
-    if len(order) <= limit:
+    if fill and len(order) <= limit:
         return order
     queues = {}
     for it in order:  # themes in the order of their best story
@@ -328,7 +332,7 @@ def balanced(items, limit, share, rank):
         for queue in queues.values():
             if turn < len(queue) and len(picked) < limit:
                 picked.append(queue[turn])
-    if len(picked) < limit:
+    if fill and len(picked) < limit:
         chosen = {id(i) for i in picked}
         picked += [i for i in order if id(i) not in chosen][: limit - len(picked)]
     return sorted(picked, key=lambda i: -rank(i))
@@ -532,7 +536,7 @@ def save_digest(now, stories, failures, notes, ai_used, new_count, cfg):
         union = stories + [s for s in old.get("stories", []) if s["id"] not in known]
         union.sort(key=lambda s: -s["rank"])
         digest["stories"] = balanced(drop_same_events(union, cfg), cfg.get("max_items", 40),
-                                     theme_share(cfg), lambda s: s["rank"])
+                                     theme_share(cfg), lambda s: s["rank"], fill=fill_leftovers(cfg))
         digest["new_items"] += old.get("new_items", 0)
         digest["ai_used"] = ai_used or old.get("ai_used", False)
     digest["stories"].sort(key=lambda s: -s["rank"])
@@ -613,7 +617,7 @@ def main():
         kept = [i for i in pool if i["score"] >= minscore]
     for i in kept:
         i["rank"] = i["relevance"] * 100 + i["score"]
-    selected = balanced(kept, cfg.get("max_items", 40), share, lambda i: i["rank"])
+    selected = balanced(kept, cfg.get("max_items", 40), share, lambda i: i["rank"], fill=fill_leftovers(cfg))
 
     # prune memory older than 45 days
     limit = (now - dt.timedelta(days=45)).date().isoformat()
