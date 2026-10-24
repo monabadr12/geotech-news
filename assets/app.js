@@ -270,8 +270,17 @@
       form.querySelector("textarea").disabled = true;
       form.querySelector(".send").disabled = true;
     } else {
-      fetch(endpoint).then(function (r) { return r.json(); }).then(function (j) { bridge = j; refreshStatus(); })
-        .catch(function () { bridge = { ok: false, problem: "the connector did not answer. Check that it is deployed with access for Anyone." }; refreshStatus(); });
+      fetch(endpoint).then(function (r) { return r.json(); }).then(function (j) {
+        bridge = j;
+        refreshStatus();
+        if (!j.ok) addMsg("bot", "<p><b>The connector answered, but reports a problem:</b></p><p>" + esc(j.problem || "unknown problem") + "</p>", "err");
+      }).catch(function () {
+        bridge = { ok: false, problem: "the connector did not answer." };
+        refreshStatus();
+        addMsg("bot", "<p><b>The connector did not answer.</b> In Google Apps Script open <b>Deploy → Manage deployments</b> and check that " +
+          "the web app has <b>Execute as: Me</b> and <b>Who has access: Anyone</b> (not “Anyone with a Google account”), and that " +
+          "the address in <code>config.yaml</code> is the one ending in <code>/exec</code>.</p>", "err");
+      });
     }
 
     loadArchive().then(function (data) {
