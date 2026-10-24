@@ -111,11 +111,21 @@ function apiKey() {
   if (cached) return cached;
   let key = (PropertiesService.getScriptProperties().getProperty('ANTHROPIC_API_KEY') || '').trim();
   if (!key) {
-    const id = (KEY_DOC.match(/[-\w]{25,}/) || [])[0];
-    if (!id) throw new Error('KEY_DOC is not set: paste the link of the Google Doc that holds your key at the top of the script.');
-    const text = DocumentApp.openById(id).getBody().getText();
+    const id = KEY_DOC.indexOf('PASTE-') === 0 ? '' : ((KEY_DOC.match(/\/d\/([-\w]{25,})/) || KEY_DOC.match(/^\s*([-\w]{25,})\s*$/) || [])[1] || '');
+    if (!id) {
+      throw new Error('The script does not know where your key is yet: on line 15, replace PASTE-THE-LINK-TO-YOUR-KEY-DOCUMENT-HERE ' +
+        'with the link of the Google Doc that holds your key, save, and deploy a new version.');
+    }
+    let text;
+    try {
+      text = DocumentApp.openById(id).getBody().getText();
+    } catch (err) {
+      throw new Error('The script could not open the Google Doc in KEY_DOC (' + String(err.message || err) + '). Check that the link ' +
+        'is right, that it is a Google Docs document (an uploaded Word file cannot be read: open it and use File > Save as Google Docs), ' +
+        'and that the deployment runs as you ("Execute as: Me"). Alternatively add the key as a Script property named ANTHROPIC_API_KEY.');
+    }
     const m = text.match(/sk-ant-[A-Za-z0-9_\-]{20,}/);
-    if (!m) throw new Error('No Anthropic key (text starting with sk-ant-) was found in the Google Doc.');
+    if (!m) throw new Error('The Google Doc opened, but no Anthropic key (text starting with sk-ant-) was found in it.');
     key = m[0];
   }
   cache.put('key', key, 600);
