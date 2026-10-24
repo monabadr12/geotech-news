@@ -94,9 +94,10 @@ def issue_window(date_str, start_month=1):
     last = (first + 1) % 12 + 1
     last_year = year + (1 if last < first else 0)
     n = offset // 3 + 1
+    cycle = d.year if d.month >= start_month else d.year - 1  # year the magazine's cycle began
     span = (f"{MONTHS[first - 1]} – {MONTHS[last - 1]} {year}" if last_year == year
             else f"{MONTHS[first - 1]} {year} – {MONTHS[last - 1]} {last_year}")
-    return {"key": f"{year}-Q{n}", "label": f"Q{n} {year}", "span": span}
+    return {"key": f"{cycle}-Q{n}", "label": f"Q{n} {cycle}", "span": span}
 
 
 def nice_date(iso, weekday=False):
@@ -477,7 +478,7 @@ def about_body(cfg, latest):
     n_ml = sum(len(v.get("terms", [])) for v in ml.values())
     ccfg = cfg.get("claude", {})
     themes = "".join(f"<li style='--tc:{theme_color(t)}'><b><span class='ticon sm'>{theme_icon(t)}</span>{esc(t)}</b>"
-                     f"<span>{esc(', '.join(w))}</span></li>" for t, w in cfg["themes"].items())
+                     f"<span>{esc(', '.join(w))}</span></li>" for t, w in cfg["themes"].items() if w)
     rows = "".join(
         f"<tr><td>{esc(f['name'])}</td><td>{esc(urlparse(f['url']).netloc.replace('www.', ''))}</td>"
         f"<td>{'+' + str(f['boost']) if f.get('boost') else '—'}</td></tr>" for f in feeds)
@@ -548,22 +549,31 @@ def write(path, text):
     path.write_text(text, encoding="utf-8")
 
 
+def csv_text(value):
+    """Spreadsheets run cells starting with = + - @ as formulas; keep feed text as text."""
+    return "'" + value if isinstance(value, str) and value[:1] in "=+-@" else value
+
+
 def export_rows(stories):
     for s in stories:
         yield {
             "Digest date": s["_digest"], "Issue window": s["_window"], "Theme": s["theme"],
             "Relevance (1-5)": s.get("relevance") or "", "Suggested use": s.get("use", ""),
-            "Headline (English)": s.get("title_en") or s["title"],
-            "Original headline": s["title"] if s.get("title_en") else "",
-            "Magazine angle": s.get("angle", ""), "Source": s["source"],
+            "Headline (English)": csv_text(s.get("title_en") or s["title"]),
+            "Original headline": csv_text(s["title"]) if s.get("title_en") else "",
+            "Magazine angle": csv_text(s.get("angle", "")), "Source": csv_text(s["source"]),
             "Google News edition": s["_region"], "Published": (s.get("published") or "")[:10], "Link": s["link"],
-            "Keywords": ", ".join(s.get("keywords", [])),
+            "Keywords": csv_text(", ".join(s.get("keywords", []))),
         }
 
 
 def build(cfg):
     use_list = USES
     digests = load_digests()
+    # themes found in the archive but no longer in config.yaml still get pages and rows
+    extra = sorted({s["theme"] for d in digests for s in d["stories"]} - set(theme_order(cfg)))
+    if extra:
+        cfg = dict(cfg, themes={**cfg["themes"], **{t: [] for t in extra}})
     sm = start_month(cfg)
     today_key = issue_window(dt.date.today().isoformat(), sm)["key"]
     order = theme_order(cfg)

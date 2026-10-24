@@ -22,10 +22,10 @@ Website: **https://monabadr12.github.io/geotech-news/**
 | **Archive** | Every digest ever produced, grouped into **three-month issue windows** that match the magazine's quarterly cycle. |
 | **Issue collection** (one per quarter, e.g. *Q4 2026*) | All stories from the quarter in one place: theme overview, "strongest leads" shortlist, all stories by theme, list of daily digests, **Excel workbook**, CSV, and print / save as PDF. This is the page to plan an issue from. |
 | **Search** | Search all archived stories by keyword, issue window, theme, use and rating; export the results. |
-| **AI assistant** | Chat with Claude about the archive: find stories, compare quarters, get a recommended line-up for an issue, and attach PDF or Word documents (calls for papers, drafts, reports) to discuss them alongside the news. |
+| **AI assistant** | Chat with Claude about the archive: find stories, compare quarters, get a recommended line-up for an issue, and attach PDF or Word documents (calls for papers, drafts, reports) to discuss them alongside the news. Needs the one-time connector setup below. |
 | **Method & sources** | What is scanned, how stories are scored, and which sources failed on the latest run. |
 
-Every page has a **Scan now** button (runs a scan immediately) and a **Settings** gear (see below).
+Every page has a **Scan now** button (see below).
 The footer links the **Website report (Word)**.
 
 ### How stories are categorised
@@ -105,18 +105,37 @@ At the bottom of the digest, open **Scanner notes and sources that failed**. For
 RSS feed address (often `site.com/feed/` or an RSS icon) and replace the address in `config.yaml`.
 If AI triage did not work, the same panel says why (for example, a rejected API key).
 
-## Website settings: Scan now button and AI assistant
-The website is public, so it holds no keys itself. The two features that need keys read them from your browser:
-open the **gear icon** on any page and paste them once per device. They are stored only in that browser.
+## Scan now button
+**Scan now** (top right of every page) opens the scan's page on GitHub in a new tab. Press **Run workflow**, then the
+green **Run workflow** button. Starting a GitHub job needs a signed-in GitHub user, which you are on github.com, so the
+website itself needs no key or token. Back on the website, a notice follows the scan and tells you when the new digest
+is ready (about 4 minutes).
 
-* **GitHub token (Scan now).** On GitHub open *Settings → Developer settings → Personal access tokens →
-  Fine-grained tokens → Generate new token*. Repository access: *Only select repositories* → `geotech-news`.
-  Permissions: *Actions → Read and write*. Copy the token into the website's settings.
-  Without a token, the button opens the GitHub page where you can press **Run workflow**.
-* **Anthropic API key (AI assistant).** Create one at console.anthropic.com → API Keys (a separate key with a
-  monthly spend limit is a good safeguard) and paste it into the website's settings. The assistant calls Claude
-  directly from your browser. Choose the model there: Claude Opus 5.5 gives the best answers; Claude Sonnet 5.5 and
-  Claude Haiku 5.5 are faster and cheaper.
+## AI assistant (one-time setup, about 5 minutes)
+The website is public, so it cannot hold an API key, and GitHub secrets can only be used by GitHub jobs. The assistant
+therefore talks to a small connector that runs in **your own Google account**. The connector reads your Anthropic key from
+your private Google Doc and passes questions to Claude. The key never reaches the website or this repository.
+
+1. Open <https://script.google.com> and press **New project**. Rename it *Geotechnical News Desk assistant*.
+2. Delete the sample code and paste the whole of [`assistant/bridge.gs`](assistant/bridge.gs) (on GitHub, open the file
+   and press the copy icon).
+3. On line 15, replace `PASTE-THE-LINK-TO-YOUR-KEY-DOCUMENT-HERE` with the link to the Google Doc that holds your key.
+   Press **Save** (disk icon).
+4. *Optional check:* choose **testConnection** in the function menu at the top and press **Run**. Allow the permissions
+   Google asks for. The log at the bottom should show `HTTP 200` and the word *connected*.
+5. Press **Deploy → New deployment**, click the gear icon and choose **Web app**. Set **Execute as: Me** and
+   **Who has access: Anyone**. Press **Deploy** and allow the permissions. Google warns that the app is unverified because
+   you wrote it yourself: choose **Advanced → Go to project**.
+6. Copy the **Web app URL** (it ends in `/exec`) and put it in `config.yaml` under `assistant: endpoint:` (or send it to
+   Claude to do it). The site rebuilds itself and the assistant connects.
+
+Notes:
+* Keep the Google Doc private (Share → *Restricted*). The connector reads it as you, so it does not need to be shared.
+* The connector answers up to 100 questions a day (`DAILY_LIMIT` in the script) to protect your Anthropic bill. Setting a
+  monthly spend limit in the Anthropic Console is still recommended.
+* Optional passcode: in the script's **Project Settings → Script properties**, add `ACCESS_CODE`. The website then asks
+  for it once per device.
+* After editing the script, use **Deploy → Manage deployments → Edit → Version: New version** to update the existing address.
 
 ## Optional: e-mail delivery
 Add these secrets the same way as the API key: `SMTP_HOST`, `SMTP_PORT` (usually 587), `SMTP_USER`,
@@ -138,6 +157,7 @@ For Gmail: host `smtp.gmail.com`, and create an *App password* in your Google ac
 | `site_builder.py` | Builds the website in `docs/` from the archive in `data/digests/`. |
 | `exports.py` | Builds the Excel workbooks. |
 | `report.py` | Builds the Word website report. |
+| `assistant/bridge.gs` | The AI assistant's connector, run in your Google account (see *AI assistant*). |
 | `data/changelog.yaml` | Change log and open items shown in the Word report. |
 | `config.yaml` | All settings. |
 | `assets/` | Website style sheet, script and icons. |
