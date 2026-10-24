@@ -417,3 +417,20 @@ claude:
   effort: low               # low | medium | high — how hard Claude thinks per batch
   max_candidates: 130     # best-scoring stories sent to Claude per run
   min_relevance: 3       # keep stories Claude rates 3/5 or higher
+
+# ---- Issue brief (Word document for the editorial meeting) -------
+# Claude reads the quarter's stories and research papers and drafts the brief:
+# an overview, a proposed line-up per theme, feature leads, Academia-to-Industry
+# topics, a regional-balance check, gaps worth covering and a watch list. It uses
+# the same ANTHROPIC_API_KEY secret as the triage. A draft is written by the daily
+# scan in the last days_before_end days of the quarter and refreshed when it is
+# refresh_days old; the final brief is written the day after the quarter closes.
+# "Generate / update brief" on an issue page writes one at any time.
+brief:
+  model: claude-opus-5-5   # Claude Opus: the most capable model, for a once-a-quarter document
+  effort: high             # low | medium | high — how hard Claude thinks about the line-up
+  min_relevance: 3         # stories rated 3/5 or higher (keyword-ranked stories count too)
+  max_per_theme: 40        # best stories per theme that Claude reads
+  max_papers: 40           # best research papers that Claude reads
+  days_before_end: 21      # automatic draft in the last 21 days of the quarter
+  refresh_days: 7          # the draft is rewritten when it is 7 days old

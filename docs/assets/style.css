@@ -98,6 +98,39 @@ h1 { font: 700 34px/1.15 var(--serif); margin: 0 0 10px; letter-spacing: -.01em;
 .callout:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
 @media (prefers-color-scheme: dark) { .callout { border-color: #4a3f20; } }
 
+/* ---------- issue brief card (issue pages) ---------- */
+.brief { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow);
+  margin: 0 0 22px; padding: 20px 22px 18px; overflow: hidden; scroll-margin-top: 16px; }
+.brief::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 4px;
+  background: linear-gradient(90deg, #e0b13a, #e04f2c 25%, #6b4fd6 50%, #0b97a5 75%, #1f9d63); }
+.brief-head { display: flex; gap: 14px; align-items: flex-start; }
+.brief-mark { display: grid; place-items: center; flex: none; width: 46px; height: 46px; border-radius: 12px; color: #f2cf6f;
+  background: linear-gradient(135deg, var(--brand), var(--brand-2)); box-shadow: 0 3px 10px rgba(22, 50, 79, .3); }
+.brief-mark .ico { width: 24px; height: 24px; }
+.brief-head .eyebrow { margin-bottom: 4px; }
+.brief-head h2 { font: 700 23px/1.2 var(--serif); margin: 0; }
+.brief-meta { margin: 4px 0 0; color: var(--muted); font-size: 13.5px; max-width: 760px; }
+.brief-meta code { font-size: 12.5px; }
+.brief-overview { font: 16px/1.6 var(--serif); margin: 16px 0 14px; max-width: 860px; }
+.lineup { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap: 8px; }
+.lineup li { display: flex; flex-direction: column; gap: 3px; min-width: 0; background: var(--surface-2); border: 1px solid var(--line);
+  border-left: 4px solid var(--tc); border-radius: 10px; padding: 9px 12px; }
+.lineup .lt { display: flex; align-items: center; gap: 6px; font: 700 10.5px var(--sans); letter-spacing: .07em; text-transform: uppercase; color: var(--tc); }
+.lineup .lt .ico { width: 13px; height: 13px; }
+.lineup a { font-weight: 600; font-size: 14.5px; line-height: 1.35; color: var(--ink); text-decoration: none; overflow-wrap: anywhere; }
+.lineup a:hover { color: var(--link); text-decoration: underline; }
+.lineup .lf { font-size: 12.5px; color: var(--muted); }
+.brief-also { margin: 12px 0 0; font-size: 13px; color: var(--muted); }
+.brief .actions { margin-top: 14px; }
+.brief-none { border-style: dashed; box-shadow: none; }
+.brief-none .brief-mark { background: var(--surface-2); color: var(--muted); box-shadow: none; border: 1px solid var(--line); }
+.brief-btn.running .ico { animation: spin 1.1s linear infinite; }
+.badge.draft { background: #fdefcf; color: #8a5a00; }
+.badge.final { background: #ddf3e7; color: #146c40; }
+@media (prefers-color-scheme: dark) {
+  .badge.draft { background: #3a2c0d; color: #f2c96a; } .badge.final { background: #15342a; color: #8fdcb2; }
+}
+
 /* ---------- buttons & toolbar ---------- */
 .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; align-items: center; }
 .btn { display: inline-flex; align-items: center; gap: 7px; font: 600 14px var(--sans); color: var(--ink); background: var(--surface);
@@ -307,6 +340,9 @@ table.overview { width: 100%; border-collapse: collapse; font-size: 14px; }
   .f-count { margin-left: 0; }
   .bubble { max-width: 94%; }
   .send span { display: none; }
+  .brief { padding: 18px 16px 16px; }
+  .brief-mark { width: 38px; height: 38px; }
+  .brief-head h2 { font-size: 20px; }
 }
 @media print {
   .masthead, .toolbar, .actions, .theme-toc, .pager, .notes, .foot, .callout, .toast { display: none !important; }

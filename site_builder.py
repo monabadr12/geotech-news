@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Builds the website in docs/ from the saved digests in data/digests/.
+Builds the website in docs/ from the saved digests in data/digests/ (and the
+issue briefs in data/briefs/, written by brief.py).
 
 The digests (one JSON file per day) are the permanent archive; everything in
 docs/ is regenerated from them on every run, so the design can be changed and
@@ -23,6 +24,7 @@ import report
 
 ROOT = Path(__file__).resolve().parent
 DIGESTS = ROOT / "data" / "digests"
+BRIEFS = ROOT / "data" / "briefs"
 CHANGELOG = ROOT / "data" / "changelog.yaml"
 DOCS = ROOT / "docs"
 ASSETS = ROOT / "assets"
@@ -108,6 +110,37 @@ def load_digests():
     return sorted(out, key=lambda d: d["date"], reverse=True)
 
 
+WINDOW_KEY = re.compile(r"^\d{4}-Q[1-4]$")
+
+
+def tidy_all(value, key=""):
+    """tidy() for nested data: every string cleaned, every "link" a web link or '#'."""
+    if isinstance(value, dict):
+        return {k: tidy_all(v, k) for k, v in value.items()}
+    if isinstance(value, list):
+        return [tidy_all(v) for v in value]
+    if isinstance(value, str):
+        return safe_url(value) if key == "link" else CONTROL_CHARS.sub("", value)
+    return value
+
+
+def load_briefs():
+    """Issue briefs written by brief.py (data/briefs/<window key>.json), by window key.
+    A file that cannot be read is reported and left out, so a hand edit gone wrong
+    never stops the site from being built."""
+    out = {}
+    for p in sorted(BRIEFS.glob("*.json")):
+        if not WINDOW_KEY.match(p.stem):
+            continue
+        try:
+            b = tidy_all(json.loads(p.read_text(encoding="utf-8")))
+            dt.datetime.fromisoformat(b["generated"])  # every page that shows the brief gives this date
+            out[p.stem] = b
+        except (ValueError, KeyError, TypeError) as ex:
+            print(f"Issue brief {p.name} left out: it is not a readable brief ({type(ex).__name__}: {ex}).")
+    return out
+
+
 def issue_window(date_str, start_month=1):
     """Three-month window (matching the magazine's quarterly cycle) containing date."""
     d = dt.date.fromisoformat(date_str[:10])
@@ -121,6 +154,15 @@ def issue_window(date_str, start_month=1):
     span = (f"{MONTHS[first - 1]} – {MONTHS[last - 1]} {year}" if last_year == year
             else f"{MONTHS[first - 1]} {year} – {MONTHS[last - 1]} {last_year}")
     return {"key": f"{cycle}-Q{n}", "label": f"Q{n} {cycle}", "span": span}
+
+
+def window_range(key, start_month=1):
+    """First and last day of the issue window with this key (e.g. 2026-Q4)."""
+    cycle, n = int(key[:4]), int(key[-1])
+    month = (start_month - 1 + (n - 1) * 3) % 12 + 1
+    year = cycle if month >= start_month else cycle + 1
+    after = dt.date(year + (month + 2) // 12, (month + 2) % 12 + 1, 1)  # first day of the next window
+    return dt.date(year, month, 1), after - dt.timedelta(days=1)
 
 
 def nice_date(iso, weekday=False):
@@ -303,7 +345,7 @@ def theme_strip(stories, order):
 
 
 # ------------------------------------------------------------------ pages
-def digest_body(d, cfg, root, uses, prev_d=None, next_d=None, latest=False):
+def digest_body(d, cfg, root, uses, prev_d=None, next_d=None, latest=False, brief=None):
     win = issue_window(d["date"], start_month(cfg))
     stories = d["stories"]
     themes = len({s["theme"] for s in stories})
@@ -316,7 +358,9 @@ def digest_body(d, cfg, root, uses, prev_d=None, next_d=None, latest=False):
     if latest:
         head.append(f"<a class='callout' href='{root}issues/{win['key']}.html'>{icon('sheet')}<span><b>Building the "
                     f"{win['label']} issue?</b> Every story found {win['span']} is collected in one place, by theme, "
-                    f"with an Excel workbook →</span></a>")
+                    f"with an Excel workbook"
+                    + (f" and the {'final' if brief.get('status') == 'final' else 'draft'} issue brief" if brief else "")
+                    + " →</span></a>")
     if not stories:
         head.append("<p class='empty'>No new geotechnical stories met the threshold in this period.</p>")
     else:
@@ -352,7 +396,62 @@ def window_summary(stories):
     }
 
 
-def issue_body(win, stories, digests, cfg, uses, current):
+def count(n, one, many=None):
+    return f"{n} {one if n == 1 else (many or one + 's')}"
+
+
+def brief_file(key):
+    return f"briefs/{key}-issue-brief.docx"
+
+
+def brief_card(win, b, cfg, current, root, opts):
+    """Issue page card: the brief's overview and line-up headlines, its Word file and
+    a button that starts the brief workflow on GitHub. opts come from brief.settings()."""
+    key = win["key"]
+    gen = (f"<button type='button' class='btn brief-btn' id='brief-btn' data-window='{key}' "
+           f"data-current='{'1' if current else ''}'>{icon('spark')}<span>Generate / update brief</span></button>")
+    if not b:
+        if current:
+            start = window_range(key, start_month(cfg))[1] - dt.timedelta(days=opts["days_before_end"] - 1)
+            text = (f"Claude drafts it automatically in the last {opts['days_before_end']} days of the quarter "
+                    f"(from {nice_date(start.isoformat())}), refreshes the draft every {count(opts['refresh_days'], 'day')} "
+                    "and writes the final brief the day after the quarter closes. You can also generate a draft now.")
+        else:
+            text = ("The final brief is written by the first daily scan after a quarter closes. To write one for this "
+                    f"window, press <b>Generate / update brief</b> and enter <code>{key}</code> on the GitHub page.")
+        return (f"<section class='brief brief-none' id='brief'><div class='brief-head'><span class='brief-mark'>{icon('doc')}</span>"
+                f"<div><p class='eyebrow'>Issue brief</p><h2>No brief yet for {win['label']}</h2><p class='brief-meta'>{text}</p>"
+                f"</div></div><div class='actions'>{gen}</div></section>")
+    final = b.get("status") == "final"
+    papers = b.get("papers_considered") or 0
+    meta = (f"Drafted by Claude on {esc(nice_date(b['generated']))} from "
+            f"{count(b.get('stories_considered') or 0, 'story', 'stories')}"
+            + (f" and {count(papers, 'paper')}" if papers else "") + " · check every story at its source before publishing")
+    picks = []
+    for entry in b.get("lineup") or []:
+        chosen = [p for p in entry.get("picks") or [] if p.get("story")]
+        if not chosen:
+            continue
+        s, t = chosen[0]["story"], entry.get("theme", "General")
+        more = f" · +{len(chosen) - 1} more in the brief" if len(chosen) > 1 else ""
+        picks.append(f"<li style='--tc:{theme_color(t)}'><span class='lt'>{theme_icon(t)}{esc(t)}</span>"
+                     f"<a href='{esc(s.get('link', '#'))}' target='_blank' rel='noopener' dir='auto'>"
+                     f"{esc(s.get('title_en') or s.get('title', ''))}</a>"
+                     f"<span class='lf'>{esc(chosen[0].get('format', ''))} · {esc(s.get('source', ''))}{more}</span></li>")
+    also = ", ".join(count(len(b.get(k) or []), one) for k, one in
+                     (("feature_leads", "feature lead"), ("a2i_topics", "Academia-to-Industry topic"), ("gaps", "gap")))
+    status = "final" if final else "draft"
+    return (f"<section class='brief {status}' id='brief'><div class='brief-head'><span class='brief-mark'>{icon('doc')}</span>"
+            f"<div><p class='eyebrow'>Issue brief <span class='badge {status}'>{status.title()}</span></p>"
+            f"<h2>Proposed line-up for {win['label']}</h2><p class='brief-meta'>{meta}</p></div></div>"
+            f"<p class='brief-overview'>{esc(b.get('overview', ''))}</p>"
+            + (f"<ul class='lineup'>{''.join(picks)}</ul>" if picks else "")
+            + f"<p class='brief-also'>Also in the Word file: {also}, a regional-balance check and a watch list.</p>"
+            f"<div class='actions'><a class='btn primary' href='{root}{brief_file(key)}' download>{icon('download')}"
+            f"Issue brief (Word)</a>{gen}</div></section>")
+
+
+def issue_body(win, stories, digests, cfg, uses, current, brief=None, brief_opts=None):
     root = "../"
     order = theme_order(cfg)
     summ = window_summary(stories)
@@ -389,6 +488,8 @@ def issue_body(win, stories, digests, cfg, uses, current):
     if not stories:
         body.append("<p class='empty'>No stories yet in this window.</p>")
         return "".join(body)
+    if brief_opts:
+        body.append(brief_card(win, brief, cfg, current, root, brief_opts))
     body.append("<h2 class='section-h'>Theme overview</h2><div class='table-wrap'><table class='overview'>"
                 "<thead><tr><th scope='col'>Theme</th><th scope='col'>Stories</th><th scope='col'>Rated 5</th>"
                 "<th scope='col'>Rated 4</th><th scope='col'>Feature leads</th><th scope='col'>Academia-to-Industry</th></tr></thead>"
@@ -403,8 +504,9 @@ def issue_body(win, stories, digests, cfg, uses, current):
     return "".join(body)
 
 
-def archive_body(windows, cfg, current_key):
+def archive_body(windows, cfg, current_key, briefs=None):
     root = ""
+    briefs = briefs or {}
     order = theme_order(cfg)
     if not windows:
         return hero("Archive", "All digests") + "<p class='empty'>The archive is empty. It fills automatically after the first scan.</p>"
@@ -430,13 +532,20 @@ def archive_body(windows, cfg, current_key):
             for t in order if t in counts)
         days = "".join(f"<a href='digests/{d['date']}.html'>{dt.date.fromisoformat(d['date']).day} "
                        f"{MONTHS[int(d['date'][5:7]) - 1]}<span>{len(d['stories'])}</span></a>" for d in digests)
+        b = briefs.get(win["key"])
+        if b:
+            brief_link = (f"<a class='btn' href='{root}{brief_file(win['key'])}' download>{icon('doc')}Issue brief"
+                          f"{'' if b.get('status') == 'final' else ' (draft)'}</a>")
+        else:
+            brief_link = (f"<a class='btn ghost' href='{root}issues/{win['key']}.html#brief' title='No brief yet: "
+                          f"generate one on the issue page'>{icon('doc')}Issue brief</a>")
         out.append(
             f"<section class='window'><div class='window-head'><div><h2>{win['label']}"
             f"{' <span class=badge>In progress</span>' if win['key'] == current_key else ''}</h2>"
             f"<p>{esc(win['span'])} · {summ['stories']} stories · {len(digests)} digests · "
             f"{summ['top']} rated 5 / 5 · {summ['features']} feature leads</p></div>"
             f"<div class='actions'><a class='btn primary' href='{root}issues/{win['key']}.html'>Open issue collection</a>"
-            f"<a class='btn' href='{root}exports/{win['key']}.xlsx' download>{icon('sheet')}Excel</a></div></div>"
+            f"<a class='btn' href='{root}exports/{win['key']}.xlsx' download>{icon('sheet')}Excel</a>{brief_link}</div></div>"
             f"{theme_strip(stories, order)}"
             f"<div class='window-body'><ul class='bars'>{bars}</ul>"
             f"<div class='days'><h3>Daily digests</h3><div class='day-grid'>{days}</div></div></div></section>")
@@ -491,7 +600,7 @@ recommend stories and angles for the magazine, and read PDF or Word files you at
 </div>"""
 
 
-def about_body(cfg, latest):
+def about_body(cfg, latest, brief_opts):
     feeds = cfg.get("feeds", [])
     g = cfg.get("google_news") or {}
     editions = len(g.get("editions") or [1])
@@ -522,7 +631,8 @@ def about_body(cfg, latest):
 <li><b>Collect.</b> {len(feeds)} websites and {n_core * editions + n_extra} Google News searches ({n_core} core searches in {editions} English editions, plus {n_extra} further searches including {n_foreign} in other languages). The scan runs every day at 05:00 Cairo time, and on demand: <b>Scan now</b> opens the scan's page on GitHub, where you press <b>Run workflow</b>; the website then follows the scan and tells you when the new digest is ready. Each run looks back {cfg.get('lookback_hours', 60)} hours; stories already shown are remembered for 45 days and never repeated.</li>
 <li><b>Score and categorise.</b> Headlines and summaries are scored against {len(cfg['keywords'])} English keywords and {n_ml} terms in 11 other languages. Each foreign term counts as its English equivalent (for example <i>glissement de terrain</i>, <i>deslizamiento</i>, <i>longsor</i> and <i>انهيار أرضي</i> all count as “landslide”), so every story is filed under an English theme. Specialist sources earn bonus points, noise terms lose points, near-identical headlines are merged. A story needs {cfg.get('min_keyword_score', 3)} points to go forward.</li>
 <li><b>Triage.</b> Up to {ccfg.get('max_candidates', 80)} candidates go to Claude, which rates each 1–5 for geotechnical substance (below {ccfg.get('min_relevance', 3)} is dropped), confirms the theme, suggests a use, writes a one-sentence magazine angle, and translates non-English headlines.</li>
-<li><b>Publish & archive.</b> Up to {cfg.get('max_items', 40)} stories per digest. Every digest is stored permanently, grouped into three-month issue windows, and exported to Excel.</li></ol>
+<li><b>Publish & archive.</b> Up to {cfg.get('max_items', 40)} stories per digest. Every digest is stored permanently, grouped into three-month issue windows, and exported to Excel.</li>
+<li><b>Issue brief.</b> In the last {brief_opts['days_before_end']} days of each quarter Claude reads the quarter's stories rated {brief_opts['min_relevance']} / 5 or higher (at most {brief_opts['max_per_theme']} per theme) and any research papers, and drafts the brief for the editorial meeting as a Word document: an overview, a proposed line-up per theme, feature leads with the kinds of experts to approach, Academia-to-Industry topics, a regional-balance check, gaps worth covering and a watch list. The draft is refreshed every {count(brief_opts['refresh_days'], 'day')} and the final brief is written the day after the quarter closes. <b>Generate / update brief</b> on an issue page starts one on GitHub at any time.</li></ol>
 <h2 class="section-h">Magazine themes</h2><p class="hint">Words that suggest each theme (English keywords found in any language count too).</p><ul class="theme-list">{themes}</ul>
 <h2 class="section-h">Websites read directly</h2><div class="table-wrap"><table class="overview"><thead><tr><th>Source</th><th>Site</th><th>Bonus</th></tr></thead><tbody>{rows}</tbody></table></div>
 {failed}
@@ -591,8 +701,11 @@ def export_rows(stories):
 
 
 def build(cfg):
+    import brief  # the issue brief's Word file (brief.py imports this module, so not at the top)
+
     use_list = USES
     digests = load_digests()
+    briefs, brief_opts = load_briefs(), brief.settings(cfg)
     # themes found in the archive but no longer in config.yaml still get pages and rows
     extra = sorted({s["theme"] for d in digests for s in d["stories"]} - set(theme_order(cfg)))
     if extra:
@@ -615,12 +728,22 @@ def build(cfg):
                                      _region=COUNTRIES.get(s.get("region", ""), s.get("region", ""))))
 
     # fresh output folder (the archive itself lives in data/digests/)
-    for sub in ("digests", "issues", "exports", "assets", "reports"):
+    for sub in ("digests", "issues", "exports", "assets", "reports", "briefs"):
         shutil.rmtree(DOCS / sub, ignore_errors=True)
     shutil.copytree(ASSETS, DOCS / "assets")
     (DOCS / "exports").mkdir()
     (DOCS / "reports").mkdir()
+    (DOCS / "briefs").mkdir()
     write(DOCS / ".nojekyll", "")
+
+    # issue briefs, from their JSON alone; one that cannot be rendered (a hand edit gone
+    # wrong) is left out with a message rather than stopping the build and the scan's save
+    for key, b in list(briefs.items()):
+        try:
+            brief.write_docx(DOCS / brief_file(key), b, cfg, theme_color)
+        except (AttributeError, KeyError, TypeError, ValueError) as ex:
+            print(f"Issue brief {key} left out: it could not be rendered ({type(ex).__name__}: {ex}).")
+            del briefs[key]
 
     dates = [d["date"] for d in digests]
     for i, d in enumerate(digests):
@@ -632,7 +755,8 @@ def build(cfg):
 
     if digests:
         latest = digests[0]
-        body = digest_body(latest, cfg, "", use_list, dates[1] if len(dates) > 1 else None, None, latest=True)
+        body = digest_body(latest, cfg, "", use_list, dates[1] if len(dates) > 1 else None, None, latest=True,
+                           brief=briefs.get(issue_window(latest["date"], sm)["key"]))
     else:
         latest = None
         body = hero("Latest digest", "Welcome",
@@ -644,7 +768,8 @@ def build(cfg):
         key = w["win"]["key"]
         write(DOCS / "issues" / f"{key}.html",
               page(cfg, f"{w['win']['label']} issue window",
-                   issue_body(w["win"], w["stories"], w["digests"], cfg, use_list, key == today_key), "../", "archive"))
+                   issue_body(w["win"], w["stories"], w["digests"], cfg, use_list, key == today_key,
+                              briefs.get(key), brief_opts), "../", "archive"))
         ordered = sorted(w["stories"], key=lambda s: (s["theme"], -s["rank"]))
         with open(DOCS / "exports" / f"{key}.csv", "w", newline="", encoding="utf-8-sig") as f:
             writer = csv.DictWriter(f, fieldnames=CSV_FIELDS)
@@ -672,10 +797,10 @@ def build(cfg):
     report.write_report(DOCS / "reports" / "site-report.docx", cfg, digests, windows, theme_color,
                         site_url(cfg), CHANGELOG)
 
-    write(DOCS / "archive.html", page(cfg, "Archive", archive_body(windows, cfg, today_key), "", "archive"))
+    write(DOCS / "archive.html", page(cfg, "Archive", archive_body(windows, cfg, today_key, briefs), "", "archive"))
     write(DOCS / "search.html", page(cfg, "Search the archive", search_body(cfg, use_list, windows), "", "search"))
     write(DOCS / "assistant.html", page(cfg, "AI assistant", assistant_body(cfg), "", "assistant"))
-    write(DOCS / "about.html", page(cfg, "Method & sources", about_body(cfg, latest), "", "about"))
+    write(DOCS / "about.html", page(cfg, "Method & sources", about_body(cfg, latest, brief_opts), "", "about"))
 
 
 if __name__ == "__main__":
