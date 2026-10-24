@@ -34,8 +34,17 @@ def load(path):
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
 
 
+def committed(name):
+    """The digest as it was in the commit this run started from (None if new)."""
+    try:
+        return json.loads(git("show", f"HEAD:data/digests/{name}"))
+    except subprocess.CalledProcessError:
+        return None
+
+
 def merge_digest(theirs, ours):
-    """Union of the day's stories; this run's version of a story wins."""
+    """Union of the day's stories (this run's version of a story wins); the
+    caller re-balances it."""
     if not theirs:
         return ours
     known = {s["id"] for s in ours["stories"]}
@@ -51,6 +60,7 @@ def main():
     branch = sys.argv[1] if len(sys.argv) > 1 else "main"
     our_seen = load(SEEN_FILE) or {}
     ours = {name: load(DIGESTS / name) for name in changed_digests()}
+    base = {name: committed(name) for name in ours}
 
     git("fetch", "--quiet", "origin", branch)
     git("reset", "--quiet", "--hard", f"origin/{branch}")
@@ -62,12 +72,21 @@ def main():
                 seen[key] = day
         SEEN_FILE.parent.mkdir(parents=True, exist_ok=True)
         SEEN_FILE.write_text(json.dumps(seen, indent=0))
+    rebalance = []
     for name, digest in ours.items():
         if digest is None:
             continue
         path = DIGESTS / name
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(merge_digest(load(path), digest), ensure_ascii=False, indent=1), encoding="utf-8")
+        theirs = load(path)
+        if theirs is None or theirs == base[name]:
+            merged = digest  # nobody else changed it: this run's digest already includes the earlier one
+        else:
+            merged = merge_digest(theirs, digest)  # another run saved the same day meanwhile
+            rebalance.append(name)
+        path.write_text(json.dumps(merged, ensure_ascii=False, indent=1), encoding="utf-8")
+    if rebalance:
+        subprocess.run([sys.executable, str(ROOT / "scanner.py"), "--rebalance", *rebalance], cwd=ROOT, check=True)
 
     # rebuild with the newest code, in a fresh process (this one has the old modules loaded)
     subprocess.run([sys.executable, str(ROOT / "site_builder.py")], cwd=ROOT, check=True)
