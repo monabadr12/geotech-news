@@ -838,7 +838,7 @@ def _dashboard(ws, ctx):
                             f'HYPERLINK({url},{shown}),HYPERLINK({to_row},{shown})))'),
              f=font(10, True, MUTED), fl=band, border=bottom,
              al=Alignment(vertical="center", wrap_text=True, indent=1))
-        put(ws, r, 9, pick("digest", text=False), f=font(9), fl=band, fmt="dd mmm yy", border=bottom,
+        put(ws, r, 9, pick("digest", text=False), f=font(9), fl=band, fmt="dd mmm yy;;", border=bottom,
             al=Alignment(horizontal="center", vertical="center"))
         span(ws, r, 10, 12, pick("theme"), f=font(9, True), fl=band, border=bottom,
              al=Alignment(vertical="center", wrap_text=True, indent=1))

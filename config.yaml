@@ -354,17 +354,28 @@ exclude:
   # elections won "by a landslide"
   - landslide victory
   - landslide win
-  - in a landslide
-  - by a landslide
   - wins landslide
   - won a landslide
   - landslide majority
+  - won in a landslide
+  - wins in a landslide
+  - win in a landslide
+  - won by a landslide
+  - wins by a landslide
+  - win by a landslide
+  - elected in a landslide
+  - re-elected in a landslide
+  - vote in a landslide
   # liquefied natural gas, not soil liquefaction
-  - lng
   - liquefied natural gas
+  - lng liquefaction
+  - gas liquefaction
   - liquefaction train
   - liquefaction plant
   - liquefaction capacity
+  - liquefaction project
+  - liquefaction expansion
+  - liquefaction cargo
   # firms that "collapse" financially
   - into administration
   - insolvency
@@ -372,7 +383,8 @@ exclude:
   - borsa
   - piazza affari
   # Japanese political and economic metaphors (地盤沈下, 液状化)
-  - 経済
+  - 経済の地盤沈下
+  - 日本経済
   - 野党
   - 与党
   - 政界

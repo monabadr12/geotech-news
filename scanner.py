@@ -270,7 +270,7 @@ def title_names(title, topic):
     story is about. Empty when capitals tell nothing: scripts without
     capitals, Title Case headlines and German nouns."""
     title = unicodedata.normalize("NFKC", title or "")
-    names, total = set(), 0
+    names, total, capitals = set(), 0, 0
     for sentence in SENTENCE_BREAK.split(title):
         for k, word in enumerate(NAME_TOKEN.findall(sentence)):
             sig = title_words(title_norm(word), topic)
@@ -278,16 +278,19 @@ def title_names(title, topic):
                 total += 1
                 if k and word[:1].isupper():
                     names |= sig
+                    capitals += 1
     head, colon, _ = title.partition(":")
     if colon and len(head.split()) == 1 and head.strip()[:1].isupper():
         names |= title_words(title_norm(head), topic)
-    return set() if len(names) > total / 2 else names
+    return set() if total > 1 and capitals > total / 2 else names
 
 
 def same_event(a, b):
     """a and b are (normalised title, significant words, names) of two headlines."""
-    if a[2] and b[2] and not a[2] & b[2]:
-        return False  # different places or people
+    if a[2] and b[2] and (a[2] - b[2]) and (b[2] - a[2]):
+        return False  # each names a place or person the other does not
+    if a[1] and b[1] and not a[1] & b[1]:
+        return False  # no significant word in common
     shared = len(a[1] & b[1])
     if (shared >= (2 if a[2] and b[2] else 3)
             and shared >= SAME_EVENT_OVERLAP * min(len(a[1]), len(b[1]))):
@@ -297,17 +300,31 @@ def same_event(a, b):
 
 
 def drop_same_events(items, cfg):
-    """Keep one headline per event: items must come best first, and an item
-    that matches any earlier one, kept or dropped, is dropped, so a chain of
-    re-wordings of the same story collapses into its best version."""
+    """Keep one headline per event. Items must come best first. Headlines that
+    match, directly or through a chain of re-wordings, form one group, and only
+    the group's best headline is kept."""
     topic = topic_words(cfg)
-    seen, kept = [], []
+    marks = []
     for it in items:
         norm = title_norm(it["title"])
-        mark = (norm, title_words(norm, topic), title_names(it["title"], topic))
-        if not any(same_event(mark, other) for other in seen):
+        marks.append((norm, title_words(norm, topic), title_names(it["title"], topic)))
+    parent = list(range(len(items)))
+
+    def root(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    for i in range(len(items)):
+        for j in range(i):
+            if root(i) != root(j) and same_event(marks[i], marks[j]):
+                parent[max(root(i), root(j))] = min(root(i), root(j))
+    kept, groups = [], set()
+    for i, it in enumerate(items):
+        if root(i) not in groups:  # the first item of each group is its best
+            groups.add(root(i))
             kept.append(it)
-        seen.append(mark)
     return kept
 
 
@@ -507,6 +524,10 @@ Stories:
                     angle=d["angle"][:300],
                     title_en=d["title_en"][:200])
         rated += 1
+    if items and not rated:
+        note = "AI triage failed for every batch, so all stories were ranked by keywords only."
+        notes.append(note)
+        print(note)
     return rated > 0
 
 
@@ -529,6 +550,18 @@ def send_email(subject, body_html):
 
 
 # ------------------------------------------------------------------ archive
+def rescore_unrated(stories, cfg):
+    """Score keyword-ranked stories again with the current lists. Earlier versions
+    added a language bonus to the score, which would let old stories crowd out
+    new ones when a day's digests are merged."""
+    compiled = compile_keywords(cfg)
+    for s in stories:
+        if not s.get("relevance"):
+            s["score"], hits = keyword_score(f"{s['title']} {s.get('summary', '')}", cfg, compiled)
+            s["rank"] = s["score"]
+            s["keywords"] = hits[:6]
+
+
 def save_digest(now, stories, failures, notes, ai_used, new_count, cfg):
     """Write today's digest to data/digests/YYYY-MM-DD.json. A second run on the
     same day merges its stories with the morning's file: the union is cleared
@@ -541,8 +574,11 @@ def save_digest(now, stories, failures, notes, ai_used, new_count, cfg):
               "failures": [list(f) for f in failures], "notes": notes}
     if path.exists():
         old = json.loads(path.read_text(encoding="utf-8"))
+        rescore_unrated(old.get("stories", []), cfg)
+        minscore = cfg.get("min_keyword_score", 3)
+        earlier = [s for s in old.get("stories", []) if s.get("relevance") or s["score"] >= minscore]
         known = {s["id"] for s in stories}
-        union = stories + [s for s in old.get("stories", []) if s["id"] not in known]
+        union = stories + [s for s in earlier if s["id"] not in known]
         union.sort(key=lambda s: -s["rank"])
         digest["stories"] = balanced(drop_same_events(union, cfg), cfg.get("max_items", 40),
                                      theme_share(cfg), lambda s: s["rank"], fill=fill_leftovers(cfg))
