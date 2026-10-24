@@ -62,9 +62,9 @@ DEFAULT_CALENDARS = [
     {"name": "GeoEngineer.org events", "url": "https://www.geoengineer.org/events"},
 ]
 DEFAULT_BLOCKED = ["waset.org", "conferenceindex.org", "conferenceseries.com", "omicsonline.org"]
-# WASET-style mass series: "ICGEGT 2027: 21. International Conference on ..." and the like
-PREDATORY_NAME = re.compile(r"^\s*[A-Z]{3,}\s*\d{4}\s*:|\b\d{1,2}\.\s*International Conference on\b"
-                            r"|World Academy of Science", re.I)
+# WASET-style mass series: "ICGEGT 2027: 21. International Conference on ..." and the like. The
+# "21." is the tell: real conferences also write "ICSGE 2027: International Conference on ...".
+PREDATORY_NAME = re.compile(r"\b\d{1,2}\.\s*International Conference on\b|World Academy of Science", re.I)
 HOSTNAME = re.compile(r"^(?:[a-z0-9-]+\.)+[a-z]{2,}$")
 URL_IN_TEXT = re.compile(r"https?://[^\s\"'<>\\)\]]+", re.I)
 # the API's answer when the organisation that owns the key has web search (or fetch) turned off
@@ -167,7 +167,7 @@ def parse_date(value):
     if isinstance(value, dt.date):
         return value.isoformat()
     m = DATE.match(str(value if value is not None else "").strip())
-    if not m:
+    if not m or not 1900 <= int(m[1]) <= 2999:  # a mistyped year (9999) would overflow the date sums
         return ""
     try:
         day = dt.date(int(m[1]), int(m[2]), int(m[3] or 1))
@@ -418,8 +418,9 @@ def read_found():
     except (OSError, ValueError):
         return {"updated": "", "events": [], "notes": []}
     data = data if isinstance(data, dict) else {}
+    found, notes = data.get("events"), data.get("notes")
     events = []
-    for raw in data.get("events") or []:
+    for raw in found if isinstance(found, list) else []:
         if isinstance(raw, dict):
             try:
                 events.append(clean_event(raw, "scan")[0])
@@ -430,7 +431,8 @@ def read_found():
         dt.datetime.fromisoformat(updated)
     except ValueError:
         updated = ""
-    return {"updated": updated, "events": events, "notes": [text(n, 400) for n in data.get("notes") or [] if n]}
+    return {"updated": updated, "events": events,
+            "notes": [text(n, 400) for n in (notes if isinstance(notes, list) else []) if n]}
 
 
 STOP = {"the", "of", "on", "and", "for", "in", "a", "an", "to", "at", "with", "international", "conference",
@@ -655,7 +657,10 @@ def ics_deadline(e, d, stamp):
     day = dt.date.fromisoformat(d["date"])
     where = ", ".join(x for x in (date_range(e["start"], e["end"]), place(e)) if x)
     desc = f"{d['label']} deadline for {full_name(e)} ({where}).\nEvent website: {e['url']}"
-    return ["BEGIN:VEVENT", f"UID:{ics_uid(e['id'], 'deadline', d['label'])}", f"DTSTAMP:{stamp}",
+    # a second deadline with the same label (an extension) needs its own UID, or calendars merge the two
+    n = [x["label"].lower() for x in e["deadlines"]][:e["deadlines"].index(d)].count(d["label"].lower())
+    uid = ics_uid(e["id"], "deadline", d["label"], str(n + 1) if n else "")
+    return ["BEGIN:VEVENT", f"UID:{uid}", f"DTSTAMP:{stamp}",
             f"DTSTART;VALUE=DATE:{day:%Y%m%d}", f"DTEND;VALUE=DATE:{day + dt.timedelta(days=1):%Y%m%d}",
             f"SUMMARY:{ics_text('Deadline: ' + d['label'] + ' – ' + label_of(e))}",
             f"DESCRIPTION:{ics_text(desc)}", *([f"URL:{e['url']}"] if e["url"] != "#" else []),
@@ -1078,9 +1083,9 @@ def read_turns(turns):
                     if host(url):
                         hosts.add(host(url))
     tool_notes = []
-    shown = [host(u) + urlparse(u).path for u in failed if u]
+    shown = list(dict.fromkeys(host(u) + urlparse(u).path for u in failed if u))  # a page retried is named once
     if failed:
-        tool_notes.append(f"Claude could not open {site_builder.count(len(failed), 'page')}"
+        tool_notes.append(f"Claude could not open {site_builder.count(len(shown) or len(failed), 'page')}"
                           + (f": {', '.join(shown[:5])}" + (" …" if len(shown) > 5 else "") if shown else "") + ".")
     if codes.get("max_uses_exceeded"):
         tool_notes.append("Claude reached the limit of searches or pages for one refresh (max_searches and max_fetches "

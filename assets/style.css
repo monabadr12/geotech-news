@@ -537,8 +537,8 @@ table.heat thead th:first-child { position: sticky; left: 0; z-index: 1; }  /* t
   .viz { box-shadow: none; break-inside: avoid; }
 }
 
-/* ---------- Events calendar ----------
-   events.html (cards grouped by month, open calls for papers, subscription) and the
+/* ---------- Events calendar ---------- */
+/* events.html (cards grouped by month, open calls for papers, subscription) and the
    "Upcoming events & deadlines" panel that other pages show. Each kind of event has its
    own ink and tint (--kc, --kb), checked for contrast in light and dark mode. */
 :root {
