@@ -29,16 +29,25 @@ main.wrap { padding-top: 24px; padding-bottom: 56px; min-height: 60vh; }
 .masthead { background: linear-gradient(100deg, #10263d 0%, var(--brand) 45%, #17466b 100%); color: #fff; position: relative; }
 .masthead::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px;
   background: linear-gradient(90deg, #e0b13a, #e04f2c 25%, #6b4fd6 50%, #0b97a5 75%, #1f9d63); }
-.masthead-inner { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; padding-top: 12px; padding-bottom: 14px; }
-.brand { display: flex; align-items: center; gap: 12px; color: inherit; text-decoration: none; margin-right: auto; }
+/* two rows: the brand and Scan now, then the nine pages; shorter labels below 1000px, a 3 × 3 grid on phones */
+.masthead-inner { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px 18px; padding-top: 12px; }
+.brand { display: flex; align-items: center; gap: 12px; color: inherit; text-decoration: none; min-width: 0; justify-self: start; }
 .brand-mark svg { width: 38px; height: 38px; display: block; filter: drop-shadow(0 2px 6px rgba(0, 0, 0, .3)); }
 .brand-name { display: block; font: 700 19px/1.15 var(--serif); letter-spacing: .01em; }
 .brand-sub { display: block; font-size: 12px; opacity: .72; }
-.nav { display: flex; gap: 2px; flex-wrap: wrap; }
-.nav a { color: inherit; text-decoration: none; font-size: 14px; font-weight: 500; padding: 7px 11px; border-radius: 8px; opacity: .82; }
+.nav { grid-column: 1 / -1; display: flex; gap: 2px; margin: 0 0 0 -11px; padding: 0 0 10px; }
+.nav a { color: inherit; text-decoration: none; font-size: 14px; font-weight: 500; padding: 7px 11px; border-radius: 8px; opacity: .82; white-space: nowrap; }
 .nav a:hover { background: rgba(255, 255, 255, .1); opacity: 1; }
 .nav a.active { background: rgba(255, 255, 255, .16); opacity: 1; box-shadow: inset 0 -2px 0 var(--accent); }
-.mast-actions { display: flex; gap: 8px; align-items: center; }
+.nav .nav-s { display: none; }
+.mast-actions { display: flex; gap: 8px; align-items: center; grid-column: 2; grid-row: 1; }
+@media (max-width: 1000px) {
+  .nav .nav-l { display: none; } .nav .nav-s { display: inline; }
+}
+@media (max-width: 560px) {
+  .nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin: 0; }
+  .nav a { text-align: center; padding: 7px 4px; overflow: hidden; text-overflow: ellipsis; }
+}
 .scan-btn { display: inline-flex; align-items: center; gap: 7px; font: 600 14px var(--sans); color: #1b1404; cursor: pointer;
   background: linear-gradient(180deg, #f2c54e, #e0a92a); border: 0; border-radius: 999px; padding: 8px 16px;
   box-shadow: 0 2px 10px rgba(224, 177, 58, .35); transition: transform .15s, box-shadow .15s; }
@@ -328,8 +337,7 @@ table.overview { width: 100%; border-collapse: collapse; font-size: 14px; }
 .foot-inner { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; }
 .foot a { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; text-decoration: none; }
 
-@media (max-width: 860px) {
-  .nav { order: 3; width: 100%; }
+@media (max-width: 560px) {
   .scan-btn span { display: none; } .scan-btn { padding: 9px; }
 }
 @media (max-width: 720px) {
@@ -997,4 +1005,66 @@ body[data-root="../"] .sl-chip.sl-up { display: inline-flex; }
 @media print {
   .wk-mail .actions, .wk-help { display: none !important; }
   .wk-list li, .wk-card { box-shadow: none; break-inside: avoid; }
+}
+
+/* ---------- Main pages: places, the Latest page's side column, regional coverage, weekly summaries ----------
+   Where a story happened on its card, the column beside the news on the Latest page (this week, upcoming events
+   and deadlines, developing stories), the regional-coverage line of issue pages, the archive's weekly summaries
+   and the four features on Method & sources (site_builder.py). */
+.story-meta .loc { display: inline-flex; align-items: center; gap: 4px; color: var(--ink); }
+.story-meta .loc .ico { width: 13px; height: 13px; color: var(--teal); }
+.side-col { display: grid; gap: 14px; align-content: start; margin-top: 30px;
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); }
+@media (min-width: 1000px) {
+  .with-side { display: grid; grid-template-columns: minmax(0, 1fr) 296px; gap: 24px; align-items: start; }
+  .side-col { margin-top: 0; grid-template-columns: minmax(0, 1fr); }
+}
+.side-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); padding: 14px 16px 15px; min-width: 0; }
+.side-card .eyebrow { margin-bottom: 6px; }
+.side-card .eyebrow .ico { color: var(--teal); }
+.side-card h2 { margin: 0; font: 700 19px/1.25 var(--serif); }
+.side-card h2 a { color: var(--ink); text-decoration: none; }
+.side-card h2 a:hover { color: var(--link); text-decoration: underline; }
+.side-card h2 span { font: 500 13px var(--sans); color: var(--muted); margin-left: 4px; }
+.side-figs { margin: 4px 0 10px; font-size: 13px; color: var(--muted); }
+.side-links { list-style: none; margin: 0; padding: 10px 0 0; border-top: 1px solid var(--line); display: grid; gap: 7px; font-size: 13.5px; }
+.side-links a { font-weight: 600; text-decoration: none; }
+.side-links a:hover { text-decoration: underline; }
+.side-links .wk-chip { margin-left: 4px; vertical-align: 1px; }
+.side-dev { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 10px; }
+.side-dev li { border-left: 3px solid var(--tc); padding: 1px 0 1px 10px; min-width: 0; }
+.side-dev a { font-weight: 600; font-size: 13.5px; line-height: 1.35; color: var(--ink); text-decoration: none; overflow-wrap: anywhere; }
+.side-dev a:hover { color: var(--link); text-decoration: underline; }
+.side-dev small { display: block; margin-top: 2px; font-size: 12px; color: var(--muted); }
+.side-more { font-size: 13px; font-weight: 600; text-decoration: none; }
+.side-more:hover { text-decoration: underline; }
+.side-col .ev-side { margin: 0; }
+.issue-dev + .ev-side { margin-top: 26px; }
+.cov-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow); padding: 12px 16px; margin: 16px 0 0; }
+.cov-line h2 { display: flex; align-items: center; gap: 7px; margin: 0; font: 700 14px var(--sans); }
+.cov-line h2 .ico { color: var(--teal); }
+.cov-regions { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; }
+.cov-regions li { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 500; background: var(--surface-2);
+  border: 1px solid var(--line); border-radius: 99px; padding: 2px 3px 2px 10px; }
+.cov-regions b { background: var(--brand-2); color: #fff; border-radius: 99px; padding: 0 7px; font-size: 11.5px; min-width: 22px; text-align: center; }
+.cov-line p { margin: 0; flex: 1 1 100%; font-size: 13px; color: var(--muted); }
+.cov-line p a { font-weight: 600; text-decoration: none; white-space: nowrap; }
+.cov-line p a:hover { text-decoration: underline; }
+.section-row { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px 12px;
+  border-bottom: 1px solid var(--line); margin: 34px 0 12px; }
+.section-row .section-h { border: 0; margin: 0; }
+.section-row a { font-size: 13.5px; font-weight: 600; text-decoration: none; white-space: nowrap; padding-bottom: 8px; }
+.section-row a:hover { text-decoration: underline; }
+.hero + .weeks .section-row { margin-top: 8px; }
+.weeks { margin-bottom: 8px; }
+.about-features { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.about-features li { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--tc); border-radius: 10px; padding: 12px 16px; }
+.about-features li > b { display: flex; align-items: center; font-size: 15px; }
+.about-features p { margin: 6px 0 0; font-size: 14px; }
+.about-features code { font-size: 12.5px; }
+@media print {
+  .with-side { display: block; }
+  .side-col, .cov-line a { display: none !important; }
+  .cov-line, .about-features li { box-shadow: none; break-inside: avoid; }
 }

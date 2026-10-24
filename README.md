@@ -9,10 +9,12 @@ Every morning (05:00 Cairo time) GitHub automatically:
 2. scores each story for geotechnical relevance in any of those languages, merges repeated reports of the same event
    and balances the digest across the magazine's eight themes;
 3. asks Claude to rate each story 1–5, place it under a theme, suggest a use (news brief, feature lead,
-   Academia-to-Industry topic, regional insight, watch only), write the geotechnical angle and translate
-   non-English headlines;
-4. saves the digest permanently, rebuilds the website, Excel workbooks and Word report, drafts the **issue brief**
-   when one is due, and *(optionally)* e-mails the digest.
+   Academia-to-Industry topic, regional insight, watch only), write the geotechnical angle, translate
+   non-English headlines and read **where the story happened** (country and town, region or site), and links any
+   story that **follows up an earlier one** (the inquiry into last month's landslide) to that event;
+4. saves the digest permanently, rebuilds the website, Excel workbooks and Word report, refreshes the **events
+   calendar** once a week, drafts the **issue brief** when one is due, and e-mails an **alert** for new 5/5 stories
+   and, on Mondays, the **weekly summary** to the editorial team.
 
 Website: **https://monabadr12.github.io/geotech-news/**
 
@@ -20,13 +22,16 @@ Website: **https://monabadr12.github.io/geotech-news/**
 
 | Page | What it is for |
 |---|---|
-| **Latest** | Today's digest, grouped by theme (strongest theme first), with filters for rating, use and keywords. |
-| **Archive** | Every digest ever produced, grouped into **three-month issue windows** that match the magazine's quarterly cycle. |
-| **Issue collection** (one per quarter, e.g. *Q4 2026*) | All stories and research papers from the quarter in one place: the **issue brief**, theme overview, "strongest leads" shortlist, all stories by theme, new research, list of daily digests, **Excel workbook**, CSV, and print / save as PDF. This is the page to plan an issue from. |
-| **Search** | Search all archived stories and research papers by keyword, issue window, theme, use and rating; export the results. |
+| **Latest** | Today's digest, grouped by theme (strongest theme first), with filters for rating, use and keywords. Beside the news: this week and its summary, upcoming events and call-for-papers deadlines, and the developing stories with new reports. |
+| **Archive** | Every digest ever produced, grouped into **three-month issue windows** that match the magazine's quarterly cycle, and the latest **weekly summaries** (each week's page lists that week's top stories, developing stories, regional coverage, events and research). |
+| **Issue collection** (one per quarter, e.g. *Q4 2026*) | All stories and research papers from the quarter in one place: the **issue brief**, theme overview, regional coverage (with a link to the gaps on the world map), "strongest leads" shortlist, the quarter's developing stories, upcoming events and deadlines (current quarter), all stories by theme, new research, list of daily digests, **Excel workbook**, CSV, and print / save as PDF. This is the page to plan an issue from. |
+| **Search** | Search all archived stories and research papers by keyword (place names included), issue window, theme, use and rating; results show where each story happened and the developing story it belongs to; export the results. |
+| **Developing stories** | Events, projects and sites reported more than once, each with its timeline: the failure, then the response, the inquiry, the repair and the court case. Active and earlier ones, with a filter. |
+| **World map** | Stories by the country they are about, for any issue window, the last 30 days or the whole archive, with the ISSMGE regions and the member-society countries that had no stories (the gaps), a table view and a theme filter. |
+| **Events** | Conferences, symposia and courses with their call-for-papers deadlines: ISSMGE events and others, a calendar feed to subscribe to, and the **Refresh calendar** button. |
 | **Trends** | Charts of stories per month and per quarter by theme, theme shares over time, rising keywords, regions, editorial uses and sources — material for editorials and the year in review. Each chart has hover details and a table view, and the numbers can be downloaded. |
-| **AI assistant** | Chat with Claude about the archive: find stories, compare quarters, get a recommended line-up for an issue, and attach PDF or Word documents (calls for papers, drafts, reports) to discuss them alongside the news. Needs the one-time connector setup below. |
-| **Method & sources** | What is scanned, how stories are scored, and which sources failed on the latest run. |
+| **AI assistant** | Chat with Claude about the archive: find stories, compare quarters, follow a developing story ("What is the latest on …?"), look up conferences and deadlines, get a recommended line-up for an issue, and attach PDF or Word documents (calls for papers, drafts, reports) to discuss them alongside the news. Needs the one-time connector setup below. |
+| **Method & sources** | What is scanned, how stories are scored, located and linked, how events are found and e-mails sent, and which sources failed on the latest run. |
 
 Every page has a **Scan now** button (see below).
 The footer links the **Website report (Word)**.
@@ -36,13 +41,64 @@ For each issue window Claude drafts a brief for the editorial meeting (`docs/bri
 from the issue page and the Archive). It contains an overview of the quarter, a proposed line-up for every theme (with
 the angle, format and reason for each pick), about five feature leads with the kinds of experts to approach,
 Academia-to-Industry topics that pair news with research papers, a regional-balance check, gaps worth covering and a
-watch list of developing stories. Every pick links to its source; check each story there before publishing.
+watch list, then the quarter's **developing stories** and the **events and deadlines** from the start of the quarter to
+six months after it (both listed as they stood when the brief was drafted; Claude also reads them for its feature leads
+and watch list). Every pick links to its source; check each story there before publishing.
 * **Automatically:** a draft in the last 21 days of each quarter, refreshed weekly, and the final brief the day after the
   quarter closes (settings under `brief:` in `config.yaml`).
 * **On demand:** press **Generate / update brief** on the issue page. It opens the *Issue brief* workflow on GitHub:
   press **Run workflow** (leave *window* empty for the current quarter, or type e.g. `2026-Q3` and tick *final*). The page
   follows the run and says when the brief is ready.
 * It uses the same `ANTHROPIC_API_KEY` secret as the scan; Claude Opus writes it.
+
+### World map
+During triage Claude reads the country each story is about (an ISO code such as `CO` or `GB`) and the town, region or
+site it names: where the event, project or site is, which is often not the outlet's country or the Google News edition
+that found the story. A story about several countries, or a general market or research result, counts as global.
+Stories archived before this was added (or whose triage failed) are located in batches after each scan, newest first.
+The **World map** page plots the stories by country, compares them with the member-society countries of ISSMGE's six
+regions and marks the member countries with no stories in the period, so regional gaps are easy to spot when planning an
+issue. The issue pages and the weekly summaries show the same regional figures. Settings and the ISSMGE member lists are
+under `map:` in `config.yaml`; the lists for Africa and Europe are marked `to_check: true` until they have been checked
+against <https://www.issmge.org/member-societies>. The outlines come from Natural Earth (`assets/world.json`, made by
+`tools/make_world.py`).
+
+### Developing stories
+Every scan, Claude compares the day's new stories with the archive of the last year and links a story to an earlier one
+only when both are about the same event, project or site (the same landslide, dam or tunnel in the same place, not merely
+a similar hazard in the same country), naming the stage it reports: the event, response and recovery, investigation and
+inquiry, repair and reconstruction, legal and policy, or an update. Without Claude, a cautious headline match links
+reports found within 30 days. Story cards everywhere carry a **Developing story** chip that opens the timeline on the
+**Developing stories** page. Long-running events make good features: by the time the cause is known and the repair
+designed, the lessons for practice can be told. Settings under `storylines:` in `config.yaml`. A link is a lead: check
+each report at its source.
+
+### Events calendar
+The **Events** page lists conferences, symposia, courses and webinars for geotechnical engineers, with their
+call-for-papers deadlines, from two sources:
+* **The editors' list, `data/events.yaml`.** Edit it on GitHub (pencil icon, or **Edit the editors' list** on the Events
+  page); its first lines explain the format. An event listed there always wins over the same event found by the refresh,
+  so this is the place to correct a date or a link. If an entry cannot be read, the Events page says which and why.
+* **The weekly refresh.** Once a week (`refresh_days`) the daily scan asks Claude to read the organisers' calendars
+  listed under `events: calendars:` in `config.yaml` (ISSMGE, ITA-AITES, the ASCE Geo-Institute, ISRM, IGS, DFI, BGA,
+  ICE and GeoEngineer) with Anthropic's web search and web fetch tools, and keeps what it finds in `data/events.json`.
+  Every event must link to a page Claude actually read, and predatory conference series are left out. Web search and web
+  fetch must be allowed for the organisation that owns the `ANTHROPIC_API_KEY` (Claude Console → Settings). A refresh
+  that fails leaves the calendar as it was.
+* **Refresh calendar** on the Events page starts a refresh at any time: it opens the *Events calendar and weekly summary*
+  workflow on GitHub, where you choose **refresh the events calendar** and press **Run workflow**.
+* **Subscribe:** the whole calendar is a feed, `https://monabadr12.github.io/geotech-news/events.ics`, that Outlook,
+  Google Calendar or Apple Calendar can subscribe to (the Events page explains how); each event also has **Add to
+  calendar**. The Latest and issue pages show the next deadlines and events beside the news.
+
+### Alerts and weekly summary (e-mail)
+After each daily scan, one e-mail lists any new story rated 5 / 5 (at most one alert per scan). Every Monday morning the
+editorial team receives the **weekly summary** of the week before: the top stories of each theme, other 5 / 5 stories,
+developing stories updated that week, regional coverage by ISSMGE region, events and deadlines in the next 60 days, and new
+research. Each week's summary is also a page on the website (Archive → **Weekly summaries**), and **Send summary now** on
+those pages sends last week's summary at any time. `data/notify.json` records what was sent, so nothing goes out twice.
+Settings (which e-mails, the weekday, the rating that triggers an alert) are under `alerts:` in `config.yaml`. Setting up
+e-mail is described [below](#e-mail-alerts-and-the-weekly-summary-setup-about-10-minutes).
 
 ### Research papers (Academia-to-Industry)
 Each scan also asks Crossref (free, no key) for papers newly registered in 25 journals, including *Géotechnique*,
@@ -76,10 +132,16 @@ is one for the whole archive (`geotech-news-archive.xlsx`, on the Archive page).
   workbook, *Issue window*. Every key figure, table, chart, the theme × use heat map and the **Top 10 stories** list
   recalculate for the selection.
 * **Stories** — every story as a filterable Excel table, colour-coded by theme and rating, with the headline linked to the
-  article. Planning columns let you work in the file: **Status** (To review / Shortlisted / Commissioned / Published /
-  Not used), **Assigned to** and **Editor notes**; the dashboard's planning chart follows the statuses you set.
+  article, and where it happened (**Country**, **Place**) and the **Developing story** it belongs to. Planning columns let
+  you work in the file: **Status** (To review / Shortlisted / Commissioned / Published / Not used), **Assigned to** and
+  **Editor notes**; the dashboard's planning chart follows the statuses you set.
 * **By theme** — a tidy reading view, one collapsible section per theme, best stories first.
+* **Research** — the window's new research papers (when there are any).
+* **Events** — the events calendar when the workbook was made: open call-for-papers deadlines (with the days left) and the
+  upcoming events, each linked to its website.
 * **Sources** — which outlets contributed and how relevant their stories were.
+
+The CSV files (issue pages and Search) have the same Country, Place and Developing story columns.
 
 Tips: downloaded files open in Protected View, so press **Enable Editing** to see the figures. The workbook is rebuilt
 after every scan, so save your own copy for the planning columns.
@@ -91,8 +153,10 @@ same event are merged into one story. A second scan on the same day merges with 
 
 ### Website report (Word)
 `docs/reports/site-report.docx` is regenerated after every scan: status at a glance, an automatic review of the
-latest scan (triage, failed sources, theme balance), source health with suggested fixes, archive figures, the
-change log and open items. The change log and open items are kept in `data/changelog.yaml`.
+latest scan (triage, failed sources, theme balance), source health with suggested fixes, archive figures, regional
+coverage on the world map (stories per ISSMGE region and the member societies with none), the most followed developing
+stories, research papers, issue briefs, the events calendar (when it was refreshed, the next deadlines), the e-mails
+recorded as sent, the change log and open items. The change log and open items are kept in `data/changelog.yaml`.
 
 ### How the archive works
 * Each scan saves its stories to `data/digests/YYYY-MM-DD.json`. **These files are the archive** —
@@ -182,15 +246,41 @@ Notes:
   for it once per device.
 * After editing the script, use **Deploy → Manage deployments → Edit → Version: New version** to update the existing address.
 
-## Optional: e-mail delivery
-Add these secrets the same way as the API key: `SMTP_HOST`, `SMTP_PORT` (usually 587), `SMTP_USER`,
-`SMTP_PASSWORD`, `MAIL_TO` (comma-separate several addresses).
-For Gmail: host `smtp.gmail.com`, and create an *App password* in your Google account
-(2-step verification required) to use as `SMTP_PASSWORD`.
+## E-mail alerts and the weekly summary (setup, about 10 minutes)
+The alerts and the Monday summary go out through the first of two routes that is set up. Until one is, nothing is sent:
+each run's log shows the e-mail that would have gone out and what is missing.
+
+**Recommended: through the AI assistant's Google connector** (no mail server or password needed; the e-mails come from
+your Google account). It uses the connector set up under *AI assistant* above.
+1. In your Apps Script project, replace the code with the current [`assistant/bridge.gs`](assistant/bridge.gs) (it now also
+   sends e-mail) and keep your link to the key document on line 15. Press **Save**.
+2. Open **Project Settings** (gear icon) → **Script properties** → **Add script property**:
+   * `NOTIFY_TOKEN` — a long random text, for example 40 letters and digits (a password generator is handy). Without it
+     the connector sends no e-mail at all.
+   * `MAIL_TO` *(optional)* — the recipients, separated by commas. Leave it out to send to your own address.
+3. Choose **testEmail** in the function menu at the top and press **Run** once. Google asks for permission to send e-mail
+   as you: allow it. A test e-mail arrives in your inbox.
+4. **Deploy → Manage deployments**, press the pencil icon, choose **Version: New version** and **Deploy**. This keeps the
+   same web address, so `config.yaml` does not change.
+5. On GitHub, add the secret `NOTIFY_TOKEN` (Settings → Secrets and variables → Actions → **New repository secret**) with
+   exactly the same text as the Script property.
+6. Check it: **Actions** tab → **Events calendar and weekly summary** → **Run workflow** → choose **send a test e-mail** →
+   **Run workflow**. The run turns green when the e-mail has gone, and red (with the reason in its log) when it could not.
+
+**Alternative: a mail server.** Add the GitHub secrets `SMTP_HOST`, `SMTP_PORT` (587, or 465 for SSL), `SMTP_USER`,
+`SMTP_PASSWORD` and `MAIL_TO` (addresses separated by commas). For Gmail: host `smtp.gmail.com`, port 587, your address
+as `SMTP_USER`, and an *App password* (Google Account → Security → 2-Step Verification → App passwords) as
+`SMTP_PASSWORD`. When `SMTP_HOST` is set, the mail server is used instead of the connector. Test it with the same
+**send a test e-mail** run.
+
+The weekly summary pages have a **Send summary now** button, which starts the same workflow with **send the weekly summary
+now**.
 
 ## Changing things
 * **Sources, searches, keywords, themes, limits:** all in `config.yaml` (edit it on GitHub with the pencil icon).
-  Adding a language is one line under `extra_queries`.
+  Adding a language is one line under `extra_queries`. The world map (`map:`), developing stories (`storylines:`), events
+  calendar (`events:`) and e-mail (`alerts:`) have their own sections at the end, each explained in its comments.
+* **Events:** `data/events.yaml` (see *Events calendar*).
 * **Schedule:** `.github/workflows/scan.yml` — daily at 05:00 Cairo time, adjusted automatically for Egypt's summer
   and winter clocks. Changes to the website's design or `config.yaml` rebuild the site automatically (no scan).
 * **Look of the website:** `assets/style.css` and `assets/app.js`. To rebuild the site without scanning, run `python site_builder.py`.
@@ -203,13 +293,22 @@ For Gmail: host `smtp.gmail.com`, and create an *App password* in your Google ac
 | `exports.py` | Builds the Excel workbooks. |
 | `report.py` | Builds the Word website report. |
 | `brief.py` | Drafts the issue brief with Claude (`python brief.py --window 2026-Q4`, `--final`, `--auto`). |
+| `geomap.py` | The World map page; locates archived stories that have no country yet. |
+| `storylines.py` | Links follow-up reports to the earlier story (each scan) and builds the Developing stories page. |
+| `events.py` | The events calendar: the Events page, the `.ics` feed and the weekly refresh (`python events.py --refresh`). |
+| `notify.py` | Alerts and the weekly summary: sends the e-mails (`--auto`, `--weekly`, `--test`) and builds `docs/weekly/`. |
 | `sync_data.py` | The workflows' save step: puts a run's data on the newest version of the site and rebuilds it. |
 | `check_feeds.py` | Tests candidate feed addresses (run by the *Check feeds* workflow). |
 | `data/briefs/` | The issue briefs (one file per issue window; the Word files are built from them). |
-| `assistant/bridge.gs` | The AI assistant's connector, run in your Google account (see *AI assistant*). |
+| `data/events.yaml` | The editors' list of events (edit it on GitHub; the format is explained at the top). |
+| `data/events.json` | Events found by the weekly calendar refresh (written by `events.py`). |
+| `data/notify.json` | The e-mails sent (alerts and weekly summaries), so none goes out twice. |
+| `assistant/bridge.gs` | The AI assistant's connector, run in your Google account; it also sends the e-mails (see *AI assistant*). |
 | `data/changelog.yaml` | Change log and open items shown in the Word report. |
 | `config.yaml` | All settings. |
-| `assets/` | Website style sheet, script and icons. |
+| `assets/` | Website style sheet, scripts, icons and the world map outlines (`world.json`). |
+| `tools/make_world.py` | Rebuilds `assets/world.json` from Natural Earth (only needed to change the map's outlines). |
+| `.github/workflows/` | The daily scan (`scan.yml`), the issue brief (`brief.yml`), the events calendar and weekly summary (`extras.yml`) and Check feeds (`check-feeds.yml`). |
 | `data/digests/` | **The permanent archive**, one file per day. |
 | `data/seen.json` | Stories already shown (45-day memory, so nothing repeats). |
 | `docs/` | The generated website (do not edit by hand). |

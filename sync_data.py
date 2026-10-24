@@ -70,14 +70,21 @@ def merge_events(theirs, ours):
     return ours if str(ours.get("updated", "")) >= str(theirs.get("updated", "")) else theirs
 
 
-def merge_notify(theirs, ours):
-    """Every e-mail either run sent stays recorded, so none is sent twice."""
+ALERT_KEEP_DAYS = 60  # as notify.KEEP_DAYS: alerts older than this are forgotten
+
+
+def merge_notify(theirs, ours, today=None):
+    """Every e-mail either run sent stays recorded, so none is sent twice; alert records older than
+    ALERT_KEEP_DAYS are dropped here too, or the branch's copy would bring back what notify.py pruned."""
+    cutoff = ((today or dt.date.today()) - dt.timedelta(days=ALERT_KEEP_DAYS)).isoformat()
     merged = dict(theirs or {})
     for key in ("alerted", "weekly"):
         both = dict((theirs or {}).get(key) or {})
         for k, v in (ours.get(key) or {}).items():
             if str(v) > str(both.get(k, "")):
                 both[k] = v
+        if key == "alerted":
+            both = {k: v for k, v in both.items() if str(v)[:10] >= cutoff}
         merged[key] = both
     return merged
 

@@ -657,7 +657,14 @@
     var i = D.periods.map(function (p) { return p.k; }).indexOf(periodSel.value);
     state.p = i < 0 ? 0 : i;
     renderAll();
+    // the address names the period (map.html#2026-Q3), so a link or a reload shows the same map
+    try { history.replaceState(null, "", state.p ? "#" + encodeURIComponent(D.periods[state.p].k) : location.pathname + location.search); } catch (e) { /* ignore */ }
   });
+  function fromLink() {  // map.html#2026-Q3 (the issue pages link here) opens that period
+    var want = "";
+    try { want = decodeURIComponent((location.hash || "").slice(1)); } catch (e) { return; }
+    if (want && D.periods.some(function (p) { return p.k === want; })) periodSel.value = want;
+  }
   themeSel.addEventListener("change", function () { state.t = +themeSel.value; renderAll(); });
   document.addEventListener("click", function (e) {
     var z = e.target.closest ? e.target.closest("[data-zoom]") : null;
@@ -711,12 +718,15 @@
   compute();
   renderLegend();
   function syncMenus() {  // a browser may bring back the last choices (reload, Back): show what the menus say
+    fromLink();
     var p = Math.max(0, D.periods.map(function (x) { return x.k; }).indexOf(periodSel.value));
     var t = themeSel.value === "" || isNaN(+themeSel.value) ? -1 : +themeSel.value;
     if (p !== state.p || t !== state.t) { state.p = p; state.t = t; renderAll(); }
   }
   window.addEventListener("pageshow", syncMenus);
   window.addEventListener("load", syncMenus);
+  window.addEventListener("hashchange", syncMenus);
+  syncMenus();
   fetch(root + "assets/world.json").then(function (r) {
     if (!r.ok) throw new Error("status " + r.status);
     return r.json();

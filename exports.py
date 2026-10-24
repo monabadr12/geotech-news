@@ -11,8 +11,12 @@ Sheets (in tab order):
               table, chart and the Top 10 list is a formula over the Stories
               table, so they all follow the selectors and the Status column.
   Stories     every story as an Excel table, with planning columns (Status,
-              Assigned to, Editor notes) the editor fills in
+              Assigned to, Editor notes) the editor fills in, and where it
+              happened (country, place) and the developing story it belongs to
   By theme    read-only view, one collapsible section per theme
+  Research    new papers from the journals (when there are any)
+  Events      the events calendar: open call-for-papers deadlines and the
+              upcoming events (when the calendar has any)
   Sources     the outlets that supplied stories
   Lists       (hidden) the values offered by the dropdowns, plus helper cells
 
@@ -71,7 +75,10 @@ STATUSES = [("To review", "4A5563", "ECEFF3", "A3ADB8", "New from the scan, not 
 DEFAULT_STATUS = STATUSES[0][0]
 KPI_COLORS = [NAVY, "0B97A5", "1E7B4F", "D38B00", "6B4FD6", "2563D6"]
 TAB_COLORS = {"Start here": ACCENT, "Dashboard": NAVY, "Stories": "2563D6", "By theme": "1F9D63",
-              "Research": "6B4FD6", "Sources": "0B97A5", "Lists": "B8C0CA"}
+              "Research": "6B4FD6", "Events": "D38B00", "Sources": "0B97A5", "Lists": "B8C0CA"}
+# the events calendar's kinds of event (events.KINDS): text colour on the Events sheet
+KIND_COLORS = {"ISSMGE conference": "7D5A0C", "ISSMGE-supported": "0A6D78", "Other conference": "36506C",
+               "Course / webinar": "5137B0"}
 ALL_THEMES, ALL_USES, ANY_REL, ALL_WINDOWS = "All themes", "All uses", "Any", "All windows"
 THIN = Side(style="thin", color=LINE)
 MAX_TEXT = 32000          # Excel holds at most 32,767 characters in a cell
@@ -87,6 +94,7 @@ STORY_COLS = [   # the printed part runs from No. to Digest date
     ("use", "Suggested use", 16), ("status", "Status", 14), ("assigned", "Assigned to", 14),
     ("notes", "Editor notes", 28), ("angle", "Magazine angle", 40), ("source", "Source", 19),
     ("digest", "Digest date", 12), ("original", "Original headline", 38), ("summary", "Summary", 40),
+    ("country", "Country", 16), ("place", "Place", 22), ("storyline", "Developing story", 36),
     ("edition", "Google News edition", 15), ("published", "Published", 12), ("window", "Issue window", 11),
     ("keywords", "Keywords", 26), ("score", "Keyword score", 9), ("url", "Article URL", 30),
     ("insel", "In Dashboard selection", 12), ("key", "Top-10 key (helper)", 12),
@@ -95,7 +103,7 @@ PRINT_TO = "digest"
 SC = {key: get_column_letter(i) for i, (key, _, _) in enumerate(STORY_COLS, 1)}
 SCI = {key: i for i, (key, _, _) in enumerate(STORY_COLS, 1)}
 PLANNING = ("status", "assigned", "notes")
-WRAPPED = ("headline", "theme", "use", "notes", "angle", "source", "original", "summary", "keywords")
+WRAPPED = ("headline", "theme", "use", "notes", "angle", "source", "original", "summary", "keywords", "place", "storyline")
 STORY_HEADER, STORY_FIRST = 3, 4
 
 
@@ -330,7 +338,18 @@ def _story(s, no):
         "digest": as_date(s.get("_digest")), "digest_iso": str(s.get("_digest") or ""),
         "window": str(s.get("_window") or ""), "keywords": ", ".join(str(k) for k in (s.get("keywords") or [])),
         "score": _int(s.get("score")), "rank": _int(s.get("rank")), "url": safe_url(s.get("link")),
+        # where it happened, as Claude read it (_country: the English name the site gives the code)
+        "country": str(s.get("_country") or s.get("country") or ""), "place": " ".join(str(s.get("place") or "").split()),
+        "storyline": _storyline(s.get("_storyline")),
     }
+
+
+def _storyline(sl):
+    """'Moniquirá landslide, Colombia (Oct 2026) · Investigation & inquiry · 4 reports' (storylines.annotate)."""
+    if not isinstance(sl, dict) or not sl.get("title"):
+        return ""
+    return " · ".join(x for x in (str(sl["title"]), str(sl.get("stage") or ""),
+                                  f"{_int(sl.get('size'))} reports" if _int(sl.get("size")) else "") if x)
 
 
 def _paper(p, no):
@@ -424,24 +443,29 @@ class Ctx:
 
 # ------------------------------------------------------------------ entry point
 def write_workbook(path, title, subtitle, stories, themes, theme_color, timeline, timeline_label,
-                   digest_count=None, windows=None, papers=None):
-    """stories carry _digest/_window/_region like the site's; timeline is [(label, count)].
+                   digest_count=None, windows=None, papers=None, events=None, deadlines=None, events_asof=None):
+    """stories carry _digest/_window/_region (and _country, _storyline) like the site's; timeline is [(label, count)].
 
     digest_count: number of daily digests in the period (counts digests that found no stories);
     defaults to the digests listed in a daily timeline, else the distinct _digest dates.
     windows: issue-window keys offered by the Issue window selector (default: those in the stories).
     papers: research papers (the digests' "papers", with _digest), listed in a Research sheet.
+    events, deadlines: the events calendar's upcoming events and open call-for-papers deadlines as of
+    events_asof (events.upcoming() and events.deadlines(); each event may carry _where), in an Events sheet.
     """
     ctx = Ctx(title, subtitle, list(stories or []), themes, theme_color, timeline, timeline_label,
               digest_count, windows)
     ctx.papers = [_paper(p, i) for i, p in enumerate(
         sorted(papers or [], key=lambda p: (_int(p.get("relevance")), str(p.get("published") or "")), reverse=True), 1)]
+    ctx.events = [e for e in events or [] if isinstance(e, dict) and e.get("name")]
+    ctx.calls = [c for c in deadlines or [] if isinstance(c, dict) and isinstance(c.get("event"), dict)]
+    ctx.events_asof = events_asof or dt.date.today()
     wb = Workbook()
     start = wb.active
     start.title = "Start here"
     sheets = {"Start here": start}
-    for name in ("Dashboard", "Stories", "By theme", "Research", "Sources", "Lists"):
-        if name != "Research" or ctx.papers:
+    for name in ("Dashboard", "Stories", "By theme", "Research", "Events", "Sources", "Lists"):
+        if (name != "Research" or ctx.papers) and (name != "Events" or ctx.events or ctx.calls):
             sheets[name] = wb.create_sheet(name)
     for name, ws in sheets.items():
         ws.sheet_properties.tabColor = TAB_COLORS[name]
@@ -452,6 +476,8 @@ def write_workbook(path, title, subtitle, stories, themes, theme_color, timeline
     _sources_sheet(sheets["Sources"], ctx)
     if ctx.papers:
         _research_sheet(sheets["Research"], ctx)
+    if "Events" in sheets:
+        _events_sheet(sheets["Events"], ctx)
     anchors = _by_theme_sheet(sheets["By theme"], ctx)
     _dashboard(sheets["Dashboard"], ctx)
     _start_sheet(start, ctx, anchors)
@@ -735,6 +761,105 @@ def _research_sheet(ws, ctx):
     ws.freeze_panes = f"C{STORY_FIRST}"
     page_setup(ws, f"{STORY_HEADER}:{STORY_HEADER}")
     ws.print_area = f"A1:K{last}"
+
+
+# ------------------------------------------------------------------ Events
+def _ev_date(iso):
+    """A date cell for 'YYYY-MM-DD', the month as text ('Jun 2027') when only the month is known, else None."""
+    text = str(iso or "")
+    day = as_date(text) if len(text) == 10 else None
+    if day:
+        return day
+    m = re.fullmatch(r"(\d{4})-(\d{2})", text)
+    return f"{dt.date(2000, int(m.group(2)), 1):%b} {m.group(1)}" if m and 1 <= int(m.group(2)) <= 12 else None
+
+
+def _ev_where(e):
+    if e.get("_where"):
+        return str(e["_where"])
+    where = ", ".join(str(x) for x in (e.get("city"), e.get("country")) if x)
+    return (f"{where} and online" if where else "Online") if e.get("online") else where
+
+
+def _ev_name(e):
+    short = str(e.get("short") or "")
+    name = str(e.get("name") or "")
+    return name + (f" ({short})" if short and short.lower() not in name.lower() else "")
+
+
+def _events_sheet(ws, ctx):
+    """The events calendar as it stood when the workbook was made: open call-for-papers deadlines, then the
+    upcoming events, each with its website."""
+    ws.sheet_view.showGridLines = False
+    cols = [("Date", 13), ("Days left", 10), ("Event", 52), ("Kind", 19), ("Place", 26), ("Dates", 22),
+            ("Organiser", 28), ("Deadlines", 34), ("Website", 34)]
+    for i, (_, width) in enumerate(cols, 1):
+        ws.column_dimensions[get_column_letter(i)].width = width
+    put(ws, 1, 1, f"Events · {len(ctx.events)} upcoming, {len(ctx.calls)} open "
+        f"{'deadline' if len(ctx.calls) == 1 else 'deadlines'}", f=font(14, True, NAVY), al=Alignment(vertical="center"))
+    nav(ws, 1, 4, [("← Dashboard", "Dashboard", "A1"), ("↑ Start here", "Start here", "A1")])
+    put(ws, 2, 1, f"From the website's events calendar on {ctx.events_asof:%d %b %Y}: ISSMGE conferences, other "
+        "conferences, courses and webinars, kept by the editors (data/events.yaml) and found by the weekly refresh. "
+        "Check the dates on each event's website before you publish them.", f=font(9, color=MUTED, italic=True))
+    ws.row_dimensions[1].height, ws.row_dimensions[2].height = 26, 16
+    top, wrap = Alignment(vertical="top"), Alignment(vertical="top", wrap_text=True)
+    center = Alignment(vertical="top", horizontal="center")
+
+    def dates(e):
+        a, b = _ev_date(e.get("start")), _ev_date(e.get("end"))
+        text = lambda d: d.strftime("%d %b %Y") if isinstance(d, dt.date) else str(d or "")
+        return text(a) if not b or a == b else f"{text(a)} – {text(b)}"
+
+    def event_cells(r, e):
+        kind = str(e.get("kind") or "")
+        cell = put(ws, r, 3, clean(_ev_name(e), 400), f=font(10, True, LINK, underline="single" if safe_url(e.get("url")) else None), al=wrap)
+        if safe_url(e.get("url")):
+            cell.hyperlink = safe_url(e.get("url"))
+        put(ws, r, 4, kind or None, f=font(9, True, KIND_COLORS.get(kind, MUTED)), al=wrap)
+        put(ws, r, 5, clean(_ev_where(e), 200) or None, al=wrap)
+        put(ws, r, 6, dates(e) or None, al=wrap)
+        put(ws, r, 7, clean(str(e.get("organiser") or ""), 200) or None, f=font(9), al=wrap)
+        put(ws, r, 9, safe_url(e.get("url")) or None, f=font(8, color=MUTED), al=top)
+        return max(lines_needed(_ev_name(e), 52), lines_needed(_ev_where(e), 26), lines_needed(e.get("organiser"), 28))
+
+    row = 4
+    section(ws, row, 1, len(cols), f"Call-for-papers deadlines ({len(ctx.calls)})")
+    head(ws, row + 1, [(1, 1, "Deadline"), (2, 2, "Days left"), (3, 3, "Event"), (4, 4, "Kind"), (5, 5, "Place"),
+                       (6, 6, "Event dates"), (7, 7, "Organiser"), (8, 8, "What is due"), (9, 9, "Website")])
+    row += 2
+    for c in ctx.calls:
+        day = _ev_date(c.get("date"))
+        put(ws, row, 1, day, f=font(10, True), al=top, fmt="dd mmm yyyy")
+        if isinstance(day, dt.date):  # counted from the day the file is opened
+            put(ws, row, 2, F(f"=A{row}-TODAY()"), f=font(10, True, "B4321B"), al=center, fmt='0;"passed";"today"')
+        else:
+            put(ws, row, 2, "exact date TBC", f=font(9, color=MUTED), al=center)
+        lines = event_cells(row, c["event"])
+        put(ws, row, 8, clean(str(c.get("label") or "Deadline"), 200), f=font(10, True), al=wrap)
+        ws.row_dimensions[row].height = min(max(lines, 1), 4) * 12.5 + 5
+        row += 1
+    if not ctx.calls:
+        put(ws, row, 3, "No call-for-papers deadline is open at the moment.", f=font(10, italic=True, color=MUTED))
+        row += 1
+
+    row += 1
+    section(ws, row, 1, len(cols), f"Upcoming events ({len(ctx.events)})")
+    head(ws, row + 1, [(1, 1, "Starts"), (2, 2, "ISSMGE"), (3, 3, "Event"), (4, 4, "Kind"), (5, 5, "Place"),
+                       (6, 6, "Dates"), (7, 7, "Organiser"), (8, 8, "Deadlines"), (9, 9, "Website")])
+    row += 2
+    for e in ctx.events:
+        put(ws, row, 1, _ev_date(e.get("start")), f=font(10, True), al=top, fmt="dd mmm yyyy")
+        put(ws, row, 2, "ISSMGE" if e.get("issmge") else None, f=font(9, True, ACCENT), al=center)
+        lines = event_cells(row, e)
+        dls = "\n".join(f"{d.get('label', 'Deadline')}: {dates({'start': d.get('date')})}"
+                        for d in e.get("deadlines") or [] if isinstance(d, dict))
+        put(ws, row, 8, clean(dls, 600) or None, f=font(9), al=wrap)
+        ws.row_dimensions[row].height = min(max(lines, len(dls.splitlines()), 1), 6) * 12.5 + 5
+        row += 1
+    if not ctx.events:
+        put(ws, row, 3, "No upcoming events in the calendar.", f=font(10, italic=True, color=MUTED))
+    ws.freeze_panes = "A4"
+    page_setup(ws, "1:2")
 
 
 # ------------------------------------------------------------------ By theme
@@ -1145,7 +1270,12 @@ def _start_sheet(ws, ctx, anchors):
          "journals for the Academia-to-Industry pages, best rated for use in practice first, with why each matters "
          "and a link to the paper. Status and Editor notes work as in Stories.",
          {"font": link_font, "link": ("Research", "A1")}),
-    ] if ctx.papers else []) + [
+    ] if ctx.papers else []) + ([
+        ("Events →", f"The events calendar on {ctx.events_asof:%d %b %Y}: {len(ctx.calls)} open call-for-papers "
+         f"{'deadline' if len(ctx.calls) == 1 else 'deadlines'} with the days left, and {len(ctx.events)} upcoming "
+         f"{'event' if len(ctx.events) == 1 else 'events'} (ISSMGE conferences, other conferences, courses and "
+         "webinars), each linked to its website.", {"font": link_font, "link": ("Events", "A1")}),
+    ] if ctx.events or ctx.calls else []) + [
         ("Sources →", "The outlets that supplied stories: how many, average relevance, main theme and how many "
          "match the current Dashboard selection.", {"font": link_font, "link": ("Sources", "A1")}),
     ])
