@@ -156,10 +156,11 @@ def last_day(iso):
     return dt.date(y + m // 12, m % 12 + 1, 1) - dt.timedelta(days=1)
 
 
-def months_after(day, n):
+def month_end_after(day, n):
+    """The last day of the month n months after day's (30 Sep + 6 → 31 Mar)."""
     y, m = divmod(day.month - 1 + n, 12)
     y, m = day.year + y, m + 1
-    return dt.date(y, m, min(day.day, calendar.monthrange(y, m)[1]))
+    return dt.date(y, m, calendar.monthrange(y, m)[1])
 
 
 def date_text_range(start, end):
@@ -211,8 +212,9 @@ def developing_in(digests, first, last, limit=15):
 
 def events_in(cfg, first, last):
     """Events from the calendar (events.load) that run, or have a deadline, between the window's first day and
-    EVENTS_AFTER months after its last: (events by start date, deadlines in that span by date, (from, to))."""
-    lo, hi = first, months_after(last, EVENTS_AFTER)
+    the end of the month EVENTS_AFTER months after its last: (events by start date, deadlines in that span by
+    date, {"from", "to"})."""
+    lo, hi = first, month_end_after(last, EVENTS_AFTER)
     events, deadlines = [], []
     for e in site_builder.optional("events", "load", cfg, default=[]) or []:
         try:
@@ -247,11 +249,12 @@ def developing_line(g, refs):
     return "- " + " | ".join(clip(p, 260) for p in parts)
 
 
-def event_line(e):
+def event_line(e, today):
     parts = [date_text_range(e["start"], e["end"]), e["name"] + (f" ({e['short']})" if e["short"] and e["short"] not in e["name"] else ""),
              e["where"] or "place to be announced", e["kind"] + (" (ISSMGE)" if e["issmge"] and "ISSMGE" not in e["kind"] else "")]
     if e["deadlines"]:
-        parts.append("deadlines: " + "; ".join(f"{d['label']} {d['date']}" for d in e["deadlines"]))
+        parts.append("deadlines: " + "; ".join(f"{d['label']} {d['date']}" + (" (passed)" if last_day(d["date"]) < today else "")
+                                               for d in e["deadlines"]))
     return "- " + " | ".join(clip(p, 260) for p in parts)
 
 
@@ -276,9 +279,10 @@ def build_prompt(win, last, today, status, chosen, total, papers, themes, editio
         a2i = "(there are no papers this time, so start from the news and say what research to look for)"
     ed = ", ".join(f"{name} {n}" for name, n in editions) or "none"
     kind = "the final brief, for the editorial meeting" if status == "final" else "a draft, to be refreshed before the meeting"
-    number = {s["id"]: f"S{i}" for i, s in enumerate(chosen, 1)}
-    dev_lines = [developing_line(g, [number[x] for x in g.get("story_ids") or [] if x in number]) for g in developing]
-    ev_lines = [event_line(e) for e in events]
+    number = {s["id"]: i for i, s in enumerate(chosen, 1)}
+    dev_lines = [developing_line(g, [f"S{n}" for n in sorted(number[x] for x in g.get("story_ids") or [] if x in number)])
+                 for g in developing]
+    ev_lines = [event_line(e, today) for e in events]
     span = span or {}
     extra = ((f"It also lists {site_builder.count(len(dev_lines), 'developing story', 'developing stories')} with a report in this "
               "window (an event reported again: the inquiry, the repair, the court case), with the S numbers of their reports in "

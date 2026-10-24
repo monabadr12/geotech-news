@@ -278,7 +278,8 @@ def email_section(doc, cfg, data_dir):
     opts = feature("notify", "settings", cfg, default={}) or {}
     plan = []
     if opts.get("story_alerts", True):
-        plan.append(f"an alert after any scan that finds a new story rated {opts.get('min_relevance', 5)}/5 or higher")
+        level = opts.get("min_relevance", 5)
+        plan.append(f"an alert after any scan that finds a new story rated {level}/5" + (" or higher" if level < 5 else ""))
     if opts.get("weekly_summary", True):
         plan.append(f"the weekly summary every {opts.get('weekday', 'Monday')}")
     doc.add_paragraph("Settings (config.yaml, alerts): " + (" and ".join(plan) if plan else "all e-mail switched off") + ". "

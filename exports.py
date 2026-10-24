@@ -806,20 +806,26 @@ def _events_sheet(ws, ctx):
     center = Alignment(vertical="top", horizontal="center")
 
     def dates(e):
+        """'12–14 Apr 2027', '28 Jun – 1 Jul 2027', '1 Nov 2026' or 'Oct 2027', as on the Events page."""
         a, b = _ev_date(e.get("start")), _ev_date(e.get("end"))
-        text = lambda d: d.strftime("%d %b %Y") if isinstance(d, dt.date) else str(d or "")
-        return text(a) if not b or a == b else f"{text(a)} – {text(b)}"
+        text = lambda d: f"{d.day} {d:%b %Y}" if isinstance(d, dt.date) else str(d or "")
+        if not b or a == b or not (isinstance(a, dt.date) and isinstance(b, dt.date)):
+            return text(a) if not b or a == b else f"{text(a)} – {text(b)}"
+        if (a.year, a.month) == (b.year, b.month):
+            return f"{a.day}–{b.day} {b:%b %Y}"
+        return f"{a.day} {a:%b} – {text(b)}" if a.year == b.year else f"{text(a)} – {text(b)}"
 
     def event_cells(r, e):
-        kind = str(e.get("kind") or "")
-        cell = put(ws, r, 3, clean(_ev_name(e), 400), f=font(10, True, LINK, underline="single" if safe_url(e.get("url")) else None), al=wrap)
-        if safe_url(e.get("url")):
-            cell.hyperlink = safe_url(e.get("url"))
+        # the name is plain wrapped text and the link sits in Website (LibreOffice does not wrap a linked cell)
+        kind, url = str(e.get("kind") or ""), safe_url(e.get("url"))
+        put(ws, r, 3, clean(_ev_name(e), 400), f=font(10, True), al=wrap)
         put(ws, r, 4, kind or None, f=font(9, True, KIND_COLORS.get(kind, MUTED)), al=wrap)
         put(ws, r, 5, clean(_ev_where(e), 200) or None, al=wrap)
         put(ws, r, 6, dates(e) or None, al=wrap)
         put(ws, r, 7, clean(str(e.get("organiser") or ""), 200) or None, f=font(9), al=wrap)
-        put(ws, r, 9, safe_url(e.get("url")) or None, f=font(8, color=MUTED), al=top)
+        cell = put(ws, r, 9, url or None, f=font(9, color=LINK, underline="single" if url else None), al=top)
+        if url:
+            cell.hyperlink = url
         return max(lines_needed(_ev_name(e), 52), lines_needed(_ev_where(e), 26), lines_needed(e.get("organiser"), 28))
 
     row = 4
