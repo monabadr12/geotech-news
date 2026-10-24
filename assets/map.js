@@ -434,9 +434,11 @@
     canvas.appendChild(svg);
     view = target();
     svg.setAttribute("viewBox", view.join(" "));
-    Object.keys(shapes).forEach(function (cc) {  // outline sizes, for the places too small to show a hatch
-      try { var b = shapes[cc].getBBox(); shapes[cc]._size = Math.max(b.width, b.height); } catch (e) { shapes[cc]._size = 0; }
-    });
+  }
+  function sizeOf(cc) {  // an outline's size, for the places too small to show a hatch; measured once the map
+    var p = shapes[cc];  // is shown (getBBox gives 0 while the table view hides it)
+    if (p && !p._size) try { var b = p.getBBox(); p._size = Math.max(b.width, b.height); } catch (e) { p._size = 0; }
+    return p ? p._size : 0;
   }
 
   function renderMap() {
@@ -488,7 +490,7 @@
     gDots.textContent = "";  // gap marks for member countries too small to show their hatch
     if (cur.located) Object.keys(member).forEach(function (cc) {
       var c = W.countries[cc];
-      if (!c || cur.counts[cc] || (shapes[cc] && shapes[cc]._size / k >= 9)) return;
+      if (!c || cur.counts[cc] || sizeOf(cc) / k >= 9) return;
       gDots.appendChild(sv("circle", { "class": "map-gd", cx: c.c[0], cy: c.c[1], r: 4.5 * k, "data-cc": cc }));
     });
     if (ring._cc) placeRing(ring._cc);
