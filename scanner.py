@@ -277,6 +277,7 @@ KOREAN_NEWS_WORDS = frozenset("""
 오전 오후 밤사이 이틀째 사흘째 잇따라 속보 단독 종합 영상 포토 폭우 호우 집중호우 장마 태풍 강풍 폭설 기상청 특보
 경보 주의보 관계자 작업자 근로자 운전자 차량 건물 주택 아파트 공사 공사장 대형 가구 세대 명 곳 건 채 대 개
 """.split())
+KOREAN_PARTICLE = re.compile("(?:으로|에서|에게|로|에|서|의|은|는|을|를|과|와)$")
 KOREAN_STEMS = sorted((w for w in KOREAN_NEWS_WORDS if len(w) > 1), key=len, reverse=True)
 SCRIPT_RUNS = re.compile(f"[{NOSPACE}]+|[^{NOSPACE}]+")
 SENTENCE_BREAK = re.compile(r"[.!?¡¿|•]")
@@ -302,6 +303,8 @@ def title_words(norm, topic=frozenset()):
     out = set()
     for word in norm.split():
         for run in SCRIPT_RUNS.findall(word):
+            if HANGUL_CHAR.match(run) and len(run) >= 3:
+                run = KOREAN_PARTICLE.sub("", run)  # 산사태로 -> 산사태
             stem = HANGUL_CHAR.match(run) and next((w for w in KOREAN_STEMS if run.startswith(w)), None)
             if stem or run in KOREAN_NEWS_WORDS:
                 out.add(stem or run)
@@ -315,10 +318,13 @@ def title_words(norm, topic=frozenset()):
 
 
 def topic_words(cfg):
-    terms = list(cfg.get("keywords") or {})
+    terms = [str(t) for t in (cfg.get("keywords") or {})]
     for spec in (cfg.get("multilingual_keywords") or {}).values():
-        terms += spec.get("terms", [])
-    return frozenset(w for t in terms for w in title_words(title_norm(str(t))))
+        terms += [str(t) for t in spec.get("terms", [])]
+    # Korean compounds listed for matching (포항지진, 하천제방) would otherwise make
+    # their place or river part (포항, 하천) a topic word and hide it from comparison
+    base = [t for t in terms if not (HANGUL_CHAR.match(t) and any(o != t and t.endswith(o) for o in terms))]
+    return frozenset(w for t in base for w in title_words(title_norm(t)))
 
 
 def title_names(title, topic):

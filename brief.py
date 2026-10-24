@@ -758,7 +758,7 @@ def write_docx(path, b, cfg, theme_color):
     # ---- 2. line-up
     report.heading(doc, "2. Proposed line-up by theme")
     hint(doc, "One to three stories per theme, strongest first, with the suggested format and angle. "
-              "Headlines link to the original stories.")
+              "Headlines link to the original stories.").paragraph_format.keep_with_next = True
     lineup_table(doc, lineup, theme_color)
 
     # ---- 3. feature leads

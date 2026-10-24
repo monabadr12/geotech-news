@@ -125,9 +125,10 @@ google_news:
     # The Geo-Institute and GEER publish rarely, so their searches (this one and
     # GEER's below) also catch coverage of them elsewhere, and still find nothing
     # on most days. ("site:" in an OR list finds nothing once a word is ANDed to it.)
-    - {q: '"Geo-Institute" OR "Geo-Congress" OR GeoStrata OR "Geo-Frontiers" OR "geotechnical engineering" ASCE', country: US, boost: 4}  # ASCE Geo-Institute
+    - {q: 'site:geoinstitute.org', country: US, boost: 4}  # ASCE Geo-Institute's own news (only the site: search finds it)
+    - {q: '"Geo-Institute" OR "Geo-Congress" OR GeoStrata OR "Geo-Frontiers" OR "geotechnical engineering" ASCE', country: US, boost: 4}  # coverage of the Geo-Institute
     # -"job with" leaves out the job ads of ASCE's job board (-site: does not work in Google News)
-    - {q: 'site:asce.org geotechnical OR "Geo-Institute" OR foundations OR tunnel OR landslide -"job with"', country: US, boost: 2}
+    - {q: 'site:asce.org geotechnical OR "Geo-Institute" OR foundations OR tunnel OR landslide -"job with" -"Career Connections"', country: US, boost: 2}
     - {q: 'site:ice.org.uk', boost: 2}                                                    # ICE
     - {q: 'site:highways.dot.gov OR site:fhwa.dot.gov', country: US, boost: 2}            # FHWA
     - {q: '"GEER" earthquake OR landslide OR reconnaissance OR liquefaction', country: US, boost: 4}  # GEER
@@ -212,7 +213,8 @@ research:
 
 # ---- Keywords and their weight -----------------------------------
 # Plurals are matched automatically (pile -> piles). Terms match whole
-# words only, except Chinese, Japanese and Korean terms, which match anywhere.
+# words only, except Chinese and Japanese terms, which match anywhere, and
+# Korean terms, which must start a word (particles after them still match).
 keywords:
   geotechnical: 5
   geotechnics: 5

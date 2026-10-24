@@ -159,10 +159,11 @@
   }
   function windowLabel(key) { var p = key.split("-"); return p[1] + " " + p[0]; }
 
+  function isPaper(s) { return s.kind === "paper"; }
   function card(s) {
-    var title = s.te || s.t, rel = s.r
-      ? "<span class='rel rel-" + s.r + "' title='Geotechnical relevance: " + s.r + " of 5'><i></i><i></i><i></i><i></i><i></i><b>" + s.r + "/5</b></span>"
-      : "<span class='rel rel-kw'>Keyword-ranked</span>";
+    var paper = isPaper(s), title = s.te || s.t, rel = s.r
+      ? "<span class='rel rel-" + s.r + "' title='" + (paper ? "Use in practice: " : "Geotechnical relevance: ") + s.r + " of 5'><i></i><i></i><i></i><i></i><i></i><b>" + s.r + "/5</b></span>"
+      : "<span class='rel rel-kw'>" + (paper ? "Not rated" : "Keyword-ranked") + "</span>";
     var meta = ["<span class='src'>" + esc(s.s) + "</span>"];
     if (s.p) meta.push("<time>" + esc(fmt(s.p)) + "</time>");
     if (s.c) meta.push("<span>" + esc(s.c) + " edition</span>");
@@ -172,8 +173,11 @@
     return "<article class='story' style='--tc:" + tc + "'><div class='story-top'><a class='story-title' dir='auto' href='" + esc(href) + "' target='_blank' rel='noopener'>" +
       esc(title) + "</a>" + rel + "</div>" +
       (s.te ? "<div class='orig' dir='auto'>Original: " + esc(s.t) + "</div>" : "") +
-      (s.a ? "<p class='angle'><span>Magazine angle</span>" + esc(s.a) + "</p>" : (s.x ? "<p class='summary'>" + esc(s.x) + "…</p>" : "")) +
-      "<div class='story-meta'>" + (s.u ? "<span class='use use-" + esc(useSlug) + "'>" + esc(s.u) + "</span>" : "") +
+      (paper && s.au ? "<div class='orig' dir='auto'>" + esc(s.au) + "</div>" : "") +
+      (s.a ? "<p class='angle'><span>" + (paper ? "Why it matters in practice" : "Magazine angle") + "</span>" + esc(s.a) + "</p>"
+        : (s.x ? "<p class='summary'>" + esc(s.x) + "…</p>" : "")) +
+      "<div class='story-meta'>" + (paper ? "<span class='badge'>Research paper</span>" : "") +
+      (s.u ? "<span class='use use-" + esc(useSlug) + "'>" + esc(s.u) + "</span>" : "") +
       "<span class='theme-tag'>" + esc(s.th) + "</span>" + meta.join(" · ") + "</div>" +
       (s.k && s.k.length ? "<div class='kw'>" + s.k.slice(0, 5).map(function (k) { return "<span>" + esc(k) + "</span>"; }).join("") + "</div>" : "") +
       "<div class='found'>Found in the <a href='" + root + "digests/" + esc(s.d) + ".html'>" + esc(fmt(s.d)) + " digest</a> · " +
@@ -216,9 +220,18 @@
       Object.keys(els).forEach(function (id) { if (els[id].value && els[id].value !== "0" && els[id].value !== "rel") qs.set(id, els[id].value); });
       history.replaceState(null, "", qs.toString() ? "?" + qs : location.pathname);
     }
+    function n(k, one, many) { return k + " " + (k === 1 ? one : many); }
+    function tally(list) {  // "3 stories", "2 research papers" or "3 stories and 2 research papers"
+      var p = list.filter(isPaper).length, parts = [];
+      if (list.length - p || !p) parts.push(n(list.length - p, "story", "stories"));
+      if (p) parts.push(n(p, "research paper", "research papers"));
+      return parts.join(" and ");
+    }
     function draw() {
-      countEl.textContent = matches.length + (matches.length === 1 ? " story" : " stories") + " found in " + all.length + " archived";
-      results.innerHTML = matches.length ? matches.slice(0, limit).map(card).join("") : "<p class='empty'>No stories match these filters.</p>";
+      var papers = all.some(isPaper);
+      countEl.textContent = tally(matches) + " found in " + (papers ? "the archive's " + tally(all) : all.length + " archived");
+      results.innerHTML = matches.length ? matches.slice(0, limit).map(card).join("")
+        : "<p class='empty'>No " + (papers ? "stories or research papers" : "stories") + " match these filters.</p>";
       moreBtn.hidden = matches.length <= limit;
     }
     function csvCell(v) {
