@@ -1862,6 +1862,7 @@ def build(cfg):
         body = hero("Latest digest", "Welcome",
                     "The first digest will appear here after the first scan. Scans run automatically every morning "
                     "at 05:00 Cairo time; press <b>Scan now</b> at the top of the page to start one on GitHub.")
+        body += optional("events", "sidebar", cfg, "", today, limit=6, default="") or ""
     write(DOCS / "index.html", page(cfg, "Latest digest", body, "", "latest"))
 
     for w in windows:

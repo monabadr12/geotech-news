@@ -1013,11 +1013,14 @@ body[data-root="../"] .sl-chip.sl-up { display: inline-flex; }
    and the four features on Method & sources (site_builder.py). */
 .story-meta .loc { display: inline-flex; align-items: center; gap: 4px; color: var(--ink); }
 .story-meta .loc .ico { width: 13px; height: 13px; color: var(--teal); }
-.side-col { display: grid; gap: 14px; align-content: start; margin-top: 30px;
+/* after the news on narrower screens: this week and developing stories side by side, the events panel below */
+.side-col { display: grid; gap: 14px; align-content: start; align-items: start; margin-top: 30px;
   grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); }
+.side-col .ev-side { grid-column: 1 / -1; order: 2; }
 @media (min-width: 1000px) {
   .with-side { display: grid; grid-template-columns: minmax(0, 1fr) 296px; gap: 24px; align-items: start; }
   .side-col { margin-top: 0; grid-template-columns: minmax(0, 1fr); }
+  .side-col .ev-side { order: 0; }
 }
 .side-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); padding: 14px 16px 15px; min-width: 0; }
 .side-card .eyebrow { margin-bottom: 6px; }
