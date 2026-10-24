@@ -71,7 +71,7 @@ STATUSES = [("To review", "4A5563", "ECEFF3", "A3ADB8", "New from the scan, not 
 DEFAULT_STATUS = STATUSES[0][0]
 KPI_COLORS = [NAVY, "0B97A5", "1E7B4F", "D38B00", "6B4FD6", "2563D6"]
 TAB_COLORS = {"Start here": ACCENT, "Dashboard": NAVY, "Stories": "2563D6", "By theme": "1F9D63",
-              "Sources": "0B97A5", "Lists": "B8C0CA"}
+              "Research": "6B4FD6", "Sources": "0B97A5", "Lists": "B8C0CA"}
 ALL_THEMES, ALL_USES, ANY_REL, ALL_WINDOWS = "All themes", "All uses", "Any", "All windows"
 THIN = Side(style="thin", color=LINE)
 MAX_TEXT = 32000          # Excel holds at most 32,767 characters in a cell
@@ -333,6 +333,17 @@ def _story(s, no):
     }
 
 
+def _paper(p, no):
+    return {
+        "no": no, "title": str(p.get("title") or "(no title)"), "theme": str(p.get("theme") or "General"),
+        "rel": max(0, min(5, _int(p.get("relevance")))), "angle": str(p.get("angle") or ""),
+        "journal": str(p.get("journal") or ""), "authors": str(p.get("authors") or ""),
+        "published": as_date(p.get("published")), "digest": as_date(p.get("_digest")),
+        "abstract": shorten(p.get("abstract") or "", 800) if p.get("abstract") else "",
+        "keywords": ", ".join(str(k) for k in (p.get("keywords") or [])), "url": safe_url(p.get("link")),
+    }
+
+
 def _timeline_key(label):
     """('date', date) for a daily-digest label such as '24 Oct 2026', ('window', '2026-Q4') for 'Q4 2026'."""
     text = " ".join(str(label).split())
@@ -413,21 +424,25 @@ class Ctx:
 
 # ------------------------------------------------------------------ entry point
 def write_workbook(path, title, subtitle, stories, themes, theme_color, timeline, timeline_label,
-                   digest_count=None, windows=None):
+                   digest_count=None, windows=None, papers=None):
     """stories carry _digest/_window/_region like the site's; timeline is [(label, count)].
 
     digest_count: number of daily digests in the period (counts digests that found no stories);
     defaults to the digests listed in a daily timeline, else the distinct _digest dates.
     windows: issue-window keys offered by the Issue window selector (default: those in the stories).
+    papers: research papers (the digests' "papers", with _digest), listed in a Research sheet.
     """
     ctx = Ctx(title, subtitle, list(stories or []), themes, theme_color, timeline, timeline_label,
               digest_count, windows)
+    ctx.papers = [_paper(p, i) for i, p in enumerate(
+        sorted(papers or [], key=lambda p: (_int(p.get("relevance")), str(p.get("published") or "")), reverse=True), 1)]
     wb = Workbook()
     start = wb.active
     start.title = "Start here"
     sheets = {"Start here": start}
-    for name in ("Dashboard", "Stories", "By theme", "Sources", "Lists"):
-        sheets[name] = wb.create_sheet(name)
+    for name in ("Dashboard", "Stories", "By theme", "Research", "Sources", "Lists"):
+        if name != "Research" or ctx.papers:
+            sheets[name] = wb.create_sheet(name)
     for name, ws in sheets.items():
         ws.sheet_properties.tabColor = TAB_COLORS[name]
         ws.sheet_view.tabSelected = name == "Start here"
@@ -435,6 +450,8 @@ def write_workbook(path, title, subtitle, stories, themes, theme_color, timeline
     _stories_sheet(sheets["Stories"], ctx)
     _lists_sheet(sheets["Lists"], ctx)
     _sources_sheet(sheets["Sources"], ctx)
+    if ctx.papers:
+        _research_sheet(sheets["Research"], ctx)
     anchors = _by_theme_sheet(sheets["By theme"], ctx)
     _dashboard(sheets["Dashboard"], ctx)
     _start_sheet(start, ctx, anchors)
@@ -658,6 +675,66 @@ def _sources_sheet(ws, ctx):
                                               showValue=True))
     ws.freeze_panes = f"B{STORY_FIRST}"
     page_setup(ws, f"{STORY_HEADER}:{STORY_HEADER}")
+
+
+# ------------------------------------------------------------------ Research
+RESEARCH_COLS = [("No.", 6), ("Paper", 50), ("Theme", 21), ("Use in practice", 10), ("Status", 14),
+                 ("Editor notes", 28), ("Why it matters in practice", 44), ("Journal", 26), ("Authors", 22),
+                 ("Published", 12), ("Digest date", 12), ("Abstract", 60), ("Keywords", 26), ("DOI link", 30)]
+
+
+def _research_sheet(ws, ctx):
+    """New papers for the Academia-to-Industry pages, best rated for practice first."""
+    ws.sheet_view.showGridLines = False
+    n = len(ctx.papers)
+    last = STORY_FIRST + n - 1
+    put(ws, 1, 1, f"Research · {n} new {'paper' if n == 1 else 'papers'}", f=font(14, True, NAVY),
+        al=Alignment(vertical="center"))
+    nav(ws, 1, 3, [("← Dashboard", "Dashboard", "A1"), ("↑ Start here", "Start here", "A1")])
+    put(ws, 2, 3, "Papers from geotechnical journals (via Crossref), best rated for use in practice first. Click a "
+        "title to open the paper. Status and Editor notes are yours, as in Stories.", f=font(9, color=MUTED, italic=True))
+    ws.row_dimensions[1].height, ws.row_dimensions[2].height = 26, 16
+    for i, (label, width) in enumerate(RESEARCH_COLS, 1):
+        ws.column_dimensions[get_column_letter(i)].width = width
+        planning = label in ("Status", "Editor notes")
+        put(ws, STORY_HEADER, i, label, f=font(10, True, NAVY if planning else WHITE), fl=ACCENT if planning else NAVY,
+            al=Alignment(horizontal="center" if width < 13 else "left", vertical="center", wrap_text=True))
+    ws.row_dimensions[STORY_HEADER].height = 32
+    top, wrap = Alignment(vertical="top"), Alignment(vertical="top", wrap_text=True)
+    center = Alignment(vertical="top", horizontal="center")
+    for idx, p in enumerate(ctx.papers):
+        r = STORY_FIRST + idx
+        color = ctx.color(p["theme"])
+        put(ws, r, 1, p["no"], f=font(9, color=MUTED), al=center)
+        cell = put(ws, r, 2, p["title"], f=font(10, True, LINK, underline="single" if p["url"] else None), al=wrap)
+        if p["url"] and idx < MAX_LINKS:
+            cell.hyperlink = p["url"]
+        put(ws, r, 3, p["theme"], f=font(9, True, color), fl=tint(color, .85), al=wrap)
+        put(ws, r, 4, p["rel"], f=font(10, True), al=center, fmt='0;-0;"–"')
+        put(ws, r, 5, DEFAULT_STATUS, f=font(10, True), fl=EDIT_FILL, al=center)
+        put(ws, r, 6, None, fl=EDIT_FILL, al=wrap)
+        put(ws, r, 7, p["angle"] or None, al=wrap)
+        put(ws, r, 8, p["journal"], f=font(10, True), al=wrap)
+        put(ws, r, 9, p["authors"] or None, f=font(9), al=wrap)
+        put(ws, r, 10, p["published"], al=top, fmt="dd mmm yyyy")
+        put(ws, r, 11, p["digest"], al=top, fmt="dd mmm yyyy")
+        put(ws, r, 12, p["abstract"] or None, f=font(9, italic=True, color=MUTED), al=wrap)
+        put(ws, r, 13, p["keywords"] or None, f=font(9, color=MUTED), al=wrap)
+        put(ws, r, 14, p["url"] or None, f=font(8, color=MUTED), al=top)
+        lines = max(lines_needed(p["title"], 50), lines_needed(p["angle"], 44), lines_needed(p["journal"], 26))
+        ws.row_dimensions[r].height = min(max(lines, 3), 6) * 12.5 + 3
+    table = Table(displayName="ResearchTable", ref=f"A{STORY_HEADER}:{get_column_letter(len(RESEARCH_COLS))}{last}")
+    table.tableStyleInfo = TableStyleInfo(name="TableStyleLight1", showRowStripes=True)
+    ws.add_table(table)
+    dv = DataValidation(type="list", formula1="Lists!$E$2:$E$6", allow_blank=True, showDropDown=False,
+                        showErrorMessage=True, errorTitle="Status", error="Choose a status from the list.")
+    dv.add(f"E{STORY_FIRST}:E{last}")
+    ws.add_data_validation(dv)
+    _status_colours(ws, f"E{STORY_FIRST}:E{last}")
+    _rel_colours(ws, f"D{STORY_FIRST}:D{last}")
+    ws.freeze_panes = f"C{STORY_FIRST}"
+    page_setup(ws, f"{STORY_HEADER}:{STORY_HEADER}")
+    ws.print_area = f"A1:K{last}"
 
 
 # ------------------------------------------------------------------ By theme
@@ -1063,6 +1140,12 @@ def _start_sheet(ws, ctx, anchors):
          {"font": link_font, "link": ("Stories", "A1")}),
         ("By theme →", "A read-only reading view: one section per theme, best stories first. Collapse or expand "
          "sections with the − / + buttons in the left margin.", {"font": link_font, "link": ("By theme", "A1")}),
+    ] + ([
+        ("Research →", f"{len(ctx.papers)} new {'paper' if len(ctx.papers) == 1 else 'papers'} from geotechnical "
+         "journals for the Academia-to-Industry pages, best rated for use in practice first, with why each matters "
+         "and a link to the paper. Status and Editor notes work as in Stories.",
+         {"font": link_font, "link": ("Research", "A1")}),
+    ] if ctx.papers else []) + [
         ("Sources →", "The outlets that supplied stories: how many, average relevance, main theme and how many "
          "match the current Dashboard selection.", {"font": link_font, "link": ("Sources", "A1")}),
     ])
