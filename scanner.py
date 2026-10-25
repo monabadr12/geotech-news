@@ -7,6 +7,7 @@ digest to data/digests/ (the permanent archive) and rebuilds the website in
 docs/ (GitHub Pages). E-mail (alerts and the weekly summary) is sent by notify.py.
 """
 import calendar
+import collections
 import datetime as dt
 import difflib
 import functools
@@ -358,15 +359,90 @@ def same_event(a, b):
     return sm.real_quick_ratio() > 0.8 and sm.quick_ratio() > 0.8 and sm.ratio() > 0.8
 
 
-def drop_same_events(items, cfg):
+def headline_marks(title, topic):
+    """What same_event() compares: (normalised title, significant words, names)."""
+    norm = title_norm(title)
+    return norm, title_words(norm, topic), title_names(title, topic)
+
+
+def story_marks(it, topic):
+    """What same_story() compares: the headline marks of a story's English
+    wording (title_en, or the title of a story written in English), all its
+    significant words (keyword words too), its numbers and the significant
+    words of the place Claude read."""
+    text = it.get("title_en") or it["title"]
+    marks = headline_marks(text, topic)
+    return (marks, title_words(marks[0]), set(re.findall(r"\d+", marks[0])),
+            title_words(title_norm(it.get("place") or ""), topic))
+
+
+def initials(norm):
+    """The initials of each run of three or four words of a normalised
+    headline, as an abbreviation of them would read (tunnel boring machine:
+    tbm)."""
+    words = norm.split()
+    return {"".join(w[0] for w in words[i:i + n]) for n in (3, 4) for i in range(len(words) - n + 1)}
+
+
+def same_story(a, b):
+    """a and b are story_marks() of two stories, at least one of them
+    translated by Claude. Short translated headlines look alike, so this is
+    stricter than same_event(). Two stories that each have a number, or a
+    word in Claude's place, that the other lacks are two (330 billion dong is
+    not 200 billion). Wordings that differ by a word or two each, a keyword
+    word among them, are two, whether or not they name a place: "Ca Mau:
+    experts propose solutions for coastal erosion" is not "... for riverbank
+    erosion" (but "TBM" may stand for "tunnel boring machine"). Otherwise
+    the words they share must include a name or a word of the place, and
+    another word: "Exploring Phong Nha-Ke Bang's famous sinkholes" is not
+    "120 m deep sinkhole discovered in Phong Nha-Ke Bang". Wordings with no
+    name in common may differ by one word each: "Anti-landslide embankment
+    threatens residential area" is "Landslide-prevention embankment...".
+    Wordings that are the same word for word are one story, unless Claude
+    read two places."""
+    (ha, wa, na, pa), (hb, wb, nb, pb) = a, b
+    if ha[0] == hb[0] and (not pa or not pb or not (pa - pb and pb - pa)
+                           or pa & pb & (ha[2] | hb[2])):  # the places share a name the headline gives
+        return True
+    if (na - nb and nb - na) or (pa - pb and pb - pa) or not same_event(ha, hb):
+        return False
+    short = (wa - wb) & initials(hb[0]) or (wb - wa) & initials(ha[0])  # TBM, tunnel boring machine
+    swapped = wa ^ wb != ha[1] ^ hb[1] and not short  # a keyword word in one wording only
+    if swapped and wa - wb and wb - wa and len(wa - wb) <= 2 and len(wb - wa) <= 2:
+        return False
+    shared = ha[1] & hb[1]
+    named = ha[2] | hb[2] | pa | pb
+    if shared & named:
+        return bool(shared - named)
+    return len(wa - wb) <= 1 and len(wb - wa) <= 1 and not swapped
+
+
+def drop_same_events(items, cfg, copies=None):
     """Keep one headline per event. Items must come best first. Headlines that
     match, directly or through a chain of re-wordings, form one group, and only
-    the group's best headline is kept."""
+    the group's best headline is kept. Stories that Claude translated are also
+    compared in English (same_story), so that the copies of one story in
+    several languages count once (Vietnam.vn publishes each story in
+    Vietnamese, English, Chinese and more, and Google News lists every copy).
+    Reports from two websites must then also be from one country; copies on
+    one website need not, since Claude may take an Indonesian copy of a
+    Vietnamese story for Indonesian news. A dict given as copies receives, for
+    each kept story's id, the other stories of its group, best first."""
     topic = topic_words(cfg)
-    marks = []
-    for it in items:
-        norm = title_norm(it["title"])
-        marks.append((norm, title_words(norm, topic), title_names(it["title"], topic)))
+    marks = [headline_marks(it["title"], topic) for it in items]
+    translated = [bool(it.get("title_en")) for it in items]
+    english = [story_marks(it, topic) for it in items] if any(translated) else []
+
+    def same(i, j):
+        if same_event(marks[i], marks[j]):
+            return True
+        if not (translated[i] or translated[j]):
+            return False  # the titles were compared above
+        ci, cj = items[i].get("country"), items[j].get("country")
+        if ci and cj and ci != cj and source_key(items[i].get("source")) != source_key(items[j].get("source")):
+            return False
+        return same_story(english[i], english[j])
+
     parent = list(range(len(items)))
 
     def root(i):
@@ -377,13 +453,15 @@ def drop_same_events(items, cfg):
 
     for i in range(len(items)):
         for j in range(i):
-            if root(i) != root(j) and same_event(marks[i], marks[j]):
+            if root(i) != root(j) and same(i, j):
                 parent[max(root(i), root(j))] = min(root(i), root(j))
-    kept, groups = [], set()
+    kept, groups = [], {}
     for i, it in enumerate(items):
         if root(i) not in groups:  # the first item of each group is its best
-            groups.add(root(i))
+            groups[root(i)] = it
             kept.append(it)
+        elif copies is not None:
+            copies.setdefault(groups[root(i)]["id"], []).append(it)
     return kept
 
 
@@ -400,7 +478,20 @@ def fill_leftovers(cfg):
     return bool(cfg.get("fill_leftover_places", False))
 
 
-def balanced(items, limit, share, rank, fill=True):
+source_cap = site_builder.source_cap  # max_per_source, read as the Method page reads it
+
+
+def source_key(name):
+    """A story's website as the cap counts it: case, spacing, a leading www.
+    and trailing punctuation do not matter (Vietnam.vn, www.vietnam.vn and
+    "VIETNAM.VN." are one website)."""
+    key = re.sub(r"^www\.", "", " ".join(str(name or "").casefold().split()))
+    while key and (key[-1].isspace() or unicodedata.category(key[-1])[0] == "P"):
+        key = key[:-1]
+    return key
+
+
+def theme_turns(items, limit, share, rank, fill=True):
     """Up to `limit` items spread across the magazine themes. Themes take
     turns, the theme with the best story first, each giving its best remaining
     story, until it runs out or reaches its cap of ceil(limit * share). With
@@ -421,6 +512,73 @@ def balanced(items, limit, share, rank, fill=True):
         chosen = {id(i) for i in picked}
         picked += [i for i in order if id(i) not in chosen][: limit - len(picked)]
     return sorted(picked, key=lambda i: -rank(i))
+
+
+def balanced(items, limit, share, rank, fill=True, per_source=0, copies=None):
+    """theme_turns(), with no website (source_key) keeping more than
+    per_source stories (0 = no limit). A website's weakest stories beyond its
+    best per_source are taken out and the places filled again, each theme
+    giving its next story, until no website has too many. A story taken out
+    gives way to another website's report of the same event when
+    drop_same_events() merged one into it (copies), so that the event is not
+    lost with it. Such a report can push a story out of its theme, leaving a
+    website below its limit or with a weaker story: a story taken out then
+    comes back, once, unless a report of its event is already picked."""
+    pool, tried, spare = list(items), {id(i) for i in items}, {}
+    stands_for, taken, back = {}, [], set()  # stands_for: a report put in -> the first story of its event (ids)
+
+    def event(it):
+        return stands_for.get(id(it), id(it))
+
+    while True:
+        picked = theme_turns(pool, limit, share, rank, fill)
+        sites, weakest = collections.Counter(), {}
+        out = []
+        for it in picked:  # best first: a website keeps its best stories
+            site = source_key(it.get("source"))
+            sites[site] += 1
+            if per_source and site and sites[site] > per_source:
+                out.append(it)
+            else:
+                weakest[site] = rank(it)
+        if not out:
+            shown = {event(i) for i in picked}
+            # a report put in that its theme had no place for: the event's next report from a website with room
+            chosen, moved = {id(i) for i in picked}, False
+            for r in [i for i in pool if id(i) in stands_for and id(i) not in chosen and event(i) not in shown]:
+                others = [c for c in spare.pop(id(r), []) if id(c) not in tried
+                          and sites[source_key(c.get("source"))] < per_source]
+                if others:
+                    pool = [i for i in pool if i is not r] + [others[0]]
+                    tried.add(id(others[0]))
+                    spare[id(others[0])] = others[1:]
+                    stands_for[id(others[0])] = event(r)
+                    moved = True
+            if moved:
+                continue
+            # a story taken out whose website now has room, or keeps a weaker story
+            due = [i for i in taken if id(i) not in back and event(i) not in shown
+                   and (sites[source_key(i.get("source"))] < per_source
+                        or rank(i) > weakest[source_key(i.get("source"))])]
+            if not due:
+                return picked
+            it = max(due, key=rank)
+            back.add(id(it))
+            pool = [i for i in pool if event(i) != event(it)] + [it]  # its event's unpicked report makes way
+            continue
+        taken += out
+        gone = {id(i) for i in out}
+        pool = [i for i in pool if id(i) not in gone]
+        for it in out:  # the other websites' reports of its event, best first, while their website has room
+            others = spare.pop(id(it), None)
+            if others is None:
+                others = (copies or {}).get(it.get("id"), [])
+            others = [c for c in others if id(c) not in tried and sites[source_key(c.get("source"))] < per_source]
+            if others:
+                pool.append(others[0])
+                tried.add(id(others[0]))
+                spare[id(others[0])] = others[1:]
+                stands_for[id(others[0])] = event(it)
 
 
 # ------------------------------------------------------------------ Claude triage
@@ -857,9 +1015,10 @@ def merge_papers(ours, theirs, cfg):
 def save_digest(now, stories, failures, notes, ai_used, new_count, cfg, papers=None):
     """Write today's digest to data/digests/YYYY-MM-DD.json. A second run on the
     same day merges its stories with the morning's file: the union is cleared
-    of repeated events and balanced across the themes again, up to max_items,
-    so a re-run also mends a lopsided earlier digest. Research papers are
-    merged the same way."""
+    of repeated events (and of copies of one story in several languages) and
+    balanced across the themes and websites again, up to max_items, so a
+    re-run also mends a lopsided earlier digest. Research papers are merged
+    the same way."""
     path = site_builder.DIGESTS / f"{now:%Y-%m-%d}.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     digest = {"date": f"{now:%Y-%m-%d}", "generated": now.isoformat(timespec="minutes"),
@@ -875,8 +1034,10 @@ def save_digest(now, stories, failures, notes, ai_used, new_count, cfg, papers=N
         known = {s["id"] for s in stories}
         union = stories + [s for s in earlier if s["id"] not in known]
         union.sort(key=lambda s: -s["rank"])
-        digest["stories"] = balanced(drop_same_events(union, cfg), cfg.get("max_items", 40),
-                                     theme_share(cfg), lambda s: s["rank"], fill=fill_leftovers(cfg))
+        copies = {}
+        digest["stories"] = balanced(drop_same_events(union, cfg, copies), cfg.get("max_items", 40),
+                                     theme_share(cfg), lambda s: s["rank"], fill=fill_leftovers(cfg),
+                                     per_source=source_cap(cfg), copies=copies)
         digest["new_items"] += old.get("new_items", 0)
         digest["ai_used"] = ai_used or old.get("ai_used", False)
         if papers is not None or old.get("papers"):
@@ -940,7 +1101,8 @@ def main():
 
     # the same event from several outlets: keep its best-scoring headline
     items.sort(key=lambda i: (-i["score"], -i["bonus"]))
-    unique = drop_same_events(items, cfg)
+    first_copies = {}  # other outlets' reports of an event, merged before Claude reads the headlines
+    unique = drop_same_events(items, cfg, first_copies)
 
     # The language bonus only lifts foreign headlines, whose words the keyword
     # lists may miss, over min_keyword_score so that Claude can read them. It
@@ -948,7 +1110,11 @@ def main():
     minscore = cfg.get("min_keyword_score", 3)
     share = theme_share(cfg)
     pool = [i for i in unique if i["score"] + i["bonus"] >= minscore]
-    candidates = balanced(pool, cfg["claude"].get("max_candidates", 80), share, lambda i: i["score"])
+    # no website fills Claude's list either; each may send three times
+    # max_per_source, since its copies of one story in other languages are only
+    # found (and counted once) in Claude's translations
+    candidates = balanced(pool, cfg["claude"].get("max_candidates", 80), share, lambda i: i["score"],
+                          per_source=3 * source_cap(cfg))
     ai_used = claude_triage(candidates, cfg, notes)
     if ai_used:
         minrel = cfg["claude"].get("min_relevance", 3)
@@ -961,7 +1127,29 @@ def main():
         kept = [i for i in pool if i["score"] >= minscore]
     for i in kept:
         i["rank"] = i["relevance"] * 100 + i["score"]
-    selected = balanced(kept, cfg.get("max_items", 40), share, lambda i: i["rank"], fill=fill_leftovers(cfg))
+    copies = {}
+    if ai_used:
+        # Claude's English titles show the copies of one story in other languages
+        # (and reports of one event in two languages): the best one is kept
+        kept.sort(key=lambda i: -i["rank"])
+        kept = drop_same_events(kept, cfg, copies)
+    # the reports merged before Claude stand in too, with the reading of the story they were merged into
+    final = {i["id"]: i["id"] for i in kept}
+    final.update({c["id"]: k for k, cs in copies.items() for c in cs})
+    rated = {i["id"]: i for i in kept} | {c["id"]: c for cs in copies.values() for c in cs}
+    for head, reports in first_copies.items():
+        if head not in final:
+            continue
+        h = rated[head]
+        for c in reports:
+            c.update(relevance=h["relevance"], theme=h["theme"], use=h["use"], angle=h["angle"],
+                     title_en=c["title_en"] or h["title_en"], rank=h["relevance"] * 100 + c["score"],
+                     **({"country": h.get("country", ""), "place": h.get("place", "")} if h["relevance"] else {}))
+            copies.setdefault(final[head], []).append(c)
+    for cs in copies.values():
+        cs.sort(key=lambda c: -c["rank"])
+    selected = balanced(kept, cfg.get("max_items", 40), share, lambda i: i["rank"], fill=fill_leftovers(cfg),
+                        per_source=source_cap(cfg), copies=copies)
 
     # new research papers for the Academia-to-Industry pages (remembered by DOI)
     papers = research_papers(cfg, now, seen, compiled, failures, notes)
@@ -1026,8 +1214,9 @@ def reclassify():
 
 
 def rebalance(names):
-    """Clear repeated events from the named digests and balance them across the
-    themes again (used when two runs saved the same day)."""
+    """Clear repeated events (and copies of one story in several languages) from
+    the named digests and balance them across the themes and websites again
+    (used when two runs saved the same day)."""
     cfg = yaml.safe_load(CONFIG.read_text(encoding="utf-8"))
     minscore = cfg.get("min_keyword_score", 3)
     for name in names:
@@ -1036,8 +1225,10 @@ def rebalance(names):
         rescore_unrated(digest["stories"], cfg)
         stories = sorted((s for s in digest["stories"] if s.get("relevance") or s["score"] >= minscore),
                          key=lambda s: -s["rank"])
-        digest["stories"] = balanced(drop_same_events(stories, cfg), cfg.get("max_items", 40), theme_share(cfg),
-                                     lambda s: s["rank"], fill=fill_leftovers(cfg))
+        copies = {}
+        digest["stories"] = balanced(drop_same_events(stories, cfg, copies), cfg.get("max_items", 40),
+                                     theme_share(cfg), lambda s: s["rank"], fill=fill_leftovers(cfg),
+                                     per_source=source_cap(cfg), copies=copies)
         if digest.get("papers"):
             digest["papers"] = select_papers(digest["papers"], cfg)
         path.write_text(json.dumps(digest, ensure_ascii=False, indent=1), encoding="utf-8")

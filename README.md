@@ -160,8 +160,14 @@ after every scan, so save your own copy for the planning columns.
 
 ### How the digest is balanced
 No theme may take more than 30 % of a digest (`max_share_per_theme` in `config.yaml`; 18 of 60 stories). Themes take
-turns, the theme with the best story first, so every theme that has stories is represented. Several outlets reporting the
-same event are merged into one story. A second scan on the same day merges with the morning's digest and re-balances it.
+turns, the theme with the best story first, so every theme that has stories is represented. No website may give more
+than 5 stories (`max_per_source`; 0 = no limit): a website keeps its five best, and each place this frees goes to the
+next story of the same theme, or, when Claude's translations show that another website reported the same event, to
+that website's report. Up to 15 stories from one website go to Claude. Several outlets reporting the same event are
+merged into one story, and copies of one story in several languages count once: Vietnam.vn, for example, publishes
+each story in Vietnamese, English, Chinese and other languages, and Google News lists every copy, so once Claude has
+translated the headlines, copies whose English headlines match are merged and the best one is kept. A second scan on
+the same day merges with the morning's digest and re-balances it.
 
 ### Website report (Word)
 `docs/reports/site-report.docx` is regenerated after every scan: status at a glance, an automatic review of the
@@ -172,7 +178,9 @@ recorded as sent, the change log and open items. The change log and open items a
 
 ### How the archive works
 * Each scan saves its stories to `data/digests/YYYY-MM-DD.json`. **These files are the archive** —
-  they are kept forever in the repository (and in its Git history).
+  they are kept forever in the repository (and in its Git history). Each issue page gathers every story of its
+  quarter, so nothing is lost by the time the issue is planned. (The 45-day memory in `data/seen.json` only stops
+  the same article being picked up twice; it never removes anything from the archive.)
 * Everything in `docs/` (the website, workbooks and report) is rebuilt from those files on every run, so the design
   can be changed at any time without losing anything.
 * Issue windows are calendar quarters by default (Jan–Mar, Apr–Jun, Jul–Sep, Oct–Dec). If the magazine's
@@ -338,7 +346,7 @@ now**.
 | `tools/make_world.py` | Rebuilds `assets/world.json` from Natural Earth (only needed to change the map's outlines). |
 | `.github/workflows/` | The daily scan (`scan.yml`), the issue brief (`brief.yml`), the events calendar and weekly summary (`extras.yml`) and Check feeds (`check-feeds.yml`). |
 | `data/digests/` | **The permanent archive**, one file per day. |
-| `data/seen.json` | Stories already shown (45-day memory, so nothing repeats). |
+| `data/seen.json` | Links the scanner has already read in the last 45 days, so the same article is not picked up twice. It only prevents repeats: nothing is removed from the archive, and the digests in `data/digests/` are kept permanently. |
 | `docs/` | The generated website (do not edit by hand). |
 
 ## Notes

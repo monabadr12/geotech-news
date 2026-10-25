@@ -199,6 +199,17 @@ def assistant_endpoint(cfg):
     return str((cfg.get("assistant") or {}).get("endpoint") or "").strip()
 
 
+def source_cap(cfg):
+    """max_per_source: the most stories one website may give a digest; 0 = no
+    limit, 5 when the setting is missing or not a number (yes and no are not).
+    The scanner applies it and the Method page states it, both from here."""
+    value = cfg.get("max_per_source", 5)
+    try:
+        return 5 if isinstance(value, bool) else max(int(value), 0)
+    except (TypeError, ValueError):
+        return 5
+
+
 _theme_colors = {}
 
 
@@ -998,6 +1009,9 @@ def about_body(cfg, latest, brief_opts):
     ml = cfg.get("multilingual_keywords") or {}
     n_ml = sum(len(v.get("terms", [])) for v in ml.values())
     ccfg = cfg.get("claude", {})
+    per_site = source_cap(cfg)  # 0 = no limit
+    site_rule = ((f" No website gives more than {per_site}, and the" if per_site else " The")
+                 + " copies of one story in several languages count once.")
     rcfg = cfg.get("research") or {}
     journals = (rcfg.get("journals") or []) if rcfg.get("enabled") is not False else []
     jrows = "".join(f"<tr><td>{esc(j['name'])}</td><td>{esc(str(j['issn']))}</td></tr>" for j in journals)
@@ -1029,11 +1043,11 @@ def about_body(cfg, latest, brief_opts):
                 stats, actions) + f"""
 <div class="prose">
 <h2 class="section-h">Each run</h2><ol class="steps">
-<li><b>Collect.</b> {len(feeds)} websites and {n_core * editions + n_extra} Google News searches ({n_core} core searches in {editions} English editions, plus {n_extra} further searches including {n_foreign} in other languages). The scan runs every day at 05:00 Cairo time, and on demand: <b>Scan now</b> opens the scan's page on GitHub, where you press <b>Run workflow</b>; the website then follows the scan and tells you when the new digest is ready. Each run looks back {cfg.get('lookback_hours', 60)} hours; stories already shown are remembered for 45 days and never repeated.</li>
+<li><b>Collect.</b> {len(feeds)} websites and {n_core * editions + n_extra} Google News searches ({n_core} core searches in {editions} English editions, plus {n_extra} further searches including {n_foreign} in other languages). The scan runs every day at 05:00 Cairo time, and on demand: <b>Scan now</b> opens the scan's page on GitHub, where you press <b>Run workflow</b>; the website then follows the scan and tells you when the new digest is ready. Each run looks back {cfg.get('lookback_hours', 60)} hours. So that the same article is not picked up twice, the scanner remembers the links it has already read for 45 days; this only prevents repeats and never removes anything from the archive, where every digest is kept permanently and each issue page gathers the whole quarter.</li>
 <li><b>Score and categorise.</b> Headlines and summaries are scored against {len(cfg['keywords'])} English keywords and {n_ml} terms in {len(languages)} other languages. Each foreign term counts as its English equivalent (for example <i>glissement de terrain</i>, <i>deslizamiento</i>, <i>longsor</i> and <i>انهيار أرضي</i> all count as “landslide”), so every story is filed under an English theme. Specialist sources earn bonus points, noise terms lose points, near-identical headlines are merged. A story needs {cfg.get('min_keyword_score', 3)} points to go forward.</li>
 <li><b>Triage.</b> Up to {ccfg.get('max_candidates', 80)} candidates go to Claude, which rates each 1–5 for geotechnical substance (below {ccfg.get('min_relevance', 3)} is dropped), confirms the theme, suggests a use, writes a one-sentence magazine angle, translates non-English headlines, and reads where each story happened (the country and the town, region or site). Claude then checks whether any new story follows up an earlier one (see below).</li>
 {research_step}
-<li><b>Publish & archive.</b> Up to {cfg.get('max_items', 40)} stories per digest. Every digest is stored permanently, grouped into three-month issue windows, and exported to Excel.</li>
+<li><b>Publish & archive.</b> Up to {cfg.get('max_items', 40)} stories per digest.{site_rule} Every digest is stored permanently, grouped into three-month issue windows, and exported to Excel.</li>
 <li><b>Issue brief.</b> In the last {brief_opts['days_before_end']} days of each quarter Claude reads the quarter's stories rated {brief_opts['min_relevance']} / 5 or higher (at most {brief_opts['max_per_theme']} per theme) and any research papers, and drafts the brief for the editorial meeting as a Word document: an overview, a proposed line-up per theme, feature leads with the kinds of experts to approach, Academia-to-Industry topics, a regional-balance check, gaps worth covering and a watch list. The draft is refreshed every {count(brief_opts['refresh_days'], 'day')} and the final brief is written the day after the quarter closes. <b>Generate / update brief</b> on an issue page starts one on GitHub at any time.</li></ol>
 {features_html(cfg)}
 <h2 class="section-h">Magazine themes</h2><p class="hint">Words that suggest each theme (English keywords found in any language count too).</p><ul class="theme-list">{themes}</ul>
