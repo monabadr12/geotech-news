@@ -1203,7 +1203,8 @@ def main():
         for c in reports:
             c.update(relevance=h["relevance"], theme=h["theme"], use=h["use"], angle=h["angle"],
                      title_en=c["title_en"] or h["title_en"], rank=h["relevance"] * 100 + c["score"],
-                     **({"country": h.get("country", ""), "place": h.get("place", "")} if h["relevance"] else {}))
+                     **({"country": h.get("country", ""), "place": h.get("place", ""),
+                         "primary_source": h.get("primary_source", "")} if h["relevance"] else {}))
             copies.setdefault(final[head], []).append(c)
     for cs in copies.values():
         cs.sort(key=lambda c: -c["rank"])
