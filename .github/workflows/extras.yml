@@ -1,4 +1,5 @@
 name: Events calendar and weekly summary
+run-name: ${{ inputs.task }}   # the website's buttons tell their runs apart by this name
 
 on:
   workflow_dispatch:   # "Run workflow" on GitHub, and the Events and Weekly summary pages' buttons
@@ -48,6 +49,7 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           MAIL_TO: ${{ secrets.MAIL_TO }}
       - name: Save
+        if: inputs.task != 'send a test e-mail'   # a test changes no data, so there is nothing to save
         run: |
           git config user.name "news-scanner"
           git config user.email "news-scanner@users.noreply.github.com"
