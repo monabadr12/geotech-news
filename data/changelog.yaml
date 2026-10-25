@@ -20,8 +20,9 @@ features:
 
 changes:
   - date: 2026-10-25
-    title: Catch-up scans
+    title: Catch-up scans and a cheaper events refresh
     items:
+      - The first events calendar refresh ran out of Anthropic credit part-way. A refresh now caps how much of each page Claude reads, uses prompt caching, stops near a spending limit (max_cost_usd, US$3) and has Claude write up the events found so far, keeps its notes when a later step fails, retries the next day when Claude was only busy, and ends its log with the tokens, searches and estimated cost.
       - GitHub did not start the 05:00 scan on 25 October (it delays scheduled runs at the start of the hour and sometimes drops them). Two catch-up runs, mid-morning and at midday Cairo time, now scan only if the day has no digest yet, so a missed morning scan is made up the same day.
   - date: 2026-10-24
     title: World map, developing stories, events calendar, alerts and weekly summary

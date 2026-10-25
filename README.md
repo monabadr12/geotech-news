@@ -88,6 +88,11 @@ deadlines (calls for abstracts and papers, registration), from two sources:
   next build, along with the events already found there. Web search and web fetch must be allowed for the organisation
   that owns the `ANTHROPIC_API_KEY` (Claude Console → Settings). A refresh that fails leaves the calendar as it was; the
   daily scan tries again two days later (the next day when Claude was only busy), and the Events page says why.
+* **What a refresh costs.** It uses Claude Opus with web search, the most expensive step of the system. Each page
+  Claude opens is capped (`max_page_tokens`), the research uses prompt caching, and near `max_cost_usd` (US$3) Claude
+  stops reading and writes up the events found so far. The log of each run ends with a line giving the tokens,
+  searches, pages and estimated cost at list prices. A cheaper model can be set with `events: model:` (for example
+  `claude-sonnet-5-5`). It is also wise to set a monthly spend limit for the key in the Claude Console.
 * **Refresh calendar** on the Events page starts a refresh at any time: it opens the *Events calendar and weekly summary*
   workflow on GitHub, where you choose **refresh the events calendar** and press **Run workflow**. The run fails, and
   the page says so, when nothing was refreshed (no key, or no event passed the checks).

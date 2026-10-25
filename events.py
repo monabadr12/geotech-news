@@ -58,7 +58,8 @@ DEFAULTS = {"model": "claude-opus-5-5", "effort": "medium", "extract_effort": "l
 # list prices in US$ per million tokens (input, output, cache read, 5-minute cache write) and per web
 # search, for the cost line in the log; a model not listed here gets token counts only
 PRICES = {"claude-opus-5-5": (4.0, 20.0, 0.20, 5.0), "claude-sonnet-5-5": (2.0, 10.0, 0.10, 2.5),
-          "claude-haiku-5-5": (0.10, 0.50, 0.01, 0.125)}
+          "claude-haiku-5-5": (0.10, 0.50, 0.01, 0.125), "claude-opus-5": (5.0, 25.0, 0.50, 6.25),
+          "claude-fable-5-1": (10.0, 50.0, 0.25, 12.5)}
 SEARCH_PRICE = 0.01
 BUSY_ERRORS = {"overloaded_error", "api_error", "rate_limit_error"}  # Claude busy: worth trying again tomorrow
 # sent when the research reaches its limit: Claude writes its event blocks after its last search, so
@@ -1232,13 +1233,22 @@ def research(client, opts, prompt, raw, key):
     if limit:
         print(f"Events calendar: the research reached {limit}; asking Claude to write up what it has found.")
         try:
-            response = ask(messages + [{"role": "system", "content": WRAP_UP}])
-            turns.append(response)
-            extra.append("Claude's research reached its limit for one refresh, so Claude wrote up the events it had "
-                         "found by then.")
+            if turns[-1].content and getattr(turns[-1].content[-1], "type", "") == "server_tool_use":
+                # the turn paused with a search or fetch still to run, and a system message may not follow
+                # that: the pending step runs first (one more plain continuation)
+                response = ask(messages)
+                turns.append(response)
+                if response.stop_reason == "pause_turn":
+                    messages.append({"role": "assistant", "content": response.content})
+            if turns[-1].stop_reason == "pause_turn":
+                turns.append(ask(messages + [{"role": "system", "content": WRAP_UP}]))
         except ScanError as ex:
+            if ex.transient:
+                raise  # Claude was busy: the next daily scan tries again
             print(f"Events calendar: the write-up request failed: {ex}")
-            extra.append("Claude's research reached its limit for one refresh; the notes made by then were used.")
+        extra.append("Claude's research reached its limit for one refresh, so Claude wrote up the events it had found "
+                     "by then." if turns[-1].stop_reason == "end_turn" else
+                     "Claude's research reached its limit for one refresh; the notes made by then were used.")
     stop = turns[-1].stop_reason
     if stop == "refusal":
         raise ScanError("Claude declined the calendar research.")
