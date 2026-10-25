@@ -933,6 +933,10 @@ def features_html(cfg):
         return o if isinstance(o, dict) else {}
 
     m, sl, ev, al = opts("geomap"), opts("storylines"), opts("events"), opts("notify")
+
+    def model_name(model):  # "Claude Opus 5.5" for claude-opus-5-5
+        return optional("storylines", "model_name", model, default=model) if model else ""
+    check = sl.get("check_model") if sl.get("max_checks") != 0 else ""  # the unsure cases' second reading
     regions = optional("geomap", "region_info", cfg, default=[]) or []
     checking = [r["name"] for r in regions if isinstance(r, dict) and r.get("to_check")]
     level = "5 / 5" if al.get("min_relevance", 5) >= 5 else f"{al.get('min_relevance')} / 5 or higher"
@@ -948,11 +952,15 @@ def features_html(cfg):
          "with no stories stand out."
          + (f" The member lists for {' and '.join(checking)} are still being checked against issmge.org." if checking else "")),
         ("#e04f2c", "layers", "Developing stories: follow-ups linked to the event",
-         f"Each scan, Claude compares the day's new stories with the archive of the last {sl.get('lookback_days', 365)} "
+         f"Each scan, {esc(model_name(sl.get('model')) or 'Claude')} compares the day's new stories with the archive "
+         f"of the last {sl.get('lookback_days', 365)} "
          "days and links a story to an earlier one only when both are about the same event, project or site (the same "
          "landslide, dam or tunnel in the same place, not merely a similar hazard in the same country), and names the "
          "stage it reports: the event, response and recovery, investigation and inquiry, repair and reconstruction, "
-         "legal and policy, or an update. Without Claude, a cautious headline match links reports found within "
+         "legal and policy, or an update."
+         + (f" The cases it is unsure of (two place names in one region, a translated headline that may or may not "
+            f"name the same site) are read again by {esc(model_name(check))}, whose decision stands." if check else "")
+         + " Without Claude, a cautious headline match links reports found within "
          f"{sl.get('heuristic_days', 30)} days. Story cards carry a <b>Developing story</b> chip that leads to the "
          "timeline on <a href='developing.html'>Developing stories</a>. A link is a lead: check it at the source."),
         ("#d38b00", "book", "Events calendar: conferences and calls for papers",

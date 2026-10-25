@@ -4,10 +4,12 @@ Developing stories: follow-up reports linked to the original event (a dam
 failure, then the inquiry, then the repair), and the page docs/developing.html.
 
 Every scan, link() compares the day's stories with the archive of the last
-year. Claude decides which new story follows up an earlier one about the same
-real-world event, project or site, and names the stage the story has reached;
-without Claude a cautious headline match links reports found within a month.
-A follow-up gets three keys in its digest:
+year. Claude (model) decides which new story follows up an earlier one about
+the same real-world event, project or site, names the stage the story has
+reached and says whether it is sure; the cases it is unsure of are read again,
+each against its own closest earlier stories, by a more capable model
+(check_model), whose decision stands. Without Claude a cautious headline match
+links reports found within a month. A follow-up gets three keys in its digest:
 
     "storyline":        "sl-<id of the earliest story of the event>"
     "stage":            one of STAGES
@@ -32,8 +34,11 @@ PREFIX = "sl-"
 STAGES = ["Event", "Response & recovery", "Investigation & inquiry", "Repair & reconstruction",
           "Legal & policy", "Update"]
 EFFORTS = ("low", "medium", "high", "xhigh", "max")
-DEFAULTS = {"enabled": True, "model": "claude-opus-5-5", "effort": "low", "lookback_days": 365,
-            "max_candidates": 400, "heuristic_days": 30, "active_days": 90}
+CONFIDENCE = ["sure", "unsure"]
+DEFAULTS = {"enabled": True, "model": "claude-sonnet-5-5", "effort": "low", "check_model": "claude-opus-5-5",
+            "check_effort": "low", "max_checks": 8, "lookback_days": 365, "max_candidates": 400,
+            "heuristic_days": 30, "active_days": 90}
+OFF = ("", "off", "no", "none", "false", "0")  # check_model: any of these (or left blank) turns the second check off
 PER_STORY = 25     # closest earlier stories kept for each new story before the max_candidates cap
 FOLD_AFTER = 6     # timelines longer than this show the first report and the latest four until opened
 MAX_TOKENS = 16000
@@ -51,25 +56,35 @@ def settings(cfg):
     out = {}
     for name, default in DEFAULTS.items():
         value = sec.get(name)
-        if value is None:
+        if name == "check_model" and name in sec and (value is None or value is False
+                                                     or str(value).strip().lower() in OFF):
+            out[name] = ""  # no second check: the first reading stands for every story
+        elif value is None:
             out[name] = default
         elif isinstance(default, bool):
             out[name] = value if isinstance(value, bool) else str(value).strip().lower() not in ("false", "no", "off", "0")
         elif isinstance(default, str):
-            out[name] = (str(value).strip().lower() if name == "effort" else str(value).strip()) or default
+            out[name] = (str(value).strip().lower() if name.endswith("effort") else str(value).strip()) or default
         else:
             try:
                 if isinstance(value, bool):
                     raise ValueError
-                out[name] = max(1, int(value))
+                out[name] = max(0 if name == "max_checks" else 1, int(value))  # max_checks: 0 checks nothing
             except (TypeError, ValueError):
                 print(f"config.yaml, storylines: {name}: {value!r} is not a whole number; using {default}.")
                 out[name] = default
-    if out["effort"] not in EFFORTS:
-        print(f"config.yaml, storylines: effort: {out['effort']!r} is not one of {', '.join(EFFORTS)}; "
-              f"using {DEFAULTS['effort']}.")
-        out["effort"] = DEFAULTS["effort"]
+    for name in ("effort", "check_effort"):
+        if out[name] not in EFFORTS:
+            print(f"config.yaml, storylines: {name}: {out[name]!r} is not one of {', '.join(EFFORTS)}; "
+                  f"using {DEFAULTS[name]}.")
+            out[name] = DEFAULTS[name]
     return out
+
+
+def model_name(model):
+    """"Claude Opus 5.5" for claude-opus-5-5, for the pages; any other name as it is."""
+    m = re.fullmatch(r"claude-([a-z]+)-(\d+)(?:-(\d))?", str(model or "").strip())
+    return f"Claude {m.group(1).title()} {m.group(2)}{'.' + m.group(3) if m.group(3) else ''}" if m else str(model or "")
 
 
 def clip(text, n):
@@ -192,7 +207,9 @@ def archive(today, opts, new_ids):
 def candidates(new, earlier, nm, em, idf, opts):
     """For each new story the closest earlier stories (up to PER_STORY), and all of them
     together within max_candidates, taken in turns so every new story keeps its best ones.
-    Returns the new stories that have any, and the earlier stories chosen, oldest first."""
+    Returns the new stories that have any, the earlier stories chosen, oldest first, and
+    {new story: its own earlier stories among those chosen, the closest first} (a second
+    check shows each unsure story only its own)."""
     index = {}  # word -> earlier stories that have it, so only stories sharing a word are compared
     for j, m in enumerate(em):
         for w in m["words"]:
@@ -208,7 +225,8 @@ def candidates(new, earlier, nm, em, idf, opts):
             if turn < len(picks) and picks[turn] not in chosen and len(chosen) < opts["max_candidates"]:
                 chosen.add(picks[turn])
                 order.append(picks[turn])
-    return [i for i in range(len(new)) if ranked[i]], sorted(order, key=lambda j: earlier[j]["_digest"])
+    own = {i: [j for j in ranked[i] if j in chosen] for i in range(len(new)) if ranked[i]}
+    return list(own), sorted(order, key=lambda j: earlier[j]["_digest"]), own
 
 
 def where(s):
@@ -237,17 +255,33 @@ def earlier_line(n, s, titles):
     return " | ".join(parts)
 
 
-def build_prompt(new_lines, earlier_lines, today):
-    stages = "; ".join(f'"{s}"' for s in STAGES)
-    return f"""You are the news-desk assistant of the ISSMGE magazine (International Society for Soil Mechanics and Geotechnical Engineering). The editors follow developing stories: a geotechnical event, project or site that is reported again later. A dam fails, then an inquiry reports, then the repair begins; a landslide is followed by the clean-up, a lawsuit and new slope works; a tunnel project goes from contract award to breakthrough.
+INTRO = ("You are the news-desk assistant of the ISSMGE magazine (International Society for Soil Mechanics and "
+         "Geotechnical Engineering). The editors follow developing stories: a geotechnical event, project or site "
+         "that is reported again later. A dam fails, then an inquiry reports, then the repair begins; a landslide is "
+         "followed by the clean-up, a lawsuit and new slope works; a tunnel project goes from contract award to "
+         "breakthrough.")
+LINES = ("number | date | theme | headline | source | place and ISO country code | for new stories, the magazine "
+         "angle or summary; for earlier stories, the name of the developing story they already belong to, if any")
 
-Below are today's new stories (N1, N2, ...) and earlier stories from the archive (E1, E2, ...), one per line: number | date | theme | headline | source | place and ISO country code | for new stories, the magazine angle or summary; for earlier stories, the name of the developing story they already belong to, if any.
+
+def fields(among):
+    """What Claude gives for every new story; among: which earlier stories "follows" may name."""
+    stages = "; ".join(f'"{s}"' for s in STAGES)
+    return f"""- "follows": the earlier story it follows up{among}, only when both are clearly about the same real-world event, project or site: the same landslide, dam, tunnel, building, mine, slope or works, in the same place. A similar hazard in the same country or region is not enough, nor are two separate storms, floods or earthquakes, two projects of the same company or two stories about the same kind of problem. If several earlier stories match, give the most recent one. Otherwise "".
+- "stage": what the new story reports, one of {stages}. "Event" is the event itself (or more reports of it in the first days); "Response & recovery" is rescue, evacuation, emergency works, clean-up or aid; "Investigation & inquiry" is the cause, an investigation, an inquiry or an expert report; "Repair & reconstruction" is repair, rebuilding, permanent works or reopening; "Legal & policy" is a court case, charges, compensation or new rules and standards; "Update" is anything else, such as progress on a project.
+- "storyline_title": a short neutral name for the event, project or site in English, at most 8 words, saying what and where, with the month and year it began for an event, e.g. "Moniquirá landslide, Colombia (Oct 2026)" or "HS2 Chiltern Tunnel, UK". If the earlier story already belongs to a developing story, repeat that name exactly. "" when "follows" is ""."""
+
+
+def build_prompt(new_lines, earlier_lines, today):
+    """The first reading: every new story that has close earlier stories, against all of them."""
+    return f"""{INTRO}
+
+Below are today's new stories (N1, N2, ...) and earlier stories from the archive (E1, E2, ...), one per line: {LINES}.
 
 For every new story return an object with:
 - "story": its number, e.g. "N3"
-- "follows": the earlier story it follows up, e.g. "E12", only when both are clearly about the same real-world event, project or site: the same landslide, dam, tunnel, building, mine, slope or works, in the same place. A similar hazard in the same country or region is not enough, nor are two separate storms, floods or earthquakes, two projects of the same company or two stories about the same kind of problem. If several earlier stories match, give the most recent one. Otherwise "".
-- "stage": what the new story reports, one of {stages}. "Event" is the event itself (or more reports of it in the first days); "Response & recovery" is rescue, evacuation, emergency works, clean-up or aid; "Investigation & inquiry" is the cause, an investigation, an inquiry or an expert report; "Repair & reconstruction" is repair, rebuilding, permanent works or reopening; "Legal & policy" is a court case, charges, compensation or new rules and standards; "Update" is anything else, such as progress on a project.
-- "storyline_title": a short neutral name for the event, project or site in English, at most 8 words, saying what and where, with the month and year it began for an event, e.g. "Moniquirá landslide, Colombia (Oct 2026)" or "HS2 Chiltern Tunnel, UK". If the earlier story already belongs to a developing story, repeat that name exactly. "" when "follows" is "".
+{fields(', e.g. "E12"')}
+- "confidence": "sure" when the answer is clear either way, as it is for most stories; "unsure" when the new story might be about the same event, project or site as an earlier story but the evidence is not clear either way: the same region but different place names, only general hazard words in common, a translated headline that may or may not name the same site, a possible follow-up whose project name differs. Give "unsure" whether or not you linked the story: those stories are read again more closely.
 
 Today is {today.isoformat()}.
 
@@ -258,31 +292,49 @@ Earlier stories:
 {chr(10).join(earlier_lines)}"""
 
 
-def link_schema():
-    item = {"type": "object",
-            "properties": {"story": {"type": "string"}, "follows": {"type": "string"},
-                           "stage": {"type": "string", "enum": STAGES}, "storyline_title": {"type": "string"}},
-            "required": ["story", "follows", "stage", "storyline_title"], "additionalProperties": False}
+def build_check_prompt(blocks, today):
+    """The second reading: only the unsure stories, each followed by its own earlier stories."""
+    return f"""{INTRO}
+
+A first reading could not tell whether the new stories below (N1, N2, ...) follow up an earlier story from the archive. Under each new story are the earlier stories closest to it (E1, E2, ...), one per line: {LINES}. Read each new story closely against its own earlier stories and decide. Weigh the details: places at every scale (a town, its district and its region can be one place; two towns in the same region are not), the kind of event, the names of projects, owners and contractors, the dates, and headlines translated from another language, which may spell a place or a project differently.
+
+For every new story return an object with:
+- "story": its number, e.g. "N2"
+{fields(', one of those listed under it, e.g. "E4"')}
+
+Today is {today.isoformat()}.
+
+{(chr(10) + chr(10)).join(blocks)}"""
+
+
+def link_schema(check=False):
+    """The answer: one object per new story; the first reading also says whether it is sure."""
+    props = {"story": {"type": "string"}, "follows": {"type": "string"},
+             "stage": {"type": "string", "enum": STAGES}, "storyline_title": {"type": "string"}}
+    if not check:
+        props["confidence"] = {"type": "string", "enum": CONFIDENCE}
+    item = {"type": "object", "properties": props, "required": list(props), "additionalProperties": False}
     return {"type": "object", "properties": {"links": {"type": "array", "items": item}},
             "required": ["links"], "additionalProperties": False}
 
 
-def ask_claude(prompt, opts, key, raw):
-    """Claude's answer as a dict, or LinkError with a clear reason."""
+def ask_claude(prompt, model, effort, schema, key, raw, check=False):
+    """Claude's answer as a dict, or LinkError with a clear reason (shorter for the second check,
+    whose key has just worked for the first reading)."""
     import anthropic  # only needed when a key is configured
 
     client = anthropic.Anthropic(api_key=key, max_retries=3)
     try:
         response = client.messages.create(
-            model=opts["model"], max_tokens=MAX_TOKENS,
-            output_config={"effort": opts["effort"], "format": {"type": "json_schema", "schema": link_schema()}},
+            model=model, max_tokens=MAX_TOKENS,
+            output_config={"effort": effort, "format": {"type": "json_schema", "schema": schema}},
             messages=[{"role": "user", "content": prompt}])
     except (anthropic.AuthenticationError, anthropic.PermissionDeniedError) as ex:
         why = ("was rejected" if isinstance(ex, anthropic.AuthenticationError)
-               else f"was refused access to {opts['model']}")
-        raise LinkError(f"the ANTHROPIC_API_KEY secret {why} ({scanner.api_message(ex)}). "
-                        + scanner.describe_key(raw, key)
-                        + " Change the key in Settings → Secrets and variables → Actions.") from None
+               else f"was refused access to {model}")
+        raise LinkError(f"the ANTHROPIC_API_KEY secret {why} ({scanner.api_message(ex)})."
+                        + ("" if check else " " + scanner.describe_key(raw, key)
+                           + " Change the key in Settings → Secrets and variables → Actions.")) from None
     except anthropic.APIError as ex:
         raise LinkError(f"Claude returned an error or could not be reached ({scanner.api_message(ex)[:100]}).") from None
     if response.stop_reason == "refusal":
@@ -302,13 +354,19 @@ def ask_claude(prompt, opts, key, raw):
 REF = re.compile(r"\s*([NE])\s*(\d+)\s*", re.I)
 
 
-def resolve(ref, table, letter):
-    """The item that "N3" or "E12" stands for in table, or None."""
+def number(ref, letter, n):
+    """The place (from 0) that "N3" or "E12" stands for in a list of n, or None."""
     m = REF.fullmatch(str(ref or ""))
     if not m or m.group(1).upper() != letter:
         return None
-    n = int(m.group(2))
-    return table[n - 1] if 1 <= n <= len(table) else None
+    k = int(m.group(2)) - 1
+    return k if 0 <= k < n else None
+
+
+def resolve(ref, table, letter):
+    """The item that "N3" or "E12" stands for in table, or None."""
+    k = number(ref, letter, len(table))
+    return None if k is None else table[k]
 
 
 def default_title(s):
@@ -325,25 +383,117 @@ def mark(s, earlier, stage, title, titles):
     s["storyline_title"] = clip(title if isinstance(title, str) else "", 90) or titles.get(sl) or default_title(earlier)
 
 
-def claude_links(new, idx, earlier, picks, titles, today, opts, key, raw):
-    """Ask Claude which new stories follow up an earlier one; the number linked."""
+def read_links(answer, table_n, table_e, allowed=None):
+    """Claude's answer as {place of the new story in table_n: decision}, each decision {"follows": the
+    earlier story or None, "stage", "title", "unsure", "valid"}. Unknown story numbers are ignored and
+    the first answer for a story counts. An answer is not valid when "follows" names a number not in
+    table_e (or, with allowed = {story: places in table_e}, not one of the story's own earlier stories)
+    or the story itself: the story is then left unlinked, and counted unsure."""
+    out = {}
+    for item in answer.get("links") or []:
+        if not isinstance(item, dict):
+            continue
+        k = number(item.get("story"), "N", len(table_n))
+        if k is None or k in out:
+            continue
+        ref = str(item.get("follows") or "").strip()
+        p = number(ref, "E", len(table_e)) if ref else None
+        valid = not ref or (p is not None and table_e[p].get("id") != table_n[k].get("id")
+                            and (allowed is None or p in allowed[k]))
+        out[k] = {"follows": table_e[p] if valid and p is not None else None, "stage": item.get("stage"),
+                  "title": item.get("storyline_title"), "valid": valid,
+                  "unsure": item.get("confidence") == "unsure" or not valid}
+    return out
+
+
+def same_link(a, b):
+    """Two decisions join the same developing story (or both join none)."""
+    return (a is None) == (b is None) and (a is None or storyline_of(a) == storyline_of(b))
+
+
+def rank_of(s):
+    try:
+        return float(s.get("rank") or 0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def recheck(decided, table_n, table_e, own, titles, today, opts, key, raw, notes):
+    """Have check_model read again the new stories the first reading was unsure of (at most
+    max_checks, the best-ranked first), each against its own earlier stories and the one first
+    chosen for it. Its valid answers replace the first reading's in decided; when the check fails,
+    the first reading stands and a note says why. Returns the log's account of it."""
+    first, check = opts["model"], opts["check_model"]
+    unsure = sorted((k for k, d in decided.items() if d["unsure"] and (own[k] or d["follows"] is not None)),
+                    key=lambda k: (-rank_of(table_n[k]), k))
+    if not unsure:
+        return "; no unsure cases"
+    cases = site_builder.count(len(unsure), "unsure case")
+    if not check or not opts["max_checks"]:
+        return f"; {cases} not re-checked ({'check_model is off' if not check else 'max_checks is 0'})"
+    chosen, more = unsure[:opts["max_checks"]], len(unsure) - opts["max_checks"]
+    checked = site_builder.count(len(chosen), "unsure case")
+    tail = (f"; {site_builder.count(more, 'more unsure case')} kept as {first} decided "
+            f"(max_checks: {opts['max_checks']})" if more > 0 else "")
+    where = {id(e): p for p, e in enumerate(table_e)}
+    try:
+        blocks, check_n, check_e, allowed, renumber = [], [], [], {}, {}
+        for n, k in enumerate(chosen):
+            picked = decided[k]["follows"]
+            mine = sorted(set(own[k]) | ({where[id(picked)]} if picked is not None else set()))
+            for p in mine:
+                if p not in renumber:
+                    renumber[p] = len(check_e)
+                    check_e.append(table_e[p])
+            allowed[n] = {renumber[p] for p in mine}
+            check_n.append(table_n[k])
+            blocks.append(new_line(n + 1, table_n[k], today) + f"\nEarlier stories for N{n + 1}:\n"
+                          + "\n".join(earlier_line(renumber[p] + 1, table_e[p], titles) for p in mine))
+        answer = ask_claude(build_check_prompt(blocks, today), check, opts["check_effort"],
+                            link_schema(check=True), key, raw, check=True)
+        redo = read_links(answer, check_n, check_e, allowed)
+    except Exception as ex:  # a failed check keeps the first reading: it must not cost the day's links
+        why = str(ex) if isinstance(ex, LinkError) else f"{type(ex).__name__}: {str(ex)[:120]}"
+        note = (f"Developing stories: {check} could not re-check {checked} ({why.rstrip('.')}); "
+                f"{first}'s first reading was kept for them.")
+        notes.append(note)
+        print(note)
+        return f"; {checked} kept as {first} decided (the check by {check} failed){tail}"
+    confirmed = changed = 0
+    for n, k in enumerate(chosen):
+        d = redo.get(n)
+        if not d or not d["valid"]:
+            continue  # no usable answer for this story: the first reading stands
+        if same_link(d["follows"], decided[k]["follows"]):
+            confirmed += 1
+            if not (isinstance(d["title"], str) and d["title"].strip()):
+                d = dict(d, title=decided[k]["title"])  # confirmed without a name: the first reading's name
+        else:
+            changed += 1
+        decided[k] = d
+    unanswered = len(chosen) - confirmed - changed
+    return (f"; {checked} re-checked by {check} ({confirmed} confirmed, {changed} changed"
+            + (f", {unanswered} not answered and kept" if unanswered else "") + f"){tail}")
+
+
+def claude_links(new, idx, earlier, picks, own, titles, today, opts, key, raw, notes):
+    """Ask Claude which new stories follow up an earlier one, then check_model about the cases
+    Claude was unsure of; the number linked and the log's account of the check."""
     table_n = [new[i] for i in idx]
     table_e = [earlier[j] for j in picks]
     prompt = build_prompt([new_line(k + 1, s, today) for k, s in enumerate(table_n)],
                           [earlier_line(k + 1, s, titles) for k, s in enumerate(table_e)], today)
-    answer = ask_claude(prompt, opts, key, raw)
-    linked, done = 0, set()
-    for item in answer["links"]:
-        if not isinstance(item, dict):
-            continue
-        s = resolve(item.get("story"), table_n, "N")
-        e = resolve(item.get("follows"), table_e, "E")
-        if s is None or e is None or id(s) in done or e.get("id") == s.get("id"):
-            continue  # unknown numbers are ignored, and each new story is linked once
-        done.add(id(s))
-        mark(s, e, item.get("stage"), item.get("storyline_title"), titles)
-        linked += 1
-    return linked
+    decided = read_links(ask_claude(prompt, opts["model"], opts["effort"], link_schema(), key, raw),
+                         table_n, table_e)
+    place = {j: p for p, j in enumerate(picks)}
+    checked = recheck(decided, table_n, table_e, {k: [place[j] for j in own[i]] for k, i in enumerate(idx)},
+                      titles, today, opts, key, raw, notes)
+    linked = 0
+    for k, d in sorted(decided.items()):
+        if d["follows"] is not None:
+            mark(table_n[k], d["follows"], d["stage"], d["title"], titles)
+            linked += 1
+    return linked, checked
 
 
 def kinds_of(cfg):
@@ -414,20 +564,20 @@ def _link(stories, now, cfg, notes):
     nm = [marks(s, topic) for s in new]
     em = [marks(s, topic) for s in earlier]
     idf = weights(nm + em)
-    idx, picks = candidates(new, earlier, nm, em, idf, opts)
+    idx, picks, own = candidates(new, earlier, nm, em, idf, opts)
     if not idx:
         print("Developing stories: no earlier story in the archive is close to today's stories.")
         return 0
 
     raw = os.environ.get("ANTHROPIC_API_KEY", "")
     key = scanner.clean_api_key(raw)
-    linked = None
+    linked, checked = None, ""
     if not key:
         print("Developing stories: no ANTHROPIC_API_KEY, so follow-ups were matched by headline only.")
     else:
         try:
-            linked = claude_links(new, idx, earlier, picks, titles, today, opts, key, raw)
-            how = f"Claude compared {len(idx)} of them with {len(picks)} of {len(earlier)} archived stories"
+            linked, checked = claude_links(new, idx, earlier, picks, own, titles, today, opts, key, raw, notes)
+            how = f"{opts['model']} compared {len(idx)} of them with {len(picks)} of {len(earlier)} archived stories"
         except LinkError as ex:
             note = f"Developing stories: {ex} Follow-ups were matched by headline only."
             notes.append(note)
@@ -435,7 +585,9 @@ def _link(stories, now, cfg, notes):
     if linked is None:
         linked = heuristic_links(new, earlier, nm, em, idf, titles, today, opts, kinds_of(cfg))
         how = f"headlines compared with the last {opts['heuristic_days']} days"
-    print(f"Developing stories: {linked} of today's {len(new)} stories follow up an earlier one ({how}).")
+    # e.g. "6 of today's 40 stories follow up an earlier one (claude-sonnet-5-5 compared …); 3 unsure
+    # cases re-checked by claude-opus-5-5 (2 confirmed, 1 changed)."
+    print(f"Developing stories: {linked} of today's {len(new)} stories follow up an earlier one ({how}){checked}.")
     return linked
 
 
@@ -628,10 +780,14 @@ def page_body(found, cfg, order, today, opts):
         "Follow-up reports linked to the event they continue: the failure, then the inquiry, then the repair. "
         "Long-running events are often the best feature leads, because by the time the cause is known and the "
         "repair designed, the lessons for practice can be told.", stats)
-    how = (f"<div class='sl-how'>{site_builder.icon('layers')}<p><b>How reports are linked.</b> Every scan, Claude compares "
-           f"the day's new stories with the archive of the last {opts['lookback_days']} days and links a report to an "
-           "earlier one only when both are about the same event, project or site, not merely a similar hazard in the "
-           "same country, and notes the stage the story has reached. Without Claude, a cautious headline match links "
+    check = (f" The cases it is unsure of, such as two place names in one region or a translated headline that may or "
+             f"may not name the same site, are read again by {esc(model_name(opts['check_model']))}, each against its "
+             "own closest earlier stories, and its decision stands." if opts["check_model"] and opts["max_checks"] else "")
+    how = (f"<div class='sl-how'>{site_builder.icon('layers')}<p><b>How reports are linked.</b> Every scan, "
+           f"{esc(model_name(opts['model']))} compares the day's new stories with the archive of the last "
+           f"{opts['lookback_days']} days and links a report to an earlier one only when both are about the same event, "
+           "project or site, not merely a similar hazard in the same country, and notes the stage the story has "
+           f"reached.{check} Without Claude, a cautious headline match links "
            f"reports found within {opts['heuristic_days']} days. Story cards across the site carry a "
            "<span class='sl-chip sl-demo'>Developing story</span> chip that leads here. Check each report at its "
            "source: a link is a lead, not a confirmed connection.</p></div>")
