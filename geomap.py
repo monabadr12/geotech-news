@@ -362,7 +362,18 @@ def script_json(data):
 
 
 def pct(n, total):
-    return f"{n / total * 100:.0f}%" if total else "–"
+    """Whole percent; "<1%" for a country with a story or two, so it does not read like one with none."""
+    if not total:
+        return "–"
+    share = n / total * 100
+    return "<1%" if 0 < share < 0.5 else f"{share:.0f}%"
+
+
+def batches(opts):
+    """How archived stories without a location get one (the map note, here and in map.js)."""
+    n = opts["locate_per_run"]
+    return (f"located in batches of up to {n} after each scan, newest first" if n
+            else "not located automatically (map: locate_per_run is 0 in config.yaml)")
 
 
 def top_themes(counts, order, n=2):
@@ -487,7 +498,7 @@ def map_body(ctx):
                     for r in info],
         "rc": {code: REGIONS.index(region) for code, region in table.items() if region},
         "names": {code: country_name(code) for code in sorted(set(world()["countries"]) | members)},
-        "alias": ALIASES, "periods": data_periods, "asof": digests[0]["date"][:10],
+        "alias": ALIASES, "periods": data_periods, "asof": digests[0]["date"][:10], "batches": batches(opts),
         "stories": [story_row(s, ti) for s in embed] if embed is not None else None,
     }
 
@@ -507,12 +518,12 @@ def map_body(ctx):
     note = ""
     if d0["n"] and not located:
         note = (f"None of this period's {d0['n']:,} stories has a location yet. Claude reads each story's country "
-                "during the scan; stories archived earlier are located in batches after the next scan.")
+                f"during the scan; stories archived earlier are {batches(opts)}.")
     elif not d0["n"]:
         note = "No stories in this period."
     elif u:  # the same words as map.js
         note = (f"{u:,} {'story' if u == 1 else 'stories'} in this period {'has' if u == 1 else 'have'} no location "
-                f"yet; {'it is' if u == 1 else 'they are'} located after the next scan. Member-society countries are "
+                f"yet; {'it is' if u == 1 else 'they are'} {batches(opts)}. Member-society countries are "
                 "marked as gaps only from the stories already located.")
     count = f"{d0['n']:,} {'story' if d0['n'] == 1 else 'stories'} · {len(c)} {'country' if len(c) == 1 else 'countries'}"
     out = [

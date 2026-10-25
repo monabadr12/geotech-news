@@ -699,12 +699,14 @@ def coverage_line(stories, cfg, root, key):
     located = sum(r["stories"] for r in rows)
     members, covered = sum(r["members"] for r in rows), sum(r["members_covered"] for r in rows)
     waiting = sum(1 for s in stories if "country" not in s)
+    per = (optional("geomap", "settings", cfg) or {}).get("locate_per_run", 300)
     if located:
         note = f"{covered} of {members} member-society countries have stories in this window"
     else:
         note = "No story in this window has a location yet"
     if waiting:
-        note += f"; {count(waiting, 'story', 'stories')} still to be located after the next scan"
+        note += f"; {count(waiting, 'story', 'stories')} still to be located" + (
+            f" (in batches of up to {per} after each scan, newest first)" if per else "")
     regions = "".join(f"<li><span>{esc(r['region'])}</span><b>{r['stories']:,}</b></li>" for r in rows)
     return (f"<div class='cov-line'><h2>{icon('globe')}Regional coverage</h2><ul class='cov-regions'>{regions}</ul>"
             f"<p>{esc(note)}. <a href='{root}map.html#{esc(key)}'>The gaps on the world map →</a></p></div>")

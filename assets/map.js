@@ -37,7 +37,11 @@
   }
   function num(n) { return Number(n || 0).toLocaleString("en-GB"); }
   function plural(n, one, many) { return num(n) + " " + (n === 1 ? one : (many || one + "s")); }
-  function pct(n, total) { return total ? Math.round(n / total * 100) + "%" : "–"; }
+  function pct(n, total) {  // "<1%" for a country with a story or two, so it does not read like one with none
+    if (!total) return "–";
+    var p = n / total * 100;
+    return p > 0 && p < 0.5 ? "<1%" : Math.round(p) + "%";
+  }
   var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   function fmtDate(iso) {  // 3 Sep 2026, as the pages built in Python write dates
     var d = new Date(String(iso || "").slice(0, 10) + "T00:00:00Z");
@@ -121,9 +125,9 @@
     var msg = "";
     if (!cur.n) msg = themeLabel() ? "No " + themeLabel() + " stories in this period." : "No stories in this period.";
     else if (!cur.located) msg = "None of this period's " + plural(cur.n, "story", "stories") + " has a location yet. Claude reads each " +
-      "story's country during the scan; stories archived earlier are located in batches after the next scan.";
+      "story's country during the scan; stories archived earlier are " + (D.batches || "located after the next scans") + ".";
     else if (cur.u) msg = plural(cur.u, "story", "stories") + " in this period " + (cur.u === 1 ? "has" : "have") +
-      " no location yet; " + (cur.u === 1 ? "it is" : "they are") + " located after the next scan. Member-society countries " +
+      " no location yet; " + (cur.u === 1 ? "it is" : "they are") + " " + (D.batches || "located after the next scans") + ". Member-society countries " +
       "are marked as gaps only from the stories already located.";
     note.textContent = msg;
     note.hidden = !msg;
@@ -483,9 +487,18 @@
       g.children[0].setAttribute("r", Math.max(r, 10) * k);
       g.children[1].setAttribute("r", r * k);
     });
-    Array.prototype.forEach.call(gLabels.children, function (t) {
+    var placed = [];  // label boxes shown so far, largest count first: a label that would overlap one is left out
+    Array.prototype.forEach.call(gLabels.children, function (t) {  // (Europe's crowd reads on the Europe zoom)
       t.setAttribute("font-size", 11 * k);
-      t.style.display = rOf(t._n) >= 12 && String(t._n).length <= 3 ? "" : "none";
+      t.setAttribute("stroke-width", 3 * k);
+      var show = rOf(t._n) >= 12 && String(t._n).length <= 3;
+      if (show) {
+        var x = +t.getAttribute("x"), y = +t.getAttribute("y");
+        var w = (String(t._n).length * 7 + 6) / 2 * k, h = 8 * k;  // half the box, in map units
+        show = !placed.some(function (b) { return Math.abs(b[0] - x) < b[2] + w && Math.abs(b[1] - y) < b[3] + h; });
+        if (show) placed.push([x, y, w, h]);
+      }
+      t.style.display = show ? "" : "none";
     });
     gDots.textContent = "";  // gap marks for member countries too small to show their hatch
     if (cur.located) Object.keys(member).forEach(function (cc) {

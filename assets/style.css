@@ -546,15 +546,16 @@ table.heat thead th:first-child { position: sticky; left: 0; z-index: 1; }  /* t
 }
 
 /* ---------- World map ---------- */
-/* Circles (one blue, area = stories) sit on a muted base: ISSMGE member-society countries in a blue-grey tint,
-   other countries grey, and member countries with no stories in the period hatched and outlined in amber (the
-   gaps). Both mark colours clear 3:1 on every base fill in both modes (checked with the dataviz validator). */
+/* Circles (one blue, area = stories) sit on a muted base: ISSMGE member-society countries in a blue tint with a
+   blue outline (a second cue besides the fill), other countries grey, and member countries with no stories in the
+   period hatched and outlined in amber (the gaps). Both mark colours clear 3:1 on every base fill in both modes;
+   member and other fills are OKLab ΔE 10.8 (light) and 13.5 (dark) apart, the outline tells them apart beyond that. */
 :root {
-  --map-sea: #edf2f7; --map-land: #d8dee6; --map-member: #bccde0; --map-edge: #ffffff;
-  --map-bubble: #1c5cab; --map-gap: #a35c00;
+  --map-sea: #edf2f7; --map-land: #d8dee6; --map-member: #a6c0e2; --map-member-edge: #6f8dbb; --map-edge: #ffffff;
+  --map-bubble: #1c5cab; --map-gap: #8f5000;
 }
 @media (prefers-color-scheme: dark) {
-  :root { --map-sea: #111820; --map-land: #252d37; --map-member: #283b51; --map-edge: #171e27;
+  :root { --map-sea: #111820; --map-land: #1d242d; --map-member: #2a4566; --map-member-edge: #5a80b0; --map-edge: #171e27;
     --map-bubble: #4b91e6; --map-gap: #c98500; }
 }
 .map-tools .field select { max-width: 320px; }
@@ -575,7 +576,7 @@ table.heat thead th:first-child { position: sticky; left: 0; z-index: 1; }  /* t
 .map-svg { display: block; width: 100%; height: auto; overflow: hidden; }
 .map-sphere { fill: var(--map-sea); }
 .map-c { fill: var(--map-land); stroke: var(--map-edge); stroke-width: .6px; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
-.map-c.member { fill: var(--map-member); }
+.map-c.member { fill: var(--map-member); stroke: var(--map-member-edge); }
 .map-c.gap { fill: url(#map-hatch); stroke: var(--map-gap); stroke-width: .9px; }
 .map-c.has, .map-c.member, .map-bg, .map-gd { cursor: pointer; }
 .map-c.on { stroke: var(--ink); stroke-width: 1.4px; }
@@ -584,18 +585,19 @@ table.heat thead th:first-child { position: sticky; left: 0; z-index: 1; }  /* t
 .map-hl { fill: var(--map-gap); }
 .map-gd { fill: url(#map-hatch); stroke: var(--map-gap); stroke-width: 1.4px; vector-effect: non-scaling-stroke; }
 .map-hit { fill: transparent; }
-.map-b { fill: var(--map-bubble); fill-opacity: .82; stroke: var(--surface); stroke-width: 1.5px; vector-effect: non-scaling-stroke; }
+.map-b { fill: var(--map-bubble); stroke: var(--surface); stroke-width: 1.5px; vector-effect: non-scaling-stroke; }
 .map-bg.on .map-b { fill-opacity: 1; stroke: var(--ink); stroke-width: 2px; }
 .map-bl { fill: #ffffff; font-family: var(--sans); font-weight: 700; text-anchor: middle; dominant-baseline: central;
-  pointer-events: none; font-variant-numeric: tabular-nums; }
+  pointer-events: none; font-variant-numeric: tabular-nums;
+  paint-order: stroke; stroke: var(--map-bubble); stroke-linejoin: round; }  /* halo: map.js sets its width */
 .map-ring { fill: none; stroke: var(--ink); stroke-width: 2px; vector-effect: non-scaling-stroke; pointer-events: none; }
 .map-note { margin: 10px 0 0; font-size: 13px; padding: 9px 12px; border-radius: 8px; background: var(--accent-soft);
   border-left: 4px solid var(--accent); }
 .map-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 28px; margin-top: 12px; }
 .map-legend .viz-legend { margin: 0; font-size: 12.5px; gap: 6px 18px; }
 .map-key i { width: 14px; height: 11px; border-radius: 2px; }
-.map-key .mk-member { background: var(--map-member); }
-.map-key .mk-other { background: var(--map-land); }
+.map-key .mk-member { background: var(--map-member); box-shadow: inset 0 0 0 1px var(--map-member-edge); }
+.map-key .mk-other { background: var(--map-land); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--muted) 40%, transparent); }
 .map-key .mk-gap, .mr-gaps span::before, .gap-tag::before {
   background: repeating-linear-gradient(45deg, var(--map-gap) 0 1.2px, var(--map-member) 1.2px 4.2px);
   box-shadow: inset 0 0 0 1px var(--map-gap); }
