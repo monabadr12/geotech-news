@@ -199,15 +199,25 @@ def coverage_section(doc, cfg, windows):
     name = lambda c: feature("geomap", "country_name", c, default=c) or c
     total = len(w["stories"])
     located = sum(r["stories"] for r in rows)
-    global_ = sum(1 for s in w["stories"] if "country" in s and not s.get("country"))
+    # global: no country, or one the map does not know ("EU"), which the map counts as global too
+    global_ = sum(1 for s in w["stories"] if "country" in s and not feature("geomap", "canonical", s.get("country"),
+                                                                             default=s.get("country")))
     waiting = sum(1 for s in w["stories"] if "country" not in s)
     members, covered = sum(r["members"] for r in rows), sum(r["members_covered"] for r in rows)
-    doc.add_paragraph(f"{w['win']['label']} ({w['win']['span']}): {located} of {total} stories are located in a country "
-                      f"of one of ISSMGE's six regions; {global_} are global or about several countries and {waiting} have "
-                      f"no location yet. {covered} of {members} member-society countries have at least one story.")
+    verb = lambda n, one, many: f"{n} {one if n == 1 else many}"
+    text = (f"{w['win']['label']} ({w['win']['span']}): {located} of {total} stories are located in a country "
+            f"of one of ISSMGE's six regions; {verb(global_, 'is', 'are')} global or about several countries and "
+            f"{verb(waiting, 'has', 'have')} no location yet. ")
+    if not located:  # as on the world map: gaps only from located stories
+        text += "No story is located in a country yet, so no member-society country is counted as a gap."
+    else:
+        text += f"{covered} of {members} member-society countries have at least one story" + (
+            "; the countries with none are counted from the stories already located." if waiting else ".")
+    doc.add_paragraph(text)
     table(doc, ["ISSMGE region", "Stories", "Member societies covered", "Member-society countries with no stories"],
-          [(r["region"], r["stories"], f"{r['members_covered']} of {r['members']}",
-            ", ".join(name(c) for c in r["gaps"]) or "—") for r in rows], [3.2, 1.8, 3.2, 8.8])
+          [(r["region"], r["stories"], f"{r['members_covered'] if located else '–'} of {r['members']}",
+            (", ".join(name(c) for c in r["gaps"]) or "—") if located else "Shown once stories are located")
+           for r in rows], [3.2, 1.8, 3.2, 8.8])
     note(doc, "A story's country is where its event, project or site is, as Claude read it (not the outlet's country "
               "or the Google News edition). The map page shows every country and period.")
 

@@ -511,13 +511,14 @@ def api_message(ex):
 
 COUNTRY_CODE = re.compile(r"^[A-Z]{2}$")
 COUNTRY_ALIASES = {"UK": "GB", "EL": "GR"}  # common non-ISO codes
+NOT_COUNTRIES = {"XX", "ZZ", "EU", "EZ", "UN"}  # unknown, and groupings that are not one country (counted as global)
 
 
 def country_code(text):
     """An ISO 3166-1 alpha-2 code from Claude's answer, or "" (global or unknown)."""
     code = str(text or "").strip().upper()
     code = COUNTRY_ALIASES.get(code, code)
-    return code if COUNTRY_CODE.match(code) and code not in ("XX", "ZZ") else ""
+    return code if COUNTRY_CODE.match(code) and code not in NOT_COUNTRIES else ""
 
 
 def claude_triage(items, cfg, notes):

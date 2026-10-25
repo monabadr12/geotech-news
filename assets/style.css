@@ -957,11 +957,12 @@ body[data-root="../"] .sl-chip.sl-up { display: inline-flex; }
   .wk-chip { background: #3a2c0d; color: #f2c96a; } .wk-chip.ok { background: #15342a; color: #8fdcb2; }
 }
 .wk-themes { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 4px; }
-.wk-themes span { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--tc);
+.wk-themes span { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ink);
   background: color-mix(in srgb, var(--tc) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--tc) 28%, transparent);
   border-radius: 999px; padding: 4px 11px; }
-.wk-themes .ico { width: 14px; height: 14px; }
-.wk-themes b { background: var(--tc); color: #fff; border-radius: 99px; padding: 0 7px; font-size: 11.5px; }
+.wk-themes .ico { width: 14px; height: 14px; color: var(--tc); }
+.wk-themes b { background: color-mix(in srgb, var(--tc) 18%, var(--surface)); color: var(--ink); border-radius: 99px;
+  padding: 0 7px; font-size: 11.5px; }
 .wk-list { list-style: none; margin: 0 0 6px; padding: 0; display: grid; gap: 8px; }
 .wk-list li { display: flex; flex-direction: column; gap: 3px; min-width: 0; background: var(--surface); border: 1px solid var(--line);
   border-left: 4px solid var(--tc, var(--brand-2)); border-radius: 10px; padding: 10px 14px; box-shadow: var(--shadow); }
@@ -969,8 +970,11 @@ body[data-root="../"] .sl-chip.sl-up { display: inline-flex; }
 .wk-list a:hover { color: var(--link); text-decoration: underline; }
 .wk-meta { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
 .wk-meta b { color: var(--ink); font-weight: 600; }
-.wk-theme { color: var(--tc); font-weight: 600; }
+.wk-theme { color: var(--ink); font-weight: 600; white-space: nowrap; }
+.wk-theme::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--tc);
+  margin-right: 5px; vertical-align: 1px; }
 .wk-more { margin: 8px 0 0; }
+.wk-sub { font: 700 12px var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 14px 0 8px; }
 .wk-ev { --tc: var(--teal); }
 .wk-ev.issmge { --tc: var(--accent); }
 .wk-ev.wk-dl { --tc: #c4361a; }
@@ -1001,6 +1005,16 @@ body[data-root="../"] .sl-chip.sl-up { display: inline-flex; }
   .wk-mail-head .brief-mark { display: none; }
   .wk-themes { gap: 5px; }
   .wk-themes span { font-size: 12px; padding: 3px 9px; gap: 5px; }
+}
+@media (max-width: 640px) {
+  /* phones: each region on two lines, the member societies with no stories on the second, so nothing scrolls away */
+  .wk-regions, .wk-regions thead, .wk-regions tbody { display: block; }
+  .wk-regions tr { display: grid; grid-template-columns: minmax(0, 1fr) 64px 156px; align-items: center;
+    border-bottom: 1px solid var(--line); }
+  .wk-regions thead tr { background: var(--surface-2); }
+  .wk-regions tbody tr:last-child { border-bottom: 0; }
+  .wk-regions th, .wk-regions td { border-bottom: 0; }
+  .wk-regions td.wk-gaps, .wk-regions thead th:last-child { grid-column: 1 / -1; min-width: 0; padding-top: 0; }
 }
 @media print {
   .wk-mail .actions, .wk-help { display: none !important; }

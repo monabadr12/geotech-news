@@ -438,6 +438,13 @@ def country_name(code):
     return name or site_builder.COUNTRIES.get(code, code)
 
 
+def mapped(code):
+    """The world map's code for a story's country; "" when the map knows no such country (a global
+    story, or an answer such as "EU"), which the map counts as global."""
+    found = optional("geomap", "canonical", code)
+    return str(code or "") if found is None else found
+
+
 def where(s):
     """'Moniquirá, Boyacá, Colombia' from the place and country Claude read in the story."""
     place, country = str(s.get("place") or "").strip(), country_name(s.get("country"))
@@ -541,16 +548,16 @@ def week_summary(digests, key, cfg, today=None):
 
     regions = optional("geomap", "coverage", stories, cfg) if stories else None
     located = sum(1 for s in stories if "country" in s)
-    global_ = sum(1 for s in stories if "country" in s and not s.get("country"))
+    global_ = sum(1 for s in stories if "country" in s and not mapped(s.get("country")))
 
     send_on = send_day(key, opts)
     ref = min(send_on, today) if sunday < today else today  # events as they stood when the summary went out
     events = optional("events", "upcoming", cfg, ref, days=opts["events_days"])
     deadlines = optional("events", "deadlines", cfg, ref, days=opts["events_days"])
 
-    windows = []
-    for d in sorted({monday, sunday}):
-        win = site_builder.issue_window(d.isoformat(), sm)
+    windows = []  # the issue windows of the week's digests (a window without digests has no issue page)
+    for d in sorted({d["date"][:10] for d in days}):
+        win = site_builder.issue_window(d, sm)
         if win["key"] not in [w["key"] for w in windows]:
             windows.append(win)
     ranked_papers = sorted(papers, key=lambda p: -site_builder.paper_rank(p))
@@ -571,6 +578,19 @@ def week_summary(digests, key, cfg, today=None):
         "papers": ranked_papers[:3], "papers_total": len(papers),
         "windows": windows, "events_days": opts["events_days"],
     }
+
+
+def coverage_note(W):
+    """What follows "Stories this week by ISSMGE region …", and whether member-society countries can be
+    marked as gaps: only from stories located in a country, as on the world map."""
+    waiting, in_country = W["figures"]["stories"] - W["located"], W["located"] - W["global"]
+    note = ((f" {plural(W['global'], 'story is', 'stories are')} global or about several countries." if W["global"] else "")
+            + (f" {plural(waiting, 'story has', 'stories have')} no location yet." if waiting else ""))
+    if not in_country:
+        note += " No story is located in a country yet, so no member-society country is marked as a gap."
+    elif waiting:
+        note += " Member-society countries are marked as gaps only from the stories already located."
+    return note, in_country > 0
 
 
 # ------------------------------------------------------------------ e-mail (inline styles, as render_email)
@@ -778,18 +798,18 @@ def render_week_email(W, cfg):
             body.append(m_p(f"…and {W['developing_hidden']} more on the Developing stories page."))
     if W["regions"]:
         body.append(m_h2("Regional coverage"))
-        body.append(m_p("Stories this week by ISSMGE region, and the member societies whose countries had none."
-                        + (f" {plural(W['global'], 'story is', 'stories are')} global or about several countries." if W["global"] else "")
-                        + (f" {plural(F['stories'] - W['located'], 'story has', 'stories have')} no location yet."
-                           if F["stories"] - W["located"] else "")))
+        note, known = coverage_note(W)
+        body.append(m_p("Stories this week by ISSMGE region, and the member societies whose countries had none." + note))
         rows = []
         for r in W["regions"]:
             gaps = [country_name(c) for c in r.get("gaps") or []]
-            gap_text = ", ".join(gaps[:6]) + (f" and {len(gaps) - 6} more" if len(gaps) > 6 else "")
+            gap_text = (", ".join(gaps[:6]) + (f" and {len(gaps) - 6} more" if len(gaps) > 6 else "")) or "—"
             rows.append(f"<tr><td style='padding:6px 8px;border-bottom:1px solid {LINE};font-weight:600;color:{INK}'>{esc(r['region'])}</td>"
                         f"<td style='padding:6px 8px;border-bottom:1px solid {LINE};text-align:right'>{r['stories']}</td>"
-                        f"<td style='padding:6px 8px;border-bottom:1px solid {LINE};text-align:right'>{r['members_covered']} of {r['members']}</td>"
-                        f"<td style='padding:6px 8px;border-bottom:1px solid {LINE};color:{MUTED}'>{esc(gap_text) or '—'}</td></tr>")
+                        f"<td style='padding:6px 8px;border-bottom:1px solid {LINE};text-align:right'>"
+                        f"{r['members_covered'] if known else '–'} of {r['members']}</td>"
+                        f"<td style='padding:6px 8px;border-bottom:1px solid {LINE};color:{MUTED}'>"
+                        f"{esc(gap_text) if known else 'Shown once stories are located'}</td></tr>")
         body.append(f"<table role='presentation' cellspacing='0' cellpadding='0' style='width:100%;border-collapse:collapse;"
                     f"font:12.5px/1.4 {FONT};color:{INK}'><tr style='background:{SOFT};color:{MUTED};font-size:11px;text-transform:uppercase'>"
                     "<th style='padding:6px 8px;text-align:left'>Region</th><th style='padding:6px 8px;text-align:right'>Stories</th>"
@@ -860,8 +880,9 @@ def new_alerts(digests, rec, today, opts):
     return by_rank(out)
 
 
-def weekly_due(today, opts, rec):
-    """(week key, "") when the weekly summary is due today, else (None, why not)."""
+def weekly_due(today, opts, rec, digests=None):
+    """(week key, "") when the weekly summary is due today, else (None, why not). digests: the archive, so
+    a missed week without digests is not offered to --weekly."""
     key = last_week(today)
     nxt = send_day(week_key(today), opts)
     if key in rec["weekly"]:
@@ -871,6 +892,9 @@ def weekly_due(today, opts, rec):
     if today < day:
         return None, f"it goes out on {day:%A} {short_date(day)}"
     if (today - day).days > opts["catch_up_days"]:
+        monday, sunday = week_range(key)
+        if digests is not None and not any(monday.isoformat() <= d["date"][:10] <= sunday.isoformat() for d in digests):
+            return None, f"the next summary, of {week_label(week_key(today)).lower()}, goes out on {nxt:%A} {short_date(nxt)}"
         return None, (f"the summary of {week_label(key).lower()} was due on {day:%A} {short_date(day)}, more than "
                       f"{plural(opts['catch_up_days'], 'day')} ago (--weekly sends it now); the next one goes out on "
                       f"{nxt:%A} {short_date(nxt)}")
@@ -976,7 +1000,7 @@ def main(argv=None, now=None):
     if not opts["weekly_summary"]:
         print("Weekly summary: switched off in config.yaml (alerts: weekly_summary: false).")
     else:
-        key, why = weekly_due(today, opts, rec)
+        key, why = weekly_due(today, opts, rec, digests)
         if not key:
             print(f"Weekly summary: not due today: {why}.")
         else:
@@ -993,19 +1017,26 @@ def main(argv=None, now=None):
 
 
 # ------------------------------------------------------------------ web pages (docs/weekly/)
-def status_text(W, rec, on=True):
+def status_text(W, rec, opts):
     """(chip class, chip text, sentence) on the e-mail of a week; ("", "", "") when there is nothing to say
-    (an older week that was not e-mailed, perhaps from before e-mail was set up). on: the weekly summary
-    is switched on in config.yaml."""
+    (an older week that was not e-mailed, perhaps from before e-mail was set up). The pages are rebuilt
+    after the morning scan, so on the day the summary is due it has normally gone out already."""
     sent = rec["weekly"].get(W["key"])
     if sent:
         return "ok", "E-mailed", f"E-mailed to the editorial team on {when_sent(sent)}."
+    on, today = opts["weekly_summary"], cairo_today()
     day = dt.date.fromisoformat(W["send_on"])
+    last = day + dt.timedelta(days=opts["catch_up_days"])  # the last day the scan tries to send it
     if W["in_progress"]:
         return "", "In progress", (f"The week is not over yet: its summary goes out on {day:%A} {short_date(day)}."
                                    if on else "The week is not over yet.")
-    if on and day >= cairo_today():
+    if on and day > today:
         return "", "Due", f"The summary goes out on {day:%A} {short_date(day)}, after the morning scan."
+    if on and today <= last:
+        return "", "Not sent yet", (f"Due on {day:%A} {short_date(day)} after the morning scan, and not sent yet. If the "
+                                    "scan has run, its log on GitHub says why (e-mail may not be set up). "
+                                    + (f"The daily scan tries again until {last:%A} {short_date(last)}; " if today < last else "")
+                                    + "Send summary now sends it at any time.")
     return "", "", ""
 
 
@@ -1018,7 +1049,7 @@ def mail_card(W, rec, opts, last_key):
         which = f"e-mails the summary of the last full week ({esc(last)}), not this one"
     else:
         which = f"e-mails the summary of the last full week ({esc(last)})"
-    chip, label, sentence = status_text(W, rec, opts["weekly_summary"]) if W else ("", "", "")
+    chip, label, sentence = status_text(W, rec, opts) if W else ("", "", "")
     status = (f"<p class='wk-status'><span class='wk-chip {chip}'>{esc(label)}</span>{esc(sentence)}</p>" if label else "")
     level = "5 / 5" if opts["min_relevance"] >= 5 else f"{opts['min_relevance']} / 5 or higher"
     plan = (f"The summary goes out every {opts['weekday']} after the morning scan" if opts["weekly_summary"]
@@ -1061,7 +1092,7 @@ def week_body(W, cfg, rec, opts, older, newer, last_key):
              + site_builder.stat(F["top"], "rated 5 / 5") + site_builder.stat(F["papers"], "research papers")
              + site_builder.stat(F["digests"], "daily digests"))
     lede = ("The week's geotechnical news for the editorial team: top stories, developing stories, regional coverage, "
-            "what is coming up and new research. " + esc(status_text(W, rec, opts["weekly_summary"])[2]))
+            "what is coming up and new research. " + esc(status_text(W, rec, opts)[2]))
     out = [site_builder.hero(eyebrow, f"Week {W['week']} <span class='h1-sub'>{esc(W['span'])}</span>", lede, stats, strip(W["themes"]))]
     if not F["digests"]:
         out.append("<p class='empty'>No daily digests were saved in this week.</p>")
@@ -1097,17 +1128,16 @@ def week_body(W, cfg, rec, opts, older, newer, last_key):
             out.append(f"<p class='hint wk-more'>…and {W['developing_hidden']} more on the "
                        f"<a href='{root}developing.html'>Developing stories</a> page.</p>")
     if W["regions"]:
+        notes, known = coverage_note(W)
         rows = []
         for r in W["regions"]:
             gaps = [country_name(c) for c in r.get("gaps") or []]
-            gap_text = ", ".join(gaps[:8]) + (f" and {len(gaps) - 8} more" if len(gaps) > 8 else "")
-            share = r["members_covered"] / r["members"] * 100 if r["members"] else 0
+            gap_text = (", ".join(gaps[:8]) + (f" and {len(gaps) - 8} more" if len(gaps) > 8 else "")) or "—"
+            share = r["members_covered"] / r["members"] * 100 if r["members"] and known else 0
             rows.append(f"<tr><th scope='row'>{esc(r['region'])}</th><td>{r['stories']:,}</td>"
-                        f"<td><span class='cellbar wk-bar'><i style='width:{share:.0f}%'></i></span>{r['members_covered']} of {r['members']}</td>"
-                        f"<td class='wk-gaps'>{esc(gap_text) or '—'}</td></tr>")
-        notes = ((f" {plural(W['global'], 'story is', 'stories are')} global or about several countries." if W["global"] else "")
-                 + (f" {plural(F['stories'] - W['located'], 'story has', 'stories have')} no location yet."
-                    if F["stories"] - W["located"] else ""))
+                        f"<td><span class='cellbar wk-bar'><i style='width:{share:.0f}%'></i></span>"
+                        f"{r['members_covered'] if known else '–'} of {r['members']}</td>"
+                        f"<td class='wk-gaps'>{esc(gap_text) if known else 'Shown once stories are located'}</td></tr>")
         out.append("<h2 class='section-h'>Regional coverage</h2><p class='hint'>Stories this week by ISSMGE region, and the "
                    f"member societies whose countries had none.{notes} <a href='{root}map.html'>World map</a></p>"
                    "<div class='table-wrap'><table class='overview wk-regions'><thead><tr><th scope='col'>Region</th>"
@@ -1116,7 +1146,7 @@ def week_body(W, cfg, rec, opts, older, newer, last_key):
     if W["events"] or W["deadlines"]:
         since = dt.date.fromisoformat(W["events_from"])
         out.append(f"<h2 class='section-h'>Coming up in the next {W['events_days']} days</h2><p class='hint'>Conferences, "
-                   f"courses and call-for-papers deadlines from {esc(short_date(since))}. "
+                   f"courses and deadlines (calls for papers, registration) from {esc(short_date(since))}. "
                    f"<a href='{root}events.html'>The whole events calendar</a></p>")
         items = []
         for e in W["events"] or []:
@@ -1126,11 +1156,14 @@ def week_body(W, cfg, rec, opts, older, newer, last_key):
                          + (f"<a href='{esc(link)}' target='_blank' rel='noopener'>{name}</a>" if link != "#" else f"<b>{name}</b>")
                          + "<span class='wk-meta'>" + " · ".join(x for x in (esc(event_place(e)), esc(e.get("kind") or "")) if x)
                          + "</span></li>")
+        dls = []
         for x in W["deadlines"] or []:
             ev = x.get("event") or {}
-            items.append(f"<li class='wk-ev wk-dl'><span class='wk-date'>{esc(event_dates({'start': x.get('date')}))}</span>"
-                         f"<b>{esc(x.get('label') or 'Deadline')}</b><span class='wk-meta'>{esc(ev.get('name') or ev.get('short') or '')}</span></li>")
-        out.append(week_list(items))
+            dls.append(f"<li class='wk-ev wk-dl'><span class='wk-date'>{esc(event_dates({'start': x.get('date')}))}</span>"
+                       f"<b>{esc(x.get('label') or 'Deadline')}</b><span class='wk-meta'>{esc(ev.get('name') or ev.get('short') or '')}</span></li>")
+        # two lists, each in date order, as in the e-mail
+        out += [f"<h3 class='wk-sub'>{title}</h3>" + week_list(group) for title, group in (("Events", items), ("Deadlines", dls))
+                if group]
     if W["papers"]:
         out.append(f"<h2 class='section-h'>New research</h2><p class='hint'>The best-rated of the week's "
                    f"{plural(W['papers_total'], 'paper')} for use in practice (Academia-to-Industry).</p>")
