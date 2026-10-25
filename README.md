@@ -68,7 +68,8 @@ Every scan, Claude compares the day's new stories with the archive of the last y
 only when both are about the same event, project or site (the same landslide, dam or tunnel in the same place, not merely
 a similar hazard in the same country), naming the stage it reports: the event, response and recovery, investigation and
 inquiry, repair and reconstruction, legal and policy, or an update. Without Claude, a cautious headline match links
-reports found within 30 days. Story cards everywhere carry a **Developing story** chip that opens the timeline on the
+reports found within 30 days that name the same place and the same kind of event (a sinkhole is not a follow-up of a
+landslide in the same city). Story cards everywhere carry a **Developing story** chip that opens the timeline on the
 **Developing stories** page. Long-running events make good features: by the time the cause is known and the repair
 designed, the lessons for practice can be told. Settings under `storylines:` in `config.yaml`. A link is a lead: check
 each report at its source.

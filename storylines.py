@@ -346,10 +346,27 @@ def claude_links(new, idx, earlier, picks, titles, today, opts, key, raw):
     return linked
 
 
-def heuristic_links(new, earlier, nm, em, idf, titles, today, opts):
+def kinds_of(cfg):
+    """A function giving the kinds of event a story's headlines name (the English keyword concepts:
+    landslide, sinkhole, tunnel …, whatever the language), worked out once per story."""
+    compiled, seen = scanner.compile_keywords(cfg), {}
+
+    def kinds(s):
+        if id(s) not in seen:
+            found = set()
+            for head in {s.get("title") or "", s.get("title_en") or ""} - {""}:
+                found.update(scanner.keyword_score(head, cfg, compiled)[1])
+            seen[id(s)] = found
+        return seen[id(s)]
+    return kinds
+
+
+def heuristic_links(new, earlier, nm, em, idf, titles, today, opts, kinds=None):
     """Without Claude: a new story follows an earlier one from another day within heuristic_days
     when the headlines would count as one event for the scanner (scanner.same_event: the same
-    names and most significant words) and the countries and places Claude read, if any, agree."""
+    names and most significant words), the countries and places Claude read, if any, agree, and
+    they name the same kind of event (kinds): a sinkhole in a city is not a follow-up of a landslide
+    there, though the two headlines share the city, the rain and the residents."""
     linked = 0
     since = today - dt.timedelta(days=opts["heuristic_days"])
     for i, s in enumerate(new):
@@ -359,6 +376,8 @@ def heuristic_links(new, earlier, nm, em, idf, titles, today, opts):
             if not day or not since <= day < today or conflict(nm[i], em[j]):
                 continue
             if not any(scanner.same_event(a, b) for a in nm[i]["variants"] for b in em[j]["variants"]):
+                continue
+            if kinds and kinds(s) and kinds(e) and not kinds(s) & kinds(e):
                 continue
             score = (closeness(nm[i], em[j], idf), e["_digest"])
             if best is None or score > best[0]:
@@ -414,7 +433,7 @@ def _link(stories, now, cfg, notes):
             notes.append(note)
             print(note)
     if linked is None:
-        linked = heuristic_links(new, earlier, nm, em, idf, titles, today, opts)
+        linked = heuristic_links(new, earlier, nm, em, idf, titles, today, opts, kinds_of(cfg))
         how = f"headlines compared with the last {opts['heuristic_days']} days"
     print(f"Developing stories: {linked} of today's {len(new)} stories follow up an earlier one ({how}).")
     return linked
