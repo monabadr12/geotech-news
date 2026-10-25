@@ -144,6 +144,12 @@ def review_findings(latest, cfg, windows):
         if latest.get("ai_used"):
             strong = sum(1 for s in stories if s.get("relevance", 0) >= 4)
             out.append(("info", f"{strong} stories were rated 4 or 5 out of 5."))
+            rated = [s for s in stories if s.get("relevance")]
+            named = sum(1 for s in rated if str(s.get("primary_source") or "").strip())
+            if rated:
+                out.append(("info", f"{named} of the {len(rated)} rated stories name a primary source to check the "
+                                    "facts with" + ("." if named else " (stories rated before primary sources were "
+                                                                       "asked for have none).")))
     else:
         out.append(("warn", "The latest scan selected no stories."))
     return out
@@ -309,8 +315,10 @@ def email_section(doc, cfg, data_dir):
                           "(Archive → Weekly summaries).")
 
 
-def write_report(path, cfg, digests, windows, theme_color, site_url, changelog_path, groups=None):
-    """groups: storylines.groups() of the archive (the developing stories), worked out once by the site build."""
+def write_report(path, cfg, digests, windows, theme_color, site_url, changelog_path, groups=None, checklist=None):
+    """groups: storylines.groups() of the archive (the developing stories), worked out once by the site build.
+    checklist: (title, the steps to follow before using a story, what the news desk does to keep to them),
+    from site_builder (USE_TITLE, use_steps_text(), USE_DONE)."""
     log = yaml.safe_load(changelog_path.read_text(encoding="utf-8")) if changelog_path.exists() else {}
     latest = digests[0] if digests else None
     data_dir = changelog_path.parent
@@ -377,6 +385,25 @@ def write_report(path, cfg, digests, windows, theme_color, site_url, changelog_p
         for item in log["features"]:
             name, _, text = item.partition(":")
             bullet(doc, text.strip(), bold_prefix=name.strip() + ": ") if text else bullet(doc, item)
+
+    # ---- the copyright-safe way of using a story
+    if checklist:
+        title_, steps, done = checklist
+        heading(doc, "Using the stories in the magazine (copyright)")
+        doc.add_paragraph("Every story on the website is a lead, not material to reuse. " + title_ + ":")
+        for i, step in enumerate(steps, 1):
+            p = doc.add_paragraph()
+            p.paragraph_format.left_indent, p.paragraph_format.first_line_indent = Cm(0.8), Cm(-0.6)
+            p.paragraph_format.space_after = Pt(2)
+            r = p.add_run(f"{i}.  ")
+            r.bold, r.font.color.rgb = True, rgb("9A7B1C")
+            p.add_run(step)
+        if done:
+            p = doc.add_paragraph()
+            p.add_run("What the news desk does to keep to it:").bold = True
+            p.paragraph_format.space_before = Pt(6)
+            for item in done:
+                bullet(doc, item)
 
     # ---- review
     section_heading("Review of the latest scan")

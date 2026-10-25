@@ -21,7 +21,10 @@ Sheets (in tab order):
   Lists       (hidden) the values offered by the dropdowns, plus helper cells
 
 Every piece of text from the news is written as a plain string (never as a
-formula) with control characters removed.
+formula) with control characters removed. No publisher's text beyond the
+headline goes into a workbook: no feed summaries or paper abstracts, only the
+headline (with Claude's English translation, labelled as such), the source, the
+link and what Claude wrote (angle, place, the primary source to check).
 """
 import datetime as dt
 import re
@@ -54,6 +57,7 @@ from openpyxl.worksheet.table import Table, TableStyleInfo
 FONT = "Arial"
 NAVY, NAVY2, ACCENT, INK, MUTED, LINE = "16324F", "23466B", "C9A227", "1B2430", "5B6573", "D9DEE3"
 LINK, PAPER, INPUT_FILL, EDIT_FILL, WHITE = "1D5A8A", "F4F6F9", "FFF4CC", "FFFBEF", "FFFFFF"
+ACCENT_INK = "8A6410"
 NOT_RATED = "Not rated"
 STANDARD_USES = ["Feature lead", "News brief", "Academia-to-Industry topic", "Regional insight", "Watch only"]
 USE_COLORS = {"Feature lead": "D38B00", "News brief": "2563D6", "Academia-to-Industry topic": "6B4FD6",
@@ -90,10 +94,11 @@ DASH = "Dashboard!"
 
 # Stories sheet columns: key, header, width
 STORY_COLS = [   # the printed part runs from No. to Digest date
-    ("no", "No.", 6), ("headline", "Headline (English)", 46), ("theme", "Theme", 21), ("rel", "Relevance", 10),
+    ("no", "No.", 6), ("headline", "Headline (English or Claude's translation)", 46), ("theme", "Theme", 21),
+    ("rel", "Relevance", 10),
     ("use", "Suggested use", 16), ("status", "Status", 14), ("assigned", "Assigned to", 14),
     ("notes", "Editor notes", 28), ("angle", "Magazine angle", 40), ("source", "Source", 19),
-    ("digest", "Digest date", 12), ("original", "Original headline", 38), ("summary", "Summary", 40),
+    ("digest", "Digest date", 12), ("original", "Original headline", 38), ("primary", "Primary source to check", 30),
     ("country", "Country", 16), ("place", "Place", 22), ("storyline", "Developing story", 36),
     ("edition", "Google News edition", 15), ("published", "Published", 12), ("window", "Issue window", 11),
     ("keywords", "Keywords", 26), ("score", "Keyword score", 9), ("url", "Article URL", 30),
@@ -103,7 +108,7 @@ PRINT_TO = "digest"
 SC = {key: get_column_letter(i) for i, (key, _, _) in enumerate(STORY_COLS, 1)}
 SCI = {key: i for i, (key, _, _) in enumerate(STORY_COLS, 1)}
 PLANNING = ("status", "assigned", "notes")
-WRAPPED = ("headline", "theme", "use", "notes", "angle", "source", "original", "summary", "keywords", "place", "storyline")
+WRAPPED = ("headline", "theme", "use", "notes", "angle", "source", "original", "primary", "keywords", "place", "storyline")
 STORY_HEADER, STORY_FIRST = 3, 4
 
 
@@ -328,12 +333,12 @@ def _int(value, default=0):
 def _story(s, no):
     title = str(s.get("title") or "")
     rel = max(0, min(5, _int(s.get("relevance"))))
-    summary = " ".join(str(s.get("summary") or "").split())
     return {
         "no": no, "headline": str(s.get("title_en") or title or "(no headline)"),
         "original": title if s.get("title_en") else "", "theme": str(s.get("theme") or "General"), "rel": rel,
         "use": str(s.get("use") or "") or NOT_RATED, "angle": str(s.get("angle") or ""),
-        "summary": shorten(summary, 400) if summary else "", "source": str(s.get("source") or "Unknown source"),
+        # whom to check the facts with (Claude); never the feed's summary
+        "primary": " ".join(str(s.get("primary_source") or "").split()), "source": str(s.get("source") or "Unknown source"),
         "edition": str(s.get("_region") or s.get("region") or ""), "published": as_date(s.get("published")),
         "digest": as_date(s.get("_digest")), "digest_iso": str(s.get("_digest") or ""),
         "window": str(s.get("_window") or ""), "keywords": ", ".join(str(k) for k in (s.get("keywords") or [])),
@@ -358,7 +363,6 @@ def _paper(p, no):
         "rel": max(0, min(5, _int(p.get("relevance")))), "angle": str(p.get("angle") or ""),
         "journal": str(p.get("journal") or ""), "authors": str(p.get("authors") or ""),
         "published": as_date(p.get("published")), "digest": as_date(p.get("_digest")),
-        "abstract": shorten(p.get("abstract") or "", 800) if p.get("abstract") else "",
         "keywords": ", ".join(str(k) for k in (p.get("keywords") or [])), "url": safe_url(p.get("link")),
     }
 
@@ -443,7 +447,8 @@ class Ctx:
 
 # ------------------------------------------------------------------ entry point
 def write_workbook(path, title, subtitle, stories, themes, theme_color, timeline, timeline_label,
-                   digest_count=None, windows=None, papers=None, events=None, deadlines=None, events_asof=None):
+                   digest_count=None, windows=None, papers=None, events=None, deadlines=None, events_asof=None,
+                   checklist=None, checklist_title="Before you use a story"):
     """stories carry _digest/_window/_region (and _country, _storyline) like the site's; timeline is [(label, count)].
 
     digest_count: number of daily digests in the period (counts digests that found no stories);
@@ -452,6 +457,8 @@ def write_workbook(path, title, subtitle, stories, themes, theme_color, timeline
     papers: research papers (the digests' "papers", with _digest), listed in a Research sheet.
     events, deadlines: the events calendar's upcoming events and open call-for-papers deadlines as of
     events_asof (events.upcoming() and events.deadlines(); each event may carry _where), in an Events sheet.
+    checklist: the steps to follow before using a story (site_builder.use_steps_text()), listed under
+    checklist_title on the Start here sheet.
     """
     ctx = Ctx(title, subtitle, list(stories or []), themes, theme_color, timeline, timeline_label,
               digest_count, windows)
@@ -460,6 +467,8 @@ def write_workbook(path, title, subtitle, stories, themes, theme_color, timeline
     ctx.events = [e for e in events or [] if isinstance(e, dict) and e.get("name")]
     ctx.calls = [c for c in deadlines or [] if isinstance(c, dict) and isinstance(c.get("event"), dict)]
     ctx.events_asof = events_asof or dt.date.today()
+    ctx.checklist = [clean(x, 600) for x in checklist or [] if x]
+    ctx.checklist_title = clean(checklist_title or "Before you use a story", 120)
     wb = Workbook()
     start = wb.active
     start.title = "Start here"
@@ -553,10 +562,9 @@ def _stories_sheet(ws, ctx):
             else:
                 v = values[key_]
                 put(ws, r, c, v if v != "" else None, f=font(9 if key_ in ("keywords", "edition") else 10,
-                                                             italic=key_ == "summary",
-                                                             color=MUTED if key_ in ("keywords", "summary") else INK),
+                                                             color=MUTED if key_ == "keywords" else INK),
                     al=wrap if key_ in WRAPPED else top)
-        lines = max(lines_needed(values[k], widths[k]) for k in ("headline", "angle", "original", "summary", "theme"))
+        lines = max(lines_needed(values[k], widths[k]) for k in ("headline", "angle", "original", "primary", "theme"))
         ws.row_dimensions[r].height = min(max(lines, 2), 5) * 12.5 + 3
     if not ctx.rows:
         put(ws, STORY_FIRST, SCI["headline"], None)
@@ -706,7 +714,7 @@ def _sources_sheet(ws, ctx):
 # ------------------------------------------------------------------ Research
 RESEARCH_COLS = [("No.", 6), ("Paper", 50), ("Theme", 21), ("Use in practice", 10), ("Status", 14),
                  ("Editor notes", 28), ("Why it matters in practice", 44), ("Journal", 26), ("Authors", 22),
-                 ("Published", 12), ("Digest date", 12), ("Abstract", 60), ("Keywords", 26), ("DOI link", 30)]
+                 ("Published", 12), ("Digest date", 12), ("Keywords", 26), ("DOI link", 30)]
 
 
 def _research_sheet(ws, ctx):
@@ -718,7 +726,8 @@ def _research_sheet(ws, ctx):
         al=Alignment(vertical="center"))
     nav(ws, 1, 3, [("← Dashboard", "Dashboard", "A1"), ("↑ Start here", "Start here", "A1")])
     put(ws, 2, 3, "Papers from geotechnical journals (via Crossref), best rated for use in practice first. Click a "
-        "title to open the paper. Status and Editor notes are yours, as in Stories.", f=font(9, color=MUTED, italic=True))
+        "title to open the paper, and read it before you write about it. Status and Editor notes are yours, as in "
+        "Stories.", f=font(9, color=MUTED, italic=True))
     ws.row_dimensions[1].height, ws.row_dimensions[2].height = 26, 16
     for i, (label, width) in enumerate(RESEARCH_COLS, 1):
         ws.column_dimensions[get_column_letter(i)].width = width
@@ -744,9 +753,8 @@ def _research_sheet(ws, ctx):
         put(ws, r, 9, p["authors"] or None, f=font(9), al=wrap)
         put(ws, r, 10, p["published"], al=top, fmt="dd mmm yyyy")
         put(ws, r, 11, p["digest"], al=top, fmt="dd mmm yyyy")
-        put(ws, r, 12, p["abstract"] or None, f=font(9, italic=True, color=MUTED), al=wrap)
-        put(ws, r, 13, p["keywords"] or None, f=font(9, color=MUTED), al=wrap)
-        put(ws, r, 14, p["url"] or None, f=font(8, color=MUTED), al=top)
+        put(ws, r, 12, p["keywords"] or None, f=font(9, color=MUTED), al=wrap)
+        put(ws, r, 13, p["url"] or None, f=font(8, color=MUTED), al=top)
         lines = max(lines_needed(p["title"], 50), lines_needed(p["angle"], 44), lines_needed(p["journal"], 26))
         ws.row_dimensions[r].height = min(max(lines, 3), 6) * 12.5 + 3
     table = Table(displayName="ResearchTable", ref=f"A{STORY_HEADER}:{get_column_letter(len(RESEARCH_COLS))}{last}")
@@ -888,7 +896,7 @@ def _by_theme_sheet(ws, ctx):
     ws.sheet_properties.outlinePr = Outline(summaryBelow=False, summaryRight=True, applyStyles=False)
     # the headline is plain wrapped text (LibreOffice does not wrap hyperlinked cells); "Open article" links
     cols = [("No.", 6), ("Relevance", 10), ("Headline", 56), ("Link", 12), ("Suggested use", 17), ("Status", 14),
-            ("Source", 20), ("Digest", 12), ("Magazine angle / summary", 50)]
+            ("Source", 20), ("Digest", 12), ("Magazine angle · check with", 50)]
     last_col = len(cols)
     centred = {1, 2, 4, 6, 8}
     for i, (_, width) in enumerate(cols, 1):
@@ -935,12 +943,12 @@ def _by_theme_sheet(ws, ctx):
             put(ws, row, 6, F(f'=IFERROR(INDEX({status_rng},MATCH($A{row},{no_rng},0))&"","")'), al=mid)
             put(ws, row, 7, s["source"], f=font(9), al=top)
             put(ws, row, 8, s["digest"], f=font(9), al=mid, fmt="dd mmm yyyy")
-            put(ws, row, 9, s["angle"] or s["summary"], f=font(9, color=INK if s["angle"] else MUTED,
-                                                                   italic=not s["angle"]), al=top)
+            # Claude's angle and whom to check the facts with; never the feed's summary
+            about = "\n".join(x for x in (s["angle"], f"Check with: {s['primary']}" if s["primary"] else "") if x)
+            put(ws, row, 9, about or None, f=font(9, color=INK), al=top)
             for c in range(1, last_col + 1):
                 ws.cell(row=row, column=c).border = Border(bottom=THIN)
-            lines = max(lines_needed(s["headline"], 56), lines_needed(s["angle"] or s["summary"], 50),
-                        lines_needed(s["source"], 20))
+            lines = max(lines_needed(s["headline"], 56), lines_needed(about, 50), lines_needed(s["source"], 20))
             ws.row_dimensions[row].height = min(max(lines, 1), 5) * 12.5 + 4
             ws.row_dimensions[row].outline_level = 1
             row += 1
@@ -1281,8 +1289,9 @@ def _start_sheet(ws, ctx, anchors):
          {"font": link_font, "link": ("Dashboard", "A1")}),
         ("Stories →", "Every story as a filterable Excel table, newest digest first; click a headline to open the "
          "article. The gold columns – Status, Assigned to and Editor notes – are for you to fill in. Further right: "
-         "where each story happened (Country, Place) and the Developing story it belongs to.",
-         {"font": link_font, "link": ("Stories", "A1")}),
+         "the Primary source to check the facts with, where each story happened (Country, Place) and the Developing "
+         "story it belongs to. A headline from a non-English source is Claude's English translation; Original "
+         "headline gives the publisher's own.", {"font": link_font, "link": ("Stories", "A1")}),
         ("By theme →", "A read-only reading view: one section per theme, best stories first. Collapse or expand "
          "sections with the − / + buttons in the left margin.", {"font": link_font, "link": ("By theme", "A1")}),
     ] + ([
@@ -1300,6 +1309,9 @@ def _start_sheet(ws, ctx, anchors):
         ("Sources →", "The outlets that supplied stories: how many, average relevance, main theme and how many "
          "match the current Dashboard selection.", {"font": link_font, "link": ("Sources", "A1")}),
     ])
+    if ctx.checklist:  # the magazine's copyright-safe way of using a story (site_builder.USE_STEPS)
+        block(ctx.checklist_title, [(str(i), step, {"h": "center", "font": font(10, True, ACCENT_INK)})
+                                    for i, step in enumerate(ctx.checklist, 1)])
     block("How to use the Dashboard selectors", [
         ("1", "Open the Dashboard. The yellow boxes at the top are selectors: Theme, Suggested use, Minimum "
          "relevance" + (" and Issue window." if ctx.show_win else " (the issue window is fixed in this workbook)."),

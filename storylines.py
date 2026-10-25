@@ -717,14 +717,14 @@ def report_item(s, sl, fold):
     meta.append(f"<a href='digests/{esc(s['_digest'])}.html'>Found in the {esc(site_builder.nice_date(s['_digest']))} digest</a>")
     if s.get("use") == "Feature lead":
         meta.insert(0, "<span class='use use-feature'>Feature lead</span>")
-    about = (f"<p class='sl-angle'>{esc(s['angle'])}</p>" if s.get("angle")
-             else f"<p class='sl-summary'>{esc(clip(s['summary'], 240))}</p>" if s.get("summary") else "")
+    # Claude's angle, never the publisher's text, and whom to check the facts with
+    about = (f"<p class='sl-angle'>{esc(s['angle'])}</p>" if s.get("angle") else "") + site_builder.check_with(s)
     return (f"<li class='sl-item {stage_class(stage)}'{' data-fold' if fold else ''}>"
             f"<div class='sl-when'><time datetime='{esc(s['_date'])}'>{esc(site_builder.nice_date(s['_date']))}</time>"
             f"<span class='sl-stage'>{esc(stage)}</span></div><div class='sl-body'>"
             f"<a class='sl-link' href='{esc(site_builder.safe_url(s.get('link')))}' target='_blank' rel='noopener' dir='auto'>"
             f"{esc(shown)}</a>"
-            + (f"<div class='orig' dir='auto'>Original: {esc(s['title'])}</div>" if s.get("title_en") else "")
+            + (site_builder.original_line(s) if s.get("title_en") else "")
             + about + f"<div class='sl-meta'>{''.join(meta)}</div></div></li>")
 
 
