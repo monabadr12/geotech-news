@@ -990,6 +990,9 @@ def about_body(cfg, latest, brief_opts):
     ml = cfg.get("multilingual_keywords") or {}
     n_ml = sum(len(v.get("terms", [])) for v in ml.values())
     ccfg = cfg.get("claude", {})
+    per_site = cfg.get("max_per_source", 5)  # 0 = no limit
+    site_rule = (f" No website gives more than {per_site}, and the" if isinstance(per_site, int) and per_site > 0
+                 else " The") + " copies of one story in several languages count once."
     rcfg = cfg.get("research") or {}
     journals = (rcfg.get("journals") or []) if rcfg.get("enabled") is not False else []
     jrows = "".join(f"<tr><td>{esc(j['name'])}</td><td>{esc(str(j['issn']))}</td></tr>" for j in journals)
@@ -1025,7 +1028,7 @@ def about_body(cfg, latest, brief_opts):
 <li><b>Score and categorise.</b> Headlines and summaries are scored against {len(cfg['keywords'])} English keywords and {n_ml} terms in {len(languages)} other languages. Each foreign term counts as its English equivalent (for example <i>glissement de terrain</i>, <i>deslizamiento</i>, <i>longsor</i> and <i>انهيار أرضي</i> all count as “landslide”), so every story is filed under an English theme. Specialist sources earn bonus points, noise terms lose points, near-identical headlines are merged. A story needs {cfg.get('min_keyword_score', 3)} points to go forward.</li>
 <li><b>Triage.</b> Up to {ccfg.get('max_candidates', 80)} candidates go to Claude, which rates each 1–5 for geotechnical substance (below {ccfg.get('min_relevance', 3)} is dropped), confirms the theme, suggests a use, writes a one-sentence magazine angle, translates non-English headlines, and reads where each story happened (the country and the town, region or site). Claude then checks whether any new story follows up an earlier one (see below).</li>
 {research_step}
-<li><b>Publish & archive.</b> Up to {cfg.get('max_items', 40)} stories per digest. Every digest is stored permanently, grouped into three-month issue windows, and exported to Excel.</li>
+<li><b>Publish & archive.</b> Up to {cfg.get('max_items', 40)} stories per digest.{site_rule} Every digest is stored permanently, grouped into three-month issue windows, and exported to Excel.</li>
 <li><b>Issue brief.</b> In the last {brief_opts['days_before_end']} days of each quarter Claude reads the quarter's stories rated {brief_opts['min_relevance']} / 5 or higher (at most {brief_opts['max_per_theme']} per theme) and any research papers, and drafts the brief for the editorial meeting as a Word document: an overview, a proposed line-up per theme, feature leads with the kinds of experts to approach, Academia-to-Industry topics, a regional-balance check, gaps worth covering and a watch list. The draft is refreshed every {count(brief_opts['refresh_days'], 'day')} and the final brief is written the day after the quarter closes. <b>Generate / update brief</b> on an issue page starts one on GitHub at any time.</li></ol>
 {features_html(cfg)}
 <h2 class="section-h">Magazine themes</h2><p class="hint">Words that suggest each theme (English keywords found in any language count too).</p><ul class="theme-list">{themes}</ul>

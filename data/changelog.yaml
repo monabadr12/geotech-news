@@ -5,7 +5,7 @@
 features:
   - "Daily scan: every day at 05:00 Cairo time, and on demand with Scan now, the scanner reads specialist, society and trade-press websites, worldwide Google News searches in English and 16 other languages, and new papers from geotechnical journals."
   - "Categorisation: every headline, in any covered language, is scored against weighted geotechnical keywords and filed under one of the magazine's eight themes; Claude then rates its geotechnical substance (1-5), confirms the theme, suggests an editorial use, writes a magazine angle and translates foreign headlines."
-  - "Balanced digests: no theme may take more than 30 % of a digest, and several outlets reporting the same event are merged into one story."
+  - "Balanced digests: no theme may take more than 30 % of a digest and no website more than five stories, several outlets reporting the same event are merged into one story, and copies of one story in several languages count once."
   - "Archive: every digest is kept permanently and grouped into three-month issue windows that follow the magazine's cycle, each with an issue page."
   - "Issue brief: for each issue window Claude drafts a Word brief for the editorial meeting - a proposed line-up per theme, feature leads, Academia-to-Industry topics, a regional-balance check and gaps worth covering. Drafts appear in the last weeks of each quarter, a final brief after it closes, and on demand from the issue page."
   - "Research papers: new papers from journals such as Géotechnique, Canadian Geotechnical Journal, ASCE JGGE, Soils and Foundations and Acta Geotechnica arrive through Crossref, with a one-line note on why each matters for practice."
@@ -19,6 +19,11 @@ features:
   - "Website report: this document, rebuilt after every scan."
 
 changes:
+  - date: 2026-10-25
+    title: At most 5 stories per website
+    items:
+      - No website may now give more than five stories to a digest (max_per_source in config.yaml; 0 = no limit). Vietnam.vn had supplied 16 of the 60 stories on 24 October and 9 of the 40 on 25 October. A website keeps its five best stories and each place this frees goes to the next story of the same theme; when another website reported the same event, its report is kept instead. At most 15 stories from one website now go to Claude, so one website cannot fill Claude's list either. Digests already in the archive are left as they are.
+      - Copies of one story in several languages count once. Vietnam.vn publishes each story in Vietnamese, English, Chinese and other languages, and Google News lists every copy as a separate story; once Claude has translated the headlines, copies whose English headlines match are merged and the best one is kept, also when a second scan on the same day is merged with the morning's digest. Headlines that only share a place, or differ in a place, a number or a keyword (coastal or riverbank erosion), stay separate stories.
   - date: 2026-10-25
     title: Lower running costs
     items:

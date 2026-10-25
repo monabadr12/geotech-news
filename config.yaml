@@ -35,6 +35,12 @@ max_items: 60
 # each theme among the stories sent to Claude (claude: max_candidates below).
 max_share_per_theme: 0.3
 
+# At most 5 stories from one website per digest (0 = no limit; without this
+# line the limit is 5). Copies of one story in several languages count once:
+# Claude's English titles show them, and only the best copy is kept. Up to
+# three times as many stories from one website go to Claude.
+max_per_source: 5
+
 # When the other themes run out of stories, should the free places go to more
 # stories from the big themes (true), or should the digest stay shorter and
 # balanced (false)?
