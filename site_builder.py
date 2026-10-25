@@ -918,9 +918,9 @@ the magazine, and read PDF or Word files you attach — for example a call for p
 <button class="btn primary send" type="submit">{icon('send')}<span>Send</span></button>
 </form>
 <div class="chat-foot"><span id="chat-status"></span><span class="chat-opts"><label>Model <select id="chat-model">
-<option value="claude-opus-5-5">Claude Opus 5.5 — best answers</option>
-<option value="claude-sonnet-5-5">Claude Sonnet 5.5 — faster</option>
-<option value="claude-haiku-5-5">Claude Haiku 5.5 — fastest</option></select></label>
+<option value="claude-sonnet-5-5">Claude Sonnet 5.5 — good answers, half the cost of Opus</option>
+<option value="claude-opus-5-5">Claude Opus 5.5 — best answers, highest cost</option>
+<option value="claude-haiku-5-5">Claude Haiku 5.5 — fastest, lowest cost</option></select></label>
 <button type="button" id="chat-new" class="linkbtn">New conversation</button></span></div>
 </div>"""
 

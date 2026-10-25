@@ -311,10 +311,10 @@
     var modelSel = document.getElementById("chat-model");
     var bridge = null;  // health report from the bridge
     if (modelSel) {
-      modelSel.value = store.get(KEYS.model) || "claude-opus-5-5";
+      modelSel.value = store.get(KEYS.model) || "claude-sonnet-5-5";
       modelSel.addEventListener("change", function () { store.set(KEYS.model, modelSel.value); refreshStatus(); });
     }
-    function model() { return (modelSel && modelSel.value) || "claude-opus-5-5"; }
+    function model() { return (modelSel && modelSel.value) || "claude-sonnet-5-5"; }
     function refreshStatus() {
       if (!endpoint) {
         statusEl.innerHTML = "<b>The assistant is not connected yet.</b>";

@@ -20,6 +20,11 @@ features:
 
 changes:
   - date: 2026-10-25
+    title: Lower running costs
+    items:
+      - The AI assistant now starts on Claude Sonnet (half the cost of Opus, still good answers); Opus and Haiku can still be chosen per question.
+      - Developing stories are linked with Claude Haiku, the lowest-cost model, and the events calendar is refreshed every 14 days with Claude Sonnet. The issue brief stays on Claude Opus. The daily scan stays daily. The README lists what each part costs.
+  - date: 2026-10-25
     title: Catch-up scans and a cheaper events refresh
     items:
       - The first events calendar refresh ran out of Anthropic credit part-way. A refresh now caps how much of each page Claude reads, uses prompt caching, stops near a spending limit (max_cost_usd, US$3) and has Claude write up the events found so far, keeps its notes when a later step fails, retries the next day when Claude was only busy, and ends its log with the tokens, searches and estimated cost.

@@ -80,7 +80,7 @@ deadlines (calls for abstracts and papers, registration), from two sources:
 * **The editors' list, `data/events.yaml`.** Edit it on GitHub (pencil icon, or **Edit the editors' list** on the Events
   page); its first lines explain the format. An event listed there always wins over the same event found by the refresh,
   so this is the place to correct a date or a link. If an entry cannot be read, the Events page says which and why.
-* **The weekly refresh.** Once a week (`refresh_days`) the daily scan asks Claude to read the organisers' calendars
+* **The regular refresh.** Every 14 days (`refresh_days`) the daily scan asks Claude to read the organisers' calendars
   listed under `events: calendars:` in `config.yaml` (ISSMGE, ITA-AITES, the ASCE Geo-Institute, ISRM, IGS, DFI, BGA,
   ICE and GeoEngineer) with Anthropic's web search and web fetch tools, and keeps what it finds in `data/events.json`.
   Every event must link to a page Claude actually read, and predatory conference series are left out. A site or organiser
@@ -88,11 +88,11 @@ deadlines (calls for abstracts and papers, registration), from two sources:
   next build, along with the events already found there. Web search and web fetch must be allowed for the organisation
   that owns the `ANTHROPIC_API_KEY` (Claude Console → Settings). A refresh that fails leaves the calendar as it was; the
   daily scan tries again two days later (the next day when Claude was only busy), and the Events page says why.
-* **What a refresh costs.** It uses Claude Opus with web search, the most expensive step of the system. Each page
+* **What a refresh costs.** It uses Claude Sonnet with web search, every 14 days (`refresh_days`). Each page
   Claude opens is capped (`max_page_tokens`), the research uses prompt caching, and near `max_cost_usd` (US$3) Claude
   stops reading and writes up the events found so far. The log of each run ends with a line giving the tokens,
-  searches, pages and estimated cost at list prices. A cheaper model can be set with `events: model:` (for example
-  `claude-sonnet-5-5`). It is also wise to set a monthly spend limit for the key in the Claude Console.
+  searches, pages and estimated cost at list prices. `claude-opus-5-5` (set with `events: model:`) judges a little
+  better at twice the price. It is also wise to set a monthly spend limit for the key in the Claude Console.
 * **Refresh calendar** on the Events page starts a refresh at any time: it opens the *Events calendar and weekly summary*
   workflow on GitHub, where you choose **refresh the events calendar** and press **Run workflow**. The run fails, and
   the page says so, when nothing was refreshed (no key, or no event passed the checks).
@@ -210,6 +210,20 @@ Without a key the scanner still works, ranking stories by keywords only.
 
 The configured model is Claude Haiku (`claude-haiku-5-5`), the lowest-cost model, which is ample for this
 triage. A daily run sends about 130 short headlines, so the cost is typically a few cents per day.
+
+**What it costs to run** (rough figures at list prices; the Claude Console's *Usage* page shows the real spend
+by model, and *Limits* sets a monthly cap):
+
+| Part | Model (`config.yaml`) | How often | Rough cost |
+|---|---|---|---|
+| Triage, locating stories, research papers | Haiku | every scan | a few cents a day |
+| Developing stories (linking follow-ups) | Haiku (`storylines: model:`) | every scan | under a cent a day |
+| Events calendar refresh | Sonnet (`events: model:`) | every 14 days | about US$0.70–1.50 |
+| Issue brief | Opus (`brief: model:`) | a few times a quarter | about US$1–2 each |
+| AI assistant | Sonnet by default, chosen per question | each question | about US$0.05–0.10 (more with long chats or PDFs; Opus about twice that) |
+
+Altogether about US$3–5 a month plus the AI assistant. Scanning less often saves little and loses news, because each
+scan looks back only 60 hours (`lookback_hours`).
 
 ### 4. Turn on the website
 **Settings → Pages → Build and deployment → Source: Deploy from a branch → Branch: `main`, folder `/docs`
