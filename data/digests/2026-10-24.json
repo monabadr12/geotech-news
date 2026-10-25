@@ -22,7 +22,9 @@
     "shaft"
    ],
    "score": 7,
-   "rank": 507
+   "rank": 507,
+   "country": "",
+   "place": ""
   },
   {
    "id": "c6d04bab794a0a40",
@@ -41,7 +43,9 @@
     "offshore wind"
    ],
    "score": 6,
-   "rank": 506
+   "rank": 506,
+   "country": "",
+   "place": ""
   },
   {
    "id": "bbf26e28138bc4cc",
@@ -61,7 +65,9 @@
     "excavation"
    ],
    "score": 6,
-   "rank": 506
+   "rank": 506,
+   "country": "KR",
+   "place": ""
   },
   {
    "id": "b14ad4f93c679ac2",
@@ -80,7 +86,9 @@
     "foundation"
    ],
    "score": 2,
-   "rank": 502
+   "rank": 502,
+   "country": "IT",
+   "place": "Pisa"
   },
   {
    "id": "7afdd995dbb71bee",
@@ -97,7 +105,9 @@
    "angle": "What rainfall and slope geometry triggered this serious landslide in Nam Gia Nghia, and how should weathered residual soils on such slopes be investigated and stabilised?",
    "keywords": [],
    "score": 0,
-   "rank": 500
+   "rank": 500,
+   "country": "VN",
+   "place": "Nam Gia Nghia, Dak Nong"
   },
   {
    "id": "c361561c489ba8fe",
@@ -114,7 +124,9 @@
    "angle": "Can transfer learning from related image domains reliably segment rock fracture networks in UAV imagery when labelled data are scarce, and how accurate are the results?",
    "keywords": [],
    "score": 0,
-   "rank": 500
+   "rank": 500,
+   "country": "",
+   "place": ""
   },
   {
    "id": "30d825ee727bf9d7",
@@ -135,7 +147,9 @@
     "embankment"
    ],
    "score": 14,
-   "rank": 414
+   "rank": 414,
+   "country": "GB",
+   "place": "M4 Wiltshire"
   },
   {
    "id": "88f86675941c5f34",
@@ -155,7 +169,9 @@
     "embankment"
    ],
    "score": 13,
-   "rank": 413
+   "rank": 413,
+   "country": "ID",
+   "place": ""
   },
   {
    "id": "6a767337a4b479ca",
@@ -175,7 +191,9 @@
     "collapse"
    ],
    "score": 11,
-   "rank": 411
+   "rank": 411,
+   "country": "IT",
+   "place": "Savona, Liguria"
   },
   {
    "id": "76022f8a7dbf20f6",
@@ -194,7 +212,9 @@
     "landslide"
    ],
    "score": 10,
-   "rank": 410
+   "rank": 410,
+   "country": "VN",
+   "place": "Khanh Le pass"
   },
   {
    "id": "4b37e2f8a50459cb",
@@ -213,7 +233,9 @@
     "landslide"
    ],
    "score": 10,
-   "rank": 410
+   "rank": 410,
+   "country": "IT",
+   "place": "Valmontone, Prenestina road"
   },
   {
    "id": "73924a67e8ae79f5",
@@ -232,7 +254,9 @@
     "landslide"
    ],
    "score": 10,
-   "rank": 410
+   "rank": 410,
+   "country": "IT",
+   "place": "Bonea, Capo locality"
   },
   {
    "id": "6174bee9ee10a0a2",
@@ -251,7 +275,9 @@
     "landslide"
    ],
    "score": 10,
-   "rank": 410
+   "rank": 410,
+   "country": "IT",
+   "place": "Cencione"
   },
   {
    "id": "ab919899f709cdc9",
@@ -270,7 +296,9 @@
     "landslide"
    ],
    "score": 10,
-   "rank": 410
+   "rank": 410,
+   "country": "ID",
+   "place": "Lae Ikan, Subulussalam"
   },
   {
    "id": "fba98b91772202dd",
@@ -290,7 +318,9 @@
     "debris flow"
    ],
    "score": 8,
-   "rank": 408
+   "rank": 408,
+   "country": "CL",
+   "place": "Concepción"
   },
   {
    "id": "5c8964d4d9a76429",
@@ -310,7 +340,9 @@
     "rockfall"
    ],
    "score": 8,
-   "rank": 408
+   "rank": 408,
+   "country": "VN",
+   "place": "Chi Lang commune, Lang Son"
   },
   {
    "id": "61271454841b06e5",
@@ -331,7 +363,9 @@
     "soil"
    ],
    "score": 8,
-   "rank": 408
+   "rank": 408,
+   "country": "VN",
+   "place": "Lam Dong province"
   },
   {
    "id": "2b2d3c37d1700400",
@@ -352,7 +386,9 @@
     "erosion"
    ],
    "score": 7,
-   "rank": 407
+   "rank": 407,
+   "country": "VN",
+   "place": "Quang Tri"
   },
   {
    "id": "1abb508283bb7d24",
@@ -372,7 +408,9 @@
     "embankment"
    ],
    "score": 7,
-   "rank": 407
+   "rank": 407,
+   "country": "VN",
+   "place": "Nghe An"
   },
   {
    "id": "480a8976be586a18",
@@ -392,7 +430,9 @@
     "subsidence"
    ],
    "score": 7,
-   "rank": 407
+   "rank": 407,
+   "country": "VN",
+   "place": "Thanh Hoa"
   },
   {
    "id": "278dd35b0ffe9c69",
@@ -412,7 +452,9 @@
     "subsidence"
    ],
    "score": 7,
-   "rank": 407
+   "rank": 407,
+   "country": "VN",
+   "place": "Da Lat, Lam Dong"
   },
   {
    "id": "ac5cec5306553fcc",
@@ -432,7 +474,9 @@
     "subsidence"
    ],
    "score": 7,
-   "rank": 407
+   "rank": 407,
+   "country": "VN",
+   "place": "Phong Nha-Ke Bang National Park"
   },
   {
    "id": "96155283e15b0e7c",
@@ -452,7 +496,9 @@
     "subsidence"
    ],
    "score": 7,
-   "rank": 407
+   "rank": 407,
+   "country": "VN",
+   "place": "Lam Dong province"
   },
   {
    "id": "6db87d7c983b6dee",
@@ -472,7 +518,9 @@
     "embankment"
    ],
    "score": 7,
-   "rank": 407
+   "rank": 407,
+   "country": "VN",
+   "place": ""
   },
   {
    "id": "9bf494164f947bf9",
@@ -492,7 +540,9 @@
     "slope"
    ],
    "score": 6,
-   "rank": 406
+   "rank": 406,
+   "country": "VN",
+   "place": "Nghe An"
   },
   {
    "id": "bb921de398f0bba4",
@@ -512,7 +562,9 @@
     "collapse"
    ],
    "score": 5,
-   "rank": 405
+   "rank": 405,
+   "country": "KR",
+   "place": "Osan, Seobu-ro"
   },
   {
    "id": "dc6993a660a7f64f",
@@ -532,7 +584,9 @@
     "collapse"
    ],
    "score": 5,
-   "rank": 405
+   "rank": 405,
+   "country": "KR",
+   "place": "Gochon, Gimpo"
   },
   {
    "id": "d802f826f8703dbb",
@@ -552,7 +606,9 @@
     "collapse"
    ],
    "score": 5,
-   "rank": 405
+   "rank": 405,
+   "country": "UA",
+   "place": "Yalta, Pioneer Park"
   },
   {
    "id": "ca872ff740158226",
@@ -572,7 +628,9 @@
     "collapse"
    ],
    "score": 5,
-   "rank": 405
+   "rank": 405,
+   "country": "VN",
+   "place": "Tien River"
   },
   {
    "id": "b069823c9885a6f9",
@@ -591,7 +649,9 @@
     "geotechnical"
    ],
    "score": 5,
-   "rank": 405
+   "rank": 405,
+   "country": "KR",
+   "place": "Gochang-Buan"
   },
   {
    "id": "bbf522b6d48b357e",
@@ -610,7 +670,9 @@
     "sinkhole"
    ],
    "score": 4,
-   "rank": 404
+   "rank": 404,
+   "country": "VN",
+   "place": "Phong Nha Ke Bang"
   },
   {
    "id": "df071e4607216998",
@@ -629,7 +691,9 @@
     "sinkhole"
    ],
    "score": 4,
-   "rank": 404
+   "rank": 404,
+   "country": "MX",
+   "place": "Guasave, Sinaloa"
   },
   {
    "id": "22d29077c5c41394",
@@ -648,7 +712,9 @@
     "sinkhole"
    ],
    "score": 4,
-   "rank": 404
+   "rank": 404,
+   "country": "VN",
+   "place": "Quang Binh"
   },
   {
    "id": "d4302596028488f8",
@@ -667,7 +733,9 @@
     "sinkhole"
    ],
    "score": 4,
-   "rank": 404
+   "rank": 404,
+   "country": "VN",
+   "place": "Quang Binh"
   },
   {
    "id": "f9e9042d63521738",
@@ -686,7 +754,9 @@
     "sinkhole"
    ],
    "score": 4,
-   "rank": 404
+   "rank": 404,
+   "country": "CL",
+   "place": "El Bosque, Santiago"
   },
   {
    "id": "095cc04132237431",
@@ -705,7 +775,9 @@
     "sinkhole"
    ],
    "score": 4,
-   "rank": 404
+   "rank": 404,
+   "country": "EC",
+   "place": "Eloy Alfaro, Quito"
   },
   {
    "id": "65ea5f0f58149f53",
@@ -724,7 +796,9 @@
     "sinkhole"
    ],
    "score": 4,
-   "rank": 404
+   "rank": 404,
+   "country": "CL",
+   "place": "Arauco"
   },
   {
    "id": "2737d799f1f32a11",
@@ -743,7 +817,9 @@
     "sinkhole"
    ],
    "score": 4,
-   "rank": 404
+   "rank": 404,
+   "country": "MX",
+   "place": "Mazatlan, Emilio Barragan avenue"
   },
   {
    "id": "9ccfd8d6d618e86e",
@@ -760,7 +836,9 @@
    "angle": "What karst processes, such as collapse or dissolution, could create a large sinkhole of over two hectares in a tropical forest, and how should it be investigated and monitored?",
    "keywords": [],
    "score": 0,
-   "rank": 400
+   "rank": 400,
+   "country": "VN",
+   "place": "Phong Nha-Ke Bang"
   },
   {
    "id": "7386da511bf675ee",
@@ -777,7 +855,9 @@
    "angle": "How do analytical solutions for a cylindrical cavity under triangular pulse loads inform the validation of numerical models for underground openings under impact?",
    "keywords": [],
    "score": 0,
-   "rank": 400
+   "rank": 400,
+   "country": "",
+   "place": ""
   },
   {
    "id": "e5790790955e1562",
@@ -794,7 +874,9 @@
    "angle": "What bank erosion mechanisms and protection measures are effective for riverbanks threatening farmland, and how can they be monitored over time?",
    "keywords": [],
    "score": 0,
-   "rank": 400
+   "rank": 400,
+   "country": "VN",
+   "place": ""
   },
   {
    "id": "90a138492a21952e",
@@ -811,7 +893,9 @@
    "angle": "How do sea-level-driven erosion and scour undermine sea dyke foundations in Quang Tri, and which revetment and foundation designs suit eroding sandy coastal soils?",
    "keywords": [],
    "score": 0,
-   "rank": 400
+   "rank": 400,
+   "country": "VN",
+   "place": "Quang Tri"
   },
   {
    "id": "5214f05ec4eed2f8",
@@ -828,7 +912,9 @@
    "angle": "What ground conditions and deep excavation and tunnelling methods are used for metro stations in soft Ho Chi Minh City clays with high groundwater, and what risks follow?",
    "keywords": [],
    "score": 0,
-   "rank": 400
+   "rank": 400,
+   "country": "VN",
+   "place": "Ho Chi Minh City"
   },
   {
    "id": "69dcb6026ae4bcfb",
@@ -850,7 +936,9 @@
     "tunnel"
    ],
    "score": 10,
-   "rank": 310
+   "rank": 310,
+   "country": "AU",
+   "place": "Snowy Mountains"
   },
   {
    "id": "791758896d249952",
@@ -870,7 +958,9 @@
     "tunnel"
    ],
    "score": 7,
-   "rank": 307
+   "rank": 307,
+   "country": "IT",
+   "place": "A14 Vinci Tunnel"
   },
   {
    "id": "28717aa79ce46d7d",
@@ -887,7 +977,9 @@
    "angle": "What geotechnical and heritage considerations should guide levelling versus preserving a rocky hill site in an urban coastal city?",
    "keywords": [],
    "score": 6,
-   "rank": 306
+   "rank": 306,
+   "country": "VN",
+   "place": "Mot Mountain, Quy Nhon"
   },
   {
    "id": "7d6bfe02d4224620",
@@ -907,7 +999,9 @@
     "tunnel"
    ],
    "score": 5,
-   "rank": 305
+   "rank": 305,
+   "country": "",
+   "place": ""
   },
   {
    "id": "6886e43c8d78cc08",
@@ -926,7 +1020,9 @@
     "tunnelling"
    ],
    "score": 5,
-   "rank": 305
+   "rank": 305,
+   "country": "AU",
+   "place": "Snowy Mountains"
   },
   {
    "id": "961d462f6c8f1600",
@@ -946,7 +1042,9 @@
     "soil"
    ],
    "score": 5,
-   "rank": 305
+   "rank": 305,
+   "country": "CL",
+   "place": "Villa El Mirador, Arauco"
   },
   {
    "id": "db215d359f53e718",
@@ -965,7 +1063,9 @@
     "sinkhole"
    ],
    "score": 4,
-   "rank": 304
+   "rank": 304,
+   "country": "CO",
+   "place": "Gámeza, Boyacá"
   },
   {
    "id": "f1da9c6b12d8a2e5",
@@ -984,7 +1084,9 @@
     "sinkhole"
    ],
    "score": 4,
-   "rank": 304
+   "rank": 304,
+   "country": "MX",
+   "place": "Mazatlan beaches"
   },
   {
    "id": "4d46294f1736118a",
@@ -1003,7 +1105,9 @@
     "retaining wall"
    ],
    "score": 4,
-   "rank": 304
+   "rank": 304,
+   "country": "RU",
+   "place": "Samara, Vladimirskaya Street"
   },
   {
    "id": "cfd402f4b2c84fed",
@@ -1022,7 +1126,9 @@
     "sinkhole"
    ],
    "score": 4,
-   "rank": 304
+   "rank": 304,
+   "country": "MX",
+   "place": "Escobedo"
   },
   {
    "id": "ca105ab6c8b1c87d",
@@ -1041,7 +1147,9 @@
     "sinkhole"
    ],
    "score": 4,
-   "rank": 304
+   "rank": 304,
+   "country": "MX",
+   "place": "Casa Blanca, Tabasco"
   },
   {
    "id": "af18accf4f37a498",
@@ -1060,7 +1168,9 @@
     "sinkhole"
    ],
    "score": 4,
-   "rank": 304
+   "rank": 304,
+   "country": "MX",
+   "place": "Francisco I. Madero, Torreon"
   },
   {
    "id": "a429d3e4cd718a0b",
@@ -1079,7 +1189,9 @@
     "sinkhole"
    ],
    "score": 4,
-   "rank": 304
+   "rank": 304,
+   "country": "AR",
+   "place": "Aucapan, Neuquen"
   },
   {
    "id": "fd921f5790c30aeb",
@@ -1096,7 +1208,9 @@
    "angle": "What are the geotechnical feasibility issues of levelling a hill, including rock quality, slope excavation and stability, compared with preservation?",
    "keywords": [],
    "score": 0,
-   "rank": 300
+   "rank": 300,
+   "country": "VN",
+   "place": "Mot Mountain, Gia Lai"
   },
   {
    "id": "65851446a693de84",
@@ -1113,7 +1227,9 @@
    "angle": "What geotechnical assessments would be needed to compare levelling Mot Mountain with conserving its historic site, including rock stability and foundation implications?",
    "keywords": [],
    "score": 0,
-   "rank": 300
+   "rank": 300,
+   "country": "VN",
+   "place": "Mot Mountain, Quy Nhon"
   },
   {
    "id": "67c28a64e2e067dd",
@@ -1130,7 +1246,9 @@
    "angle": "What causes subsidence along a riverfront promenade in Corrientes, and how should ground investigation guide repair of the costanera?",
    "keywords": [],
    "score": 0,
-   "rank": 300
+   "rank": 300,
+   "country": "AR",
+   "place": "Corrientes costanera"
   },
   {
    "id": "0fa2dd592e8dd555",
@@ -1147,7 +1265,9 @@
    "angle": "What causes slab sinking on a coastal promenade exposed to waves, and what foundation and drainage remedies are appropriate?",
    "keywords": [],
    "score": 0,
-   "rank": 300
+   "rank": 300,
+   "country": "MX",
+   "place": "Coatzacoalcos malecon"
   }
  ],
  "failures": [],
