@@ -376,29 +376,44 @@ def story_marks(it, topic):
             title_words(title_norm(it.get("place") or ""), topic))
 
 
+def initials(norm):
+    """The initials of each run of three or four words of a normalised
+    headline, as an abbreviation of them would read (tunnel boring machine:
+    tbm)."""
+    words = norm.split()
+    return {"".join(w[0] for w in words[i:i + n]) for n in (3, 4) for i in range(len(words) - n + 1)}
+
+
 def same_story(a, b):
     """a and b are story_marks() of two stories, at least one of them
     translated by Claude. Short translated headlines look alike, so this is
     stricter than same_event(). Two stories that each have a number, or a
     word in Claude's place, that the other lacks are two (330 billion dong is
-    not 200 billion). The words they share must include a name or a word of
-    the place, and another word: "Exploring Phong Nha-Ke Bang's famous
-    sinkholes" is not "120 m deep sinkhole discovered in Phong Nha-Ke Bang".
-    Wordings with no name in common may differ by one word each, but not by a
-    keyword word: "Anti-landslide embankment threatens residential area" is
-    "Landslide-prevention embankment...", but "Experts propose solutions for
-    coastal erosion" is not "... for riverbank erosion". Wordings that are
-    the same word for word are one story."""
+    not 200 billion). Wordings that differ by a word or two each, a keyword
+    word among them, are two, whether or not they name a place: "Ca Mau:
+    experts propose solutions for coastal erosion" is not "... for riverbank
+    erosion" (but "TBM" may stand for "tunnel boring machine"). Otherwise
+    the words they share must include a name or a word of the place, and
+    another word: "Exploring Phong Nha-Ke Bang's famous sinkholes" is not
+    "120 m deep sinkhole discovered in Phong Nha-Ke Bang". Wordings with no
+    name in common may differ by one word each: "Anti-landslide embankment
+    threatens residential area" is "Landslide-prevention embankment...".
+    Wordings that are the same word for word are one story, unless Claude
+    read two places."""
     (ha, wa, na, pa), (hb, wb, nb, pb) = a, b
-    if ha[0] == hb[0]:
+    if ha[0] == hb[0] and (not pa or not pb or pa & pb):
         return True
     if (na - nb and nb - na) or (pa - pb and pb - pa) or not same_event(ha, hb):
+        return False
+    short = (wa - wb) & initials(hb[0]) or (wb - wa) & initials(ha[0])  # TBM, tunnel boring machine
+    swapped = wa ^ wb != ha[1] ^ hb[1] and not short  # a keyword word in one wording only
+    if swapped and wa - wb and wb - wa and len(wa - wb) <= 2 and len(wb - wa) <= 2:
         return False
     shared = ha[1] & hb[1]
     named = ha[2] | hb[2] | pa | pb
     if shared & named:
         return bool(shared - named)
-    return len(wa - wb) <= 1 and len(wb - wa) <= 1 and wa ^ wb == ha[1] ^ hb[1]
+    return len(wa - wb) <= 1 and len(wb - wa) <= 1 and not swapped
 
 
 def drop_same_events(items, cfg, copies=None):
@@ -462,13 +477,7 @@ def fill_leftovers(cfg):
     return bool(cfg.get("fill_leftover_places", False))
 
 
-def source_cap(cfg):
-    """max_per_source: the most stories one website may give a digest; 0 = no
-    limit, 5 when the setting is missing."""
-    try:
-        return max(int(cfg.get("max_per_source", 5)), 0)
-    except (TypeError, ValueError):
-        return 5
+source_cap = site_builder.source_cap  # max_per_source, read as the Method page reads it
 
 
 def source_key(name):
@@ -511,19 +520,39 @@ def balanced(items, limit, share, rank, fill=True, per_source=0, copies=None):
     giving its next story, until no website has too many. A story taken out
     gives way to another website's report of the same event when
     drop_same_events() merged one into it (copies), so that the event is not
-    lost with it."""
+    lost with it. Such a report can push a story out of its theme, leaving a
+    website below its limit or with a weaker story: a story taken out then
+    comes back, once, unless a report of its event is already picked."""
     pool, tried, spare = list(items), {id(i) for i in items}, {}
+    stands_for, taken, back = {}, [], set()  # stands_for: a report put in -> the first story of its event (ids)
+
+    def event(it):
+        return stands_for.get(id(it), id(it))
+
     while True:
         picked = theme_turns(pool, limit, share, rank, fill)
-        sites = collections.Counter()
+        sites, weakest = collections.Counter(), {}
         out = []
         for it in picked:  # best first: a website keeps its best stories
             site = source_key(it.get("source"))
             sites[site] += 1
             if per_source and site and sites[site] > per_source:
                 out.append(it)
+            else:
+                weakest[site] = rank(it)
         if not out:
-            return picked
+            # a story taken out whose website now has room, or keeps a weaker story
+            shown = {event(i) for i in picked}
+            due = [i for i in taken if id(i) not in back and event(i) not in shown
+                   and (sites[source_key(i.get("source"))] < per_source
+                        or rank(i) > weakest[source_key(i.get("source"))])]
+            if not due:
+                return picked
+            it = max(due, key=rank)
+            back.add(id(it))
+            pool = [i for i in pool if event(i) != event(it)] + [it]  # its event's unpicked report makes way
+            continue
+        taken += out
         gone = {id(i) for i in out}
         pool = [i for i in pool if id(i) not in gone]
         for it in out:  # the other websites' reports of its event, best first, while their website has room
@@ -535,6 +564,7 @@ def balanced(items, limit, share, rank, fill=True, per_source=0, copies=None):
                 pool.append(others[0])
                 tried.add(id(others[0]))
                 spare[id(others[0])] = others[1:]
+                stands_for[id(others[0])] = event(it)
 
 
 # ------------------------------------------------------------------ Claude triage

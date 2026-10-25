@@ -199,6 +199,17 @@ def assistant_endpoint(cfg):
     return str((cfg.get("assistant") or {}).get("endpoint") or "").strip()
 
 
+def source_cap(cfg):
+    """max_per_source: the most stories one website may give a digest; 0 = no
+    limit, 5 when the setting is missing or not a number (yes and no are not).
+    The scanner applies it and the Method page states it, both from here."""
+    value = cfg.get("max_per_source", 5)
+    try:
+        return 5 if isinstance(value, bool) else max(int(value), 0)
+    except (TypeError, ValueError):
+        return 5
+
+
 _theme_colors = {}
 
 
@@ -990,9 +1001,9 @@ def about_body(cfg, latest, brief_opts):
     ml = cfg.get("multilingual_keywords") or {}
     n_ml = sum(len(v.get("terms", [])) for v in ml.values())
     ccfg = cfg.get("claude", {})
-    per_site = cfg.get("max_per_source", 5)  # 0 = no limit
-    site_rule = (f" No website gives more than {per_site}, and the" if isinstance(per_site, int) and per_site > 0
-                 else " The") + " copies of one story in several languages count once."
+    per_site = source_cap(cfg)  # 0 = no limit
+    site_rule = ((f" No website gives more than {per_site}, and the" if per_site else " The")
+                 + " copies of one story in several languages count once.")
     rcfg = cfg.get("research") or {}
     journals = (rcfg.get("journals") or []) if rcfg.get("enabled") is not False else []
     jrows = "".join(f"<tr><td>{esc(j['name'])}</td><td>{esc(str(j['issn']))}</td></tr>" for j in journals)
