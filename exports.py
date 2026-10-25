@@ -953,7 +953,7 @@ def _by_theme_sheet(ws, ctx):
             for c in range(1, last_col + 1):
                 ws.cell(row=row, column=c).border = Border(bottom=THIN)
             lines = max(lines_needed(shown, 56), lines_needed(about, 50), lines_needed(s["source"], 20))
-            ws.row_dimensions[row].height = min(max(lines, 1), 5) * 12.5 + 4
+            ws.row_dimensions[row].height = min(max(lines, 1), 8 if s["original"] else 5) * 12.5 + 4
             ws.row_dimensions[row].outline_level = 1
             row += 1
         _rel_colours(ws, f"B{first}:B{row - 1}")

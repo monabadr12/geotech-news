@@ -1250,7 +1250,8 @@ def index_body(summaries, cfg, rec, opts, last_key):
                    f"<span class='wk-figs'>{plural(F['stories'], 'story', 'stories')} · {F['top']} rated 5 / 5 · "
                    f"{plural(F['digests'], 'digest')}{' · ' + plural(F['papers'], 'paper') if F['papers'] else ''}</span>"
                    + (f"<span class='wk-lead' dir='auto'>{esc(headline(lead))}</span>" if lead else "")
-                   + (f"<span class='wk-figs'>{site_builder.TRANSLATED}</span>" if lead and lead.get("title_en") else "")
+                   + (f"<span class='wk-figs'>{site_builder.TRANSLATED} · Original: <span dir='auto'>{esc(lead.get('title') or '')}</span></span>"
+                      if lead and lead.get("title_en") else "")
                    + f"{strip(W['themes'])}</a>")
     out.append("</div>")
     return "".join(out)

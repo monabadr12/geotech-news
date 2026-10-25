@@ -695,7 +695,7 @@ def primary_source(text):
     if out.casefold() in ("", "none", "n/a", "na", "unknown", "unclear", "not clear", "-"):
         return ""
     cut = len(words) > PRIMARY_SOURCE_WORDS
-    if len(out) > 120:
+    if len(out) > (119 if cut else 120):
         out, cut = out[:119].rsplit(" ", 1)[0], True
     if not cut:
         return out

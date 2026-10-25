@@ -120,7 +120,7 @@ Each scan also asks Crossref (free, no key) for papers newly registered in 25 jo
 *Géotechnique Letters*, *Canadian Geotechnical Journal*, *ASCE JGGE*, *Soils and Foundations*, *Acta Geotechnica*,
 *Computers and Geotechnics*, *Engineering Geology*, *Landslides*, *Tunnelling and Underground Space Technology* and
 *Geotextiles and Geomembranes*. Claude rates each for practice and writes one line, in its own words, on why it matters
-to practitioners (the abstracts are read for this but not kept or shown: read the paper itself through its DOI link).
+to practitioners (the abstracts are read for this but no longer saved and never shown: read the paper itself through its DOI link).
 Up to 20 papers per digest appear under **New research** on the digest and issue pages, in Search, in the Excel
 **Research** sheet and in the issue brief. Add a journal under `research: journals:` in `config.yaml` with its ISSN;
 test it with the **Check feeds** workflow (input `{"research": true}` tests every journal).
