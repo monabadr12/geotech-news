@@ -1,12 +1,12 @@
 /**
- * Geotechnical News Desk — AI assistant bridge (Google Apps Script)
+ * Geotechnical News Desk — AI assistant bridge and e-mail sender (Google Apps Script)
  *
- * The website is public, so it cannot hold an API key. This small script runs in
- * your own Google account instead: the website sends each question here, the
- * script adds your Anthropic key (read from your private Google Doc) and passes
- * the question to Claude. The key never reaches the website or the repository.
- *
- * Set up once (about 5 minutes) — see "AI assistant" in the repository README.
+ * The website is public, so it cannot hold an API key. This small script runs in your own Google
+ * account instead: the website sends each question here, the script adds your Anthropic key (read
+ * from your private Google Doc) and passes the question to Claude. The key never reaches the website
+ * or the repository. It also e-mails the news desk's alerts and weekly summary from your account once
+ * the Script property NOTIFY_TOKEN is set (the same text as the GitHub secret NOTIFY_TOKEN); MAIL_TO
+ * (optional) lists the recipients. See "E-mail" below. Setup: "AI assistant" in the repository README.
  */
 
 // The Google Doc that holds your Anthropic key (paste its link or ID). The key is
@@ -21,12 +21,26 @@ const DAILY_LIMIT = 100;            // questions per day (Cairo time): protects 
 const MAX_REQUEST_MB = 25;          // largest question + attachments accepted
 const TIME_ZONE = 'Africa/Cairo';
 
+// ---------- E-mail (alerts and the weekly summary) ----------
+// After each daily scan, notify.py in the repository posts {action: 'notify', token, subject, html, text}
+// here and the script sends it from your Google account. Script properties (Project Settings → Script properties):
+//   NOTIFY_TOKEN  required: a long random text (for example 40 letters and digits). Add the same text as the
+//                 GitHub secret NOTIFY_TOKEN. Without this property the script sends no e-mail at all.
+//   MAIL_TO       optional: the recipients, separated by commas. Empty: your own address (the script owner).
+// After pasting this version: choose testEmail in the function menu and press Run once, so that Google asks
+// for the permission to send e-mail as you; then Deploy → Manage deployments → Edit → Version: New version.
+const MAIL_DAILY_LIMIT = 20;        // e-mails per day (Cairo time); a scan sends at most three
+const MAX_SUBJECT = 250;            // characters
+const MAX_MAIL_KB = 500;            // largest e-mail accepted (HTML and plain text together)
+const MAX_RECIPIENTS = 50;
+const SENDER_NAME = 'Geotechnical News Desk';
+
 function doGet() {
   let keyFound = false, problem = '';
   try { keyFound = !!apiKey(); } catch (err) { problem = String(err.message || err); }
   return reply({
     ok: keyFound, service: 'Geotechnical News Desk assistant bridge', problem: problem,
-    dailyLimit: DAILY_LIMIT, usedToday: usedToday(), passcode: !!accessCode()
+    dailyLimit: DAILY_LIMIT, usedToday: usedToday(), passcode: !!accessCode(), email: !!notifyToken()
   });
 }
 
@@ -37,6 +51,7 @@ function doPost(e) {
       return reply({ error: 'This question and its attachments are larger than ' + MAX_REQUEST_MB + ' MB.' });
     }
     const req = JSON.parse(raw);
+    if (req && req.action === 'notify') return reply(notify(req));  // an e-mail from the scan, not a question
     if (accessCode() && req.passcode !== accessCode()) return reply({ error: 'passcode', message: 'Passcode required.' });
     const messages = cleanMessages(req.messages);
     if (!messages.length) return reply({ error: 'Empty question.' });
@@ -161,6 +176,82 @@ function takeOne() {
   }
 }
 
+// ---------- E-mail ----------
+function notify(req) {
+  const expected = notifyToken();
+  if (!expected) {
+    return { ok: false, error: 'E-mail is not switched on in the connector: add the Script property NOTIFY_TOKEN ' +
+      '(Project Settings → Script properties) with the same text as the GitHub secret NOTIFY_TOKEN.' };
+  }
+  if (!sameText(String(req.token || ''), expected)) {
+    return { ok: false, error: 'The token does not match: give the GitHub secret NOTIFY_TOKEN exactly the text of the ' +
+      'Script property NOTIFY_TOKEN.' };
+  }
+  const subject = String(req.subject || '').replace(/[\r\n\t]+/g, ' ').trim().slice(0, MAX_SUBJECT);
+  const html = String(req.html || '');
+  const text = String(req.text || '');
+  if (!subject || !html) return { ok: false, error: 'Empty e-mail: a subject and a body are needed.' };
+  if (html.length + text.length > MAX_MAIL_KB * 1024) {
+    return { ok: false, error: 'The e-mail is larger than ' + MAX_MAIL_KB + ' KB, so it was not sent.' };
+  }
+  const to = recipients();
+  if (!to.length) return { ok: false, error: 'No recipient: add the Script property MAIL_TO (addresses separated by commas).' };
+  if (MailApp.getRemainingDailyQuota() < to.length) {
+    return { ok: false, error: "Google's daily e-mail quota for this account is used up. It resets within 24 hours." };
+  }
+  if (!takeMail()) {
+    return { ok: false, error: "The connector has sent today's limit of " + MAIL_DAILY_LIMIT + ' e-mails. It resets at midnight Cairo time.' };
+  }
+  try {
+    MailApp.sendEmail({ to: to.join(','), subject: subject, htmlBody: html,
+      body: text || 'This e-mail is best read in a mail program that shows HTML.', name: SENDER_NAME });
+  } catch (err) {
+    return { ok: false, error: 'Google did not send the e-mail: ' + String(err.message || err) +
+      (/permission|authori/i.test(String(err.message || err)) ? ' Run testEmail once from the script editor to allow e-mail.' : '') };
+  }
+  return { ok: true, sent_to: to.length };
+}
+
+function notifyToken() {
+  return (PropertiesService.getScriptProperties().getProperty('NOTIFY_TOKEN') || '').trim();
+}
+
+// Compares the SHA-256 digests of the two texts byte by byte, so the time taken does not reveal the token.
+function sameText(a, b) {
+  const da = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, a, Utilities.Charset.UTF_8);
+  const db = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, b, Utilities.Charset.UTF_8);
+  let diff = da.length ^ db.length;
+  for (let i = 0; i < da.length; i++) diff |= da[i] ^ db[i];
+  return diff === 0;
+}
+
+function recipients() {
+  const list = (PropertiesService.getScriptProperties().getProperty('MAIL_TO') || '').split(/[,;]/)
+    .map(function (a) { return a.trim(); }).filter(function (a) { return /^[^@\s]+@[^@\s]+$/.test(a); });
+  if (list.length) return list.slice(0, MAX_RECIPIENTS);
+  const me = Session.getEffectiveUser().getEmail();
+  return me ? [me] : [];
+}
+
+// A daily counter of its own for e-mails (the questions' counter is takeOne).
+function takeMail() {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const props = PropertiesService.getScriptProperties();
+    const name = 'mails-' + today();
+    const n = Number(props.getProperty(name) || 0);
+    if (n >= MAIL_DAILY_LIMIT) return false;
+    props.setProperty(name, String(n + 1));
+    Object.keys(props.getProperties()).forEach(function (k) {
+      if (k.indexOf('mails-') === 0 && k !== name) props.deleteProperty(k);
+    });
+    return true;
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function reply(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }
@@ -170,4 +261,18 @@ function testConnection() {
   const res = callClaude({ model: 'claude-haiku-5-5', max_tokens: 1000, output_config: { effort: 'low' },
     messages: [{ role: 'user', content: 'Reply with the single word: connected' }] }, false);
   Logger.log('HTTP ' + res.code + ': ' + res.text.slice(0, 300));
+}
+
+// Run this once from the editor (select "testEmail", press Run) after pasting this version: Google asks for the
+// permission to send e-mail as you, and a test message goes to the recipients (MAIL_TO, or your own address).
+function testEmail() {
+  const to = recipients();
+  if (!to.length) throw new Error('No recipient: add the Script property MAIL_TO.');
+  const note = 'The connector can send e-mail. Alerts for new 5/5 stories and the weekly summary will arrive this way ' +
+    'once the GitHub secret NOTIFY_TOKEN has the same text as the Script property NOTIFY_TOKEN.';
+  MailApp.sendEmail({ to: to.join(','), subject: 'Geotechnical News Desk: test e-mail from the connector', name: SENDER_NAME,
+    htmlBody: '<p style="font:14px Arial,sans-serif">' + note + '</p>', body: note });
+  Logger.log('Test e-mail sent to ' + to.length + ' recipient(s). E-mails Google still allows today: ' +
+    MailApp.getRemainingDailyQuota() + '.' + (notifyToken() ? '' : ' The Script property NOTIFY_TOKEN is not set yet: ' +
+    'add it (Project Settings → Script properties), or the scan cannot send e-mail.'));
 }

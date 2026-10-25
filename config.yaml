@@ -620,3 +620,168 @@ brief:
   max_papers: 40           # best research papers that Claude reads
   days_before_end: 21      # automatic draft in the last 21 days of the quarter
   refresh_days: 7          # the draft is rewritten when it is 7 days old
+
+# ---- World map (map.html) -------------------------------------------
+# Stories are plotted by the country Claude reads in each story. The ISSMGE
+# regions and their member-society countries show where coverage is thin.
+# Stories saved before the country was read (and any whose AI triage failed) are
+# located by Claude after each scan, newest first, up to locate_per_run at a time.
+map:
+  model: claude-haiku-5-5   # locates archived stories (country and place); empty = the triage model above
+  effort: low               # low | medium | high
+  locate_per_run: 300       # archived stories located per scan at most
+  embed_limit: 1500         # the default period's stories are built into the page up to this many;
+                            # beyond it the page reads them from the issue window's export when needed
+  # ISSMGE regions and the countries of their member societies (ISO 3166-1 codes).
+  # Source: https://www.issmge.org/member-societies (one page per region).
+  # Transnational societies have no single country: they are named on the page, not mapped.
+  # Lists marked to_check: true could not be read in full and still need checking
+  # against the ISSMGE pages; the page notes this under the region.
+  regions:
+    Africa:
+      societies: 13          # member societies at the 2019 council
+      to_check: true         # only these are known here; check issmge.org/member-societies/africa
+      members: [EG, KE, MA, NG, ZA, TN, ZW, ZM]
+      transnational: ["CTGA (Comité Transnational des Géotechniciens d'Afrique)"]
+    Asia:
+      societies: 27          # issmge.org/member-societies/asia, October 2026 (TW is Chinese Taipei)
+      members: [BD, CN, TW, HK, IN, ID, IR, IQ, JP, KZ, KG, MN, PH, VN, UZ, TH, TJ, SY, LK, KR, SG, PK, NP, MY, LB, AE]
+      transnational: ["SEAGS (South East Asian Geotechnical Society)"]
+    Australasia:
+      societies: 2
+      members: [AU, NZ]
+    Europe:
+      societies: 38          # ISSMGE lists 38; one is missing below
+      to_check: true         # check issmge.org/member-societies/europe ("NO" is quoted: YAML reads NO as "false")
+      members: [AT, BE, BA, BG, HR, CY, CZ, DK, EE, FI, FR, GE, DE, GR, HU, IS, IE, IL, IT, LV, LT, NL, MK, "NO",
+                PL, PT, RO, RU, RS, SK, SI, ES, SE, CH, TR, UA, GB]
+    North America:
+      societies: 3
+      members: [US, MX, CA]
+    South America:           # ISSMGE's South America region also covers Central America and the Caribbean
+      societies: 11          # issmge.org/member-societies/south-america
+      members: [VE, PY, GT, CU, CR, CO, CL, BR, AR, PE, BO]
+  # Countries without a member society belong to the region of their continent, as
+  # Natural Earth gives it (North America split into its subregions). The Middle East
+  # and Central Asia are in Asia, Egypt in Africa, Oceania in Australasia.
+  continents:
+    Africa: Africa
+    Asia: Asia
+    Europe: Europe
+    Oceania: Australasia
+    South America: South America
+    Northern America: North America
+    Central America: South America
+    Caribbean: South America
+  regions_of:                # exceptions to the continent rule (a member country follows its list above)
+    IL: Europe               # ISSMGE places Israel, Türkiye, Cyprus, Russia and Georgia in Europe
+    TR: Europe
+    CY: Europe
+    RU: Europe
+    GE: Europe
+    HM: Australasia          # Heard and McDonald Islands (Australian)
+
+# ---- Developing stories (developing.html) --------------------------------
+# Follow-up reports (an inquiry, a repair, a court case) are linked to the
+# earlier story about the same event, so long-running events can be followed.
+# Each scan, Claude compares the day's stories with the closest archived stories
+# of the last lookback_days and links a story only when both are about the same
+# event, project or site, naming the stage it reports (event, response and
+# recovery, investigation, repair, legal and policy, update). It uses the same
+# ANTHROPIC_API_KEY secret as the triage, once per scan. Without the key, or
+# when Claude cannot be reached, a cautious headline match links stories from
+# the last heuristic_days. Story cards then carry a "Developing story" chip.
+storylines:
+  enabled: true            # false: no new links (developing.html keeps those already made)
+  model: claude-opus-5-5   # telling one event from a similar one is judgement work
+  effort: low              # low | medium | high — how hard Claude thinks about the links
+  lookback_days: 365       # how far back earlier stories are compared
+  max_candidates: 400      # earlier stories Claude reads per scan, at most (the closest matches)
+  heuristic_days: 30       # without Claude: earlier stories from the last 30 days only
+  active_days: 90          # developing.html: "active" means a new report in the last 90 days
+
+# ---- Events calendar (events.html) ----------------------------------------
+# Conferences and call-for-papers deadlines: data/events.yaml (kept by the
+# editors) plus the events Claude finds on the organisers' calendars each week.
+# The daily scan refreshes the calendar when it is refresh_days old, and the
+# Events page's "Refresh calendar" button refreshes it at any time. Claude reads
+# the calendars below with Anthropic's web search and web fetch tools, which run
+# on Anthropic's servers (issmge.org and most organiser sites cannot be read from
+# GitHub). They must be turned on for the organisation that owns the
+# ANTHROPIC_API_KEY, in the Claude Console. A refresh that fails keeps the calendar.
+events:
+  model: claude-opus-5-5   # Claude Opus: reads the organisers' pages and judges what is a real event
+  effort: medium           # low | medium | high — how hard Claude works through the calendars
+  extract_effort: low      # effort for turning Claude's notes into calendar entries
+  refresh_days: 7          # the daily scan refreshes the calendar when it is 7 days old
+  months_ahead: 24         # events starting in the next 24 months
+  deadline_days: 90        # "Open deadlines" on the Events page: deadlines in the next 90 days
+  keep_days: 7             # events found by a refresh stay 7 days after they end
+  max_searches: 10         # web searches per refresh
+  max_fetches: 15          # pages Claude opens per refresh
+  calendars:               # where Claude looks first; it also searches the web for more
+    - name: ISSMGE events
+      url: https://www.issmge.org/events
+    - name: ISSMGE news (calls for abstracts, TC symposia)
+      url: https://www.issmge.org/news
+    - name: ITA-AITES future events (tunnelling)
+      url: https://about.ita-aites.org/future-events
+    - name: ASCE Geo-Institute conferences and events
+      url: https://www.asce.org/communities/institutes-and-technical-groups/geo-institute/conferences-and-events
+    - name: GeoEngineer.org events
+      url: https://www.geoengineer.org/events
+    - name: ISRM conferences (rock mechanics; the conference list on the home page)
+      url: https://www.isrm.net/
+    - name: International Geosynthetics Society (IGS) calendar
+      url: https://www.geosyntheticssociety.org/
+    - name: Deep Foundations Institute (DFI) events
+      url: https://dfi.org/
+    - name: British Geotechnical Association (BGA) events
+      url: https://www.britishgeotech.org/events
+    - name: Institution of Civil Engineers (ICE) events
+      url: https://www.ice.org.uk/events
+  blocked_domains:         # predatory, mass-produced "International Conference on ..." series: never listed
+                           # (adding one also removes the events already found there)
+    - waset.org
+    - conferenceindex.org
+    - conferenceseries.com
+    - omicsonline.org
+    - iser.co
+    - iier.org
+    - theiier.org
+    - iraj.in
+    - academicsworld.org
+    - researchfora.com
+    - technoarete.org
+    - allconferencealert.com
+    - internationalconferencealerts.com
+    - conferencealerts.co.in
+    - worldresearchlibrary.org
+    - scientificfederation.com
+  blocked_organisers:      # organisers never listed (words in the name or organiser)
+    - World Academy of Science, Engineering and Technology
+    - WASET
+    - OMICS
+    - Conference Series LLC
+    - Institute for Educational Research (IIER)
+    - Institute of Research and Journals (IRAJ)
+
+# ---- Alerts and weekly summary (e-mail) -----------------------------------
+# An e-mail when a 5/5 story appears and a Monday summary for the editorial team.
+# After each daily scan, notify.py sends at most one alert listing the new top-rated
+# stories, and on the weekday below the summary of the last full week (Monday to
+# Sunday): top stories, developing stories, regional coverage, events and research.
+# The summaries are also on the website (weekly/index.html). E-mail goes out through
+# the AI assistant's Google connector (assistant/bridge.gs: Script property and
+# GitHub secret NOTIFY_TOKEN) or a mail server (GitHub secrets SMTP_HOST, SMTP_PORT,
+# SMTP_USER, SMTP_PASSWORD, MAIL_TO); without either, the log shows what would have
+# been sent. Test it with the "Events calendar and weekly summary" workflow.
+alerts:
+  story_alerts: true       # e-mail when a scan finds a new top-rated story
+  min_relevance: 5         # the rating that triggers an alert (5 = only 5/5 stories)
+  weekly_summary: true     # the weekly summary for the editorial team
+  weekday: Monday          # the day it goes out, after the morning scan (Cairo time)
+  catch_up_days: 1         # if it could not be sent that day, try again on the next day(s)
+  max_stories: 8           # stories per section of the summary (top stories, 5/5, developing)
+  events_days: 60          # events and call-for-papers deadlines in the next 60 days
+  daily_digest: false      # true: also e-mail the whole daily digest after each scan

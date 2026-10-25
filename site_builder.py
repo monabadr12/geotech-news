@@ -15,6 +15,7 @@ import math
 import os
 import re
 import shutil
+import traceback
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
@@ -42,8 +43,8 @@ COUNTRIES = {
     "PL": "Poland", "CO": "Colombia", "CL": "Chile", "PE": "Peru", "AR": "Argentina",
 }
 CSV_FIELDS = ["Digest date", "Issue window", "Theme", "Relevance (1-5)", "Suggested use",
-              "Headline (English)", "Original headline", "Magazine angle", "Source",
-              "Google News edition", "Published", "Link", "Keywords"]
+              "Headline (English)", "Original headline", "Magazine angle", "Source", "Country", "Place",
+              "Google News edition", "Published", "Developing story", "Link", "Keywords"]
 
 # Colour and icon for each magazine theme (themes added later in config.yaml
 # take the spare colours in turn).
@@ -80,6 +81,8 @@ ICONS = {
     "print": "<path d='M6 9V2h12v7'/><rect x='6' y='14' width='12' height='8'/><path d='M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2'/>",
     "search": "<circle cx='11' cy='11' r='7'/><path d='m21 21-4.3-4.3'/>",
     "book": "<path d='M4 19.5A2.5 2.5 0 0 1 6.5 17H20'/><path d='M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'/>",
+    "pin": "<path d='M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z'/><circle cx='12' cy='10' r='3'/>",
+    "globe": "<circle cx='12' cy='12' r='10'/><path d='M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z'/>",
 }
 FAVICON = (ASSETS / "favicon.svg").read_text(encoding="utf-8") if (ASSETS / "favicon.svg").exists() else ""
 
@@ -170,9 +173,11 @@ def window_range(key, start_month=1):
 
 
 def nice_date(iso, weekday=False):
-    if not iso:
+    """'24 Oct 2026' ("" for anything that is not a date, e.g. a feed's mangled time)."""
+    try:
+        d = dt.date.fromisoformat(str(iso or "")[:10])
+    except ValueError:
         return ""
-    d = dt.date.fromisoformat(iso[:10])
     return f"{d:%A} {d.day} {d:%B %Y}" if weekday else f"{d.day} {d:%b %Y}"
 
 
@@ -214,16 +219,70 @@ def theme_icon(theme):
     return icon(THEME_STYLE.get(theme, ("", "dot"))[1])
 
 
+def feature(module, name):
+    """A function of one of the feature modules (geomap, storylines, events, notify), or None when it
+    is missing. They import this module, so they are imported here only when a page needs them."""
+    if module in _unloadable:
+        return None
+    try:
+        return getattr(__import__(module), name, None)
+    except Exception as ex:  # a module that cannot even be imported leaves its parts out (said once)
+        _unloadable.add(module)
+        print(f"{module}.py could not be loaded ({type(ex).__name__}: {ex}); its parts of the pages are left out.")
+        return None
+
+
+_unloadable = set()
+
+
+def optional(module, name, *args, default=None, **kw):
+    """module.name(*args), or default when the function is missing or fails: a fault in one feature
+    leaves its part of a page out (with a message), never the page or the scan."""
+    fn = feature(module, name)
+    if not callable(fn):
+        return default
+    try:
+        return fn(*args, **kw)
+    except Exception as ex:
+        print(f"{module}.{name} failed ({type(ex).__name__}: {ex}); that part of the page is left out.")
+        return default
+
+
+def country_label(code):
+    """English name of an ISO country code: the world map's list (every code), else the short list above."""
+    code = str(code or "").strip().upper()
+    if not code:
+        return ""
+    fn = feature("geomap", "country_name")
+    try:
+        name = fn(code) if callable(fn) else ""
+    except Exception:
+        name = ""
+    return name or COUNTRIES.get(code, code)
+
+
+def place_text(s):
+    """Where a story happened, as Claude read it: 'Moniquirá, Boyacá, Colombia' ("" when not located or global)."""
+    place = " ".join(str(s.get("place") or "").split())
+    country = country_label(s.get("country"))
+    if country and country.lower() in place.lower():
+        country = ""
+    return ", ".join(x for x in (place, country) if x)
+
+
 # ------------------------------------------------------------------ page parts
 def page(cfg, title, body, root, active, description="", head=""):
     mag = (cfg.get("magazine") or {}).get("name", "ISSMGE Magazine")
-    nav = [("index.html", "Latest", "latest"), ("archive.html", "Archive", "archive"),
-           ("search.html", "Search", "search"), ("trends.html", "Trends", "trends"),
-           ("assistant.html", "AI assistant", "assistant"),
-           ("about.html", "Method & sources", "about")]
+    # (page, label, shorter label for narrow screens, key); style.css shows one of the two labels
+    nav = [("index.html", "Latest", "", "latest"), ("archive.html", "Archive", "", "archive"),
+           ("search.html", "Search", "", "search"), ("developing.html", "Developing stories", "Developing", "developing"),
+           ("map.html", "World map", "Map", "map"), ("events.html", "Events", "", "events"),
+           ("trends.html", "Trends", "", "trends"), ("assistant.html", "AI assistant", "Assistant", "assistant"),
+           ("about.html", "Method & sources", "Method", "about")]
     current = " class='active' aria-current='page'"
-    links = "".join(f"<a href='{root}{href}'{current if key == active else ''}>{label}</a>"
-                    for href, label, key in nav)
+    links = "".join(f"<a href='{root}{href}'{current if key == active else ''}>"
+                    + (f"<span class='nav-l'>{esc(label)}</span><span class='nav-s'>{esc(short)}</span>" if short else esc(label))
+                    + "</a>" for href, label, short, key in nav)
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -240,7 +299,7 @@ def page(cfg, title, body, root, active, description="", head=""):
 <header class="masthead"><div class="wrap masthead-inner">
 <a class="brand" href="{root}index.html"><span class="brand-mark" aria-hidden="true">{FAVICON}</span>
 <span><span class="brand-name">Geotechnical News Desk</span><span class="brand-sub">{esc(mag)} · editorial monitoring</span></span></a>
-<nav class="nav">{links}</nav>
+<nav class="nav" aria-label="Main">{links}</nav>
 <div class="mast-actions"><button type="button" class="scan-btn" id="scan-btn" title="Start a new scan on GitHub">{icon('scan')}<span>Scan now</span></button></div>
 </div></header>
 <main class="wrap">{body}</main>
@@ -259,19 +318,24 @@ def rating(s):
     return f"<span class='rel rel-{rel}' title='Geotechnical relevance: {rel} of 5'>{'<i></i>' * 5}<b>{rel}/5</b></span>"
 
 
-def story_card(s, show_theme=False):
+def story_card(s, show_theme=False, root=""):
     shown = s.get("title_en") or s["title"]
     when = nice_date(s.get("published") or s.get("_digest", ""))
     region = COUNTRIES.get(s.get("region", ""), s.get("region", ""))
-    search_text = " ".join([shown, s["title"], s.get("angle", ""), s["source"], region,
-                            " ".join(s.get("keywords", []))]).lower()
+    where = place_text(s)  # where it happened (Claude), which the Google News edition is not
+    sl = s.get("_storyline")  # set by storylines.annotate() when the story belongs to a developing story
+    search_text = " ".join([shown, s["title"], s.get("angle", ""), s["source"], region, where,
+                            " ".join(s.get("keywords", [])), sl["title"] if sl else ""]).lower()
     meta = [f"<span class='src'>{esc(s['source'])}</span>"]
     if when:
         meta.append(f"<time>{esc(when)}</time>")
-    if region:
+    if where:
+        meta.append(f"<span class='loc'>{icon('pin')}{esc(where)}</span>")
+    if region and not (s.get("region") and s.get("region") == s.get("country")):  # "Colombia · Colombia edition" says it twice
         meta.append(f"<span>{esc(region)} edition</span>")
     parts = [f"<article class='story' style='--tc:{theme_color(s['theme'])}' data-rel='{s.get('relevance') or 0}' "
-             f"data-use='{esc(s.get('use', ''))}' data-text='{esc(search_text)}'>",
+             f"data-use='{esc(s.get('use', ''))}' data-text='{esc(search_text)}'"
+             + (f" data-sl='{esc(sl['id'])}'" if sl else "") + ">",
              "<div class='story-top'>",
              f"<a class='story-title' href='{esc(s['link'])}' target='_blank' rel='noopener' dir='auto'>{esc(shown)}</a>",
              rating(s), "</div>"]
@@ -282,6 +346,12 @@ def story_card(s, show_theme=False):
     elif s.get("summary"):
         parts.append(f"<p class='summary'>{esc(s['summary'][:260])}…</p>")
     parts.append("<div class='story-meta'>")
+    if sl:
+        # "Developing story · 4 reports", and for a follow-up the stage it reports; root: "" at the top of the
+        # site, "../" one folder down (digests/, issues/, weekly/)
+        label = f"Developing story · {sl['size']} reports" + (f" · {sl['stage']}" if s.get("storyline") == sl["id"] else "")
+        parts.append(f"<a class='sl-chip' href='{root}developing.html#{esc(sl['id'])}' "
+                     f"title='{esc(sl['title'])}'>{esc(label)}</a>")
     if s.get("use"):
         slug_ = s["use"].split()[0].lower().strip("-")
         parts.append(f"<span class='use use-{esc(slug_)}'>{esc(s['use'])}</span>")
@@ -309,7 +379,7 @@ def filtered(uses, sections):
     return f"<div class='filter-scope'>{filter_bar(uses)}{sections}</div>"
 
 
-def theme_sections(stories, order=None, show_theme=False):
+def theme_sections(stories, order=None, show_theme=False, root=""):
     by_theme = {}
     for s in stories:
         by_theme.setdefault(s["theme"], []).append(s)
@@ -324,7 +394,7 @@ def theme_sections(stories, order=None, show_theme=False):
         items = sorted(by_theme[t], key=lambda s: (-(s.get("relevance") or 0), -s["rank"]))
         out.append(f"<section class='theme-section' id='{slug(t)}' style='--tc:{theme_color(t)}'>"
                    f"<h2><span class='ticon'>{theme_icon(t)}</span>{esc(t)} <span class='count'>{len(items)}</span></h2>")
-        out += [story_card(s, show_theme) for s in items]
+        out += [story_card(s, show_theme, root) for s in items]
         out.append("</section>")
     return "".join(out)
 
@@ -410,12 +480,15 @@ def theme_strip(stories, order):
 
 
 # ------------------------------------------------------------------ pages
-def digest_body(d, cfg, root, uses, prev_d=None, next_d=None, latest=False, brief=None):
+def digest_body(d, cfg, root, uses, prev_d=None, next_d=None, latest=False, brief=None, side="", week=None):
+    """A daily digest page. On the Latest page, side is the column beside the news (this week, upcoming
+    events and deadlines, developing stories) and week the {"key", "label"} of the week's summary page."""
     win = issue_window(d["date"], start_month(cfg))
     stories, papers = d["stories"], d.get("papers", [])
     themes = len({s["theme"] for s in stories})
     eyebrow = (f"{'Latest digest' if latest else 'Daily digest'} · "
-               f"<a href='{root}issues/{win['key']}.html'>{win['label']} issue window</a>")
+               f"<a href='{root}issues/{win['key']}.html'>{win['label']} issue window</a>"
+               + (f" · <a href='{root}weekly/{week['key']}.html'>{esc(week['label'])} summary</a>" if week else ""))
     stats = (stat(len(stories), "stories selected") + stat(d.get("new_items", 0), "new items scanned")
              + stat(themes, "themes") + stat("AI" if d.get("ai_used") else "Keywords", "triage method"))
     if papers:
@@ -428,13 +501,16 @@ def digest_body(d, cfg, root, uses, prev_d=None, next_d=None, latest=False, brie
                     f"with an Excel workbook"
                     + (f" and the {'final' if brief.get('status') == 'final' else 'draft'} issue brief" if brief else "")
                     + " →</span></a>")
-    if not stories:
-        head.append("<p class='empty'>No new geotechnical stories met the threshold in this period.</p>")
+    news = [("<p class='empty'>No new geotechnical stories met the threshold in this period.</p>" if not stories
+             else filtered(uses, theme_sections(stories, root=root))),
+            research_section(papers, "Papers that geotechnical journals published in the last few days, for the "
+                                     "Academia-to-Industry pages, best rated for use in practice first. Titles open "
+                                     "the paper through its DOI.")]
+    if side:  # beside the news on wide screens, after it on phones
+        head.append(f"<div class='with-side'><div class='main-col'>{''.join(news)}</div>"
+                    f"<div class='side-col'>{side}</div></div>")
     else:
-        head.append(filtered(uses, theme_sections(stories)))
-    head.append(research_section(
-        papers, "Papers that geotechnical journals published in the last few days, for the Academia-to-Industry "
-                "pages, best rated for use in practice first. Titles open the paper through its DOI."))
+        head += news
     pager = ["<nav class='pager'>"]
     pager.append(f"<a href='{root}digests/{prev_d}.html'>← {esc(nice_date(prev_d))}</a>" if prev_d else "<span></span>")
     pager.append(f"<a href='{root}archive.html'>All digests</a>")
@@ -518,12 +594,166 @@ def brief_card(win, b, cfg, current, root, opts):
             f"<h2>Proposed line-up for {win['label']}</h2><p class='brief-meta'>{meta}</p></div></div>"
             f"<p class='brief-overview'>{esc(b.get('overview', ''))}</p>"
             + (f"<ul class='lineup'>{''.join(picks)}</ul>" if picks else "")
-            + f"<p class='brief-also'>Also in the Word file: {also}, a regional-balance check and a watch list.</p>"
+            + f"<p class='brief-also'>Also in the Word file: {also}, a regional-balance check, a watch list"
+            + (", the window's developing stories and the events and deadlines ahead." if "developing" in b else ".") + "</p>"
             f"<div class='actions'><a class='btn primary' href='{root}{brief_file(key)}' download>{icon('download')}"
             f"Issue brief (Word)</a>{gen}</div></section>")
 
 
-def issue_body(win, stories, digests, cfg, uses, current, brief=None, brief_opts=None, papers=()):
+# ------------------------------------------------------------------ the map, developing stories, events and weekly summaries on the main pages
+WEEK = re.compile(r"^(\d{4})-W(\d{2})$")
+
+
+def week_span(key):
+    """'19–25 Oct 2026' for the ISO week 2026-W43 (as on the weekly summary pages)."""
+    m = WEEK.match(key)
+    mon = dt.date.fromisocalendar(int(m[1]), int(m[2]), 1)
+    sun = mon + dt.timedelta(days=6)
+    if mon.year != sun.year:
+        return f"{mon.day} {MONTHS[mon.month - 1]} {mon.year} – {sun.day} {MONTHS[sun.month - 1]} {sun.year}"
+    if mon.month != sun.month:
+        return f"{mon.day} {MONTHS[mon.month - 1]} – {sun.day} {MONTHS[sun.month - 1]} {sun.year}"
+    return f"{mon.day}–{sun.day} {MONTHS[sun.month - 1]} {sun.year}"
+
+
+def weeks_of(digests):
+    """The archive's ISO weeks, newest first, as the weekly summary pages (notify.py) list them:
+    [{"key", "label", "span", "digests", "stories", "top", "sent"}]; [] without notify.py."""
+    week_key = feature("notify", "week_key")
+    if not callable(week_key):
+        return []
+    record = optional("notify", "load_record", default={}) or {}
+    sent = record.get("weekly") if isinstance(record.get("weekly"), dict) else {}
+    out, by_key = [], {}
+    for d in digests:  # newest first
+        try:
+            key = week_key(d["date"])
+        except (TypeError, ValueError):
+            continue
+        if not WEEK.match(str(key)):
+            continue
+        if key not in by_key:
+            by_key[key] = {"key": key, "label": f"Week {int(key[-2:])}", "span": week_span(key), "digests": 0,
+                           "ids": set(), "top": 0, "sent": str(sent.get(key) or "")}
+            out.append(by_key[key])
+        w = by_key[key]
+        w["digests"] += 1
+        for s in d["stories"]:
+            sid = s.get("id") or id(s)  # a hand-edited story may have lost its id
+            if sid not in w["ids"]:
+                w["ids"].add(sid)
+                w["top"] += s.get("relevance") == 5
+    for w in out:
+        w["stories"] = len(w.pop("ids"))
+    return out
+
+
+def report_stage(s, sl):
+    """The stage a report of a developing story reached (its first report is the event itself)."""
+    return (s.get("stage") or "Update") if s.get("storyline") == sl else (s.get("stage") or "Event")
+
+
+def side_column(weeks, groups, cfg, today):
+    """Beside the news on the Latest page: this week and its summary, the events calendar's next calls for
+    papers and events, and the developing stories with a new report in the last 30 days."""
+    parts = []
+    if weeks:
+        w, last = weeks[0], (weeks[1] if len(weeks) > 1 else None)
+        running = WEEK.match(w["key"]) and dt.date.fromisocalendar(int(w["key"][:4]), int(w["key"][-2:]), 7) >= today
+        links = [f"<li><a href='weekly/{w['key']}.html'>{'This week' if running else w['label']}’s summary →</a></li>"]
+        if last:
+            links.append(f"<li><a href='weekly/{last['key']}.html'>{last['label']} · {esc(last['span'])}</a>"
+                         + (" <span class='wk-chip ok'>E-mailed</span>" if last["sent"] else "") + "</li>")
+        links.append("<li><a href='weekly/index.html'>All weekly summaries</a></li>")
+        parts.append(f"<section class='side-card'><p class='eyebrow'>{icon('book')}{'This week' if running else 'Latest week'}</p>"
+                     f"<h2><a href='weekly/{w['key']}.html'>{w['label']}</a> <span>{esc(w['span'])}</span></h2>"
+                     f"<p class='side-figs'>{count(w['stories'], 'story', 'stories')} · {w['top']} rated 5 / 5 · "
+                     f"{count(w['digests'], 'daily digest')}{' so far' if running else ''}</p>"
+                     f"<ul class='side-links'>{''.join(links)}</ul></section>")
+    parts.append(optional("events", "sidebar", cfg, "", today, limit=6, default="") or "")
+    since = (today - dt.timedelta(days=30)).isoformat()
+    recent = [g for g in groups if g["last"] >= since][:4]
+    if recent:
+        items = []
+        for g in recent:
+            s = g["stories"][-1]
+            where = ", ".join(x for x in (g.get("place"), country_label(g.get("country"))) if x)
+            items.append(f"<li style='--tc:{theme_color(g['theme'])}'><a href='developing.html#{esc(g['id'])}' dir='auto'>"
+                         f"{esc(g['title'])}</a><small>" + " · ".join(esc(x) for x in (
+                             where, count(len(g["stories"]), "report"),
+                             f"{report_stage(s, g['id'])}, {nice_date(g['last'])}") if x) + "</small></li>")
+        parts.append(f"<section class='side-card'><p class='eyebrow'>{icon('layers')}Developing stories</p>"
+                     f"<ul class='side-dev'>{''.join(items)}</ul><a class='side-more' href='developing.html'>"
+                     "All developing stories →</a></section>")
+    return "".join(p for p in parts if p)
+
+
+def coverage_line(stories, cfg, root, key):
+    """Issue pages: stories per ISSMGE region and how many member-society countries have stories, linking to
+    the world map of the window."""
+    rows = optional("geomap", "coverage", stories, cfg)
+    if not rows:
+        return ""
+    located = sum(r["stories"] for r in rows)
+    members, covered = sum(r["members"] for r in rows), sum(r["members_covered"] for r in rows)
+    waiting = sum(1 for s in stories if "country" not in s)
+    per = (optional("geomap", "settings", cfg) or {}).get("locate_per_run", 300)
+    if located:
+        note = f"{covered} of {members} member-society countries have stories in this window"
+    else:
+        note = "No story in this window has a location yet"
+    if waiting:
+        note += f"; {count(waiting, 'story', 'stories')} still to be located" + (
+            f" (in batches of up to {per} after each scan, newest first)" if per else "")
+    regions = "".join(f"<li><span>{esc(r['region'])}</span><b>{r['stories']:,}</b></li>" for r in rows)
+    return (f"<div class='cov-line'><h2>{icon('globe')}Regional coverage</h2><ul class='cov-regions'>{regions}</ul>"
+            f"<p>{esc(note)}. <a href='{root}map.html#{esc(key)}'>The gaps on the world map →</a></p></div>")
+
+
+def developing_section(groups, first, last, root, limit=6):
+    """Issue pages: developing stories with a report in the window, the most recently active first."""
+    lo, hi = first.isoformat(), last.isoformat()
+    active = [(g, [s for s in g["stories"] if lo <= str(s.get("_digest", ""))[:10] <= hi]) for g in groups]
+    active = [(g, inside) for g, inside in active if inside]
+    if not active:
+        return ""
+    items = []
+    for g, inside in active[:limit]:
+        s = inside[-1]
+        where = ", ".join(x for x in (g.get("place"), country_label(g.get("country"))) if x)
+        meta = [esc(where), f"{count(len(g['stories']), 'report')}, <b>{len(inside)} in this window</b>",
+                f"latest: {esc(report_stage(s, g['id']))} ({esc(nice_date(s.get('_date') or s['_digest']))})"]
+        items.append(f"<li style='--tc:{theme_color(g['theme'])}'><a href='{root}developing.html#{esc(g['id'])}' dir='auto'>"
+                     f"{esc(g['title'])}</a><span class='wk-meta'>{' · '.join(x for x in meta if x)}</span></li>")
+    more = len(active) - limit
+    return ("<section class='issue-dev' id='developing'><h2 class='section-h'>Developing stories "
+            f"<span class='h1-sub'>{len(active)}</span></h2><p class='hint'>Events, projects and sites reported more than "
+            "once, with a report in this window: the follow-ups (inquiries, repairs, court cases) often make the best "
+            "features.</p>"
+            f"<ul class='wk-list'>{''.join(items)}</ul>"
+            + (f"<p class='hint wk-more'>…and {count(more, 'more developing story', 'more developing stories')} on the "
+               f"<a href='{root}developing.html'>Developing stories</a> page.</p>" if more > 0 else "") + "</section>")
+
+
+def weeks_section(weeks, cfg, root, limit=3):
+    """Archive page: the latest weekly summaries, linking to all of them."""
+    if not weeks:
+        return ""
+    opts = optional("notify", "settings", cfg, default={}) or {}
+    day = opts.get("weekday", "Monday") if isinstance(opts, dict) else "Monday"
+    cards = "".join(
+        f"<a class='wk-card' href='{root}weekly/{w['key']}.html'><span class='wk-card-head'><span><b>{w['label']}</b>"
+        f"<span class='wk-span'>{esc(w['span'])}</span></span>" + ("<span class='wk-chip ok'>E-mailed</span>" if w["sent"] else "")
+        + f"</span><span class='wk-figs'>{count(w['stories'], 'story', 'stories')} · {w['top']} rated 5 / 5 · "
+        f"{count(w['digests'], 'digest')}</span></a>" for w in weeks[:limit])
+    return (f"<section class='weeks'><div class='section-row'><h2 class='section-h'>Weekly summaries</h2>"
+            f"<a href='{root}weekly/index.html'>All {count(len(weeks), 'week')} →</a></div>"
+            f"<p class='hint'>The summary the news desk e-mails to the editorial team every {esc(day)}: top stories, "
+            "developing stories, regional coverage, events coming up and new research.</p>"
+            f"<div class='wk-index'>{cards}</div></section>")
+
+
+def issue_body(win, stories, digests, cfg, uses, current, brief=None, brief_opts=None, papers=(), extras=None):
     root = "../"
     order = theme_order(cfg)
     summ = window_summary(stories)
@@ -579,17 +809,21 @@ def issue_body(win, stories, digests, cfg, uses, current, brief=None, brief_opts
                 "<th scope='col'>Rated 4</th><th scope='col'>Feature leads</th><th scope='col'>Academia-to-Industry</th>"
                 + ("<th scope='col'>Research papers</th>" if papers else "") + "</tr></thead>"
                 f"<tbody>{rows}</tbody></table></div>")
+    extras = extras or {}
+    body.append(extras.get("coverage", ""))
     if best:
         body.append("<h2 class='section-h'>Strongest leads</h2><p class='hint'>Stories rated 5 / 5 or suggested as feature leads.</p>"
-                    "<div class='shortlist'>" + "".join(story_card(s, show_theme=True) for s in best) + "</div>")
+                    "<div class='shortlist'>" + "".join(story_card(s, show_theme=True, root=root) for s in best) + "</div>")
+    body.append(extras.get("developing", ""))
+    body.append(extras.get("events", ""))
     body.append("<h2 class='section-h'>All stories by theme</h2>")
-    body.append(filtered(uses, theme_sections(stories, order=order)))
+    body.append(filtered(uses, theme_sections(stories, order=order, root=root)))
     body.append(research)
     body.append(f"<h2 class='section-h'>Daily digests in this window</h2><ul class='digest-list'>{dlist}</ul>")
     return "".join(body)
 
 
-def archive_body(windows, cfg, current_key, briefs=None):
+def archive_body(windows, cfg, current_key, briefs=None, weeks=()):
     root = ""
     briefs = briefs or {}
     order = theme_order(cfg)
@@ -604,7 +838,9 @@ def archive_body(windows, cfg, current_key, briefs=None):
     out = [hero("Archive", "All digests",
                 "Every daily digest is kept permanently. They are grouped into three-month issue windows that follow "
                 "the magazine's publication cycle, so each issue can be planned from one page and one workbook.",
-                stats, actions)]
+                stats, actions), weeks_section(list(weeks), cfg, root)]
+    if weeks:
+        out.append("<h2 class='section-h'>Issue windows</h2>")
     for w in windows:
         win, stories, digests = w["win"], w["stories"], w["digests"]
         summ = window_summary(stories)
@@ -660,6 +896,8 @@ def search_body(cfg, uses, windows):
 def assistant_body(cfg):
     suggestions = ["What are the strongest feature leads in the current issue window?",
                    "Find stories about liquefaction or ground improvement in Asia",
+                   "Which conferences and call-for-papers deadlines are coming up?",
+                   "Which developing stories had new reports recently?",
                    "Suggest a line-up of 6 stories for the next issue, one per theme",
                    "Which regions are under-represented this quarter?"]
     chips = "".join(f"<button type='button' class='chip-btn' data-q='{esc(q)}'>{esc(q)}</button>" for q in suggestions)
@@ -668,8 +906,9 @@ def assistant_body(cfg):
                 "document to discuss it alongside the news.", small=True) + f"""
 <div class="chat" id="chat-app">
 <div class="chat-log" id="chat-log" aria-live="polite">
-<div class="msg bot welcome"><div class="bubble"><p><b>Hello!</b> I can search every archived story, compare themes and quarters,
-recommend stories and angles for the magazine, and read PDF or Word files you attach — for example a call for papers or an article draft.</p>
+<div class="msg bot welcome"><div class="bubble"><p><b>Hello!</b> I can search every archived story, compare themes, quarters and regions,
+follow developing stories, look up conferences and call-for-papers deadlines in the events calendar, recommend stories and angles for
+the magazine, and read PDF or Word files you attach — for example a call for papers or an article draft.</p>
 <div class="chips">{chips}</div></div></div>
 </div>
 <div class="chat-files" id="chat-files"></div>
@@ -684,6 +923,59 @@ recommend stories and angles for the magazine, and read PDF or Word files you at
 <option value="claude-haiku-5-5">Claude Haiku 5.5 — fastest</option></select></label>
 <button type="button" id="chat-new" class="linkbtn">New conversation</button></span></div>
 </div>"""
+
+
+def features_html(cfg):
+    """Method & sources: how locations are read, follow-ups linked, events found and e-mail sent, with the
+    numbers from config.yaml (each feature's defaults when its module or section is missing)."""
+    def opts(module):
+        o = optional(module, "settings", cfg, default={})
+        return o if isinstance(o, dict) else {}
+
+    m, sl, ev, al = opts("geomap"), opts("storylines"), opts("events"), opts("notify")
+    regions = optional("geomap", "region_info", cfg, default=[]) or []
+    checking = [r["name"] for r in regions if isinstance(r, dict) and r.get("to_check")]
+    level = "5 / 5" if al.get("min_relevance", 5) >= 5 else f"{al.get('min_relevance')} / 5 or higher"
+    calendars = ev.get("calendars") or []
+    items = [
+        ("#0b97a5", "globe", "World map: where stories happen",
+         "During triage Claude reads the country each story is about and the town, region or site it names: where the "
+         "event, project or site is, not the outlet's country and not the Google News edition that found it. A story "
+         "about several countries, or a general market or research result, counts as global. Stories saved before "
+         f"locations were read (or whose triage failed) are located after each scan, newest first, up to "
+         f"{m.get('locate_per_run', 300)} at a time. The <a href='map.html'>World map</a> plots the stories by country "
+         "and compares them with the member-society countries of ISSMGE's six regions, so regions and member societies "
+         "with no stories stand out."
+         + (f" The member lists for {' and '.join(checking)} are still being checked against issmge.org." if checking else "")),
+        ("#e04f2c", "layers", "Developing stories: follow-ups linked to the event",
+         f"Each scan, Claude compares the day's new stories with the archive of the last {sl.get('lookback_days', 365)} "
+         "days and links a story to an earlier one only when both are about the same event, project or site (the same "
+         "landslide, dam or tunnel in the same place, not merely a similar hazard in the same country), and names the "
+         "stage it reports: the event, response and recovery, investigation and inquiry, repair and reconstruction, "
+         "legal and policy, or an update. Without Claude, a cautious headline match links reports found within "
+         f"{sl.get('heuristic_days', 30)} days. Story cards carry a <b>Developing story</b> chip that leads to the "
+         "timeline on <a href='developing.html'>Developing stories</a>. A link is a lead: check it at the source."),
+        ("#d38b00", "book", "Events calendar: conferences and calls for papers",
+         "The editors keep their own list of events in <code>data/events.yaml</code>. Every "
+         f"{count(ev.get('refresh_days', 7), 'day')} Claude reads {count(len(calendars), 'organiser calendar')} "
+         "(ISSMGE, ITA-AITES, the ASCE Geo-Institute and others) with web search and web fetch and adds the conferences, "
+         f"courses and call-for-papers deadlines it finds in the next {ev.get('months_ahead', 24)} months; the "
+         "<b>Refresh calendar</b> button on the Events page starts a refresh at any time. Every event found must link "
+         "to a page Claude actually read, and predatory conference series are left out. An editors' entry always wins "
+         "over the same event found by the refresh. The <a href='events.html'>Events</a> page offers the whole calendar "
+         "as a feed (<code>events.ics</code>) for Outlook, Google or Apple Calendar."),
+        ("#6b4fd6", "send", "Alerts and the weekly summary (e-mail)",
+         (f"After each scan, one e-mail lists any new story rated {level}. " if al.get("story_alerts", True) else "")
+         + (f"Every {al.get('weekday', 'Monday')} morning the editorial team receives the summary of the week before: "
+            "the top stories of each theme, developing stories, regional coverage, events and deadlines in the next "
+            f"{al.get('events_days', 60)} days, and new research. " if al.get("weekly_summary", True) else "")
+         + "E-mail goes out through the AI assistant's Google connector or a mail server, as set up in the README; "
+           "nothing is sent twice. Each week's summary is also on the website: <a href='weekly/index.html'>Weekly "
+           "summaries</a>, linked from the Archive."),
+    ]
+    lis = "".join(f"<li style='--tc:{c}'><b><span class='ticon sm'>{icon(ic)}</span>{esc(title)}</b><p>{text}</p></li>"
+                  for c, ic, title, text in items)
+    return f"<h2 class='section-h'>Map, developing stories, events and e-mail</h2><ul class='about-features'>{lis}</ul>"
 
 
 def about_body(cfg, latest, brief_opts):
@@ -731,10 +1023,11 @@ def about_body(cfg, latest, brief_opts):
 <h2 class="section-h">Each run</h2><ol class="steps">
 <li><b>Collect.</b> {len(feeds)} websites and {n_core * editions + n_extra} Google News searches ({n_core} core searches in {editions} English editions, plus {n_extra} further searches including {n_foreign} in other languages). The scan runs every day at 05:00 Cairo time, and on demand: <b>Scan now</b> opens the scan's page on GitHub, where you press <b>Run workflow</b>; the website then follows the scan and tells you when the new digest is ready. Each run looks back {cfg.get('lookback_hours', 60)} hours; stories already shown are remembered for 45 days and never repeated.</li>
 <li><b>Score and categorise.</b> Headlines and summaries are scored against {len(cfg['keywords'])} English keywords and {n_ml} terms in {len(languages)} other languages. Each foreign term counts as its English equivalent (for example <i>glissement de terrain</i>, <i>deslizamiento</i>, <i>longsor</i> and <i>انهيار أرضي</i> all count as “landslide”), so every story is filed under an English theme. Specialist sources earn bonus points, noise terms lose points, near-identical headlines are merged. A story needs {cfg.get('min_keyword_score', 3)} points to go forward.</li>
-<li><b>Triage.</b> Up to {ccfg.get('max_candidates', 80)} candidates go to Claude, which rates each 1–5 for geotechnical substance (below {ccfg.get('min_relevance', 3)} is dropped), confirms the theme, suggests a use, writes a one-sentence magazine angle, and translates non-English headlines.</li>
+<li><b>Triage.</b> Up to {ccfg.get('max_candidates', 80)} candidates go to Claude, which rates each 1–5 for geotechnical substance (below {ccfg.get('min_relevance', 3)} is dropped), confirms the theme, suggests a use, writes a one-sentence magazine angle, translates non-English headlines, and reads where each story happened (the country and the town, region or site). Claude then checks whether any new story follows up an earlier one (see below).</li>
 {research_step}
 <li><b>Publish & archive.</b> Up to {cfg.get('max_items', 40)} stories per digest. Every digest is stored permanently, grouped into three-month issue windows, and exported to Excel.</li>
 <li><b>Issue brief.</b> In the last {brief_opts['days_before_end']} days of each quarter Claude reads the quarter's stories rated {brief_opts['min_relevance']} / 5 or higher (at most {brief_opts['max_per_theme']} per theme) and any research papers, and drafts the brief for the editorial meeting as a Word document: an overview, a proposed line-up per theme, feature leads with the kinds of experts to approach, Academia-to-Industry topics, a regional-balance check, gaps worth covering and a watch list. The draft is refreshed every {count(brief_opts['refresh_days'], 'day')} and the final brief is written the day after the quarter closes. <b>Generate / update brief</b> on an issue page starts one on GitHub at any time.</li></ol>
+{features_html(cfg)}
 <h2 class="section-h">Magazine themes</h2><p class="hint">Words that suggest each theme (English keywords found in any language count too).</p><ul class="theme-list">{themes}</ul>
 <h2 class="section-h">Websites read directly</h2><p class="hint">Sites that block feed readers or publish no feed (among them ISSMGE, ICE, GEER, USGS and GeoEngineer) are read through Google News searches limited to the site.</p><div class="table-wrap"><table class="overview"><thead><tr><th>Source</th><th>Site</th><th>Bonus</th></tr></thead><tbody>{rows}</tbody></table></div>
 {jtable}
@@ -1470,7 +1763,13 @@ def write(path, text):
 
 def csv_text(value):
     """Spreadsheets run cells starting with = + - @ as formulas; keep feed text as text."""
-    return "'" + value if isinstance(value, str) and value[:1] in "=+-@" else value
+    return "'" + value if isinstance(value, str) and value.startswith(("=", "+", "-", "@")) else value
+
+
+def storyline_text(s):
+    """'Moniquirá landslide, Colombia (Oct 2026) · Investigation & inquiry' for a report of a developing story."""
+    sl = s.get("_storyline")
+    return f"{sl['title']} · {sl['stage']}" if sl else ""
 
 
 def export_rows(stories):
@@ -1481,7 +1780,9 @@ def export_rows(stories):
             "Headline (English)": csv_text(s.get("title_en") or s["title"]),
             "Original headline": csv_text(s["title"]) if s.get("title_en") else "",
             "Magazine angle": csv_text(s.get("angle", "")), "Source": csv_text(s["source"]),
-            "Google News edition": s["_region"], "Published": (s.get("published") or "")[:10], "Link": s["link"],
+            "Country": s.get("_country", ""), "Place": csv_text(" ".join(str(s.get("place") or "").split())),
+            "Google News edition": s["_region"], "Published": (s.get("published") or "")[:10],
+            "Developing story": csv_text(storyline_text(s)), "Link": s["link"],
             "Keywords": csv_text(", ".join(s.get("keywords", []))),
         }
 
@@ -1491,17 +1792,19 @@ def build(cfg):
 
     use_list = USES
     digests = load_digests()
+    optional("storylines", "annotate", digests)  # every story of a developing story gets "_storyline" for its card
     briefs, brief_opts = load_briefs(), brief.settings(cfg)
     # themes found in the archive but no longer in config.yaml still get pages and rows
     extra = sorted({s["theme"] for d in digests for s in d["stories"] + d["papers"]} - set(theme_order(cfg)))
     if extra:
         cfg = dict(cfg, themes={**cfg["themes"], **{t: [] for t in extra}})
     sm = start_month(cfg)
-    today_key = issue_window(dt.date.today().isoformat(), sm)["key"]
+    today = dt.date.today()
+    today_key = issue_window(today.isoformat(), sm)["key"]
     order = theme_order(cfg)
 
     # group digests into issue windows (newest first)
-    windows, by_key = [], {}
+    windows, by_key, names = [], {}, {}
     for d in digests:
         win = issue_window(d["date"], sm)
         if win["key"] not in by_key:
@@ -1510,13 +1813,16 @@ def build(cfg):
         w = by_key[win["key"]]
         w["digests"].append(d)
         for s in d["stories"]:
-            w["stories"].append(dict(s, _digest=d["date"], _window=win["key"],
+            code = str(s.get("country") or "").strip().upper()
+            if code and code not in names:
+                names[code] = country_label(code)
+            w["stories"].append(dict(s, _digest=d["date"], _window=win["key"], _country=names.get(code, ""),
                                      _region=COUNTRIES.get(s.get("region", ""), s.get("region", ""))))
         for p in d["papers"]:
             w["papers"].append(dict(p, _digest=d["date"], _window=win["key"]))
 
     # fresh output folder (the archive itself lives in data/digests/)
-    for sub in ("digests", "issues", "exports", "assets", "reports", "briefs"):
+    for sub in ("digests", "issues", "exports", "assets", "reports", "briefs", "weekly"):
         shutil.rmtree(DOCS / sub, ignore_errors=True)
     shutil.copytree(ASSETS, DOCS / "assets")
     (DOCS / "exports").mkdir()
@@ -1541,23 +1847,44 @@ def build(cfg):
         write(DOCS / "digests" / f"{d['date']}.html",
               page(cfg, title, digest_body(d, cfg, "../", use_list, older, newer), "../", "archive"))
 
+    # the developing stories, the archive's weeks and the events calendar, for the main pages and the workbooks
+    groups = optional("storylines", "groups", digests, default=[]) or []
+    weeks = weeks_of(digests)
+    ev_opts = optional("events", "settings", cfg, default={}) or {}
+    horizon = round(ev_opts.get("months_ahead", 12) * 30.44) if isinstance(ev_opts, dict) else 365
+    ev_coming = optional("events", "upcoming", cfg, today, days=horizon, default=[]) or []
+    ev_calls = optional("events", "deadlines", cfg, today, days=horizon, default=[]) or []
+    for e in ev_coming + [c.get("event") for c in ev_calls if isinstance(c, dict)]:
+        if isinstance(e, dict):  # 'Lyon, France and online', for the workbooks
+            where = ", ".join(x for x in (str(e.get("city") or ""), country_label(e.get("country"))) if x)
+            e["_where"] = (f"{where} and online" if where else "Online") if e.get("online") else where
+
     if digests:
         latest = digests[0]
         body = digest_body(latest, cfg, "", use_list, dates[1] if len(dates) > 1 else None, None, latest=True,
-                           brief=briefs.get(issue_window(latest["date"], sm)["key"]))
+                           brief=briefs.get(issue_window(latest["date"], sm)["key"]),
+                           side=side_column(weeks, groups, cfg, today),
+                           week={"key": weeks[0]["key"], "label": weeks[0]["label"]} if weeks else None)
     else:
         latest = None
         body = hero("Latest digest", "Welcome",
                     "The first digest will appear here after the first scan. Scans run automatically every morning "
                     "at 05:00 Cairo time; press <b>Scan now</b> at the top of the page to start one on GitHub.")
+        body += optional("events", "sidebar", cfg, "", today, limit=6, default="") or ""
     write(DOCS / "index.html", page(cfg, "Latest digest", body, "", "latest"))
 
     for w in windows:
         key = w["win"]["key"]
+        first, last = window_range(key, sm)
+        extras = {"coverage": coverage_line(w["stories"], cfg, "../", key),
+                  "developing": developing_section(groups, first, last, "../"),
+                  # what is coming up belongs to the window being planned now, not to one already closed
+                  "events": (optional("events", "sidebar", cfg, "../", today, limit=6, default="") or "")
+                  if key == today_key else ""}
         write(DOCS / "issues" / f"{key}.html",
               page(cfg, f"{w['win']['label']} issue window",
                    issue_body(w["win"], w["stories"], w["digests"], cfg, use_list, key == today_key,
-                              briefs.get(key), brief_opts, w["papers"]), "../", "archive"))
+                              briefs.get(key), brief_opts, w["papers"], extras), "../", "archive"))
         ordered = sorted(w["stories"], key=lambda s: (s["theme"], -s["rank"]))
         with open(DOCS / "exports" / f"{key}.csv", "w", newline="", encoding="utf-8-sig") as f:
             writer = csv.DictWriter(f, fieldnames=CSV_FIELDS)
@@ -1567,12 +1894,18 @@ def build(cfg):
             DOCS / "exports" / f"{key}.xlsx", f"Geotechnical News · {w['win']['label']}",
             f"Issue window {w['win']['span']}", w["stories"], order, theme_color,
             [(nice_date(d["date"]), len(d["stories"])) for d in reversed(w["digests"])], "daily digest",
-            digest_count=len(w["digests"]), windows=[key], papers=w["papers"])
+            digest_count=len(w["digests"]), windows=[key], papers=w["papers"], events=ev_coming, deadlines=ev_calls,
+            events_asof=today)
         compact = [{"d": s["_digest"], "w": key, "t": s["title"], "te": s.get("title_en", ""), "l": s["link"],
                     "s": s["source"], "c": s["_region"], "p": (s.get("published") or "")[:10], "th": s["theme"],
                     "r": s.get("relevance") or 0, "u": s.get("use", ""), "a": s.get("angle", ""),
                     "k": s.get("keywords", []), "x": s.get("summary", "")[:200] if not s.get("angle") else "",
-                    "rk": s["rank"]}
+                    "rk": s["rank"], "id": s["id"],
+                    # where it happened (ISO code, "" = global; names in exports/countries.json) and the
+                    # developing story it belongs to (its first report included), its name, size and stage
+                    "cc": s.get("country", ""), "pl": s.get("place", ""),
+                    **({"sl": s["_storyline"]["id"], "st": s["_storyline"]["title"], "sz": s["_storyline"]["size"],
+                        "sg": s["_storyline"]["stage"]} if s.get("_storyline") else {"sl": "", "sg": s.get("stage", "")})}
                    for s in w["stories"]]
         # research papers in the same shape (source = journal), marked kind "paper", with their authors
         compact += [{"d": p["_digest"], "w": key, "t": p["title"], "te": "", "l": p["link"],
@@ -1585,16 +1918,17 @@ def build(cfg):
     write(DOCS / "exports" / "index.json",
           json.dumps([w["win"] | {"stories": len(w["stories"]), "papers": len(w["papers"])} for w in windows],
                      ensure_ascii=False))
+    write(DOCS / "exports" / "countries.json", json.dumps(dict(sorted(names.items())), ensure_ascii=False))
     exports.write_workbook(
         DOCS / "exports" / "geotech-news-archive.xlsx", "Geotechnical News · Whole archive",
         f"All {len(windows)} issue windows", [s for w in windows for s in w["stories"]], order, theme_color,
         [(w["win"]["label"], len(w["stories"])) for w in reversed(windows)], "issue window",
         digest_count=len(digests), windows=[w["win"]["key"] for w in windows],
-        papers=[p for w in windows for p in w["papers"]])
+        papers=[p for w in windows for p in w["papers"]], events=ev_coming, deadlines=ev_calls, events_asof=today)
     report.write_report(DOCS / "reports" / "site-report.docx", cfg, digests, windows, theme_color,
-                        site_url(cfg), CHANGELOG)
+                        site_url(cfg), CHANGELOG, groups=groups)
 
-    write(DOCS / "archive.html", page(cfg, "Archive", archive_body(windows, cfg, today_key, briefs), "", "archive"))
+    write(DOCS / "archive.html", page(cfg, "Archive", archive_body(windows, cfg, today_key, briefs, weeks), "", "archive"))
     write(DOCS / "search.html", page(cfg, "Search the archive", search_body(cfg, use_list, windows), "", "search"))
     trends = trend_stats(digests, cfg) if digests else None
     if trends:
@@ -1604,6 +1938,18 @@ def build(cfg):
                                      head="<script src='assets/trends.js' defer></script>"))
     write(DOCS / "assistant.html", page(cfg, "AI assistant", assistant_body(cfg), "", "assistant"))
     write(DOCS / "about.html", page(cfg, "Method & sources", about_body(cfg, latest, brief_opts), "", "about"))
+
+    # pages of their own modules (they import this one, so not at the top): the world map,
+    # developing stories, the events calendar and the weekly summaries. A page that fails is reported and left as
+    # it was, so the rest of the site (and the scan's save step, which rebuilds it) still goes through.
+    ctx = {"cfg": cfg, "digests": digests, "windows": windows, "order": order, "today_key": today_key,
+           "start_month": sm}
+    for name in ("geomap", "storylines", "events", "notify"):
+        try:
+            __import__(name).build(ctx)
+        except Exception as ex:
+            print(f"The {name}.py page was not rebuilt: {type(ex).__name__}: {ex}")
+            traceback.print_exc()
 
 
 if __name__ == "__main__":

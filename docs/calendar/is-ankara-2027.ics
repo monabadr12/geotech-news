@@ -1,0 +1,29 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:IS-Ankara 2027
+NAME:IS-Ankara 2027
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:is-ankara-2027@geotech-news-desk
+DTSTAMP:20261025T000000Z
+DTSTART;VALUE=DATE:20270914
+DTEND;VALUE=DATE:20270918
+SUMMARY:9th International Symposium on Deformation Characteristics of Geoma
+ terials (IS-Ankara 2027)
+DESCRIPTION:9th International Symposium on Deformation Characteristics of G
+ eomaterials\nOrganiser: ISSMGE TC101\, Middle East Technical University (M
+ ETU)\nKind: ISSMGE-supported\nAbstracts: 21 Sep 2026\nHeld at METU\, Ankar
+ a\nEvent website: https://www.issmge.org/news/tc223-june-news-update\nList
+ ed by the ISSMGE Magazine editors
+LOCATION:Ankara\, Türkiye
+URL:https://www.issmge.org/news/tc223-june-news-update
+CATEGORIES:ISSMGE-supported
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

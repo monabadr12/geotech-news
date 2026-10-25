@@ -1,0 +1,29 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:WTC 2027
+NAME:WTC 2027
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:wtc-2027@geotech-news-desk
+DTSTAMP:20261025T000000Z
+DTSTART;VALUE=DATE:20270423
+DTEND;VALUE=DATE:20270430
+SUMMARY:ITA-AITES World Tunnel Congress 2027 (WTC 2027)
+DESCRIPTION:ITA-AITES World Tunnel Congress 2027\nOrganiser: ITA-AITES with
+  the Belgian Tunnel Association\nKind: Other conference\nAbstracts: 10 Jun
+  2026\nOfficial congress website www.wtc2027.com\nEvent website: https://a
+ bout.ita-aites.org/future-events/2350/world-tunnel-congress-wtc-2027\nList
+ ed by the ISSMGE Magazine editors
+LOCATION:Antwerp\, Belgium
+URL:https://about.ita-aites.org/future-events/2350/world-tunnel-congress-wt
+ c-2027
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

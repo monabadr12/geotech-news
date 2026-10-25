@@ -4,7 +4,7 @@ ISSMGE Magazine — Geotechnical News Scanner
 Reads trade-site feeds and Google News searches, scores stories for
 geotechnical relevance, (optionally) asks Claude to triage them, saves the
 digest to data/digests/ (the permanent archive) and rebuilds the website in
-docs/ (GitHub Pages). Optionally e-mails the digest.
+docs/ (GitHub Pages). E-mail (alerts and the weekly summary) is sent by notify.py.
 """
 import calendar
 import datetime as dt
@@ -16,13 +16,9 @@ import json
 import math
 import os
 import re
-import smtplib
-import ssl
 import sys
 import time
 import unicodedata
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 from pathlib import Path
 from urllib.parse import quote, quote_plus, urlencode, urljoin
 
@@ -438,8 +434,10 @@ def triage_schema(themes):
             "use": {"type": "string", "enum": USES},
             "angle": {"type": "string"},
             "title_en": {"type": "string"},
+            "country": {"type": "string"},
+            "place": {"type": "string"},
         },
-        "required": ["id", "relevance", "theme", "use", "angle", "title_en"],
+        "required": ["id", "relevance", "theme", "use", "angle", "title_en", "country", "place"],
         "additionalProperties": False,
     }
     return {"type": "object", "properties": {"stories": {"type": "array", "items": story}},
@@ -511,6 +509,18 @@ def api_message(ex):
     return KEY_TOKEN.sub("sk-ant-…", str(msg))[:160]
 
 
+COUNTRY_CODE = re.compile(r"^[A-Z]{2}$")
+COUNTRY_ALIASES = {"UK": "GB", "EL": "GR"}  # common non-ISO codes
+NOT_COUNTRIES = {"XX", "ZZ", "EU", "EZ", "UN"}  # unknown, and groupings that are not one country (counted as global)
+
+
+def country_code(text):
+    """An ISO 3166-1 alpha-2 code from Claude's answer, or "" (global or unknown)."""
+    code = str(text or "").strip().upper()
+    code = COUNTRY_ALIASES.get(code, code)
+    return code if COUNTRY_CODE.match(code) and code not in NOT_COUNTRIES else ""
+
+
 def claude_triage(items, cfg, notes):
     """Ask Claude to rate the candidates. True if at least one batch was rated."""
     raw = os.environ.get("ANTHROPIC_API_KEY", "")
@@ -543,6 +553,8 @@ For each story below return an object with:
 - "use": the best editorial use
 - "angle": one sentence (max 30 words) stating the geotechnical question a magazine piece could explore, in your own words
 - "title_en": if the headline is not in English, your English translation of it (max 20 words); otherwise ""
+- "country": the ISO 3166-1 alpha-2 code (e.g. "CO", "GB", "HK") of the country where the event, project or site is, which may differ from the outlet's country; "" if the story is not about one country (a global market report, a general research result, several countries)
+- "place": the town, city, region or site named in the story, in English (max 6 words, e.g. "Moniquirá, Boyacá" or "HS2 Chiltern Tunnel"); "" if none is named
 
 Stories:
 {listing}"""
@@ -585,7 +597,9 @@ Stories:
                     theme=d["theme"] if d["theme"] in themes else items[idx]["theme"],
                     use=d["use"] if d["use"] in USES else "",
                     angle=d["angle"][:300],
-                    title_en=d["title_en"][:200])
+                    title_en=d["title_en"][:200],
+                    country=country_code(d["country"]),
+                    place=d["place"][:80])
         rated += 1
     if items and not rated:
         note = "AI triage failed for every batch, so all stories were ranked by keywords only."
@@ -821,24 +835,6 @@ def research_papers(cfg, now, seen, compiled, failures, notes):
     return [{k: p[k] for k in PAPER_FIELDS} for p in papers]
 
 
-# ------------------------------------------------------------------ e-mail
-def send_email(subject, body_html):
-    host, to = os.environ.get("SMTP_HOST", "").strip(), os.environ.get("MAIL_TO", "").strip()
-    if not host or not to:
-        return "E-mail not configured (optional)."
-    user, pwd = os.environ.get("SMTP_USER", ""), os.environ.get("SMTP_PASSWORD", "")
-    port = int(os.environ.get("SMTP_PORT", "587") or 587)
-    msg = MIMEMultipart("alternative")
-    msg["Subject"], msg["From"], msg["To"] = subject, user or to, to
-    msg.attach(MIMEText(body_html, "html", "utf-8"))
-    with smtplib.SMTP(host, port, timeout=60) as s:
-        s.starttls(context=ssl.create_default_context())  # verify the mail server's certificate
-        if user:
-            s.login(user, pwd)
-        s.sendmail(msg["From"], [a.strip() for a in to.split(",")], msg.as_string())
-    return f"E-mail sent to {to}."
-
-
 # ------------------------------------------------------------------ archive
 def rescore_unrated(stories, cfg):
     """Score keyword-ranked stories again with the current lists. Earlier versions
@@ -982,19 +978,18 @@ def main():
         "published": i["time"].isoformat(timespec="minutes") if i["time"] else "",
         "theme": i["theme"], "relevance": i["relevance"], "use": i["use"], "angle": i["angle"],
         "keywords": i["hits"][:6], "score": i["score"], "rank": i["rank"],
+        # where the story happened, as Claude read it ("" = global); stories Claude did not
+        # rate have no "country" yet, so geomap.locate_missing() locates them later
+        **({"country": i.get("country", ""), "place": i.get("place", "")} if i["relevance"] else {}),
     } for i in selected]
-    digest = save_digest(now, stories, failures, notes, ai_used, new_count, cfg, papers)
-    site_builder.build(cfg)
 
-    try:
-        mail_note = None
-        if selected:
-            mail_note = send_email(
-                f"Geotechnical News Digest — {now:%d %b %Y} ({len(digest['stories'])} stories)",
-                site_builder.render_email(digest, cfg))
-    except Exception as ex:
-        mail_note = f"E-mail failed: {ex}"
-    print(f"{new_count} new items, {len(selected)} selected, {len(failures)} failed sources. {mail_note or ''}")
+    import geomap, storylines  # (they import this module, so not at the top)
+    storylines.link(stories, now, cfg, notes)  # follow-up reports joined to the earlier event
+    geomap.locate_missing(cfg, notes)          # archived stories that have no country yet
+    save_digest(now, stories, failures, notes, ai_used, new_count, cfg, papers)
+    site_builder.build(cfg)
+    # e-mail (alerts for 5/5 stories, the Monday summary) is sent by notify.py, a later workflow step
+    print(f"{new_count} new items, {len(selected)} selected, {len(failures)} failed sources.")
     for n, e in failures:
         print(f"  failed: {n}: {e}")
 

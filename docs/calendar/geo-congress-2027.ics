@@ -1,0 +1,29 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Geo-Congress 2027
+NAME:Geo-Congress 2027
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:geo-congress-2027@geotech-news-desk
+DTSTAMP:20261025T000000Z
+DTSTART;VALUE=DATE:20270301
+DTEND;VALUE=DATE:20270306
+SUMMARY:Geo-Congress 2027\, part of ASCE2027
+DESCRIPTION:Geo-Congress 2027\, part of ASCE2027\nOrganiser: ASCE Geo-Insti
+ tute\nKind: Other conference\nAbstracts: 4 Mar 2026\nHeld within ASCE2027\
+ , the American Society of Civil Engineers' combined convention\nEvent webs
+ ite: https://geoinstitute.org/news/call-abstract-geo-congress-2027-part-as
+ ce2027\nListed by the ISSMGE Magazine editors
+LOCATION:Philadelphia\, United States
+URL:https://geoinstitute.org/news/call-abstract-geo-congress-2027-part-asce
+ 2027
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

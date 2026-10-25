@@ -1,0 +1,29 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:18ARC
+NAME:18ARC
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:18arc-2027@geotech-news-desk
+DTSTAMP:20261025T000000Z
+DTSTART;VALUE=DATE:20271109
+DTEND;VALUE=DATE:20271114
+SUMMARY:18th Asian Regional Conference on Soil Mechanics and Geotechnical E
+ ngineering (18ARC)
+DESCRIPTION:18th Asian Regional Conference on Soil Mechanics and Geotechnic
+ al Engineering\nOrganiser: Thai Geotechnical Society\, under the auspices 
+ of ISSMGE\nKind: ISSMGE conference\nCall-for-papers deadlines not yet publ
+ ished\nEvent website: https://www.issmge.org/events/18arc\nListed by the I
+ SSMGE Magazine editors
+LOCATION:Bangkok\, Thailand
+URL:https://www.issmge.org/events/18arc
+CATEGORIES:ISSMGE conference
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR
