@@ -187,6 +187,8 @@
   }
   var PIN = "<svg class='ico' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' " +
     "stroke-linejoin='round' aria-hidden='true'><path d='M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z'/><circle cx='12' cy='10' r='3'/></svg>";
+  var CHECK = "<svg class='ico' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' " +
+    "stroke-linejoin='round' aria-hidden='true'><path d='m9 11 3 3L22 4'/><path d='M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11'/></svg>";
 
   function isPaper(s) { return s.kind === "paper"; }
   function card(s) {
@@ -203,12 +205,13 @@
     // the developing story it belongs to, as on the story cards of the digest and issue pages
     var chip = s.sl && s.st ? "<a class='sl-chip' href='" + root + "developing.html#" + esc(encodeURIComponent(s.sl)) + "' title='" + esc(s.st) + "'>" +
       "Developing story · " + esc(s.sz || 2) + " reports" + (s.sg && s.sg !== "Event" ? " · " + esc(s.sg) : "") + "</a>" : "";
+    // only what identifies the article (headline, source, link) and what Claude wrote: never the publisher's text
     return "<article class='story' style='--tc:" + tc + "'><div class='story-top'><a class='story-title' dir='auto' href='" + esc(href) + "' target='_blank' rel='noopener'>" +
       esc(title) + "</a>" + rel + "</div>" +
-      (s.te ? "<div class='orig' dir='auto'>Original: " + esc(s.t) + "</div>" : "") +
+      (s.te ? "<div class='orig'><span class='tr-tag'>English headline translated by Claude</span> · Original: <span dir='auto'>" + esc(s.t) + "</span></div>" : "") +
       (paper && s.au ? "<div class='orig' dir='auto'>" + esc(s.au) + "</div>" : "") +
-      (s.a ? "<p class='angle'><span>" + (paper ? "Why it matters in practice" : "Magazine angle") + "</span>" + esc(s.a) + "</p>"
-        : (s.x ? "<p class='summary'>" + esc(s.x) + "…</p>" : "")) +
+      (s.a ? "<p class='angle'><span>" + (paper ? "Why it matters in practice" : "Magazine angle") + "</span>" + esc(s.a) + "</p>" : "") +
+      (s.ps ? "<p class='check-with'>" + CHECK + "<span><b>Check with:</b> " + esc(s.ps) + "</span></p>" : "") +
       "<div class='story-meta'>" + (paper ? "<span class='badge'>Research paper</span>" : "") + chip +
       (s.u ? "<span class='use use-" + esc(useSlug) + "'>" + esc(s.u) + "</span>" : "") +
       "<span class='theme-tag'>" + esc(s.th) + "</span>" + meta.join(" · ") + "</div>" +
@@ -273,10 +276,12 @@
       return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
     }
     exportBtn.addEventListener("click", function () {
-      var head = ["Digest date", "Issue window", "Theme", "Relevance (1-5)", "Suggested use", "Headline (English)", "Original headline",
-        "Magazine angle", "Source", "Country", "Place", "Google News edition", "Published", "Developing story", "Link", "Keywords"];
+      // the columns of the issue pages' CSV files (site_builder.CSV_FIELDS)
+      var head = ["Digest date", "Issue window", "Theme", "Relevance (1-5)", "Suggested use", "Headline (English or Claude's translation)",
+        "Original headline", "Magazine angle", "Primary source to check", "Source", "Country", "Place", "Google News edition", "Published",
+        "Developing story", "Link", "Keywords"];
       var rows = matches.map(function (s) {
-        return [s.d, s.w, s.th, s.r || "", s.u, s.te || s.t, s.te ? s.t : "", s.a, s.s, countryName(s.cc), s.pl, s.c, s.p,
+        return [s.d, s.w, s.th, s.r || "", s.u, s.te || s.t, s.te ? s.t : "", s.a, s.ps, s.s, countryName(s.cc), s.pl, s.c, s.p,
           s.st ? s.st + (s.sg ? " · " + s.sg : "") : "", s.l, (s.k || []).join(", ")].map(csvCell).join(",");
       });
       var blob = new Blob(["﻿" + [head.join(",")].concat(rows).join("\r\n")], { type: "text/csv;charset=utf-8" });
@@ -293,7 +298,7 @@
   })();
 
   function hay(s) {
-    return s._hay || (s._hay = [s.t, s.te, s.a, s.s, s.c, s.th, s.u, s.x, (s.k || []).join(" "), placeText(s), s.st].join(" ").toLowerCase());
+    return s._hay || (s._hay = [s.t, s.te, s.a, s.ps, s.s, s.c, s.th, s.u, (s.k || []).join(" "), placeText(s), s.st].join(" ").toLowerCase());
   }
 
   /* ---------- AI assistant ---------- */
@@ -364,6 +369,24 @@
 
     function clip(text, n) { text = String(text == null ? "" : text); return text.length > n ? text.slice(0, n - 1) + "…" : text; }
 
+    /* the magazine's copyright-safe way of using a story (the Method page's "Before you use a story"), as rules for Claude */
+    var COPYRIGHT_RULES = "Copyright and sources: strict rules of the ISSMGE Magazine, which apply to every answer.\n" +
+      "- Every story is a lead, not a source. You know each story only from its line below (headline, source, link and the news desk's " +
+      "own notes: angle, place, primary source); you have not read the article. Never present anything else as what the article says, " +
+      "and never invent quotations, figures or names.\n" +
+      "- Answer and draft in your own words, from the facts. Never reproduce article text, abstracts or paywalled content, and do not " +
+      "closely paraphrase them; the same holds for documents the editor attaches that others wrote (a call for papers, a report), " +
+      "which you summarise in your own words.\n" +
+      "- Quote at most one or two sentences from any source, in quotation marks, naming the publication and linking to it.\n" +
+      "- Always list your sources, each with its link: the story's headline as a markdown link to its URL, with the publication and date.\n" +
+      "- Name the primary source the editor should check the facts with before publishing: the story's \"check with\" when it has one, " +
+      "otherwise the authority, project owner, company (its press release) or official report most likely to confirm them.\n" +
+      "- When asked to draft a magazine piece (a news brief, a feature, an introduction or similar), end the draft with a short list headed " +
+      "\"Check before publishing\": the facts and figures to confirm with the primary source, any quotes to verify against the original, " +
+      "and the image rights to clear.\n" +
+      "- Images: recommend the editor's own photos, the project's press-kit photos released for media use, or asking the rights holder " +
+      "for permission. Never suggest reusing a source's photos, figures or drawings.";
+
     /* the developing stories in the archive (reports sharing a storyline id), most recently active first */
     function storylines() {
       if (!archive) return [];
@@ -387,6 +410,10 @@
         return g;
       }).sort(function (a, b) { return a.last < b.last ? 1 : a.last > b.last ? -1 : 0; });
       return archive._lines;
+    }
+    /* a story's headline for Claude: a translated one is marked as such, with the original */
+    function headText(s) {
+      return (s.te || s.t) + (s.te ? " (Claude's translation; original: " + s.t + ")" : "");
     }
     function storylineHead(g) {
       return g.title + (g.where ? " | " + g.where : "") + " | " + g.reports.length + " reports, " + g.first + " to " + g.last +
@@ -429,7 +456,10 @@
         "With each question you receive the archive stories most relevant to it, retrieved from the full archive. Base what you say about the " +
         "news on those stories. When you mention a story, give its headline as a markdown link to its URL, followed by the source and date. " +
         "If the retrieved stories do not cover what was asked, say so plainly and suggest a search term or filter for the Search page. " +
-        "Each story line gives where it happened (place and country, as read from the story) when known.\n\n" +
+        "Each story line gives where it happened (place and country, as read from the story) when known, and the primary source to check " +
+        "the facts with (\"check with\") when the news desk named one. A headline marked \"Claude's translation\" is the news desk's English " +
+        "translation of a foreign headline: say so if you quote it.\n\n" +
+        COPYRIGHT_RULES + "\n\n" +
         "Developing stories are events, projects or sites reported more than once (a failure, then the inquiry, then the repair). When asked " +
         "for the latest on one, give its reports in date order with the stage each reached, from the developing stories retrieved with the " +
         "question, and link the Developing stories page (developing.html). The most recently active:\n" +
@@ -466,8 +496,9 @@
       var text = chosen.map(function (x, i) {
         var s = x.s, where = placeText(s);
         return "[" + (i + 1) + "] " + (s.p || s.d) + " | " + windowLabel(s.w) + " | " + s.th + " | " + (s.r ? s.r + "/5" : "keyword-ranked") +
-          (s.u ? " | " + s.u : "") + " | " + (s.te || s.t) + (s.te ? " (original: " + s.t + ")" : "") +
+          (s.u ? " | " + s.u : "") + " | " + headText(s) +
           (s.a ? " | angle: " + s.a : "") + " | " + s.s + (where ? " | where: " + where : "") + (s.c ? " | " + s.c + " edition" : "") +
+          (s.ps ? " | check with: " + s.ps : "") +
           (s.st ? " | developing story: " + s.st : "") + ((s.k && s.k.length) ? " | keywords: " + s.k.join(", ") : "") + " | " + s.l;
       }).join("\n");
       // the developing stories the question names (title words count most): their whole timeline, so
@@ -481,7 +512,7 @@
       var timelines = named.map(function (x) {
         var g = x.g;
         return "Developing story: " + storylineHead(g) + "\n" + g.reports.slice(-15).map(function (s) {
-          return "  - " + (s.p || s.d) + " | " + (s.sg || "Update") + " | " + (s.te || s.t) + " | " + s.s + " | " + s.l;
+          return "  - " + (s.p || s.d) + " | " + (s.sg || "Update") + " | " + headText(s) + " | " + s.s + " | " + s.l;
         }).join("\n");
       }).join("\n");
       return "Archive stories retrieved for this question (" + chosen.length + " of " + stories.length + " archived" +

@@ -192,9 +192,11 @@ def locate_schema():
             "required": ["stories"], "additionalProperties": False}
 
 
-def unlocated(limit):
-    """Archived stories with no "country" key, newest digest first: [(path, digest, story)]."""
-    out, digests = [], []
+def unlocated(limit, today=()):
+    """Stories with no "country" key: [(path, digest, story)]. First the scan's own (today: not saved yet, so
+    path and digest are None), while they still hold the feed summary that save_digest() does not keep, then
+    archived ones, newest digest first."""
+    out = [(None, None, s) for s in today if isinstance(s, dict) and "country" not in s][:limit]
     for path in sorted(site_builder.DIGESTS.glob("*.json"), reverse=True):
         if len(out) >= limit:
             break
@@ -208,16 +210,18 @@ def unlocated(limit):
     return out
 
 
-def locate_missing(cfg, notes):
-    """Give archived stories without a "country" key their country and place (Claude), newest
-    first, at most map: locate_per_run per run, and save their digests. A story Claude answers
-    for keeps its answer (a "" country means global), so it is never asked again. Returns how
-    many were located; without a key it does nothing. The scan calls it before it saves the
-    day's digest, so an unexpected error here becomes a note, never a failed scan."""
+def locate_missing(cfg, notes, today=()):
+    """Give stories without a "country" key their country and place (Claude), at most map:
+    locate_per_run per run: first today's (the scan's stories Claude did not rate, located in
+    memory while their feed summaries are there to read; save_digest() then saves them), then
+    archived ones, newest first, whose digests are saved here. A story Claude answers for keeps
+    its answer (a "" country means global), so it is never asked again. Returns how many were
+    located; without a key it does nothing. The scan calls it before it saves the day's digest,
+    so an unexpected error here becomes a note, never a failed scan."""
     import scanner  # (it imports this module's callers, so not at the top)
 
     try:
-        return _locate(cfg, notes, scanner)
+        return _locate(cfg, notes, scanner, today)
     except Exception as ex:
         note = (f"Locating archived stories for the world map stopped ({type(ex).__name__}: "
                 f"{scanner.api_message(ex)[:100]}); they are tried again after the next scan.")
@@ -226,13 +230,13 @@ def locate_missing(cfg, notes):
         return 0
 
 
-def _locate(cfg, notes, scanner):
+def _locate(cfg, notes, scanner, today=()):
     opts = settings(cfg)
     raw = os.environ.get("ANTHROPIC_API_KEY", "")
     key = scanner.clean_api_key(raw)
     if not key or not opts["locate_per_run"]:
         return 0
-    todo = unlocated(opts["locate_per_run"])
+    todo = unlocated(opts["locate_per_run"], today)
     if not todo:
         return 0
     import anthropic  # only needed when a key is configured
@@ -290,13 +294,14 @@ Stories:
                 path, digest, story = batch[idx]
                 story["country"] = scanner.country_code(a.get("country"))
                 story["place"] = str(a.get("place") or "")[:80]
-                changed[path] = digest
+                if path:  # today's stories are saved by save_digest()
+                    changed[path] = digest
                 located += 1
     for path, digest in changed.items():  # same formatting as scanner.save_digest
         path.write_text(json.dumps(digest, ensure_ascii=False, indent=1), encoding="utf-8")
     if failed:
         notes.append(failed)
-    print(f"World map: {located} archived {'story' if located == 1 else 'stories'} located"
+    print(f"World map: {located} {'story' if located == 1 else 'stories'} without a country located"
           + (f"; {failed}" if failed else "."))
     return located
 

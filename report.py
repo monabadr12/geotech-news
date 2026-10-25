@@ -13,6 +13,7 @@ import yaml
 from docx import Document
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.opc.constants import RELATIONSHIP_TYPE
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
@@ -76,6 +77,21 @@ def bullet(doc, text, bold_prefix=""):
         p.add_run(bold_prefix).bold = True
     p.add_run(text)
     return p
+
+
+def hyperlink(p, text, url, bold=False):
+    """A run linked to url, as a real Word hyperlink (anything but a web link stays plain text)."""
+    run = p.add_run(text)
+    run.bold = bold
+    url = str(url or "").strip()
+    if not url.lower().startswith(("http://", "https://")):
+        return run
+    run.font.color.rgb, run.font.underline = rgb("1D5A8A"), True
+    link = OxmlElement("w:hyperlink")
+    link.set(qn("r:id"), p.part.relate_to(url, RELATIONSHIP_TYPE.HYPERLINK, is_external=True))
+    link.append(run._r)  # moves the run from the paragraph into the link
+    p._p.append(link)
+    return run
 
 
 def heading(doc, text, level=1):
@@ -144,6 +160,12 @@ def review_findings(latest, cfg, windows):
         if latest.get("ai_used"):
             strong = sum(1 for s in stories if s.get("relevance", 0) >= 4)
             out.append(("info", f"{strong} stories were rated 4 or 5 out of 5."))
+            rated = [s for s in stories if s.get("relevance")]
+            named = sum(1 for s in rated if str(s.get("primary_source") or "").strip())
+            if rated:
+                out.append(("info", f"{named} of the {len(rated)} rated stories name a primary source to check the "
+                                    "facts with" + ("." if named else " (stories rated before primary sources were "
+                                                                       "asked for have none).")))
     else:
         out.append(("warn", "The latest scan selected no stories."))
     return out
@@ -309,8 +331,10 @@ def email_section(doc, cfg, data_dir):
                           "(Archive → Weekly summaries).")
 
 
-def write_report(path, cfg, digests, windows, theme_color, site_url, changelog_path, groups=None):
-    """groups: storylines.groups() of the archive (the developing stories), worked out once by the site build."""
+def write_report(path, cfg, digests, windows, theme_color, site_url, changelog_path, groups=None, checklist=None):
+    """groups: storylines.groups() of the archive (the developing stories), worked out once by the site build.
+    checklist: (title, the steps to follow before using a story, what the news desk does to keep to them),
+    from site_builder (USE_TITLE, use_steps_text(), USE_DONE)."""
     log = yaml.safe_load(changelog_path.read_text(encoding="utf-8")) if changelog_path.exists() else {}
     latest = digests[0] if digests else None
     data_dir = changelog_path.parent
@@ -378,6 +402,25 @@ def write_report(path, cfg, digests, windows, theme_color, site_url, changelog_p
             name, _, text = item.partition(":")
             bullet(doc, text.strip(), bold_prefix=name.strip() + ": ") if text else bullet(doc, item)
 
+    # ---- the copyright-safe way of using a story
+    if checklist:
+        title_, steps, done = checklist
+        heading(doc, "Using the stories in the magazine (copyright)")
+        doc.add_paragraph("Every story on the website is a lead, not material to reuse. " + title_ + ":")
+        for i, step in enumerate(steps, 1):
+            p = doc.add_paragraph()
+            p.paragraph_format.left_indent, p.paragraph_format.first_line_indent = Cm(0.8), Cm(-0.6)
+            p.paragraph_format.space_after = Pt(2)
+            r = p.add_run(f"{i}.  ")
+            r.bold, r.font.color.rgb = True, rgb("9A7B1C")
+            p.add_run(step)
+        if done:
+            p = doc.add_paragraph()
+            p.add_run("What the news desk does to keep to it:").bold = True
+            p.paragraph_format.space_before = Pt(6)
+            for item in done:
+                bullet(doc, item)
+
     # ---- review
     section_heading("Review of the latest scan")
     marks = {"ok": ("✔ ", "1E7B4F"), "warn": ("⚠ ", "B5560E"), "info": ("• ", MUTED)}
@@ -437,9 +480,10 @@ def write_report(path, cfg, digests, windows, theme_color, site_url, changelog_p
         doc.add_paragraph(f"{len(papers)} new papers from {len(journals)} journals were picked up for Academia-to-Industry topics.")
         table(doc, ["Journal", "Papers"], journals.most_common(), [12, 3])
         best = sorted(papers, key=lambda pp: -(pp.get("relevance") or 0))[:8]
-        for pp in best:
-            bullet(doc, f" — {pp.get('journal', '')}, {pp.get('published', '')}" + (f". {pp['angle']}" if pp.get("angle") else ""),
-                   bold_prefix=pp.get("title", ""))
+        for pp in best:  # the title is the link to the paper, with the journal named after it
+            p = doc.add_paragraph(style="List Bullet")
+            hyperlink(p, pp.get("title", ""), pp.get("link"), bold=True)
+            p.add_run(f" — {pp.get('journal', '')}, {pp.get('published', '')}" + (f". {pp['angle']}" if pp.get("angle") else ""))
     else:
         doc.add_paragraph("No research papers have been collected in this issue window yet.")
 
