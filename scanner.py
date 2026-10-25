@@ -594,8 +594,9 @@ def triage_schema(themes):
             "title_en": {"type": "string"},
             "country": {"type": "string"},
             "place": {"type": "string"},
+            "primary_source": {"type": "string"},
         },
-        "required": ["id", "relevance", "theme", "use", "angle", "title_en", "country", "place"],
+        "required": ["id", "relevance", "theme", "use", "angle", "title_en", "country", "place", "primary_source"],
         "additionalProperties": False,
     }
     return {"type": "object", "properties": {"stories": {"type": "array", "items": story}},
@@ -679,6 +680,31 @@ def country_code(text):
     return code if COUNTRY_CODE.match(code) and code not in NOT_COUNTRIES else ""
 
 
+PRIMARY_SOURCE_WORDS = 12
+# words a shortened answer must not end on ("… the regional geological survey and")
+DANGLING = {"and", "or", "of", "the", "a", "an", "with", "for", "to", "its", "their", "in", "at", "on", "by",
+            "from", "&"}
+
+
+def primary_source(text):
+    """Claude's "who to check the facts with" on one line, at most PRIMARY_SOURCE_WORDS words and 120
+    characters ("" when unclear, or when Claude answered "none", "unknown" or the like). A longer answer is
+    shortened at a word, without a dangling "and", "of" or the like, and ends in "…"."""
+    words = " ".join(str(text or "").split()).strip(" .;:-–—").split(" ")
+    out = " ".join(words[:PRIMARY_SOURCE_WORDS])
+    if out.casefold() in ("", "none", "n/a", "na", "unknown", "unclear", "not clear", "-"):
+        return ""
+    cut = len(words) > PRIMARY_SOURCE_WORDS
+    if len(out) > (119 if cut else 120):
+        out, cut = out[:119].rsplit(" ", 1)[0], True
+    if not cut:
+        return out
+    kept = out.split(" ")
+    while len(kept) > 1 and kept[-1].rstrip(",;:").casefold() in DANGLING:
+        kept.pop()
+    return " ".join(kept).rstrip(" ,;:-–—") + "…"
+
+
 def claude_triage(items, cfg, notes):
     """Ask Claude to rate the candidates. True if at least one batch was rated."""
     raw = os.environ.get("ANTHROPIC_API_KEY", "")
@@ -709,10 +735,13 @@ For each story below return an object with:
 - "relevance": 1-5 (5 = rich geotechnical lesson or major ground-related event; 3 = clear ground engineering element worth a brief; 1 = not geotechnical)
 - "theme": the one magazine theme it fits best
 - "use": the best editorial use
-- "angle": one sentence (max 30 words) stating the geotechnical question a magazine piece could explore, in your own words
+- "angle": one sentence (max 30 words) stating the geotechnical question a magazine piece could explore, entirely in your own words: never copy or closely paraphrase the headline or the summary
 - "title_en": if the headline is not in English, your English translation of it (max 20 words); otherwise ""
 - "country": the ISO 3166-1 alpha-2 code (e.g. "CO", "GB", "HK") of the country where the event, project or site is, which may differ from the outlet's country; "" if the story is not about one country (a global market report, a general research result, several countries)
 - "place": the town, city, region or site named in the story, in English (max 6 words, e.g. "Moniquirá, Boyacá" or "HS2 Chiltern Tunnel"); "" if none is named
+- "primary_source": who the editor should check the facts with before publishing, in at most 12 words: the authority, the project owner or client, the company, or the body behind the official report (e.g. "HS2 Ltd", "the state disaster management authority", "the city's water utility", "the national geological survey's landslide report"); "" when unclear. The news outlet that ran the story is not a primary source
+
+The magazine treats every story as a lead: its writers check the facts with the primary source and write their own pieces. The headlines and summaries below are the outlets' text, for you to judge the stories by; they are not to be reused.
 
 Stories:
 {listing}"""
@@ -757,7 +786,8 @@ Stories:
                     angle=d["angle"][:300],
                     title_en=d["title_en"][:200],
                     country=country_code(d["country"]),
-                    place=d["place"][:80])
+                    place=d["place"][:80],
+                    primary_source=primary_source(d.get("primary_source")))
         rated += 1
     if items and not rated:
         note = "AI triage failed for every batch, so all stories were ranked by keywords only."
@@ -852,7 +882,13 @@ def crossref_date(item, today):
 
 
 def paper_text(p):
-    return f"{p['title']} {p.get('abstract', '')}"
+    """What a paper's keyword score reads: its title and, during the scan, its abstract. The archive keeps
+    no abstracts (see clear_publisher_text), so for an archived paper the keyword concepts found in the abstract
+    stand in for it, kept apart by " | " so that two of them never make up a longer term ("tunnel" and
+    "collapse" are not "tunnel collapse")."""
+    if p.get("abstract"):
+        return f"{p['title']} {p['abstract']}"
+    return " | ".join([p["title"], *(p.get("keywords") or [])])
 
 
 def paper_rank(p, cfg, compiled):
@@ -940,7 +976,7 @@ For each paper below return an object with:
 - "id": the number
 - "relevance": 1-5 for practice (5 = findings a practising engineer could apply now or should know about: design methods, case histories, field performance, monitoring, new testing or construction techniques; 3 = sound research with a clear route to practice; 1 = theoretical with no near-term use, or not geotechnical)
 - "theme": the one magazine theme it fits best
-- "angle": one sentence (max 30 words), in your own words, on why the paper matters to practitioners
+- "angle": one sentence (max 30 words), entirely in your own words, on why the paper matters to practitioners: never copy or closely paraphrase the title or the abstract
 
 Papers:
 {listing}"""
@@ -972,6 +1008,7 @@ Papers:
     return True
 
 
+# "abstract" is kept as a key for older readers but saved empty (clear_publisher_text)
 PAPER_FIELDS = ("id", "title", "link", "journal", "authors", "published", "abstract", "theme", "relevance",
                 "angle", "keywords")
 
@@ -994,6 +1031,45 @@ def research_papers(cfg, now, seen, compiled, failures, notes):
 
 
 # ------------------------------------------------------------------ archive
+# Publisher text stays out of the archive. Feed summaries and paper abstracts are read during the scan, for
+# the keyword score and for Claude's prompts, but the digests (public, like the website built from them)
+# keep only what identifies an article and what the news desk wrote itself: the headline, the source and
+# the link, and Claude's angle, translation, place and primary source. The magazine treats each story as a
+# lead and writes its own piece from the facts.
+def clear_publisher_text(digest):
+    """Empty every story's "summary" and every paper's "abstract" in a digest (in place). The keys stay,
+    empty, so older readers still find them; nothing else changes. The number of texts emptied."""
+    cleared = 0
+    for items, key in ((digest.get("stories") or [], "summary"), (digest.get("papers") or [], "abstract")):
+        for item in items:
+            if isinstance(item, dict) and item.get(key):
+                item[key] = ""
+                cleared += 1
+    return cleared
+
+
+def clear_archive(folder=None):
+    """One-time clean-up (safe to run again): clear_publisher_text() on every digest in the archive,
+    written back in the archive's own format. Returns {file name: texts emptied} for the files changed."""
+    changed = {}
+    for path in sorted((folder or site_builder.DIGESTS).glob("*.json")):
+        digest = json.loads(path.read_text(encoding="utf-8"))
+        n = clear_publisher_text(digest)
+        if n:
+            path.write_text(json.dumps(digest, ensure_ascii=False, indent=1), encoding="utf-8")
+            changed[path.name] = n
+    return changed
+
+
+def story_text(s):
+    """What a story's keyword score reads: its headline and, during the scan, its feed summary. The archive
+    keeps no summaries, so the keyword concepts found in the summary stand in for it when an archived story
+    is scored again, kept apart by " | " as in paper_text."""
+    if s.get("summary"):
+        return f"{s['title']} {s['summary']}"
+    return " | ".join([s["title"], *(s.get("keywords") or [])])
+
+
 def rescore_unrated(stories, cfg):
     """Score keyword-ranked stories again with the current lists. Earlier versions
     added a language bonus to the score, which would let old stories crowd out
@@ -1001,7 +1077,7 @@ def rescore_unrated(stories, cfg):
     compiled = compile_keywords(cfg)
     for s in stories:
         if not s.get("relevance"):
-            s["score"], hits = keyword_score(f"{s['title']} {s.get('summary', '')}", cfg, compiled)
+            s["score"], hits = keyword_score(story_text(s), cfg, compiled)
             s["rank"] = s["score"]
             s["keywords"] = hits[:6]
 
@@ -1018,7 +1094,7 @@ def save_digest(now, stories, failures, notes, ai_used, new_count, cfg, papers=N
     of repeated events (and of copies of one story in several languages) and
     balanced across the themes and websites again, up to max_items, so a
     re-run also mends a lopsided earlier digest. Research papers are merged
-    the same way."""
+    the same way. Feed summaries and abstracts are not saved (clear_publisher_text)."""
     path = site_builder.DIGESTS / f"{now:%Y-%m-%d}.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     digest = {"date": f"{now:%Y-%m-%d}", "generated": now.isoformat(timespec="minutes"),
@@ -1043,6 +1119,7 @@ def save_digest(now, stories, failures, notes, ai_used, new_count, cfg, papers=N
         if papers is not None or old.get("papers"):
             digest["papers"] = merge_papers(papers or [], old.get("papers"), cfg)
     digest["stories"].sort(key=lambda s: -s["rank"])
+    clear_publisher_text(digest)
     path.write_text(json.dumps(digest, ensure_ascii=False, indent=1), encoding="utf-8")
     return digest
 
@@ -1144,7 +1221,8 @@ def main():
         for c in reports:
             c.update(relevance=h["relevance"], theme=h["theme"], use=h["use"], angle=h["angle"],
                      title_en=c["title_en"] or h["title_en"], rank=h["relevance"] * 100 + c["score"],
-                     **({"country": h.get("country", ""), "place": h.get("place", "")} if h["relevance"] else {}))
+                     **({"country": h.get("country", ""), "place": h.get("place", ""),
+                         "primary_source": h.get("primary_source", "")} if h["relevance"] else {}))
             copies.setdefault(final[head], []).append(c)
     for cs in copies.values():
         cs.sort(key=lambda c: -c["rank"])
@@ -1162,18 +1240,21 @@ def main():
 
     stories = [{
         "id": i["id"], "title": i["title"], "title_en": i["title_en"], "link": i["link"],
+        # the feed summary is only for Claude's reading below: save_digest() saves it empty
         "source": i["source"], "region": i["region"], "summary": i["summary"][:400],
         "published": i["time"].isoformat(timespec="minutes") if i["time"] else "",
         "theme": i["theme"], "relevance": i["relevance"], "use": i["use"], "angle": i["angle"],
         "keywords": i["hits"][:6], "score": i["score"], "rank": i["rank"],
-        # where the story happened, as Claude read it ("" = global); stories Claude did not
-        # rate have no "country" yet, so geomap.locate_missing() locates them later
-        **({"country": i.get("country", ""), "place": i.get("place", "")} if i["relevance"] else {}),
+        # where the story happened, as Claude read it ("" = global), and whom to check the facts
+        # with; stories Claude did not rate have no "country" yet, so geomap.locate_missing()
+        # locates them below, while their feed summaries are still here to read
+        **({"country": i.get("country", ""), "place": i.get("place", ""),
+            "primary_source": i.get("primary_source", "")} if i["relevance"] else {}),
     } for i in selected]
 
     import geomap, storylines  # (they import this module, so not at the top)
     storylines.link(stories, now, cfg, notes)  # follow-up reports joined to the earlier event
-    geomap.locate_missing(cfg, notes)          # archived stories that have no country yet
+    geomap.locate_missing(cfg, notes, today=stories)  # today's and archived stories with no country yet
     save_digest(now, stories, failures, notes, ai_used, new_count, cfg, papers)
     site_builder.build(cfg)
     # e-mail (alerts for 5/5 stories, the Monday summary) is sent by notify.py, a later workflow step
@@ -1193,7 +1274,7 @@ def reclassify():
         for s in digest["stories"]:
             if s.get("relevance"):
                 continue  # Claude's theme stands
-            text = f"{s['title']} {s.get('summary', '')}"
+            text = story_text(s)
             _, hits = keyword_score(text, cfg, compiled)
             theme = guess_theme(text, cfg["themes"], hits)
             if theme != s["theme"] or hits[:6] != s.get("keywords"):
@@ -1208,6 +1289,7 @@ def reclassify():
                 p["theme"], p["keywords"] = theme, hits[:6]
                 changed += 1
         if changed:
+            clear_publisher_text(digest)
             path.write_text(json.dumps(digest, ensure_ascii=False, indent=1), encoding="utf-8")
             print(f"{path.name}: {changed} stories re-classified")
     site_builder.build(cfg)
@@ -1231,11 +1313,24 @@ def rebalance(names):
                                      per_source=source_cap(cfg), copies=copies)
         if digest.get("papers"):
             digest["papers"] = select_papers(digest["papers"], cfg)
+        clear_publisher_text(digest)
         path.write_text(json.dumps(digest, ensure_ascii=False, indent=1), encoding="utf-8")
         print(f"{path.name}: {len(digest['stories'])} stories after re-balancing")
+
+
+def clear_archive_main():
+    """python scanner.py --clear-publisher-text: empty the feed summaries and abstracts that digests saved
+    before they stopped being kept (the archive is public); nothing else in the digests changes."""
+    changed = clear_archive()
+    for name, n in changed.items():
+        print(f"{name}: {n} feed {'summary or abstract' if n == 1 else 'summaries and abstracts'} emptied")
+    print(f"{len(changed)} digest(s) changed." if changed else "No digest holds a feed summary or abstract.")
+    return 0
 
 
 if __name__ == "__main__":
     if "--rebalance" in sys.argv:
         sys.exit(rebalance(sys.argv[sys.argv.index("--rebalance") + 1:]))
+    if "--clear-publisher-text" in sys.argv:
+        sys.exit(clear_archive_main())
     sys.exit(reclassify() if "--reclassify" in sys.argv else main())

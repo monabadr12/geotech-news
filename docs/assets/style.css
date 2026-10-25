@@ -108,6 +108,40 @@ h1 { font: 700 34px/1.15 var(--serif); margin: 0 0 10px; letter-spacing: -.01em;
 .callout:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
 @media (prefers-color-scheme: dark) { .callout { border-color: #4a3f20; } }
 
+/* ---------- before you use a story (copyright) ----------
+   use-note: folded to one line near the top of digest and issue pages; use-box: open, on Method & sources and
+   at the foot of the weekly pages (site_builder.use_note, use_box) */
+.use-note { margin: 0 0 18px; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent);
+  border-radius: var(--radius); box-shadow: var(--shadow); font-size: 14px; }
+.use-note summary { display: flex; align-items: center; flex-wrap: wrap; gap: 2px 10px; padding: 9px 14px; cursor: pointer; list-style: none; }
+.use-note summary::-webkit-details-marker { display: none; }
+.use-note summary::after { content: "Show the 5 steps ▾"; margin-left: auto; font-size: 12.5px; font-weight: 600; color: var(--link); white-space: nowrap; }
+.use-note[open] summary::after { content: "Hide ▴"; }
+.use-note summary:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; border-radius: var(--radius); }
+.use-mark { display: inline-flex; color: var(--accent-ink); }
+.use-mark .ico { width: 18px; height: 18px; }
+.use-note summary b { color: var(--ink); }
+.use-short { color: var(--muted); font-size: 13px; }
+.use-steps { margin: 0; padding-left: 22px; }
+.use-steps li { margin: 0 0 5px; line-height: 1.5; }
+.use-steps li::marker { color: var(--accent-ink); font-weight: 700; }
+.use-note .use-steps { padding: 4px 16px 2px 40px; border-top: 1px solid var(--line); padding-top: 10px; }
+.use-more { margin: 4px 14px 12px 40px; font-size: 12.5px; color: var(--muted); }
+.use-box { background: var(--accent-soft); border: 1px solid #f0dfa6; border-left: 4px solid var(--accent); border-radius: var(--radius);
+  padding: 12px 16px 6px; margin: 0 0 16px; font-size: 14px; }
+.use-box-h { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; color: var(--ink); }
+.use-box-h .ico { color: var(--accent-ink); width: 18px; height: 18px; }
+.use-box .use-steps { margin: 0 0 8px; }
+.use-box .use-more { margin: 0 0 8px; }
+.use-done li { margin-bottom: 4px; }
+@media (prefers-color-scheme: dark) { .use-box { border-color: #4a3f20; } }
+@media (max-width: 560px) {
+  .use-short { display: none; }
+  .use-note summary::after { content: "5 steps ▾"; }
+  .use-note .use-steps { padding-left: 32px; }
+  .use-more { margin-left: 32px; }
+}
+
 /* ---------- issue brief card (issue pages) ---------- */
 .brief { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow);
   margin: 0 0 22px; padding: 20px 22px 18px; overflow: hidden; scroll-margin-top: 16px; }
@@ -186,9 +220,15 @@ h1 { font: 700 34px/1.15 var(--serif); margin: 0 0 10px; letter-spacing: -.01em;
 .story-title { font: 650 16.5px/1.4 var(--sans); font-weight: 650; color: var(--ink); text-decoration: none; }
 .story-title:hover { color: var(--link); text-decoration: underline; }
 .orig { font-size: 13px; color: var(--muted); margin-top: 3px; }
+.lineup .orig, .wk-list .orig { margin-top: 0; font-size: 12.5px; overflow-wrap: anywhere; }
 .angle { margin: 10px 0 0; font: 15.5px/1.5 var(--serif); padding: 8px 12px; border-radius: 8px; background: color-mix(in srgb, var(--tc) 6%, var(--surface)); }
 .angle span { display: block; font: 700 10.5px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--tc); margin-bottom: 2px; }
-.summary { margin: 8px 0 0; color: var(--muted); font-size: 14px; }
+/* whom to check the facts with (Claude), and the label of a translated headline */
+.check-with { display: flex; align-items: flex-start; gap: 7px; margin: 8px 0 0; font-size: 13.5px; line-height: 1.45; color: var(--ink); }
+.check-with .ico { color: var(--teal); margin-top: 2px; }
+.check-with b { font-weight: 600; }
+.tr-tag { display: inline-block; font-size: 11px; font-weight: 600; color: var(--muted); background: var(--surface-2);
+  border: 1px solid var(--line); border-radius: 99px; padding: 0 7px; line-height: 1.6; }
 .story-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: 11px; font-size: 13px; color: var(--muted); }
 .story-meta .src { color: var(--ink); font-weight: 600; }
 .use, .theme-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; border-radius: 6px; padding: 3px 9px; }

@@ -43,8 +43,59 @@ COUNTRIES = {
     "PL": "Poland", "CO": "Colombia", "CL": "Chile", "PE": "Peru", "AR": "Argentina",
 }
 CSV_FIELDS = ["Digest date", "Issue window", "Theme", "Relevance (1-5)", "Suggested use",
-              "Headline (English)", "Original headline", "Magazine angle", "Source", "Country", "Place",
-              "Google News edition", "Published", "Developing story", "Link", "Keywords"]
+              "Headline (English or Claude's translation)", "Original headline", "Magazine angle",
+              "Primary source to check", "Source", "Country", "Place", "Google News edition", "Published",
+              "Developing story", "Link", "Keywords"]
+
+# The magazine's copyright-safe way of using a story, as the editor set it out, worded for engineers: (what
+# to do, what follows it, how). Shown as "Before you use a story" on the digest and issue pages, the Method
+# page, the Excel Start here sheet, the weekly e-mail and page, the Word website report and the issue brief.
+USE_STEPS = [
+    ("Treat the news item as a lead", ", ", "not as your source."),
+    ("Check the facts with the primary source", ": ", "the authority, the project owner, the company's press "
+                                                      "release or the official report (“Check with”, where the news "
+                                                      "desk found it)."),
+    ("Write the piece in your own words", ", ", "with your own angle: the magazine angle is a starting point."),
+    ("Quote a sentence or two at most", ", ", "in quotation marks, naming the publication and linking to it."),
+    ("For images, use your own", ", ", "the project's press-kit photos released for media use, or ask permission; "
+                                       "never reuse a source's photos, figures or drawings."),
+]
+USE_TITLE = "Before you use a story"
+# What the news desk itself does to keep to them (the Method page, the README and the Word report)
+USE_DONE = [
+    "The website, the downloads, the e-mails and the current archive files in the repository show no publisher's "
+    "text beyond the headline: no feed summaries, no paper abstracts and no images from the sources. Each headline "
+    "names its source and links to the original article. (Earlier versions of the archive in the repository's "
+    "history, saved before 25 October 2026, still hold the feed summaries and abstracts removed that day.)",
+    "Headlines from non-English sources are shown in Claude's English translation, labelled as such, with the "
+    "original headline beside it.",
+    "The magazine angle and the note on why a paper matters are written by Claude in its own words, never copied "
+    "from the article.",
+    "For each story Claude rates, it names the primary source to check the facts with (“Check with”).",
+    "The AI assistant and the issue brief write in their own words, quote at most a sentence or two with the "
+    "publication named and linked, and name the primary source to check; for images they recommend your own "
+    "photos, press-kit photos or asking permission. The assistant ends every draft of a magazine piece with a "
+    "“Check before publishing” list.",
+]
+
+
+def use_steps_text():
+    """The five steps as plain sentences, for the Excel, Word and e-mail versions."""
+    return [what + sep + how for what, sep, how in USE_STEPS]
+
+
+def use_steps_html():
+    """The five steps as an ordered list, the first words in bold."""
+    return ("<ol class='use-steps'>" + "".join(f"<li><b>{esc(what)}</b>{esc(sep)}{esc(how)}</li>"
+                                               for what, sep, how in USE_STEPS) + "</ol>")
+
+
+def use_note(root=""):
+    """'Before you use a story', folded, near the top of the digest and issue pages: one line until opened."""
+    return (f"<details class='use-note'><summary><span class='use-mark'>{icon('check')}</span><b>{USE_TITLE}</b>"
+            "<span class='use-short'>lead → primary source → own words → short quotes → image rights</span></summary>"
+            f"{use_steps_html()}<p class='use-more'>The site shows no publisher's text or images beyond the headline. "
+            f"<a href='{root}about.html#copyright'>How the news desk keeps to this</a></p></details>")
 
 # Colour and icon for each magazine theme (themes added later in config.yaml
 # take the spare colours in turn).
@@ -83,6 +134,7 @@ ICONS = {
     "book": "<path d='M4 19.5A2.5 2.5 0 0 1 6.5 17H20'/><path d='M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'/>",
     "pin": "<path d='M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z'/><circle cx='12' cy='10' r='3'/>",
     "globe": "<circle cx='12' cy='12' r='10'/><path d='M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z'/>",
+    "check": "<path d='m9 11 3 3L22 4'/><path d='M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11'/>",
 }
 FAVICON = (ASSETS / "favicon.svg").read_text(encoding="utf-8") if (ASSETS / "favicon.svg").exists() else ""
 
@@ -109,11 +161,33 @@ def tidy(story):
     return story
 
 
+def no_publisher_text(item, key):
+    """A story without its feed "summary", or a paper without its "abstract": the archive no longer keeps
+    them (scanner.clear_publisher_text), and nothing built from it may show one, even from a digest saved
+    earlier or edited by hand."""
+    if item.get(key):
+        item[key] = ""
+    return item
+
+
+def same_headline(a, b):
+    return " ".join(str(a or "").split()).casefold() == " ".join(str(b or "").split()).casefold()
+
+
+def no_echo(story):
+    """A "translation" that only repeats an English headline is no translation: it is not shown, so the story is not
+    labelled as translated (Claude sometimes echoes the headline instead of answering ""). The digest keeps it, as
+    the scanner's merging of a story's copies in several languages reads it."""
+    if story.get("title_en") and same_headline(story["title_en"], story.get("title")):
+        story["title_en"] = ""
+    return story
+
+
 def load_digests():
     out = [json.loads(p.read_text(encoding="utf-8")) for p in DIGESTS.glob("*.json")]
     for d in out:
-        d["stories"] = [tidy(s) for s in d.get("stories", [])]
-        d["papers"] = [tidy(p) for p in d.get("papers", [])]
+        d["stories"] = [no_echo(no_publisher_text(tidy(s), "summary")) for s in d.get("stories", [])]
+        d["papers"] = [no_publisher_text(tidy(p), "abstract") for p in d.get("papers", [])]
     return sorted(out, key=lambda d: d["date"], reverse=True)
 
 
@@ -314,8 +388,8 @@ def page(cfg, title, body, root, active, description="", head=""):
 <div class="mast-actions"><button type="button" class="scan-btn" id="scan-btn" title="Start a new scan on GitHub">{icon('scan')}<span>Scan now</span></button></div>
 </div></header>
 <main class="wrap">{body}</main>
-<footer class="foot"><div class="wrap foot-inner"><span>Headlines link to the original publishers. Treat every story as a lead and verify with the primary source before publishing.
-Ratings, themes and angles are machine-assisted suggestions for the editorial team.</span>
+<footer class="foot"><div class="wrap foot-inner"><span>Headlines link to the original publishers; the site shows none of their text or images beyond the headline. Treat every story as a lead and check the facts with the primary source before publishing: <a href="{root}about.html#copyright">before you use a story</a>.
+Ratings, themes, angles and translations are machine-assisted suggestions for the editorial team.</span>
 <a href="{root}reports/site-report.docx" download>{icon('doc')} Website report (Word)</a></div></footer>
 <div id="toast" class="toast" role="status" hidden></div>
 <script src="{root}assets/app.js"></script>
@@ -329,14 +403,29 @@ def rating(s):
     return f"<span class='rel rel-{rel}' title='Geotechnical relevance: {rel} of 5'>{'<i></i>' * 5}<b>{rel}/5</b></span>"
 
 
+TRANSLATED = "English headline translated by Claude"
+
+
+def original_line(s):
+    """Under a translated headline: that it is Claude's translation, and the publisher's own headline."""
+    return (f"<div class='orig'><span class='tr-tag'>{TRANSLATED}</span> · Original: "
+            f"<span dir='auto'>{esc(s['title'])}</span></div>")
+
+
+def check_with(s):
+    """'Check with: <primary source>' under a story Claude rated ("" when it named none)."""
+    ps = " ".join(str(s.get("primary_source") or "").split())
+    return (f"<p class='check-with'>{icon('check')}<span><b>Check with:</b> {esc(ps)}</span></p>" if ps else "")
+
+
 def story_card(s, show_theme=False, root=""):
     shown = s.get("title_en") or s["title"]
     when = nice_date(s.get("published") or s.get("_digest", ""))
     region = COUNTRIES.get(s.get("region", ""), s.get("region", ""))
     where = place_text(s)  # where it happened (Claude), which the Google News edition is not
     sl = s.get("_storyline")  # set by storylines.annotate() when the story belongs to a developing story
-    search_text = " ".join([shown, s["title"], s.get("angle", ""), s["source"], region, where,
-                            " ".join(s.get("keywords", [])), sl["title"] if sl else ""]).lower()
+    search_text = " ".join([shown, s["title"], s.get("angle", ""), s.get("primary_source") or "", s["source"],
+                            region, where, " ".join(s.get("keywords", [])), sl["title"] if sl else ""]).lower()
     meta = [f"<span class='src'>{esc(s['source'])}</span>"]
     if when:
         meta.append(f"<time>{esc(when)}</time>")
@@ -351,11 +440,11 @@ def story_card(s, show_theme=False, root=""):
              f"<a class='story-title' href='{esc(s['link'])}' target='_blank' rel='noopener' dir='auto'>{esc(shown)}</a>",
              rating(s), "</div>"]
     if s.get("title_en"):
-        parts.append(f"<div class='orig' dir='auto'>Original: {esc(s['title'])}</div>")
+        parts.append(original_line(s))
+    # Claude's own words only: a story without an angle shows none of the publisher's text
     if s.get("angle"):
         parts.append(f"<p class='angle'><span>Magazine angle</span>{esc(s['angle'])}</p>")
-    elif s.get("summary"):
-        parts.append(f"<p class='summary'>{esc(s['summary'][:260])}…</p>")
+    parts.append(check_with(s))
     parts.append("<div class='story-meta'>")
     if sl:
         # "Developing story · 4 reports", and for a follow-up the stage it reports; root: "" at the top of the
@@ -433,10 +522,8 @@ def paper_card(p):
              rating_, "</div>"]
     if p.get("authors"):
         parts.append(f"<div class='orig' dir='auto'>{esc(p['authors'])}</div>")
-    if p.get("angle"):
+    if p.get("angle"):  # Claude's note, never the abstract
         parts.append(f"<p class='angle'><span>Why it matters in practice</span>{esc(p['angle'])}</p>")
-    elif p.get("abstract"):
-        parts.append(f"<p class='summary'>{esc(p['abstract'][:300])}…</p>")
     meta = [f"<span class='src'>{esc(p.get('journal', ''))}</span>"]
     if p.get("published"):
         meta.append(f"<time>{esc(nice_date(p['published']))}</time>")
@@ -512,6 +599,8 @@ def digest_body(d, cfg, root, uses, prev_d=None, next_d=None, latest=False, brie
                     f"with an Excel workbook"
                     + (f" and the {'final' if brief.get('status') == 'final' else 'draft'} issue brief" if brief else "")
                     + " →</span></a>")
+    if stories or papers:
+        head.append(use_note(root))
     news = [("<p class='empty'>No new geotechnical stories met the threshold in this period.</p>" if not stories
              else filtered(uses, theme_sections(stories, root=root))),
             research_section(papers, "Papers that geotechnical journals published in the last few days, for the "
@@ -596,7 +685,8 @@ def brief_card(win, b, cfg, current, root, opts):
         picks.append(f"<li style='--tc:{theme_color(t)}'><span class='lt'>{theme_icon(t)}{esc(t)}</span>"
                      f"<a href='{esc(s.get('link', '#'))}' target='_blank' rel='noopener' dir='auto'>"
                      f"{esc(s.get('title_en') or s.get('title', ''))}</a>"
-                     f"<span class='lf'>{esc(chosen[0].get('format', ''))} · {esc(s.get('source', ''))}{more}</span></li>")
+                     + (original_line(s) if s.get("title_en") else "")
+                     + f"<span class='lf'>{esc(chosen[0].get('format', ''))} · {esc(s.get('source', ''))}{more}</span></li>")
     also = ", ".join(count(len(b.get(k) or []), one) for k, one in
                      (("feature_leads", "feature lead"), ("a2i_topics", "Academia-to-Industry topic"), ("gaps", "gap")))
     status = "final" if final else "draft"
@@ -813,6 +903,7 @@ def issue_body(win, stories, digests, cfg, uses, current, brief=None, brief_opts
     if not stories:
         body.append("<p class='empty'>No stories yet in this window.</p>")
         return "".join(body) + research
+    body.append(use_note(root))
     if brief_opts:
         body.append(brief_card(win, brief, cfg, current, root, brief_opts))
     body.append("<h2 class='section-h'>Theme overview</h2><div class='table-wrap'><table class='overview'>"
@@ -910,6 +1001,7 @@ def assistant_body(cfg):
                    "Which conferences and call-for-papers deadlines are coming up?",
                    "Which developing stories had new reports recently?",
                    "Suggest a line-up of 6 stories for the next issue, one per theme",
+                   "Draft a 150-word news brief on the strongest landslide story",
                    "Which regions are under-represented this quarter?"]
     chips = "".join(f"<button type='button' class='chip-btn' data-q='{esc(q)}'>{esc(q)}</button>" for q in suggestions)
     return hero(f"{icon('spark')} AI assistant", "Ask the news desk",
@@ -920,6 +1012,8 @@ def assistant_body(cfg):
 <div class="msg bot welcome"><div class="bubble"><p><b>Hello!</b> I can search every archived story, compare themes, quarters and regions,
 follow developing stories, look up conferences and call-for-papers deadlines in the events calendar, recommend stories and angles for
 the magazine, and read PDF or Word files you attach — for example a call for papers or an article draft.</p>
+<p class='hint'>I write in my own words, quote a sentence or two at most (named and linked), list my sources, name whom to check the
+facts with, and end drafts with a <i>Check before publishing</i> list. <a href='about.html#copyright'>Before you use a story</a></p>
 <div class="chips">{chips}</div></div></div>
 </div>
 <div class="chat-files" id="chat-files"></div>
@@ -997,6 +1091,22 @@ def features_html(cfg):
     return f"<h2 class='section-h'>Map, developing stories, events and e-mail</h2><ul class='about-features'>{lis}</ul>"
 
 
+def use_box(root="", more=True):
+    """'Before you use a story' as an open box (Method page, foot of the weekly pages)."""
+    link = (f"<p class='use-more'><a href='{root}about.html#copyright'>How the news desk keeps to this</a></p>"
+            if more else "")
+    return (f"<div class='use-box'><p class='use-box-h'>{icon('check')}<b>{USE_TITLE}</b></p>{use_steps_html()}"
+            f"{link}</div>")
+
+
+def copyright_html():
+    """Method & sources: the five steps, and what the news desk does to keep to them."""
+    done = "".join(f"<li>{esc(x)}</li>" for x in USE_DONE)
+    return (f"<h2 class='section-h' id='copyright'>Using the stories: copyright</h2>"
+            "<p>Every story here is a lead for the magazine, not material to reuse. The editor's rule for using one:</p>"
+            f"{use_box(more=False)}<p>What the news desk does to keep to it:</p><ul class='plain use-done'>{done}</ul>")
+
+
 def about_body(cfg, latest, brief_opts):
     feeds = cfg.get("feeds", [])
     g = cfg.get("google_news") or {}
@@ -1017,8 +1127,9 @@ def about_body(cfg, latest, brief_opts):
     jrows = "".join(f"<tr><td>{esc(j['name'])}</td><td>{esc(str(j['issn']))}</td></tr>" for j in journals)
     research_step = (f"<li><b>Research.</b> New papers from {len(journals)} geotechnical journals, read from Crossref's "
                      f"free index (papers registered in the last {rcfg.get('lookback_days', 4)} days, each shown once). "
-                     f"They are scored and themed with the same keywords; Claude rates each 1–5 for its use in practice "
-                     f"and writes one sentence on why it matters to practitioners. Up to {rcfg.get('max_papers', 20)} "
+                     f"They are scored and themed with the same keywords (titles and abstracts; the abstracts are not "
+                     f"kept); Claude rates each 1–5 for its use in practice and writes one sentence, in its own words, "
+                     f"on why it matters to practitioners. Up to {rcfg.get('max_papers', 20)} "
                      "papers per digest appear under <b>New research</b>, for the Academia-to-Industry pages.</li>"
                      if journals else "")
     jtable = (f"<h2 class='section-h'>Journals read for new research</h2><div class='table-wrap'><table class='overview'>"
@@ -1044,11 +1155,12 @@ def about_body(cfg, latest, brief_opts):
 <div class="prose">
 <h2 class="section-h">Each run</h2><ol class="steps">
 <li><b>Collect.</b> {len(feeds)} websites and {n_core * editions + n_extra} Google News searches ({n_core} core searches in {editions} English editions, plus {n_extra} further searches including {n_foreign} in other languages). The scan runs every day at 05:00 Cairo time, and on demand: <b>Scan now</b> opens the scan's page on GitHub, where you press <b>Run workflow</b>; the website then follows the scan and tells you when the new digest is ready. Each run looks back {cfg.get('lookback_hours', 60)} hours. So that the same article is not picked up twice, the scanner remembers the links it has already read for 45 days; this only prevents repeats and never removes anything from the archive, where every digest is kept permanently and each issue page gathers the whole quarter.</li>
-<li><b>Score and categorise.</b> Headlines and summaries are scored against {len(cfg['keywords'])} English keywords and {n_ml} terms in {len(languages)} other languages. Each foreign term counts as its English equivalent (for example <i>glissement de terrain</i>, <i>deslizamiento</i>, <i>longsor</i> and <i>انهيار أرضي</i> all count as “landslide”), so every story is filed under an English theme. Specialist sources earn bonus points, noise terms lose points, near-identical headlines are merged. A story needs {cfg.get('min_keyword_score', 3)} points to go forward.</li>
-<li><b>Triage.</b> Up to {ccfg.get('max_candidates', 80)} candidates go to Claude, which rates each 1–5 for geotechnical substance (below {ccfg.get('min_relevance', 3)} is dropped), confirms the theme, suggests a use, writes a one-sentence magazine angle, translates non-English headlines, and reads where each story happened (the country and the town, region or site). Claude then checks whether any new story follows up an earlier one (see below).</li>
+<li><b>Score and categorise.</b> Headlines and the feeds' summaries (read during the scan; no longer saved, never shown) are scored against {len(cfg['keywords'])} English keywords and {n_ml} terms in {len(languages)} other languages. Each foreign term counts as its English equivalent (for example <i>glissement de terrain</i>, <i>deslizamiento</i>, <i>longsor</i> and <i>انهيار أرضي</i> all count as “landslide”), so every story is filed under an English theme. Specialist sources earn bonus points, noise terms lose points, near-identical headlines are merged. A story needs {cfg.get('min_keyword_score', 3)} points to go forward.</li>
+<li><b>Triage.</b> Up to {ccfg.get('max_candidates', 80)} candidates go to Claude, which rates each 1–5 for geotechnical substance (below {ccfg.get('min_relevance', 3)} is dropped), confirms the theme, suggests a use, writes a one-sentence magazine angle in its own words, translates non-English headlines, reads where each story happened (the country and the town, region or site) and names the primary source to check the facts with. Claude then checks whether any new story follows up an earlier one (see below).</li>
 {research_step}
 <li><b>Publish & archive.</b> Up to {cfg.get('max_items', 40)} stories per digest.{site_rule} Every digest is stored permanently, grouped into three-month issue windows, and exported to Excel.</li>
 <li><b>Issue brief.</b> In the last {brief_opts['days_before_end']} days of each quarter Claude reads the quarter's stories rated {brief_opts['min_relevance']} / 5 or higher (at most {brief_opts['max_per_theme']} per theme) and any research papers, and drafts the brief for the editorial meeting as a Word document: an overview, a proposed line-up per theme, feature leads with the kinds of experts to approach, Academia-to-Industry topics, a regional-balance check, gaps worth covering and a watch list. The draft is refreshed every {count(brief_opts['refresh_days'], 'day')} and the final brief is written the day after the quarter closes. <b>Generate / update brief</b> on an issue page starts one on GitHub at any time.</li></ol>
+{copyright_html()}
 {features_html(cfg)}
 <h2 class="section-h">Magazine themes</h2><p class="hint">Words that suggest each theme (English keywords found in any language count too).</p><ul class="theme-list">{themes}</ul>
 <h2 class="section-h">Websites read directly</h2><p class="hint">Sites that block feed readers or publish no feed (among them ISSMGE, ICE, GEER, USGS and GeoEngineer) are read through Google News searches limited to the site.</p><div class="table-wrap"><table class="overview"><thead><tr><th>Source</th><th>Site</th><th>Bonus</th></tr></thead><tbody>{rows}</tbody></table></div>
@@ -1743,9 +1855,13 @@ def render_email(d, cfg):
             rows.append(
                 "<div style='margin:0 0 14px'>"
                 f"<a href='{esc(s['link'])}' style='font:600 15px Arial,sans-serif;color:#1b2430'>{esc(s.get('title_en') or s['title'])}</a>"
-                f"<div style='font:12px Arial,sans-serif;color:#5b6573;margin-top:2px'>{rel}{esc(s.get('use') or '')}"
+                + (f"<div style='font:12px Arial,sans-serif;color:#5b6573;margin-top:2px'>{TRANSLATED} · Original: "
+                   f"<span dir='auto'>{esc(s['title'])}</span></div>" if s.get("title_en") else "")
+                + f"<div style='font:12px Arial,sans-serif;color:#5b6573;margin-top:2px'>{rel}{esc(s.get('use') or '')}"
                 f"{' · ' if s.get('use') else ''}{esc(s['source'])}</div>"
                 + (f"<div style='font:italic 14px Georgia,serif;color:#333;margin-top:4px'>{esc(s['angle'])}</div>" if s.get("angle") else "")
+                + (f"<div style='font:12.5px Arial,sans-serif;color:#1b2430;margin-top:4px'><b>Check with:</b> "
+                   f"{esc(s['primary_source'])}</div>" if s.get("primary_source") else "")
                 + "</div>")
     papers = sorted(d.get("papers", []), key=lambda p: -paper_rank(p))[:8]
     if papers:
@@ -1766,7 +1882,16 @@ def render_email(d, cfg):
             f"<div style='font:600 12px Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#9a7b1c'>Geotechnical News Desk</div>"
             f"<h1 style='font:600 24px Georgia,serif;color:#16324f;margin:4px 0 6px'>{esc(nice_date(d['date'], weekday=True))}</h1>"
             f"<div style='font:13px Arial,sans-serif;color:#5b6573'>{len(d['stories'])} stories selected from {d.get('new_items', 0)} new items</div>"
-            f"{link}{''.join(rows)}{link}</div></body></html>")
+            f"{link}{''.join(rows)}{link}{use_steps_email()}</div></body></html>")
+
+
+def use_steps_email(font="Arial,Helvetica,sans-serif", color="#5b6573", ink="#1b2430", line="#e2e7ee"):
+    """'Before you use a story' for the foot of an e-mail (inline styles, as mail programs need)."""
+    items = "".join(f"<li style='margin:0 0 3px'><b style='color:{ink}'>{esc(what)}</b>{esc(sep)}{esc(how)}</li>"
+                    for what, sep, how in USE_STEPS)
+    return (f"<div style='border-top:1px solid {line};margin-top:24px;padding-top:12px;font:12px/1.5 {font};color:{color}'>"
+            f"<div style='font:700 12px {font};color:{ink};margin:0 0 4px'>{USE_TITLE}</div>"
+            f"<ol style='margin:0;padding:0 0 0 18px'>{items}</ol></div>")
 
 
 # ------------------------------------------------------------------ build
@@ -1799,9 +1924,11 @@ def export_rows(stories):
         yield {
             "Digest date": s["_digest"], "Issue window": s["_window"], "Theme": s["theme"],
             "Relevance (1-5)": s.get("relevance") or "", "Suggested use": s.get("use", ""),
-            "Headline (English)": csv_text(s.get("title_en") or s["title"]),
+            "Headline (English or Claude's translation)": csv_text(s.get("title_en") or s["title"]),
             "Original headline": csv_text(s["title"]) if s.get("title_en") else "",
-            "Magazine angle": csv_text(s.get("angle", "")), "Source": csv_text(s["source"]),
+            "Magazine angle": csv_text(s.get("angle", "")),
+            "Primary source to check": csv_text(" ".join(str(s.get("primary_source") or "").split())),
+            "Source": csv_text(s["source"]),
             "Country": s.get("_country", ""), "Place": csv_text(" ".join(str(s.get("place") or "").split())),
             "Google News edition": s["_region"], "Published": (s.get("published") or "")[:10],
             "Developing story": csv_text(storyline_text(s)), "Link": s["link"],
@@ -1854,9 +1981,11 @@ def build(cfg):
 
     # issue briefs, from their JSON alone; one that cannot be rendered (a hand edit gone
     # wrong) is left out with a message rather than stopping the build and the scan's save
+    # whom to check each story's facts with, for briefs whose story references do not carry it yet
+    primary = {s.get("id"): s["primary_source"] for d in digests for s in d["stories"] if s.get("primary_source")}
     for key, b in list(briefs.items()):
         try:
-            brief.write_docx(DOCS / brief_file(key), b, cfg, theme_color)
+            brief.write_docx(DOCS / brief_file(key), b, cfg, theme_color, primary=primary)
         except (AttributeError, KeyError, TypeError, ValueError) as ex:
             print(f"Issue brief {key} left out: it could not be rendered ({type(ex).__name__}: {ex}).")
             del briefs[key]
@@ -1917,11 +2046,13 @@ def build(cfg):
             f"Issue window {w['win']['span']}", w["stories"], order, theme_color,
             [(nice_date(d["date"]), len(d["stories"])) for d in reversed(w["digests"])], "daily digest",
             digest_count=len(w["digests"]), windows=[key], papers=w["papers"], events=ev_coming, deadlines=ev_calls,
-            events_asof=today)
+            events_asof=today, checklist=use_steps_text(), checklist_title=USE_TITLE)
+        # what Search and the AI assistant read: the headline (and Claude's translation), the source and link,
+        # and what Claude wrote (angle, place, primary source to check, "ps"); never the publisher's text
         compact = [{"d": s["_digest"], "w": key, "t": s["title"], "te": s.get("title_en", ""), "l": s["link"],
                     "s": s["source"], "c": s["_region"], "p": (s.get("published") or "")[:10], "th": s["theme"],
                     "r": s.get("relevance") or 0, "u": s.get("use", ""), "a": s.get("angle", ""),
-                    "k": s.get("keywords", []), "x": s.get("summary", "")[:200] if not s.get("angle") else "",
+                    "k": s.get("keywords", []), "ps": " ".join(str(s.get("primary_source") or "").split()),
                     "rk": s["rank"], "id": s["id"],
                     # where it happened (ISO code, "" = global; names in exports/countries.json) and the
                     # developing story it belongs to (its first report included), its name, size and stage
@@ -1933,8 +2064,7 @@ def build(cfg):
         compact += [{"d": p["_digest"], "w": key, "t": p["title"], "te": "", "l": p["link"],
                      "s": p.get("journal", ""), "c": "", "p": (p.get("published") or "")[:10], "th": p["theme"],
                      "r": p.get("relevance") or 0, "u": A2I, "a": p.get("angle", ""), "k": p.get("keywords", []),
-                     "x": p.get("abstract", "")[:200] if not p.get("angle") else "", "rk": paper_rank(p),
-                     "kind": "paper", "au": p.get("authors", "")}
+                     "rk": paper_rank(p), "kind": "paper", "au": p.get("authors", "")}
                     for p in w["papers"]]
         write(DOCS / "exports" / f"{key}.json", json.dumps(compact, ensure_ascii=False, separators=(",", ":")))
     write(DOCS / "exports" / "index.json",
@@ -1946,9 +2076,10 @@ def build(cfg):
         f"All {len(windows)} issue windows", [s for w in windows for s in w["stories"]], order, theme_color,
         [(w["win"]["label"], len(w["stories"])) for w in reversed(windows)], "issue window",
         digest_count=len(digests), windows=[w["win"]["key"] for w in windows],
-        papers=[p for w in windows for p in w["papers"]], events=ev_coming, deadlines=ev_calls, events_asof=today)
+        papers=[p for w in windows for p in w["papers"]], events=ev_coming, deadlines=ev_calls, events_asof=today,
+        checklist=use_steps_text(), checklist_title=USE_TITLE)
     report.write_report(DOCS / "reports" / "site-report.docx", cfg, digests, windows, theme_color,
-                        site_url(cfg), CHANGELOG, groups=groups)
+                        site_url(cfg), CHANGELOG, groups=groups, checklist=(USE_TITLE, use_steps_text(), USE_DONE))
 
     write(DOCS / "archive.html", page(cfg, "Archive", archive_body(windows, cfg, today_key, briefs, weeks), "", "archive"))
     write(DOCS / "search.html", page(cfg, "Search the archive", search_body(cfg, use_list, windows), "", "search"))

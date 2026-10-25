@@ -9,9 +9,10 @@ Every morning (05:00 Cairo time) GitHub automatically:
 2. scores each story for geotechnical relevance in any of those languages, merges repeated reports of the same event
    and balances the digest across the magazine's eight themes;
 3. asks Claude to rate each story 1–5, place it under a theme, suggest a use (news brief, feature lead,
-   Academia-to-Industry topic, regional insight, watch only), write the geotechnical angle, translate
-   non-English headlines and read **where the story happened** (country and town, region or site), and links any
-   story that **follows up an earlier one** (the inquiry into last month's landslide) to that event;
+   Academia-to-Industry topic, regional insight, watch only), write the geotechnical angle in its own words, translate
+   non-English headlines, read **where the story happened** (country and town, region or site) and name the
+   **primary source to check** the facts with, and links any story that **follows up an earlier one** (the inquiry
+   into last month's landslide) to that event;
 4. saves the digest permanently, rebuilds the website, Excel workbooks and Word report, refreshes the **events
    calendar** once a week, drafts the **issue brief** when one is due, and e-mails an **alert** for new 5/5 stories
    and, on Mondays, the **weekly summary** to the editorial team.
@@ -30,8 +31,8 @@ Website: **https://monabadr12.github.io/geotech-news/**
 | **World map** | Stories by the country they are about, for any issue window, the last 30 days or the whole archive, with the ISSMGE regions and the member-society countries that had no stories (the gaps), a table view and a theme filter. |
 | **Events** | Conferences, symposia and courses with their call-for-papers deadlines: ISSMGE events and others, a calendar feed to subscribe to, and the **Refresh calendar** button. |
 | **Trends** | Charts of stories per month and per quarter by theme, theme shares over time, rising keywords, regions, editorial uses and sources — material for editorials and the year in review. Each chart has hover details and a table view, and the numbers can be downloaded. |
-| **AI assistant** | Chat with Claude about the archive: find stories, compare quarters, follow a developing story ("What is the latest on …?"), look up conferences and deadlines, get a recommended line-up for an issue, and attach PDF or Word documents (calls for papers, drafts, reports) to discuss them alongside the news. Needs the one-time connector setup below. |
-| **Method & sources** | What is scanned, how stories are scored, located and linked, how events are found and e-mails sent, and which sources failed on the latest run. |
+| **AI assistant** | Chat with Claude about the archive: find stories, compare quarters, follow a developing story ("What is the latest on …?"), look up conferences and deadlines, get a recommended line-up for an issue or a draft in its own words (ending with a *Check before publishing* list), and attach PDF or Word documents (calls for papers, drafts, reports) to discuss them alongside the news. Needs the one-time connector setup below. |
+| **Method & sources** | What is scanned, how stories are scored, located and linked, how events are found and e-mails sent, how to use the stories without breaching copyright, and which sources failed on the latest run. |
 
 Every page has a **Scan now** button (see below).
 The footer links the **Website report (Word)**.
@@ -43,7 +44,8 @@ the angle, format and reason for each pick), about five feature leads with the k
 Academia-to-Industry topics that pair news with research papers, a regional-balance check, gaps worth covering and a
 watch list, then the quarter's **developing stories** and the **events and deadlines** from the start of the quarter to
 six months after it (both listed as they stood when the brief was drafted; Claude also reads them for its feature leads
-and watch list). Every pick links to its source; check each story there before publishing.
+and watch list). Every pick links to its source and names the primary source to check it with, and the brief opens
+with the five steps of *Before you use a story*.
 * **Automatically:** a draft in the last 21 days of each quarter, refreshed weekly, and the final brief the day after the
   quarter closes (settings under `brief:` in `config.yaml`).
 * **On demand:** press **Generate / update brief** on the issue page. It opens the *Issue brief* workflow on GitHub:
@@ -55,7 +57,8 @@ and watch list). Every pick links to its source; check each story there before p
 During triage Claude reads the country each story is about (an ISO code such as `CO` or `GB`) and the town, region or
 site it names: where the event, project or site is, which is often not the outlet's country or the Google News edition
 that found the story. A story about several countries, or a general market or research result, counts as global.
-Stories archived before this was added (or whose triage failed) are located in batches after each scan, newest first.
+Stories archived before this was added (or whose triage failed) are located in batches after each scan, newest first;
+the scan's own stories that Claude did not rate come first, while their feed summaries are still there to read.
 The **World map** page plots the stories by country, compares them with the member-society countries of ISSMGE's six
 regions and marks the member countries with no stories in the period, so regional gaps are easy to spot when planning an
 issue. The issue pages and the weekly summaries show the same regional figures. Settings and the ISSMGE member lists are
@@ -116,7 +119,8 @@ e-mail is described [below](#e-mail-alerts-and-the-weekly-summary-setup-about-10
 Each scan also asks Crossref (free, no key) for papers newly registered in 25 journals, including *Géotechnique*,
 *Géotechnique Letters*, *Canadian Geotechnical Journal*, *ASCE JGGE*, *Soils and Foundations*, *Acta Geotechnica*,
 *Computers and Geotechnics*, *Engineering Geology*, *Landslides*, *Tunnelling and Underground Space Technology* and
-*Geotextiles and Geomembranes*. Claude rates each for practice and writes one line on why it matters to practitioners.
+*Geotextiles and Geomembranes*. Claude rates each for practice and writes one line, in its own words, on why it matters
+to practitioners (the abstracts are read for this but no longer saved and never shown: read the paper itself through its DOI link).
 Up to 20 papers per digest appear under **New research** on the digest and issue pages, in Search, in the Excel
 **Research** sheet and in the issue brief. Add a journal under `research: journals:` in `config.yaml` with its ISSN;
 test it with the **Check feeds** workflow (input `{"research": true}` tests every journal).
@@ -144,7 +148,8 @@ is one for the whole archive (`geotech-news-archive.xlsx`, on the Archive page).
   workbook, *Issue window*. Every key figure, table, chart, the theme × use heat map and the **Top 10 stories** list
   recalculate for the selection.
 * **Stories** — every story as a filterable Excel table, colour-coded by theme and rating, with the headline linked to the
-  article, and where it happened (**Country**, **Place**) and the **Developing story** it belongs to. Planning columns let
+  article (Claude's English translation for a foreign story, with the original beside it), the **Primary source to
+  check**, and where it happened (**Country**, **Place**) and the **Developing story** it belongs to. Planning columns let
   you work in the file: **Status** (To review / Shortlisted / Commissioned / Published / Not used), **Assigned to** and
   **Editor notes**; the dashboard's planning chart follows the statuses you set.
 * **By theme** — a tidy reading view, one collapsible section per theme, best stories first.
@@ -153,7 +158,8 @@ is one for the whole archive (`geotech-news-archive.xlsx`, on the Archive page).
   upcoming events, each linked to its website.
 * **Sources** — which outlets contributed and how relevant their stories were.
 
-The CSV files (issue pages and Search) have the same Country, Place and Developing story columns.
+The CSV files (issue pages and Search) have the same Primary source to check, Country, Place and Developing story
+columns. The **Start here** sheet repeats the five steps of *Before you use a story*.
 
 Tips: downloaded files open in Protected View, so press **Enable Editing** to see the figures. The workbook is rebuilt
 after every scan, so save your own copy for the planning columns.
@@ -185,6 +191,51 @@ recorded as sent, the change log and open items. The change log and open items a
   can be changed at any time without losing anything.
 * Issue windows are calendar quarters by default (Jan–Mar, Apr–Jun, Jul–Sep, Oct–Dec). If the magazine's
   cycle starts in a different month, change `issue_start_month` under `magazine:` in `config.yaml`.
+
+## Using the stories in the magazine (copyright)
+Every story the news desk finds is a **lead**, not material to reuse. Before you use a story:
+
+1. **Treat the news item as a lead**, not as your source.
+2. **Check the facts with the primary source**: the authority, the project owner, the company's press release or the
+   official report. Story cards name it as **Check with**.
+3. **Write the piece in your own words**, with your own angle; the digest's *magazine angle* is a starting point.
+4. **Quote a sentence or two at most**, in quotation marks, naming the publication and linking to it.
+5. **For images, use your own**, the project's press-kit photos released for media use, or ask permission. Never reuse
+   a source's photos, figures or drawings.
+
+The five steps appear as **Before you use a story** near the top of every digest and issue page (one line, opened
+with a click), on the Method & sources page (*Using the stories: copyright*), on the Excel **Start here** sheet, at the
+foot of the weekly summary e-mail and page, in the Word website report and in each issue brief.
+
+What the system does to follow them:
+* **No publisher's text beyond the headline is published or saved.** The scanner reads the feeds' summaries and the
+  papers' abstracts during the scan (for the keyword score and for Claude's reading), but saves every story with an
+  empty `summary` and every paper with an empty `abstract`, so neither the current archive files in `data/digests/`
+  (public in this repository) nor anything built from them — website pages, search data (`docs/exports/*.json`), CSV
+  and Excel files, the Word report, issue briefs, e-mails, the AI assistant's context — contain them. A story without
+  an angle shows its headline and source only. `python scanner.py --clear-publisher-text` empties any summaries and
+  abstracts left in older digests (it was run once on 25 October 2026 and changes nothing else; running it again is
+  safe). *Earlier versions* of the files in the repository's Git history (the digests, workbooks and search data
+  committed before 25 October 2026) still hold the feed summaries and abstracts saved until then. Removing them takes a
+  history rewrite (for example `git filter-repo`, blanking `summary` and `abstract` in `data/digests/*.json` and
+  dropping the old `docs/exports/` files) and a force-push of `main`, which only the repository owner should decide on.
+* **Headlines identify the article** and always come with the source's name and a link to the original. Headlines of
+  foreign stories are shown in Claude's English translation, labelled *English headline translated by Claude*, with
+  the original headline beside it.
+* **The magazine angle and the note on why a paper matters are Claude's own words**: the triage prompt forbids copying
+  or closely paraphrasing the headline, summary or abstract.
+* **Primary source to check**: for each story it rates, Claude names in at most 12 words whom to verify the facts with
+  (an authority, the project owner, the company or the body behind the official report; blank when unclear). It is
+  shown as *Check with* on story cards, in Search, in the alerts and the weekly summary, as the *Primary source to
+  check* column of the CSV and Excel files, in the AI assistant's context and with each story in the issue brief.
+  Stories rated before 25 October 2026 have none.
+* **The AI assistant** answers and drafts in its own words, never reproduces article text, abstracts or paywalled
+  content, quotes at most a sentence or two (in quotation marks, publication named and linked), always lists its
+  sources with links, names the primary source to check, ends every draft of a magazine piece with a short **Check
+  before publishing** list (facts to confirm, quotes to verify, image rights) and, for images, recommends your own
+  photos, press-kit photos or asking permission — never a source's photos, figures or drawings. The **issue brief**
+  follows the same own-words, short-quote, primary-source and image rules and shows *Check with* beside every story.
+* **No images from the sources**: the website, e-mails and downloads show none, and the scanner does not collect them.
 
 ---
 
@@ -350,6 +401,7 @@ now**.
 | `docs/` | The generated website (do not edit by hand). |
 
 ## Notes
-* Headlines link to the original publishers; the digest reproduces no article text beyond the short feed
-  summary. Treat stories as leads and go to the primary source before publishing.
+* Headlines link to the original publishers; the digest reproduces no article text, summary, abstract or image
+  beyond the headline. Treat stories as leads and go to the primary source before publishing (see
+  *Using the stories in the magazine (copyright)*).
 * Some sites block automated readers or have no feed; Google News searches usually still catch their stories.
