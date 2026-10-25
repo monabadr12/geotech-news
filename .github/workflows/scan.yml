@@ -8,6 +8,11 @@ on:
     # in Cairo: 02:00 UTC in summer (UTC+3), 03:00 UTC in winter (UTC+2).
     - cron: "0 2 * * *"
     - cron: "0 3 * * *"
+    # Catch-up runs: GitHub delays scheduled runs at the start of the hour and
+    # sometimes drops them when it is busy. These scan only if the day has no
+    # digest yet (05:37 and 09:13 UTC, i.e. mid-morning and midday in Cairo).
+    - cron: "37 5 * * *"
+    - cron: "13 9 * * *"
   workflow_dispatch:   # "Run workflow" button on GitHub and the website's "Scan now" button
   push:                # rebuild the website (no scan) when its design or settings change
     branches: [main]
@@ -23,21 +28,23 @@ jobs:
   scan:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}   # the branch tip when the job starts, not the commit that queued it
       - name: Check the time
         id: gate
         run: |
           offset=$(TZ=Africa/Cairo date +%z)
           run=true
-          if [ "${{ github.event_name }}" = "schedule" ]; then
-            if [ "${{ github.event.schedule }}" = "0 2 * * *" ] && [ "$offset" != "+0300" ]; then run=false; fi
-            if [ "${{ github.event.schedule }}" = "0 3 * * *" ] && [ "$offset" != "+0200" ]; then run=false; fi
-          fi
+          case "${{ github.event.schedule }}" in
+            "0 2 * * *") if [ "$offset" != "+0300" ]; then run=false; fi ;;
+            "0 3 * * *") if [ "$offset" != "+0200" ]; then run=false; fi ;;
+            "37 5 * * *"|"13 9 * * *")  # catch-up: only when today's scan did not run
+              if [ -f "data/digests/$(date -u +%F).json" ]; then run=false; echo "Today's digest exists, so no catch-up scan is needed."
+              else echo "No digest yet today (the 05:00 scan was delayed or dropped by GitHub): scanning now."; fi ;;
+          esac
           echo "Cairo UTC offset $offset, run=$run"
           echo "run=$run" >> "$GITHUB_OUTPUT"
-      - uses: actions/checkout@v4
-        if: steps.gate.outputs.run == 'true'
-        with:
-          ref: ${{ github.ref }}   # the branch tip when the job starts, not the commit that queued it
       - uses: actions/setup-python@v5
         if: steps.gate.outputs.run == 'true'
         with:
