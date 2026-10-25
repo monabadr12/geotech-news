@@ -774,6 +774,17 @@ def _ev_date(iso):
     return f"{dt.date(2000, int(m.group(2)), 1):%b} {m.group(1)}" if m and 1 <= int(m.group(2)) <= 12 else None
 
 
+def _ev_passed(iso, asof):
+    """True when a deadline ('YYYY-MM-DD', or 'YYYY-MM' up to the month's end) lies before asof."""
+    text = str(iso or "")
+    day = as_date(text) if len(text) == 10 else None
+    m = re.fullmatch(r"(\d{4})-(\d{2})", text) if not day else None
+    if m and 1 <= int(m.group(2)) <= 12:  # the month's last day
+        y, mo = int(m.group(1)), int(m.group(2))
+        day = dt.date(y + mo // 12, mo % 12 + 1, 1) - dt.timedelta(days=1)
+    return bool(day and day < asof)
+
+
 def _ev_where(e):
     if e.get("_where"):
         return str(e["_where"])
@@ -788,8 +799,8 @@ def _ev_name(e):
 
 
 def _events_sheet(ws, ctx):
-    """The events calendar as it stood when the workbook was made: open call-for-papers deadlines, then the
-    upcoming events, each with its website."""
+    """The events calendar as it stood when the workbook was made: open deadlines (calls for papers,
+    registration), then the upcoming events, each with its website."""
     ws.sheet_view.showGridLines = False
     cols = [("Date", 13), ("Days left", 10), ("Event", 52), ("Kind", 19), ("Place", 26), ("Dates", 22),
             ("Organiser", 28), ("Deadlines", 34), ("Website", 34)]
@@ -829,7 +840,7 @@ def _events_sheet(ws, ctx):
         return max(lines_needed(_ev_name(e), 52), lines_needed(_ev_where(e), 26), lines_needed(e.get("organiser"), 28))
 
     row = 4
-    section(ws, row, 1, len(cols), f"Call-for-papers deadlines ({len(ctx.calls)})")
+    section(ws, row, 1, len(cols), f"Open deadlines: calls for papers, registration ({len(ctx.calls)})")
     head(ws, row + 1, [(1, 1, "Deadline"), (2, 2, "Days left"), (3, 3, "Event"), (4, 4, "Kind"), (5, 5, "Place"),
                        (6, 6, "Event dates"), (7, 7, "Organiser"), (8, 8, "What is due"), (9, 9, "Website")])
     row += 2
@@ -845,7 +856,7 @@ def _events_sheet(ws, ctx):
         ws.row_dimensions[row].height = min(max(lines, 1), 4) * 12.5 + 5
         row += 1
     if not ctx.calls:
-        put(ws, row, 3, "No call-for-papers deadline is open at the moment.", f=font(10, italic=True, color=MUTED))
+        put(ws, row, 3, "No deadline is open at the moment.", f=font(10, italic=True, color=MUTED))
         row += 1
 
     row += 1
@@ -857,7 +868,9 @@ def _events_sheet(ws, ctx):
         put(ws, row, 1, _ev_date(e.get("start")), f=font(10, True), al=top, fmt="dd mmm yyyy")
         put(ws, row, 2, "ISSMGE" if e.get("issmge") else None, f=font(9, True, ACCENT), al=center)
         lines = event_cells(row, e)
+        # a deadline that has passed is marked, as the Events page strikes it through
         dls = "\n".join(f"{d.get('label', 'Deadline')}: {dates({'start': d.get('date')})}"
+                        + (" (passed)" if _ev_passed(d.get("date"), ctx.events_asof) else "")
                         for d in e.get("deadlines") or [] if isinstance(d, dict))
         put(ws, row, 8, clean(dls, 600) or None, f=font(9), al=wrap)
         ws.row_dimensions[row].height = min(max(lines, len(dls.splitlines()), 1), 6) * 12.5 + 5
@@ -1278,8 +1291,9 @@ def _start_sheet(ws, ctx, anchors):
          "and a link to the paper. Status and Editor notes work as in Stories.",
          {"font": link_font, "link": ("Research", "A1")}),
     ] if ctx.papers else []) + ([
-        ("Events →", f"The events calendar on {ctx.events_asof:%d %b %Y}: {len(ctx.calls)} open call-for-papers "
-         f"{'deadline' if len(ctx.calls) == 1 else 'deadlines'} with the days left, and {len(ctx.events)} upcoming "
+        ("Events →", f"The events calendar on {ctx.events_asof:%d %b %Y}: {len(ctx.calls)} open "
+         f"{'deadline' if len(ctx.calls) == 1 else 'deadlines'} (calls for papers, registration) with the days left, "
+         f"and {len(ctx.events)} upcoming "
          f"{'event' if len(ctx.events) == 1 else 'events'} (ISSMGE conferences, other conferences, courses and "
          "webinars), each linked to its website.", {"font": link_font, "link": ("Events", "A1")}),
     ] if ctx.events or ctx.calls else []) + [

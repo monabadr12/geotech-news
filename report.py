@@ -252,13 +252,13 @@ def events_section(doc, cfg, data_dir):
                          "ANTHROPIC_API_KEY secret and Anthropic's web search and web fetch tools)."))
     calls = feature("events", "deadlines", cfg, today, days=90, default=[]) or []
     if calls:
-        heading(doc, "Call-for-papers deadlines in the next 90 days", 2)
+        heading(doc, "Deadlines in the next 90 days (calls for papers, registration)", 2)
         table(doc, ["Deadline", "Days left", "What is due", "Event"],
               [(nice(c["date"]) or c["date"], max(0, (dt.date.fromisoformat(c["date"]) - today).days)
                 if len(c["date"]) == 10 else "date TBC", c["label"], c["event"].get("short") or c["event"].get("name", ""))
                for c in calls[:10]], [2.6, 2, 4.4, 8])
     else:
-        doc.add_paragraph("No call-for-papers deadline falls in the next 90 days.")
+        doc.add_paragraph("No deadline (call for papers, registration) falls in the next 90 days.")
     coming = feature("events", "upcoming", cfg, today, days=365, default=[]) or []
     if coming:
         heading(doc, "Events in the next 12 months", 2)

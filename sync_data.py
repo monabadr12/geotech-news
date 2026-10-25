@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parent
 DIGESTS = ROOT / "data" / "digests"
 BRIEFS = ROOT / "data" / "briefs"
 SEEN_FILE = ROOT / "data" / "seen.json"
-EVENTS_FILE = ROOT / "data" / "events.json"   # events found by events.py: {"updated": iso, "events": [...]}
+EVENTS_FILE = ROOT / "data" / "events.json"   # events found by events.py: {"updated": iso, "events": [...], "failed": why the last refresh failed}
 NOTIFY_FILE = ROOT / "data" / "notify.json"   # e-mails sent by notify.py: {"alerted": {id: date}, "weekly": {week: iso}}
 
 

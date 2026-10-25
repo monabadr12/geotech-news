@@ -715,7 +715,7 @@ events:
   extract_effort: low      # effort for turning Claude's notes into calendar entries
   refresh_days: 7          # the daily scan refreshes the calendar when it is 7 days old
   months_ahead: 24         # events starting in the next 24 months
-  deadline_days: 90        # "Open calls for papers": deadlines in the next 90 days
+  deadline_days: 90        # "Open deadlines" on the Events page: deadlines in the next 90 days
   keep_days: 7             # events found by a refresh stay 7 days after they end
   max_searches: 10         # web searches per refresh
   max_fetches: 15          # pages Claude opens per refresh
@@ -741,6 +741,7 @@ events:
     - name: Institution of Civil Engineers (ICE) events
       url: https://www.ice.org.uk/events
   blocked_domains:         # predatory, mass-produced "International Conference on ..." series: never listed
+                           # (adding one also removes the events already found there)
     - waset.org
     - conferenceindex.org
     - conferenceseries.com

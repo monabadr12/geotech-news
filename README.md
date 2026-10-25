@@ -75,18 +75,21 @@ each report at its source.
 
 ### Events calendar
 The **Events** page lists conferences, symposia, courses and webinars for geotechnical engineers, with their
-call-for-papers deadlines, from two sources:
+deadlines (calls for abstracts and papers, registration), from two sources:
 * **The editors' list, `data/events.yaml`.** Edit it on GitHub (pencil icon, or **Edit the editors' list** on the Events
   page); its first lines explain the format. An event listed there always wins over the same event found by the refresh,
   so this is the place to correct a date or a link. If an entry cannot be read, the Events page says which and why.
 * **The weekly refresh.** Once a week (`refresh_days`) the daily scan asks Claude to read the organisers' calendars
   listed under `events: calendars:` in `config.yaml` (ISSMGE, ITA-AITES, the ASCE Geo-Institute, ISRM, IGS, DFI, BGA,
   ICE and GeoEngineer) with Anthropic's web search and web fetch tools, and keeps what it finds in `data/events.json`.
-  Every event must link to a page Claude actually read, and predatory conference series are left out. Web search and web
-  fetch must be allowed for the organisation that owns the `ANTHROPIC_API_KEY` (Claude Console → Settings). A refresh
-  that fails leaves the calendar as it was.
+  Every event must link to a page Claude actually read, and predatory conference series are left out. A site or organiser
+  added later to `blocked_domains` or `blocked_organisers` (`events:` in `config.yaml`) disappears from the calendar at the
+  next build, along with the events already found there. Web search and web fetch must be allowed for the organisation
+  that owns the `ANTHROPIC_API_KEY` (Claude Console → Settings). A refresh that fails leaves the calendar as it was; the
+  daily scan tries again two days later (the next day when Claude was only busy), and the Events page says why.
 * **Refresh calendar** on the Events page starts a refresh at any time: it opens the *Events calendar and weekly summary*
-  workflow on GitHub, where you choose **refresh the events calendar** and press **Run workflow**.
+  workflow on GitHub, where you choose **refresh the events calendar** and press **Run workflow**. The run fails, and
+  the page says so, when nothing was refreshed (no key, or no event passed the checks).
 * **Subscribe:** the whole calendar is a feed, `https://monabadr12.github.io/geotech-news/events.ics`, that Outlook,
   Google Calendar or Apple Calendar can subscribe to (the Events page explains how); each event also has **Add to
   calendar**. The Latest and issue pages show the next deadlines and events beside the news.
@@ -137,7 +140,7 @@ is one for the whole archive (`geotech-news-archive.xlsx`, on the Archive page).
   **Editor notes**; the dashboard's planning chart follows the statuses you set.
 * **By theme** — a tidy reading view, one collapsible section per theme, best stories first.
 * **Research** — the window's new research papers (when there are any).
-* **Events** — the events calendar when the workbook was made: open call-for-papers deadlines (with the days left) and the
+* **Events** — the events calendar when the workbook was made: open deadlines (with the days left) and the
   upcoming events, each linked to its website.
 * **Sources** — which outlets contributed and how relevant their stories were.
 

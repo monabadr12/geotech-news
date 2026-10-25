@@ -883,7 +883,7 @@ def events_docx(doc, events, deadlines, span):
     hint(doc, f"From the website's events calendar when the brief was drafted, {when}: ISSMGE conferences, other "
               "conferences, courses and webinars. Check the dates on each event's website before you publish them.")
     if deadlines:
-        list_label(doc, "Call-for-papers deadlines")
+        list_label(doc, "Deadlines")
         table(doc, ["Deadline", "What is due", "Event"],
               [(date_text_range(d["date"], d["date"]), d.get("label", ""), d.get("event", "")) for d in deadlines],
               [3, 5, 9])

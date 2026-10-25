@@ -40,6 +40,7 @@ ROOT = Path(__file__).resolve().parent
 CONFIG = Path(os.environ.get("SCANNER_CONFIG", ROOT / "config.yaml"))
 CURATED_FILE = ROOT / "data" / "events.yaml"   # kept by the editors
 FOUND_FILE = ROOT / "data" / "events.json"     # written by the refresh: {"updated": iso, "events": [...], "notes": [...]}
+#                                                and, after a refresh that failed, "attempted", "failed" and "retry"
 esc = site_builder.esc
 
 KINDS = ["ISSMGE conference", "ISSMGE-supported", "Other conference", "Course / webinar"]
@@ -49,6 +50,7 @@ KIND_CLASS = {"ISSMGE conference": "k-conf", "ISSMGE-supported": "k-supp", "Othe
 EFFORTS = ("low", "medium", "high", "xhigh", "max")
 RESEARCH_TOKENS = 64000  # thinking, searches and the notes; streamed, so a long turn cannot time out
 EXTRACT_TOKENS = 32000
+RETRY_DAYS = 2  # after a failed refresh the daily scan waits this long (only a day when Claude was busy)
 
 DEFAULTS = {"model": "claude-opus-5-5", "effort": "medium", "extract_effort": "low", "refresh_days": 7,
             "months_ahead": 24, "deadline_days": 90, "keep_days": 7, "max_searches": 10, "max_fetches": 15,
@@ -66,6 +68,8 @@ DEFAULT_BLOCKED = ["waset.org", "conferenceindex.org", "conferenceseries.com", "
 # "21." is the tell: real conferences also write "ICSGE 2027: International Conference on ...".
 PREDATORY_NAME = re.compile(r"\b\d{1,2}\.\s*International Conference on\b|World Academy of Science", re.I)
 HOSTNAME = re.compile(r"^(?:[a-z0-9-]+\.)+[a-z]{2,}$")
+# a deadline for abstracts or papers (a call for papers); registration and the like are other deadlines
+CALL_LABEL = re.compile(r"abstract|paper|submission|manuscript|contribution|proposal|poster", re.I)
 URL_IN_TEXT = re.compile(r"https?://[^\s\"'<>\\)\]]+", re.I)
 # the API's answer when the organisation that owns the key has web search (or fetch) turned off
 WEB_OFF = re.compile(r"web[ _-]?(?:search|fetch)\b[^.]*\b(?:not enabled|disabled|not available|not allowed|turned off)"
@@ -101,7 +105,12 @@ NAME_TO_CODE.update({"usa": "US", "uk": "GB", "england": "GB", "scotland": "GB",
 
 
 class ScanError(Exception):
-    """A refresh could not be completed; the message says why, for the log and the page."""
+    """A refresh could not be completed; the message says why, for the log and the page.
+    transient: Claude was busy or could not be reached, so the next daily scan may well succeed."""
+
+    def __init__(self, message, transient=False):
+        super().__init__(message)
+        self.transient = transient
 
 
 class Problem(Exception):
@@ -412,11 +421,12 @@ def read_curated(problems):
 
 
 def read_found():
-    """The last refresh: {"updated": iso or "", "events": [...], "notes": [...]}; empty when missing or unreadable."""
+    """The last refresh: {"updated": iso or "", "events": [...], "notes": [...]}, and "attempted" (iso),
+    "failed" (why) and "retry" (YYYY-MM-DD), all "" unless a later refresh failed; empty when missing or unreadable."""
     try:
         data = json.loads(FOUND_FILE.read_text(encoding="utf-8"))
     except (OSError, ValueError):
-        return {"updated": "", "events": [], "notes": []}
+        return {"updated": "", "events": [], "notes": [], "attempted": "", "failed": "", "retry": ""}
     data = data if isinstance(data, dict) else {}
     found, notes = data.get("events"), data.get("notes")
     events = []
@@ -426,13 +436,21 @@ def read_found():
                 events.append(clean_event(raw, "scan")[0])
             except Problem:
                 continue
-    updated = str(data.get("updated") or "")
-    try:
-        dt.datetime.fromisoformat(updated)
-    except ValueError:
-        updated = ""
-    return {"updated": updated, "events": events,
-            "notes": [text(n, 400) for n in (notes if isinstance(notes, list) else []) if n]}
+    stamps, when = {}, {}
+    for k in ("updated", "attempted"):
+        stamps[k] = str(data.get(k) or "")
+        try:
+            w = dt.datetime.fromisoformat(stamps[k])
+            when[k] = w if w.tzinfo else w.replace(tzinfo=dt.timezone.utc)
+        except ValueError:
+            stamps[k] = ""
+    # a refresh that failed after the last one that worked (a later success clears it)
+    failed = "attempted" in when and ("updated" not in when or when["attempted"] > when["updated"])
+    retry = parse_date(data.get("retry")) if failed else ""
+    return {"updated": stamps["updated"], "events": events,
+            "notes": [text(n, 400) for n in (notes if isinstance(notes, list) else []) if n],
+            "attempted": stamps["attempted"] if failed else "", "failed": text(data.get("failed"), 400) if failed else "",
+            "retry": retry if len(retry) == 10 else ""}
 
 
 STOP = {"the", "of", "on", "and", "for", "in", "a", "an", "to", "at", "with", "international", "conference",
@@ -450,23 +468,38 @@ def norm_url(url):
     return host(url) + p.path.rstrip("/").lower()
 
 
+def acronym(e):
+    return re.sub(r"[^a-z0-9]", "", e["short"].lower())
+
+
+def overlap(a, b):
+    """The share of the two names' words that they have in common (0 to 1)."""
+    wa, wb = words(a["name"]), words(b["name"])
+    return len(wa & wb) / len(wa | wb) if wa and wb else 0
+
+
+def same_name(a, b):
+    """The names say it is one event: the same words or acronym, or most of the words shared."""
+    wa, wb = words(a["name"]), words(b["name"])
+    sa, sb = acronym(a), acronym(b)
+    return bool(wa and wa == wb or sa and sa == sb or overlap(a, b) >= 0.75)
+
+
 def same_event(a, b):
     """Two entries for one event: the same name, acronym or link in the same year, or the
-    same start day in the same city."""
+    same start day in the same city with names that agree in part. A TC workshop that starts on
+    a conference's first day in the same city is an event of its own."""
     if first_day(a["start"]).year != first_day(b["start"]).year:
         return False
-    wa, wb = words(a["name"]), words(b["name"])
-    if wa and wa == wb:
+    if same_name(a, b):
         return True
-    sa, sb = re.sub(r"[^a-z0-9]", "", a["short"].lower()), re.sub(r"[^a-z0-9]", "", b["short"].lower())
-    if sa and sa == sb:
+    share = overlap(a, b)
+    if norm_url(a["url"]) == norm_url(b["url"]) and (a["start"] == b["start"] or share >= 0.5):
         return True
-    overlap = len(wa & wb) / len(wa | wb) if wa and wb else 0
-    if overlap >= 0.75:
-        return True
-    if norm_url(a["url"]) == norm_url(b["url"]) and (a["start"] == b["start"] or overlap >= 0.5):
-        return True
-    return bool(a["start"] == b["start"] and a["city"] and a["city"].lower() == b["city"].lower())
+    if not (a["start"] == b["start"] and a["city"] and a["city"].lower() == b["city"].lower()):
+        return False
+    sa, sb = acronym(a), acronym(b)  # one names the other's acronym: "18ARC" for the 18th Asian Regional Conference
+    return share >= 0.3 or bool(sa and sa in words(b["name"]) or sb and sb in words(a["name"]))
 
 
 def assign_ids(events):
@@ -499,15 +532,19 @@ def merge_deadlines(keep, extra):
 
 def load(cfg, problems=None):
     """Every event: the editors' list, then the events the refresh found that are not on it
-    (an editors' entry always wins; when it has no deadlines yet, the refresh's are shown)."""
+    (an editors' entry always wins; when it has no deadlines yet, the refresh's are shown if the
+    names agree). A found event whose site or organiser has since been blocked in config.yaml is left out."""
     problems = [] if problems is None else problems
     curated = read_curated(problems)
     found = read_found()
+    opts = settings(cfg)
     out = list(curated)
     for e in found["events"]:
+        if blocked(e, opts):
+            continue
         twin = next((c for c in curated if same_event(c, e)), None)
         if twin is not None:
-            if not twin["deadlines"] and e["deadlines"]:
+            if not twin["deadlines"] and e["deadlines"] and same_name(twin, e):
                 twin["deadlines"] = list(e["deadlines"])
                 twin["notes"] = " ".join(x for x in (twin["notes"].rstrip(".") + "." if twin["notes"] else "",
                                                      "Deadlines found by the weekly refresh"
@@ -566,7 +603,7 @@ def date_tile(iso):
 
 
 def sidebar(cfg, root, today, limit=5):
-    """'Upcoming events & deadlines': the next calls for papers and events, for other pages.
+    """'Upcoming events & deadlines': the next deadlines (calls for papers, registration) and events, for other pages.
     Empty when the calendar has nothing coming up."""
     opts = settings(cfg)
     events = load(cfg)
@@ -591,7 +628,7 @@ def sidebar(cfg, root, today, limit=5):
                            f"<a href='{root}events.html#ev-{esc(e['id'])}' dir='auto'>{esc(e['name'])}</a>"
                            f"<small>{esc(sub)}</small></span></li>")
     cols = "".join(f"<div><h3>{title}</h3><ul class='ev-side-list'>{''.join(items)}</ul></div>"
-                   for title, items in (("Calls for papers", deadline_items_), ("Coming up", event_items)) if items)
+                   for title, items in (("Deadlines", deadline_items_), ("Coming up", event_items)) if items)
     return (f"<aside class='ev-side' aria-label='Upcoming events and deadlines'><div class='ev-side-head'>"
             f"<h2>{icon('calendar')}Upcoming events &amp; deadlines</h2>"
             f"<a href='{root}events.html'>Full calendar →</a></div><div class='ev-side-cols'>{cols}</div></aside>")
@@ -664,7 +701,8 @@ def ics_deadline(e, d, stamp):
             f"DTSTART;VALUE=DATE:{day:%Y%m%d}", f"DTEND;VALUE=DATE:{day + dt.timedelta(days=1):%Y%m%d}",
             f"SUMMARY:{ics_text('Deadline: ' + d['label'] + ' – ' + label_of(e))}",
             f"DESCRIPTION:{ics_text(desc)}", *([f"URL:{e['url']}"] if e["url"] != "#" else []),
-            "CATEGORIES:Call for papers", "TRANSP:TRANSPARENT", "END:VEVENT"]
+            f"CATEGORIES:{'Call for papers' if CALL_LABEL.search(d['label']) else 'Deadline'}", "TRANSP:TRANSPARENT",
+            "END:VEVENT"]
 
 
 def ics_calendar(blocks, name, cfg):
@@ -760,8 +798,8 @@ def event_card(e, cfg, today, found_on="", past=False):
 
 def calls_panel(calls, today, days):
     if not calls:
-        return (f"<section class='ev-calls none' id='calls'><h2 class='section-h'>Open calls for papers</h2>"
-                f"<p class='empty'>No call-for-papers deadlines in the next {days} days. Later deadlines are shown "
+        return (f"<section class='ev-calls none' id='calls'><h2 class='section-h'>Open deadlines</h2>"
+                f"<p class='empty'>No deadlines in the next {days} days. Later deadlines are shown "
                 "on each event below.</p></section>")
     rows = []
     for c in calls:
@@ -771,10 +809,10 @@ def calls_panel(calls, today, days):
         rows.append(f"<li class='{state}'><a href='#ev-{esc(e['id'])}'><span class='ev-cd'>{date_tile(c['date'])}</span>"
                     f"<span class='ev-ct'><b>{esc(c['label'])}</b> · {esc(label_of(e))}<small dir='auto'>{esc(sub)}</small></span>"
                     f"{left_html(c['date'], today)}</a></li>")
-    return (f"<section class='ev-calls' id='calls'><h2 class='section-h'>Open calls for papers "
-            f"<span class='h1-sub'>deadlines in the next {days} days</span></h2>"
-            "<p class='hint'>Abstract, paper and registration deadlines, soonest first. Check each date on the event's "
-            f"website before announcing it.</p><ol class='ev-calls-list'>{''.join(rows)}</ol></section>")
+    return (f"<section class='ev-calls' id='calls'><h2 class='section-h'>Open deadlines "
+            f"<span class='h1-sub'>in the next {days} days</span></h2>"
+            "<p class='hint'>Calls for abstracts and papers, registration and other deadlines, soonest first. Check "
+            f"each date on the event's website before announcing it.</p><ol class='ev-calls-list'>{''.join(rows)}</ol></section>")
 
 
 def filters(events, cfg):
@@ -824,10 +862,13 @@ def page_body(cfg, events, found, today, problems, opts):
         refreshed = "Editors' list"
         state = ("The weekly refresh has not run yet, so the calendar shows the editors' list. Press "
                  "<b>Refresh calendar</b> to have Claude read the organisers' calendars now.")
+    if found["failed"]:
+        state += (f" The refresh of {esc(nice(found['attempted'][:10]))} did not complete: {esc(found['failed'])} "
+                  + (f"The daily scan tries again on {esc(nice(found['retry']))}." if found["retry"] else ""))
     nxt = next((e for e in coming if first_day(e["start"]) > today), None)
     stats = (site_builder.stat(len(coming), f"events in the next {opts['months_ahead']} months")
              + site_builder.stat(sum(1 for e in coming if e["issmge"]), "ISSMGE events")
-             + site_builder.stat(len(calls), f"open calls ({opts['deadline_days']} days)")
+             + site_builder.stat(len(calls), f"open deadlines ({opts['deadline_days']} days)")
              + site_builder.stat(site_builder.count((first_day(nxt["start"]) - today).days, "day") if nxt else "–",
                                  "to the next event"))
     actions = (f"<div class='actions'><a class='btn primary' href='#subscribe'>{icon('rss')}Subscribe to the calendar</a>"
@@ -1037,8 +1078,10 @@ def api_call(client, raw, key, model, what, **request):
             raise ScanError(web_off_note(ex)) from None
         raise ScanError(f"Claude could not take the {what} request ({scanner.api_message(ex)}).") from None
     except anthropic.APIError as ex:
+        busy = isinstance(ex, anthropic.APIConnectionError) or (
+            isinstance(ex, anthropic.APIStatusError) and (ex.status_code == 429 or ex.status_code >= 500))
         raise ScanError(f"Claude returned an error or could not be reached during the {what} "
-                        f"({scanner.api_message(ex)}). The next daily scan tries again.") from None
+                        f"({scanner.api_message(ex)}).", transient=busy) from None
 
 
 def web_off_note(ex):
@@ -1156,16 +1199,16 @@ def check_found(entries, today, opts, hosts):
     """The entries that pass the checks, and a Counter of why the others were left out."""
     keep, why = [], Counter()
     oldest, horizon = today - dt.timedelta(days=opts["keep_days"]), add_months(today, opts["months_ahead"])
-    calendars = {norm_url(c["url"]) for c in opts["calendars"]}
     for raw in entries:
         if blocked(raw, opts):
             why["a predatory conference series"] += 1
             continue
         # the link must come from a page Claude read (a search result, a fetched page or a citation),
-        # so an address it made up never reaches the calendar
+        # so an address it made up never reaches the calendar; a configured calendar that could not
+        # be opened does not count
         links = [u for u in (text(raw.get("url"), 500), text(raw.get("source_url"), 500))
                  if u.lower().startswith("https://") and host(u)]
-        good = [u for u in links if on_domain(host(u), hosts) or norm_url(u) in calendars]
+        good = [u for u in links if on_domain(host(u), hosts)]
         if not links:
             why["no https web address"] += 1
             continue
@@ -1201,7 +1244,7 @@ def merge_found(new, old, curated, today, opts, day):
         if twin is not None:  # reported twice in one refresh
             twin["deadlines"] = merge_deadlines(twin["deadlines"], e["deadlines"])
             continue
-        before = next((o for o in old if same_event(o, e)), None)
+        before = next((o for o in old if same_event(o, e) and not blocked(o, opts)), None)
         if before is not None:
             e["id"], e["found"] = before["id"], before["found"] or day
             e["deadlines"] = merge_deadlines(e["deadlines"], before["deadlines"])
@@ -1210,8 +1253,8 @@ def merge_found(new, old, curated, today, opts, day):
             fresh += not any(same_event(c, e) for c in curated)
         kept.append(e)
     distinct = len(kept)
-    for o in old:
-        if last_day(o["end"]) >= oldest and not any(same_event(k, o) for k in kept):
+    for o in old:  # an earlier find whose site or organiser has been blocked since is dropped
+        if last_day(o["end"]) >= oldest and not blocked(o, opts) and not any(same_event(k, o) for k in kept):
             kept.append(o)
     kept.sort(key=lambda e: (first_day(e["start"]), e["name"].lower()))
     assign_ids(kept)
@@ -1219,23 +1262,45 @@ def merge_found(new, old, curated, today, opts, day):
 
 
 def due(now, opts):
-    """(True, why) when the calendar should be refreshed today, else (False, why)."""
-    updated = read_found()["updated"]
+    """(True, why) when the calendar should be refreshed today, else (False, why). After a refresh
+    that failed, the next one waits until its retry day, so Claude's research is not repeated every day."""
+    found = read_found()
+    updated, today = found["updated"], now.astimezone(dt.timezone.utc).date()
+    if found["retry"] and today < dt.date.fromisoformat(found["retry"]):
+        return False, (f"the refresh of {nice(found['attempted'][:10])} did not complete; the daily scan tries "
+                       f"again on {nice(found['retry'])} (Refresh calendar on the Events page tries now)")
     if not updated:
         return True, "the calendar has not been refreshed yet"
     last = dt.datetime.fromisoformat(updated)
     last = (last if last.tzinfo else last.replace(tzinfo=dt.timezone.utc)).astimezone(dt.timezone.utc).date()
-    age = (now.astimezone(dt.timezone.utc).date() - last).days
+    age = (today - last).days
     if age >= opts["refresh_days"]:
         return True, f"the calendar was last refreshed {site_builder.count(age, 'day')} ago"
     return False, (f"refreshed on {nice(last.isoformat())}; the next refresh is due on "
                    f"{nice((last + dt.timedelta(days=opts['refresh_days'])).isoformat())}")
 
 
+def record_failure(now, note, transient):
+    """Note in data/events.json that a refresh failed, keeping the events it holds: the daily scan
+    tries again after RETRY_DAYS days, or the next day when Claude was busy or could not be reached."""
+    try:
+        data = json.loads(FOUND_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        data = {}
+    data = data if isinstance(data, dict) else {}
+    retry = now.astimezone(dt.timezone.utc).date() + dt.timedelta(days=1 if transient else RETRY_DAYS)
+    data = {"updated": data.get("updated") or "", "events": data.get("events") or [], "notes": data.get("notes") or [],
+            "attempted": now.isoformat(timespec="seconds"), "failed": text(note, 400), "retry": retry.isoformat()}
+    FOUND_FILE.parent.mkdir(parents=True, exist_ok=True)
+    FOUND_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
+    return retry
+
+
 def scan(cfg, now, notes, force=False):
     """Refresh data/events.json with the events Claude finds on the organisers' calendars.
     Returns the number of events this refresh found (0 when it was not due, had no key or failed:
-    notes says why). The calendar is only saved after a refresh that found events."""
+    notes says why). The calendar's events are only replaced after a refresh that found events;
+    a refresh that failed is recorded, so the daily scan does not repeat it every day."""
     opts = settings(cfg)
     if not force:
         is_due, why = due(now, opts)
@@ -1266,7 +1331,9 @@ def scan(cfg, now, notes, force=False):
             raise ScanError("Claude's research came back without any notes.")
         entries = extract(client, opts, notes_text, today, raw, key)
     except ScanError as ex:
-        note = f"Events calendar not refreshed: {ex} The calendar keeps the events it had."
+        retry = record_failure(now, str(ex), ex.transient)
+        note = (f"Events calendar not refreshed: {ex} The calendar keeps the events it had; the daily scan tries "
+                f"again on {nice(retry.isoformat())}.")
         print(note)
         notes.append(note)
         return 0
@@ -1275,8 +1342,10 @@ def scan(cfg, now, notes, force=False):
         run_notes.append(f"Left out {site_builder.count(sum(why.values()), 'event')} that Claude reported: "
                          + "; ".join(f"{reason} ({n})" for reason, n in why.most_common()) + ".")
     if not found:
-        note = ("Events calendar not refreshed: no event Claude reported passed the checks"
-                + (f" ({len(entries)} reported)" if entries else "") + ". The calendar keeps the events it had.")
+        why_not = "no event Claude reported passed the checks" + (f" ({len(entries)} reported)" if entries else "")
+        retry = record_failure(now, why_not + ".", False)
+        note = (f"Events calendar not refreshed: {why_not}. The calendar keeps the events it had; the daily scan "
+                f"tries again on {nice(retry.isoformat())}.")
         for n in run_notes:
             print("  " + n)
         print(note)
@@ -1317,7 +1386,7 @@ def summary(cfg, today):
         for e in coming:
             print(f"  {date_range(e['start'], e['end']):<26} {label_of(e)} · {place(e) or '–'} · {e['kind']}")
     calls = open_deadlines(events, today, opts["deadline_days"])
-    print(f"Open calls for papers (next {opts['deadline_days']} days):" + ("" if calls else " none"))
+    print(f"Open deadlines (next {opts['deadline_days']} days):" + ("" if calls else " none"))
     for c in calls:
         print(f"  {nice(c['date']):<12} {c['label']} · {label_of(c['event'])} ({left_text(c['date'], today)})")
     if problems:
@@ -1349,7 +1418,10 @@ def main(argv=None):
         print(f"Events calendar: refreshing, as {why}.")
     if not scanner.clean_api_key(os.environ.get("ANTHROPIC_API_KEY", "")):
         scan(cfg, now, notes, force=True)  # says why in the log
-        return 0
+        if args.auto:
+            return 0  # in the daily scan, as its other steps: a note in the log
+        annotate("error", notes[-1])  # Refresh calendar must not report a refresh that did not happen
+        return 1
     found = scan(cfg, now, notes, force=True)
     if not found:
         annotate("warning" if args.auto else "error", notes[-1] if notes else "The calendar was not refreshed.")
