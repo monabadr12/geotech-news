@@ -286,7 +286,9 @@ now**.
   calendar (`events:`) and e-mail (`alerts:`) have their own sections at the end, each explained in its comments.
 * **Events:** `data/events.yaml` (see *Events calendar*).
 * **Schedule:** `.github/workflows/scan.yml` — daily at 05:00 Cairo time, adjusted automatically for Egypt's summer
-  and winter clocks. Changes to the website's design or `config.yaml` rebuild the site automatically (no scan).
+  and winter clocks. GitHub sometimes starts scheduled runs late or skips them when it is busy, so two catch-up runs
+  (mid-morning and midday Cairo time) scan only if the day has no digest yet. Changes to the website's design or
+  `config.yaml` rebuild the site automatically (no scan).
 * **Look of the website:** `assets/style.css` and `assets/app.js`. To rebuild the site without scanning, run `python site_builder.py`.
 
 ## Files

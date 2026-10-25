@@ -19,6 +19,10 @@ features:
   - "Website report: this document, rebuilt after every scan."
 
 changes:
+  - date: 2026-10-25
+    title: Catch-up scans
+    items:
+      - GitHub did not start the 05:00 scan on 25 October (it delays scheduled runs at the start of the hour and sometimes drops them). Two catch-up runs, mid-morning and at midday Cairo time, now scan only if the day has no digest yet, so a missed morning scan is made up the same day.
   - date: 2026-10-24
     title: World map, developing stories, events calendar, alerts and weekly summary
     items:
