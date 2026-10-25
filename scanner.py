@@ -401,7 +401,8 @@ def same_story(a, b):
     Wordings that are the same word for word are one story, unless Claude
     read two places."""
     (ha, wa, na, pa), (hb, wb, nb, pb) = a, b
-    if ha[0] == hb[0] and (not pa or not pb or pa & pb):
+    if ha[0] == hb[0] and (not pa or not pb or not (pa - pb and pb - pa)
+                           or pa & pb & (ha[2] | hb[2])):  # the places share a name the headline gives
         return True
     if (na - nb and nb - na) or (pa - pb and pb - pa) or not same_event(ha, hb):
         return False
@@ -541,8 +542,21 @@ def balanced(items, limit, share, rank, fill=True, per_source=0, copies=None):
             else:
                 weakest[site] = rank(it)
         if not out:
-            # a story taken out whose website now has room, or keeps a weaker story
             shown = {event(i) for i in picked}
+            # a report put in that its theme had no place for: the event's next report from a website with room
+            chosen, moved = {id(i) for i in picked}, False
+            for r in [i for i in pool if id(i) in stands_for and id(i) not in chosen and event(i) not in shown]:
+                others = [c for c in spare.pop(id(r), []) if id(c) not in tried
+                          and sites[source_key(c.get("source"))] < per_source]
+                if others:
+                    pool = [i for i in pool if i is not r] + [others[0]]
+                    tried.add(id(others[0]))
+                    spare[id(others[0])] = others[1:]
+                    stands_for[id(others[0])] = event(r)
+                    moved = True
+            if moved:
+                continue
+            # a story taken out whose website now has room, or keeps a weaker story
             due = [i for i in taken if id(i) not in back and event(i) not in shown
                    and (sites[source_key(i.get("source"))] < per_source
                         or rank(i) > weakest[source_key(i.get("source"))])]
@@ -1087,7 +1101,8 @@ def main():
 
     # the same event from several outlets: keep its best-scoring headline
     items.sort(key=lambda i: (-i["score"], -i["bonus"]))
-    unique = drop_same_events(items, cfg)
+    first_copies = {}  # other outlets' reports of an event, merged before Claude reads the headlines
+    unique = drop_same_events(items, cfg, first_copies)
 
     # The language bonus only lifts foreign headlines, whose words the keyword
     # lists may miss, over min_keyword_score so that Claude can read them. It
@@ -1118,6 +1133,21 @@ def main():
         # (and reports of one event in two languages): the best one is kept
         kept.sort(key=lambda i: -i["rank"])
         kept = drop_same_events(kept, cfg, copies)
+    # the reports merged before Claude stand in too, with the reading of the story they were merged into
+    final = {i["id"]: i["id"] for i in kept}
+    final.update({c["id"]: k for k, cs in copies.items() for c in cs})
+    rated = {i["id"]: i for i in kept} | {c["id"]: c for cs in copies.values() for c in cs}
+    for head, reports in first_copies.items():
+        if head not in final:
+            continue
+        h = rated[head]
+        for c in reports:
+            c.update(relevance=h["relevance"], theme=h["theme"], use=h["use"], angle=h["angle"],
+                     title_en=c["title_en"] or h["title_en"], rank=h["relevance"] * 100 + c["score"],
+                     **({"country": h.get("country", ""), "place": h.get("place", "")} if h["relevance"] else {}))
+            copies.setdefault(final[head], []).append(c)
+    for cs in copies.values():
+        cs.sort(key=lambda c: -c["rank"])
     selected = balanced(kept, cfg.get("max_items", 40), share, lambda i: i["rank"], fill=fill_leftovers(cfg),
                         per_source=source_cap(cfg), copies=copies)
 
