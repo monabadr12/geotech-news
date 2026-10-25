@@ -67,12 +67,15 @@ against <https://www.issmge.org/member-societies>. The outlines come from Natura
 Every scan, Claude compares the day's new stories with the archive of the last year and links a story to an earlier one
 only when both are about the same event, project or site (the same landslide, dam or tunnel in the same place, not merely
 a similar hazard in the same country), naming the stage it reports: the event, response and recovery, investigation and
-inquiry, repair and reconstruction, legal and policy, or an update. Without Claude, a cautious headline match links
-reports found within 30 days that name the same place and the same kind of event (a sinkhole is not a follow-up of a
-landslide in the same city). Story cards everywhere carry a **Developing story** chip that opens the timeline on the
-**Developing stories** page. Long-running events make good features: by the time the cause is known and the repair
-designed, the lessons for practice can be told. Settings under `storylines:` in `config.yaml`. A link is a lead: check
-each report at its source.
+inquiry, repair and reconstruction, legal and policy, or an update. Claude Sonnet makes the links and says which cases it
+is unsure of (two place names in one region, a translated headline that may or may not name the same site); up to 8 of
+those per scan (`max_checks`) are read again by Claude Opus, each against its own closest earlier stories, and Opus's
+decision stands. `check_model: ""` turns this check off, and if the check fails, Sonnet's reading is kept. Without
+Claude, a cautious headline match links reports found within 30 days that name the same place and the same kind of
+event (a sinkhole is not a follow-up of a landslide in the same city). Story cards everywhere carry a **Developing
+story** chip that opens the timeline on the **Developing stories** page. Long-running events make good features: by
+the time the cause is known and the repair designed, the lessons for practice can be told. Settings under
+`storylines:` in `config.yaml`. A link is a lead: check each report at its source.
 
 ### Events calendar
 The **Events** page lists conferences, symposia, courses and webinars for geotechnical engineers, with their
@@ -217,12 +220,12 @@ by model, and *Limits* sets a monthly cap):
 | Part | Model (`config.yaml`) | How often | Rough cost |
 |---|---|---|---|
 | Triage, locating stories, research papers | Haiku | every scan | a few cents a day |
-| Developing stories (linking follow-ups) | Haiku (`storylines: model:`) | every scan | under a cent a day |
+| Developing stories (linking follow-ups) | Sonnet (`storylines: model:`); the unsure cases checked by Opus (`check_model:`) | every scan | about US$0.05–0.15 a day (US$1.50–4.50 a month, rising as the archive grows) |
 | Events calendar refresh | Sonnet (`events: model:`) | every 14 days | about US$0.70–1.50 |
 | Issue brief | Opus (`brief: model:`) | a few times a quarter | about US$1–2 each |
 | AI assistant | Sonnet by default, chosen per question | each question | about US$0.05–0.10 (more with long chats or PDFs; Opus about twice that) |
 
-Altogether about US$3–5 a month plus the AI assistant. Scanning less often saves little and loses news, because each
+Altogether about US$5–9 a month plus the AI assistant. Scanning less often saves little and loses news, because each
 scan looks back only 60 hours (`lookback_hours`).
 
 ### 4. Turn on the website

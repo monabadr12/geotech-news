@@ -20,6 +20,10 @@ features:
 
 changes:
   - date: 2026-10-25
+    title: "Developing stories: Sonnet links, Opus checks the unsure cases"
+    items:
+      - Developing stories are now linked with Claude Sonnet, which also says which cases it is unsure of (two place names in one region, a translated headline that may or may not name the same site, a follow-up whose project name differs). Up to 8 of those per scan are read again by Claude Opus, each against its own closest earlier stories, and its decision stands. If the check fails, Sonnet's reading is kept and the scan notes say why. Settings under storylines (check_model, check_effort, max_checks) in config.yaml; check_model "" turns the check off.
+  - date: 2026-10-25
     title: Lower running costs
     items:
       - The AI assistant now starts on Claude Sonnet (half the cost of Opus, still good answers); Opus and Haiku can still be chosen per question.

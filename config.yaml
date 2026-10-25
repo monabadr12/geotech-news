@@ -687,14 +687,22 @@ map:
 # Each scan, Claude compares the day's stories with the closest archived stories
 # of the last lookback_days and links a story only when both are about the same
 # event, project or site, naming the stage it reports (event, response and
-# recovery, investigation, repair, legal and policy, update). It uses the same
-# ANTHROPIC_API_KEY secret as the triage, once per scan. Without the key, or
-# when Claude cannot be reached, a cautious headline match links stories from
-# the last heuristic_days. Story cards then carry a "Developing story" chip.
+# recovery, investigation, repair, legal and policy, update), and says which
+# cases it is unsure of (two place names in one region, a translated headline
+# that may or may not name the same site). Those cases alone are read again by
+# check_model, each against its own closest earlier stories, and its decision
+# stands; if that check fails, the first reading is kept. It uses the same
+# ANTHROPIC_API_KEY secret as the triage, once per scan (twice when a case is
+# unsure). Without the key, or when Claude cannot be reached, a cautious
+# headline match links stories from the last heuristic_days. Story cards then
+# carry a "Developing story" chip.
 storylines:
   enabled: true            # false: no new links (developing.html keeps those already made)
-  model: claude-haiku-5-5  # the lowest-cost model; claude-sonnet-5-5 or claude-opus-5-5 judge close cases better, at a higher cost
+  model: claude-sonnet-5-5 # makes the links and says which cases it is unsure of
   effort: low              # low | medium | high — how hard Claude thinks about the links
+  check_model: claude-opus-5-5  # reads the unsure cases again and decides them; "" turns the second check off
+  check_effort: low        # low | medium | high — how hard the check thinks about each case
+  max_checks: 8            # unsure cases checked per scan, at most (the best-ranked stories first)
   lookback_days: 365       # how far back earlier stories are compared
   max_candidates: 400      # earlier stories Claude reads per scan, at most (the closest matches)
   heuristic_days: 30       # without Claude: earlier stories from the last 30 days only
