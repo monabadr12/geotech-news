@@ -693,7 +693,7 @@ map:
 # the last heuristic_days. Story cards then carry a "Developing story" chip.
 storylines:
   enabled: true            # false: no new links (developing.html keeps those already made)
-  model: claude-opus-5-5   # telling one event from a similar one is judgement work
+  model: claude-haiku-5-5  # the lowest-cost model; claude-sonnet-5-5 or claude-opus-5-5 judge close cases better, at a higher cost
   effort: low              # low | medium | high — how hard Claude thinks about the links
   lookback_days: 365       # how far back earlier stories are compared
   max_candidates: 400      # earlier stories Claude reads per scan, at most (the closest matches)
@@ -710,10 +710,10 @@ storylines:
 # GitHub). They must be turned on for the organisation that owns the
 # ANTHROPIC_API_KEY, in the Claude Console. A refresh that fails keeps the calendar.
 events:
-  model: claude-opus-5-5   # Claude Opus: reads the organisers' pages and judges what is a real event
+  model: claude-sonnet-5-5 # reads the organisers' pages at half the cost of claude-opus-5-5 (which judges a little better)
   effort: medium           # low | medium | high — how hard Claude works through the calendars
   extract_effort: low      # effort for turning Claude's notes into calendar entries
-  refresh_days: 7          # the daily scan refreshes the calendar when it is 7 days old
+  refresh_days: 14         # the daily scan refreshes the calendar when it is 14 days old (Refresh calendar: any time)
   months_ahead: 24         # events starting in the next 24 months
   deadline_days: 90        # "Open deadlines" on the Events page: deadlines in the next 90 days
   keep_days: 7             # events found by a refresh stay 7 days after they end

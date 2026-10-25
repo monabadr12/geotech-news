@@ -14,7 +14,7 @@
 // Alternatively set a Script property named ANTHROPIC_API_KEY (Project Settings).
 const KEY_DOC = 'PASTE-THE-LINK-TO-YOUR-KEY-DOCUMENT-HERE';
 
-const DEFAULT_MODEL = 'claude-opus-5-5';
+const DEFAULT_MODEL = 'claude-sonnet-5-5';
 const MODELS = ['claude-opus-5-5', 'claude-sonnet-5-5', 'claude-haiku-5-5'];
 const MAX_TOKENS = 4000;
 const DAILY_LIMIT = 100;            // questions per day (Cairo time): protects your Anthropic bill
