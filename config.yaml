@@ -720,7 +720,7 @@ events:
   max_searches: 10         # web searches per request (a refresh that pauses and continues may use them again)
   max_fetches: 12          # pages Claude opens per request (likewise)
   max_page_tokens: 12000   # most text Claude reads from one page; keeps the cost of a refresh down
-  max_cost_usd: 3          # Claude stops reading (and the notes so far are used) once a refresh has cost about this
+  max_cost_usd: 3          # US$: near this, Claude stops reading and writes up the events found so far (0 = write up at the first pause)
   calendars:               # where Claude looks first; it also searches the web for more
     - name: ISSMGE events
       url: https://www.issmge.org/events

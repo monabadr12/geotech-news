@@ -54,12 +54,17 @@ RETRY_DAYS = 2  # after a failed refresh the daily scan waits this long (only a 
 
 DEFAULTS = {"model": "claude-opus-5-5", "effort": "medium", "extract_effort": "low", "refresh_days": 7,
             "months_ahead": 24, "deadline_days": 90, "keep_days": 7, "max_searches": 10, "max_fetches": 12,
-            "max_page_tokens": 12000, "max_continuations": 3, "max_cost_usd": 3}
+            "max_page_tokens": 12000, "max_continuations": 3, "max_cost_usd": 3.0}
 # list prices in US$ per million tokens (input, output, cache read, 5-minute cache write) and per web
 # search, for the cost line in the log; a model not listed here gets token counts only
 PRICES = {"claude-opus-5-5": (4.0, 20.0, 0.20, 5.0), "claude-sonnet-5-5": (2.0, 10.0, 0.10, 2.5),
           "claude-haiku-5-5": (0.10, 0.50, 0.01, 0.125)}
 SEARCH_PRICE = 0.01
+BUSY_ERRORS = {"overloaded_error", "api_error", "rate_limit_error"}  # Claude busy: worth trying again tomorrow
+# sent when the research reaches its limit: Claude writes its event blocks after its last search, so
+# rather than stop with no notes it is asked to write them now from what it has read
+WRAP_UP = ("The time and budget for this research are used up. Make no more searches or fetches. Write the blocks "
+           "now, in the format asked for, for every event you have found so far, and nothing else.")
 spent = []  # (model, usage, stopped part-way) of every request this refresh made, for the cost line
 DEFAULT_CALENDARS = [
     {"name": "ISSMGE events", "url": "https://www.issmge.org/events"},
@@ -139,12 +144,14 @@ def settings(cfg):
                 value = default
             out[name] = value
             continue
+        kind = float if isinstance(default, float) else int
         try:
             if isinstance(value, bool):
                 raise ValueError
-            out[name] = default if value is None else max(0, int(value))
+            out[name] = default if value is None else max(kind(0), kind(value))
         except (TypeError, ValueError):
-            print(f"config.yaml, events: {name}: {value!r} is not a whole number; using {default}.")
+            print(f"config.yaml, events: {name}: {value!r} is not a {'number' if kind is float else 'whole number'}; "
+                  f"using {default}.")
             out[name] = default
     cals = e.get("calendars") if isinstance(e.get("calendars"), list) else DEFAULT_CALENDARS
     out["calendars"] = [{"name": text(c.get("name"), 80) or c.get("url"), "url": c["url"]} for c in cals
@@ -1074,6 +1081,10 @@ def extract_schema():
 def api_call(client, raw, key, model, what, **request):
     """One streamed request; its final message, or ScanError with a clear reason."""
     import anthropic  # only needed when a key is configured
+    try:
+        import httpx2 as http  # the HTTP library of anthropic 2.x
+    except ImportError:
+        import httpx as http
 
     try:
         with client.messages.stream(model=model, **request) as stream:
@@ -1096,10 +1107,16 @@ def api_call(client, raw, key, model, what, **request):
             raise ScanError(web_off_note(ex)) from None
         raise ScanError(f"Claude could not take the {what} request ({scanner.api_message(ex)}).") from None
     except anthropic.APIError as ex:
-        busy = isinstance(ex, anthropic.APIConnectionError) or (
+        body = getattr(ex, "body", None)
+        error = body.get("error") if isinstance(body, dict) else None
+        kind = error.get("type") if isinstance(error, dict) else None  # an error inside the stream comes with status 200
+        busy = isinstance(ex, anthropic.APIConnectionError) or kind in BUSY_ERRORS or (
             isinstance(ex, anthropic.APIStatusError) and (ex.status_code == 429 or ex.status_code >= 500))
         raise ScanError(f"Claude returned an error or could not be reached during the {what} "
                         f"({scanner.api_message(ex)}).", transient=busy) from None
+    except http.TransportError as ex:  # the connection dropped while Claude was answering
+        raise ScanError(f"the connection to Claude dropped during the {what} ({type(ex).__name__}).",
+                        transient=True) from None
 
 
 def record_partial(stream, model):
@@ -1131,10 +1148,11 @@ def read_turns(turns):
     notes, hosts, failed, codes = [], set(), [], Counter()
     asked = {}  # tool_use_id -> what was asked (the url fetched or the query searched)
     for response in turns:
+        notes.append("")  # each request's notes start on a line of their own
         for block in response.content:
             kind = getattr(block, "type", "")
             if kind == "text":
-                notes.append(block.text)
+                notes[-1] += block.text
                 for c in getattr(block, "citations", None) or []:
                     if getattr(c, "url", ""):
                         hosts.add(host(c.url))
@@ -1163,8 +1181,9 @@ def read_turns(turns):
     if codes.get("too_many_requests") or codes.get("unavailable"):
         tool_notes.append("The web tools were busy or unavailable for part of the refresh, so some calendars may "
                           "not have been read.")
-    # cited passages come as separate text blocks within one sentence, so the blocks are joined as they are
-    return "".join(notes).strip(), hosts, tool_notes
+    # cited passages come as separate text blocks within one sentence, so a request's blocks are joined as
+    # they are; the notes of separate requests (a continuation, the write-up) are kept apart
+    return "\n\n".join(n.strip() for n in notes if n.strip()), hosts, tool_notes
 
 
 def research(client, opts, prompt, raw, key):
@@ -1177,14 +1196,21 @@ def research(client, opts, prompt, raw, key):
     tools = [{"type": "web_search_20260209", "name": "web_search", "max_uses": opts["max_searches"], **tool_opts},
              {"type": "web_fetch_20260209", "name": "web_fetch", "max_uses": opts["max_fetches"], **fetch_cap,
               **tool_opts}]
+    system = [{"type": "text", "text": SYSTEM_RESEARCH, "cache_control": {"type": "ephemeral"}}]
+
+    def ask(conversation):
+        return api_call(client, raw, key, opts["model"], "calendar research", max_tokens=RESEARCH_TOKENS,
+                        system=system, tools=tools, output_config={"effort": opts["effort"]},
+                        cache_control={"type": "ephemeral"}, messages=conversation)
+
+    if opts["model"] not in PRICES:
+        print(f"Events calendar: no list price is known for {opts['model']}, so the spending limit assumes the "
+              "dearest known prices.")
     messages = [{"role": "user", "content": prompt}]
-    turns, extra = [], []
+    turns, extra, limit = [], [], ""
     for _ in range(opts["max_continuations"] + 1):
         try:
-            response = api_call(client, raw, key, opts["model"], "calendar research", max_tokens=RESEARCH_TOKENS,
-                                system=[{"type": "text", "text": SYSTEM_RESEARCH, "cache_control": {"type": "ephemeral"}}],
-                                tools=tools, output_config={"effort": opts["effort"]},
-                                cache_control={"type": "ephemeral"}, messages=messages)
+            response = ask(messages)
         except ScanError as ex:
             if not turns or ex.transient:
                 raise  # nothing read yet, or Claude was busy: the next daily scan tries again
@@ -1193,19 +1219,26 @@ def research(client, opts, prompt, raw, key):
             extra.append("Claude's research stopped part-way; the notes it had made by then were used.")
             break
         turns.append(response)
-        cost = spent_cost()
-        if response.stop_reason == "pause_turn" and cost is not None and cost >= opts["max_cost_usd"]:
-            # every continuation may use max_searches and max_fetches again, so the cost is capped here
-            extra.append(f"Claude's research was stopped at the spending limit for one refresh (about US${cost:.2f}; "
-                         "max_cost_usd in config.yaml, events:); the notes it had made by then were used.")
-            break
         if response.stop_reason != "pause_turn":
             break
         # the server paused a long run of searches: send the paused turn back and it carries on
         messages.append({"role": "assistant", "content": response.content})
+        cost = spent_cost(assume_dearest=True)
+        if cost >= 0.8 * opts["max_cost_usd"]:  # every continuation may search and fetch again: cap the cost here
+            limit = f"the spending limit (about US${cost:.2f} spent, max_cost_usd US${opts['max_cost_usd']:g})"
+            break
     else:
-        extra.append(f"Claude was still reading after {opts['max_continuations']} continuations; the notes it had "
-                     "made by then were used.")
+        limit = f"{opts['max_continuations']} continuations (max_continuations)"
+    if limit:
+        print(f"Events calendar: the research reached {limit}; asking Claude to write up what it has found.")
+        try:
+            response = ask(messages + [{"role": "system", "content": WRAP_UP}])
+            turns.append(response)
+            extra.append("Claude's research reached its limit for one refresh, so Claude wrote up the events it had "
+                         "found by then.")
+        except ScanError as ex:
+            print(f"Events calendar: the write-up request failed: {ex}")
+            extra.append("Claude's research reached its limit for one refresh; the notes made by then were used.")
     stop = turns[-1].stop_reason
     if stop == "refusal":
         raise ScanError("Claude declined the calendar research.")
@@ -1343,11 +1376,12 @@ def record_failure(now, note, transient):
     return retry
 
 
-def spent_cost():
-    """What this refresh has cost so far at list prices (US$), or None for a model without a price."""
+def spent_cost(assume_dearest=False):
+    """What this refresh has cost so far at list prices (US$), or None for a model without a price
+    (assume_dearest: cost such a model at the dearest known prices instead, for the spending limit)."""
     total = 0.0
     for model, u, _ in spent:
-        price = PRICES.get(model)
+        price = PRICES.get(model) or (max(PRICES.values()) if assume_dearest else None)
         if not price:
             return None
         tools = u.server_tool_use
