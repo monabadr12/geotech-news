@@ -54,13 +54,13 @@ RETRY_DAYS = 2  # after a failed refresh the daily scan waits this long (only a 
 
 DEFAULTS = {"model": "claude-opus-5-5", "effort": "medium", "extract_effort": "low", "refresh_days": 7,
             "months_ahead": 24, "deadline_days": 90, "keep_days": 7, "max_searches": 10, "max_fetches": 12,
-            "max_page_tokens": 6000, "max_continuations": 3}
+            "max_page_tokens": 12000, "max_continuations": 3, "max_cost_usd": 3}
 # list prices in US$ per million tokens (input, output, cache read, 5-minute cache write) and per web
 # search, for the cost line in the log; a model not listed here gets token counts only
-PRICES = {"claude-opus-5-5": (4.0, 20.0, 0.20, 5.0), "claude-sonnet-5-5": (2.0, 10.0, 0.20, 2.5),
+PRICES = {"claude-opus-5-5": (4.0, 20.0, 0.20, 5.0), "claude-sonnet-5-5": (2.0, 10.0, 0.10, 2.5),
           "claude-haiku-5-5": (0.10, 0.50, 0.01, 0.125)}
 SEARCH_PRICE = 0.01
-spent = []  # (model, usage) of every request this refresh made, for the cost line
+spent = []  # (model, usage, stopped part-way) of every request this refresh made, for the cost line
 DEFAULT_CALENDARS = [
     {"name": "ISSMGE events", "url": "https://www.issmge.org/events"},
     {"name": "ISSMGE news (calls for abstracts)", "url": "https://www.issmge.org/news"},
@@ -1077,8 +1077,12 @@ def api_call(client, raw, key, model, what, **request):
 
     try:
         with client.messages.stream(model=model, **request) as stream:
-            response = stream.get_final_message()
-        spent.append((model, response.usage))
+            try:
+                response = stream.get_final_message()
+            except Exception:
+                record_partial(stream, model)
+                raise
+        spent.append((model, response.usage, False))
         return response
     except (anthropic.AuthenticationError, anthropic.PermissionDeniedError) as ex:
         if WEB_OFF.search(scanner.api_message(ex)):
@@ -1096,6 +1100,15 @@ def api_call(client, raw, key, model, what, **request):
             isinstance(ex, anthropic.APIStatusError) and (ex.status_code == 429 or ex.status_code >= 500))
         raise ScanError(f"Claude returned an error or could not be reached during the {what} "
                         f"({scanner.api_message(ex)}).", transient=busy) from None
+
+
+def record_partial(stream, model):
+    """A request that failed part-way (an error inside the stream) is billed for what it did: record that."""
+    try:
+        usage = stream.current_message_snapshot.usage
+    except Exception:  # the stream broke before Claude started
+        return
+    spent.append((model, usage, True))
 
 
 def web_off_note(ex):
@@ -1158,7 +1171,8 @@ def research(client, opts, prompt, raw, key):
     """Claude reads the calendars with web search and web fetch; (notes, web hosts seen, tool notes)."""
     tool_opts = {"blocked_domains": opts["blocked_domains"]} if opts["blocked_domains"] else {}
     # max_content_tokens caps how much of each page enters the conversation, and caching lets every
-    # later step of the research (and each continuation) re-read what came before at a tenth of the price
+    # later step of the research (and each continuation) re-read what came before at a small fraction of
+    # the price (the API caches each tool result once the request carries a cache marker)
     fetch_cap = {"max_content_tokens": opts["max_page_tokens"]} if opts["max_page_tokens"] else {}
     tools = [{"type": "web_search_20260209", "name": "web_search", "max_uses": opts["max_searches"], **tool_opts},
              {"type": "web_fetch_20260209", "name": "web_fetch", "max_uses": opts["max_fetches"], **fetch_cap,
@@ -1168,16 +1182,23 @@ def research(client, opts, prompt, raw, key):
     for _ in range(opts["max_continuations"] + 1):
         try:
             response = api_call(client, raw, key, opts["model"], "calendar research", max_tokens=RESEARCH_TOKENS,
-                                system=SYSTEM_RESEARCH, tools=tools, output_config={"effort": opts["effort"]},
+                                system=[{"type": "text", "text": SYSTEM_RESEARCH, "cache_control": {"type": "ephemeral"}}],
+                                tools=tools, output_config={"effort": opts["effort"]},
                                 cache_control={"type": "ephemeral"}, messages=messages)
         except ScanError as ex:
-            if not turns:
-                raise
-            # a continuation failed: what Claude read before it is kept rather than paid for twice
-            extra.append(f"Claude's research stopped part-way ({str(ex).rstrip('.')}); the notes it had made by then "
-                         "were used.")
+            if not turns or ex.transient:
+                raise  # nothing read yet, or Claude was busy: the next daily scan tries again
+            # a continuation failed for good: the notes Claude made before it are used
+            print(f"Events calendar: a continuation of the research failed: {ex}")
+            extra.append("Claude's research stopped part-way; the notes it had made by then were used.")
             break
         turns.append(response)
+        cost = spent_cost()
+        if response.stop_reason == "pause_turn" and cost is not None and cost >= opts["max_cost_usd"]:
+            # every continuation may use max_searches and max_fetches again, so the cost is capped here
+            extra.append(f"Claude's research was stopped at the spending limit for one refresh (about US${cost:.2f}; "
+                         "max_cost_usd in config.yaml, events:); the notes it had made by then were used.")
+            break
         if response.stop_reason != "pause_turn":
             break
         # the server paused a long run of searches: send the paused turn back and it carries on
@@ -1322,29 +1343,39 @@ def record_failure(now, note, transient):
     return retry
 
 
+def spent_cost():
+    """What this refresh has cost so far at list prices (US$), or None for a model without a price."""
+    total = 0.0
+    for model, u, _ in spent:
+        price = PRICES.get(model)
+        if not price:
+            return None
+        tools = u.server_tool_use
+        total += ((u.input_tokens or 0) * price[0] + (u.output_tokens or 0) * price[1]
+                  + (u.cache_read_input_tokens or 0) * price[2] + (u.cache_creation_input_tokens or 0) * price[3]) / 1e6
+        total += ((getattr(tools, "web_search_requests", 0) or 0) if tools else 0) * SEARCH_PRICE
+    return total
+
+
 def spent_line():
     """Tokens, searches and pages this refresh used, with the cost at list prices when the model is known."""
     if not spent:
         return ""
     sums = Counter()
-    cost, priced = 0.0, True
-    for model, u in spent:
+    for model, u, _ in spent:
         part = {"in": u.input_tokens or 0, "out": u.output_tokens or 0, "read": u.cache_read_input_tokens or 0,
                 "write": u.cache_creation_input_tokens or 0,
                 "searches": getattr(u.server_tool_use, "web_search_requests", 0) or 0 if u.server_tool_use else 0,
                 "pages": getattr(u.server_tool_use, "web_fetch_requests", 0) or 0 if u.server_tool_use else 0}
         sums.update(part)
-        price = PRICES.get(model)
-        if price:
-            cost += (part["in"] * price[0] + part["out"] * price[1] + part["read"] * price[2]
-                     + part["write"] * price[3]) / 1e6 + part["searches"] * SEARCH_PRICE
-        else:
-            priced = False
-    line = (f"Events calendar: {len(spent)} request(s) used {sums['in'] + sums['read'] + sums['write']:,} input tokens "
+    cost = spent_cost()
+    broken = sum(1 for *_, partial in spent if partial)
+    line = (f"Events calendar: {len(spent)} request(s)"
+            + (f" ({broken} stopped part-way)" if broken else "") + f" used {sums['in'] + sums['read'] + sums['write']:,} input tokens "
             f"({sums['read']:,} read from the cache), {sums['out']:,} output tokens, "
             f"{site_builder.count(sums['searches'], 'web search', 'web searches')} and "
             f"{site_builder.count(sums['pages'], 'page')} opened")
-    return line + (f"; about US${cost:.2f} at list prices." if priced else ".")
+    return line + (f"; about US${cost:.2f} at list prices." if cost is not None else ".")
 
 
 def scan(cfg, now, notes, force=False):

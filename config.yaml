@@ -717,9 +717,10 @@ events:
   months_ahead: 24         # events starting in the next 24 months
   deadline_days: 90        # "Open deadlines" on the Events page: deadlines in the next 90 days
   keep_days: 7             # events found by a refresh stay 7 days after they end
-  max_searches: 10         # web searches per refresh
-  max_fetches: 12          # pages Claude opens per refresh
-  max_page_tokens: 6000    # most text Claude reads from one page; keeps the cost of a refresh down
+  max_searches: 10         # web searches per request (a refresh that pauses and continues may use them again)
+  max_fetches: 12          # pages Claude opens per request (likewise)
+  max_page_tokens: 12000   # most text Claude reads from one page; keeps the cost of a refresh down
+  max_cost_usd: 3          # Claude stops reading (and the notes so far are used) once a refresh has cost about this
   calendars:               # where Claude looks first; it also searches the web for more
     - name: ISSMGE events
       url: https://www.issmge.org/events
