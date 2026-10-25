@@ -1,0 +1,28 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:ECPMG 2028
+NAME:ECPMG 2028
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:ecpmg-2028@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20280620
+DTEND;VALUE=DATE:20280621
+SUMMARY:6th European Conference on Physical Modelling in Geotechnics (ECPMG
+  2028)
+DESCRIPTION:6th European Conference on Physical Modelling in Geotechnics\nK
+ ind: ISSMGE-supported\nLast day not published\; check it.\nEvent website: 
+ https://www.issmge.org/events/ecpmg-2028\nFound by the weekly calendar ref
+ resh\; check the dates on the event's website
+LOCATION:Southampton\, United Kingdom
+URL:https://www.issmge.org/events/ecpmg-2028
+CATEGORIES:ISSMGE-supported
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

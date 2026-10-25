@@ -1,0 +1,29 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Slope Stability 2026
+NAME:Slope Stability 2026
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:slope-stability-2026@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261026
+DTEND;VALUE=DATE:20261030
+SUMMARY:Slope Stability 2026 – Slope for Safety Performance – an ISRM S
+ pecialized Conference
+DESCRIPTION:Slope Stability 2026 – Slope for Safety Performance – an IS
+ RM Specialized Conference\nOrganiser: ISRM\nKind: Other conference\nStarts
+  tomorrow\; the calendar gives only the dates and the place.\nEvent websit
+ e: https://isrm.net/conference/show/6392\nFound by the weekly calendar ref
+ resh\; check the dates on the event's website
+LOCATION:Lima\, Peru
+URL:https://isrm.net/conference/show/6392
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

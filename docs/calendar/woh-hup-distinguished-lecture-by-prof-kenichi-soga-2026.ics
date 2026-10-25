@@ -1,0 +1,31 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Woh Hup Distinguished Lecture by Prof. Kenichi Soga
+NAME:Woh Hup Distinguished Lecture by Prof. Kenichi Soga
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:woh-hup-distinguished-lecture-by-prof-kenichi-soga-2026@geotech-news-de
+ sk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261110
+DTEND;VALUE=DATE:20261111
+SUMMARY:Woh Hup Distinguished Lecture by Prof. Kenichi Soga
+DESCRIPTION:Woh Hup Distinguished Lecture by Prof. Kenichi Soga\nOrganiser:
+  National University of Singapore\, co-organised by ISSMGE TC207\nKind: Co
+ urse / webinar\nRead only in a news summary\; check the venue and whether 
+ it can be followed online.\nEvent website: https://www.issmge.org/news/dis
+ tinguished-lecture-by-prof-kenichi-soga-co-organised-by-issmge-tc207-10-no
+ v-2026\nFound by the weekly calendar refresh\; check the dates on the even
+ t's website
+URL:https://www.issmge.org/news/distinguished-lecture-by-prof-kenichi-soga-
+ co-organised-by-issmge-tc207-10-nov-2026
+CATEGORIES:Course / webinar
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

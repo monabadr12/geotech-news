@@ -1,0 +1,29 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Tunnelling Asia 2026
+NAME:Tunnelling Asia 2026
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:tunnelling-asia-2026@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261203
+DTEND;VALUE=DATE:20261204
+SUMMARY:TUNNELLING ASIA 2026: International Conference & Exhibition
+DESCRIPTION:TUNNELLING ASIA 2026: International Conference & Exhibition\nKi
+ nd: Other conference\nITA supported event\; place and last day not publish
+ ed\, so check both.\nEvent website: https://about.ita-aites.org/future-eve
+ nts/2654/tunnelling-asia-2026-international-conference-exhibition?tmpl=com
+ ponent\nFound by the weekly calendar refresh\; check the dates on the even
+ t's website
+URL:https://about.ita-aites.org/future-events/2654/tunnelling-asia-2026-int
+ ernational-conference-exhibition?tmpl=component
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

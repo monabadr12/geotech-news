@@ -1,0 +1,29 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Tunnel Turkey 2026
+NAME:Tunnel Turkey 2026
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:tunnel-turkey-2026@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261112
+DTEND;VALUE=DATE:20261113
+SUMMARY:Tunnel Turkey 2026
+DESCRIPTION:Tunnel Turkey 2026\nKind: Other conference\nLast day not publis
+ hed\; check the city\, the end date and whether it has a technical program
+ me rather than only a trade fair.\nEvent website: https://about.ita-aites.
+ org/future-events/2558/tunnel-turkey-2026?tmpl=component\nFound by the wee
+ kly calendar refresh\; check the dates on the event's website
+LOCATION:Türkiye
+URL:https://about.ita-aites.org/future-events/2558/tunnel-turkey-2026?tmpl=
+ component
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

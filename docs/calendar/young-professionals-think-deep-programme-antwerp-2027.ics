@@ -1,0 +1,30 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Young Professionals Think Deep Programme – Antwerp
+NAME:Young Professionals Think Deep Programme – Antwerp
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:young-professionals-think-deep-programme-antwerp-2027@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20270420
+DTEND;VALUE=DATE:20270421
+SUMMARY:Young Professionals Think Deep Programme – Antwerp
+DESCRIPTION:Young Professionals Think Deep Programme – Antwerp\nOrganiser
+ : ITA-AITES\nKind: Course / webinar\nLast day not published\; takes place 
+ just before WTC 2027 (23 April\, Antwerp).\nEvent website: https://about.i
+ ta-aites.org/future-events/2665/young-professionals-think-deep-programme-a
+ ntwerp?tmpl=component\nFound by the weekly calendar refresh\; check the da
+ tes on the event's website
+LOCATION:Antwerp\, Belgium
+URL:https://about.ita-aites.org/future-events/2665/young-professionals-thin
+ k-deep-programme-antwerp?tmpl=component
+CATEGORIES:Course / webinar
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

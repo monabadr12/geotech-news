@@ -1,0 +1,29 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:World Tunnel Day 2026 – ITAym
+NAME:World Tunnel Day 2026 – ITAym
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:world-tunnel-day-2026-itaym@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261207
+DTEND;VALUE=DATE:20261208
+SUMMARY:World Tunnel Day 2026 – ITAym
+DESCRIPTION:World Tunnel Day 2026 – ITAym\nOrganiser: ITA-AITES Young Mem
+ bers (ITAym)\nKind: Course / webinar\nPlace and last day not published\; c
+ heck the format and whether it has a technical programme.\nEvent website: 
+ https://about.ita-aites.org/future-events/2658/world-tunnel-day-2026-itaym
+ ?tmpl=component\nFound by the weekly calendar refresh\; check the dates on
+  the event's website
+URL:https://about.ita-aites.org/future-events/2658/world-tunnel-day-2026-it
+ aym?tmpl=component
+CATEGORIES:Course / webinar
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

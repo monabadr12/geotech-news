@@ -1,0 +1,31 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:GeoMandu 2027
+NAME:GeoMandu 2027
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:geomandu-2027@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20270317
+DTEND;VALUE=DATE:20270318
+SUMMARY:GeoMandu 2027\, 11th AYGEC and 1st SACG: Mountain Geotechnics for I
+ nfrastructure Development
+DESCRIPTION:GeoMandu 2027\, 11th AYGEC and 1st SACG: Mountain Geotechnics f
+ or Infrastructure Development\nKind: ISSMGE-supported\nLast day not publis
+ hed\; check it and any call for abstracts.\nEvent website: https://www.iss
+ mge.org/events/geomandu-2027-11th-aygec-and-1st-sacg-mountain-geotechnics-
+ for-infrastructure-development\nFound by the weekly calendar refresh\; che
+ ck the dates on the event's website
+LOCATION:Kathmandu\, Nepal
+URL:https://www.issmge.org/events/geomandu-2027-11th-aygec-and-1st-sacg-mou
+ ntain-geotechnics-for-infrastructure-development
+CATEGORIES:ISSMGE-supported
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

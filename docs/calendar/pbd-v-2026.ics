@@ -1,0 +1,30 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:PBD-V 2026
+NAME:PBD-V 2026
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:pbd-v-2026@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261104
+DTEND;VALUE=DATE:20261107
+SUMMARY:International Conference on Performance-Based Design in Earthquake 
+ Geotechnical Engineering (PBD-V 2026)
+DESCRIPTION:International Conference on Performance-Based Design in Earthqu
+ ake Geotechnical Engineering\nKind: ISSMGE-supported\nEnd date comes from 
+ a cut-off GeoEngineer summary\, so check it\; the conference's own website
+  was not found.\nEvent website: https://www.issmge.org/events/pbd-v-confer
+ ence-2026\nFound by the weekly calendar refresh\; check the dates on the e
+ vent's website
+LOCATION:Puerto Varas\, Chile
+URL:https://www.issmge.org/events/pbd-v-conference-2026
+CATEGORIES:ISSMGE-supported
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

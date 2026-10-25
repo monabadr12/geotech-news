@@ -1,0 +1,28 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:BGA Fleming Award Event 2026
+NAME:BGA Fleming Award Event 2026
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:bga-fleming-award-event-2026@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261201
+DTEND;VALUE=DATE:20261202
+SUMMARY:BGA Fleming Award Event 2026
+DESCRIPTION:BGA Fleming Award Event 2026\nOrganiser: British Geotechnical A
+ ssociation (BGA)\nKind: Course / webinar\nAt ICE\, 18:30–20:00.\nEvent w
+ ebsite: https://www.britishgeotech.org/event/bga-fleming-award-event-2026/
+ \nFound by the weekly calendar refresh\; check the dates on the event's we
+ bsite
+LOCATION:London\, United Kingdom
+URL:https://www.britishgeotech.org/event/bga-fleming-award-event-2026/
+CATEGORIES:Course / webinar
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

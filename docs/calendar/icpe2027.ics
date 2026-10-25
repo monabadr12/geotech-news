@@ -1,0 +1,31 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:ICPE2027
+NAME:ICPE2027
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:icpe2027@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20270602
+DTEND;VALUE=DATE:20270603
+SUMMARY:The 4th International Conference on Press-in Engineering 2027 (ICPE
+ 2027)
+DESCRIPTION:The 4th International Conference on Press-in Engineering 2027\n
+ Kind: Other conference\nLast day not published\; listed on the ISSMGE cale
+ ndar without the ISSMGE-event mark.\nEvent website: https://www.issmge.org
+ /events/the-4th-international-conference-on-press-in-engineering-2027-icpe
+ 2027\nFound by the weekly calendar refresh\; check the dates on the event'
+ s website
+LOCATION:Papendrecht\, Netherlands
+URL:https://www.issmge.org/events/the-4th-international-conference-on-press
+ -in-engineering-2027-icpe2027
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

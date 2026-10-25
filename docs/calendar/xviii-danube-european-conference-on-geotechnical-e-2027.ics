@@ -1,0 +1,31 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:XVIII Danube-European Conference on Geotechnical Engineering
+NAME:XVIII Danube-European Conference on Geotechnical Engineering
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:xviii-danube-european-conference-on-geotechnical-e-2027@geotech-news-de
+ sk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20270609
+DTEND;VALUE=DATE:20270610
+SUMMARY:XVIII Danube-European Conference on Geotechnical Engineering
+DESCRIPTION:XVIII Danube-European Conference on Geotechnical Engineering\nK
+ ind: ISSMGE conference\nLast day not published\; decide whether this sub-r
+ egional series counts as a regional conference or as ISSMGE-supported.\nEv
+ ent website: https://www.issmge.org/events/xviii-danube-european-conferenc
+ e-on-geotechnical-engineering\nFound by the weekly calendar refresh\; chec
+ k the dates on the event's website
+LOCATION:Budapest\, Hungary
+URL:https://www.issmge.org/events/xviii-danube-european-conference-on-geote
+ chnical-engineering
+CATEGORIES:ISSMGE conference
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

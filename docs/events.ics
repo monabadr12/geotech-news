@@ -10,8 +10,378 @@ X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from
 REFRESH-INTERVAL;VALUE=DURATION:P1D
 X-PUBLISHED-TTL:P1D
 BEGIN:VEVENT
+UID:slope-stability-2026@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261026
+DTEND;VALUE=DATE:20261030
+SUMMARY:Slope Stability 2026 – Slope for Safety Performance – an ISRM S
+ pecialized Conference
+DESCRIPTION:Slope Stability 2026 – Slope for Safety Performance – an IS
+ RM Specialized Conference\nOrganiser: ISRM\nKind: Other conference\nStarts
+  tomorrow\; the calendar gives only the dates and the place.\nEvent websit
+ e: https://isrm.net/conference/show/6392\nFound by the weekly calendar ref
+ resh\; check the dates on the event's website
+LOCATION:Lima\, Peru
+URL:https://isrm.net/conference/show/6392
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:dfi51-2026@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261102
+DTEND;VALUE=DATE:20261106
+SUMMARY:DFI's 51st Annual Conference on Deep Foundations (DFI51)
+DESCRIPTION:DFI's 51st Annual Conference on Deep Foundations\nOrganiser: De
+ ep Foundations Institute (DFI)\nKind: Other conference\nTheme: Sea Level I
+ mpacts: Navigating Challenges Together\; the DFI home page banner links to
+  the wrong page (ca-golf26).\nEvent website: https://dfi-events.org/dfi51/
+ \nFound by the weekly calendar refresh\; check the dates on the event's we
+ bsite
+LOCATION:Orlando\, United States
+URL:https://dfi-events.org/dfi51/
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:2026-geotechnical-engineering-proceedings-lecture@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261104
+DTEND;VALUE=DATE:20261105
+SUMMARY:2026 Geotechnical Engineering Proceedings Lecture: Strains in spray
+ ed concrete tunnel linings at Heathrow Terminal 4 and back-calculation of 
+ stress
+DESCRIPTION:2026 Geotechnical Engineering Proceedings Lecture: Strains in s
+ prayed concrete tunnel linings at Heathrow Terminal 4 and back-calculation
+  of stress\nOrganiser: British Geotechnical Association (BGA)\nKind: Cours
+ e / webinar\nEvening lecture by Dr Benoît Jones at ICE\, One Great George
+  Street\, 18:30–20:30.\nEvent website: https://www.britishgeotech.org/ev
+ ent/the-2026-geotechnical-engineering-proceedings-lecture-strains-in-spray
+ ed-concrete-tunnel-linings-at-heathrow-terminal-4-and-back-calculation-of-
+ stress/\nFound by the weekly calendar refresh\; check the dates on the eve
+ nt's website
+LOCATION:London\, United Kingdom
+URL:https://www.britishgeotech.org/event/the-2026-geotechnical-engineering-
+ proceedings-lecture-strains-in-sprayed-concrete-tunnel-linings-at-heathrow
+ -terminal-4-and-back-calculation-of-stress/
+CATEGORIES:Course / webinar
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:pbd-v-2026@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261104
+DTEND;VALUE=DATE:20261107
+SUMMARY:International Conference on Performance-Based Design in Earthquake 
+ Geotechnical Engineering (PBD-V 2026)
+DESCRIPTION:International Conference on Performance-Based Design in Earthqu
+ ake Geotechnical Engineering\nKind: ISSMGE-supported\nEnd date comes from 
+ a cut-off GeoEngineer summary\, so check it\; the conference's own website
+  was not found.\nEvent website: https://www.issmge.org/events/pbd-v-confer
+ ence-2026\nFound by the weekly calendar refresh\; check the dates on the e
+ vent's website
+LOCATION:Puerto Varas\, Chile
+URL:https://www.issmge.org/events/pbd-v-conference-2026
+CATEGORIES:ISSMGE-supported
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:bga-ecg-advanced-laboratory-testing-dynamic-behavi-2026@geotech-news-de
+ sk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261110
+DTEND;VALUE=DATE:20261111
+SUMMARY:BGA ECG Advanced Laboratory Testing & Dynamic Behaviour of Soils
+DESCRIPTION:BGA ECG Advanced Laboratory Testing & Dynamic Behaviour of Soil
+ s\nOrganiser: BGA Early Career Group\nKind: Course / webinar\nSpeaker Dani
+ el Shirkavand\, 18:30–20:00.\nEvent website: https://www.britishgeotech.
+ org/event/bga-ecg-advanced-laboratory-testing-dynamic-behaviour-of-soils/\
+ nFound by the weekly calendar refresh\; check the dates on the event's web
+ site
+LOCATION:Online
+URL:https://www.britishgeotech.org/event/bga-ecg-advanced-laboratory-testin
+ g-dynamic-behaviour-of-soils/
+CATEGORIES:Course / webinar
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:itacet-lunchtime-lecture-series-60-2026@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261110
+DTEND;VALUE=DATE:20261111
+SUMMARY:ITACET Lunchtime Lecture Series #60
+DESCRIPTION:ITACET Lunchtime Lecture Series #60\nOrganiser: ITA-AITES / ITA
+ CET Foundation\nKind: Course / webinar\nLast day\, place\, topic and forma
+ t not published\; check whether it is online.\nEvent website: https://abou
+ t.ita-aites.org/future-events/2671/itacet-lunchtime-lecture-series-60?tmpl
+ =component\nFound by the weekly calendar refresh\; check the dates on the 
+ event's website
+URL:https://about.ita-aites.org/future-events/2671/itacet-lunchtime-lecture
+ -series-60?tmpl=component
+CATEGORIES:Course / webinar
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:woh-hup-distinguished-lecture-by-prof-kenichi-soga-2026@geotech-news-de
+ sk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261110
+DTEND;VALUE=DATE:20261111
+SUMMARY:Woh Hup Distinguished Lecture by Prof. Kenichi Soga
+DESCRIPTION:Woh Hup Distinguished Lecture by Prof. Kenichi Soga\nOrganiser:
+  National University of Singapore\, co-organised by ISSMGE TC207\nKind: Co
+ urse / webinar\nRead only in a news summary\; check the venue and whether 
+ it can be followed online.\nEvent website: https://www.issmge.org/news/dis
+ tinguished-lecture-by-prof-kenichi-soga-co-organised-by-issmge-tc207-10-no
+ v-2026\nFound by the weekly calendar refresh\; check the dates on the even
+ t's website
+URL:https://www.issmge.org/news/distinguished-lecture-by-prof-kenichi-soga-
+ co-organised-by-issmge-tc207-10-nov-2026
+CATEGORIES:Course / webinar
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:10th-conference-of-the-croatian-geotechnical-socie-2026@geotech-news-de
+ sk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261112
+DTEND;VALUE=DATE:20261115
+SUMMARY:10th Conference of the Croatian Geotechnical Society: Geotechnical 
+ Engineering in Soft Rocks and Heterogeneous Rock Masses – an ISRM Specia
+ lized Conference
+DESCRIPTION:10th Conference of the Croatian Geotechnical Society: Geotechni
+ cal Engineering in Soft Rocks and Heterogeneous Rock Masses – an ISRM Sp
+ ecialized Conference\nOrganiser: Croatian Geotechnical Society\nKind: Othe
+ r conference\nThe ISSMGE President's Nonveiller Distinguished Lecture in S
+ plit in November may be part of this conference\; check.\nEvent website: h
+ ttps://isrm.net/conference/show/6404\nFound by the weekly calendar refresh
+ \; check the dates on the event's website
+LOCATION:Split\, Croatia
+URL:https://isrm.net/conference/show/6404
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:tunnel-turkey-2026@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261112
+DTEND;VALUE=DATE:20261113
+SUMMARY:Tunnel Turkey 2026
+DESCRIPTION:Tunnel Turkey 2026\nKind: Other conference\nLast day not publis
+ hed\; check the city\, the end date and whether it has a technical program
+ me rather than only a trade fair.\nEvent website: https://about.ita-aites.
+ org/future-events/2558/tunnel-turkey-2026?tmpl=component\nFound by the wee
+ kly calendar refresh\; check the dates on the event's website
+LOCATION:Türkiye
+URL:https://about.ita-aites.org/future-events/2558/tunnel-turkey-2026?tmpl=
+ component
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:bga-touring-lecture-beyond-automation-responsible-2026@geotech-news-des
+ k
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261117
+DTEND;VALUE=DATE:20261120
+SUMMARY:BGA Touring Lecture – Beyond Automation: Responsible AI Workflows
+  in Geotechnical Modelling and Monitoring
+DESCRIPTION:BGA Touring Lecture – Beyond Automation: Responsible AI Workf
+ lows in Geotechnical Modelling and Monitoring\nOrganiser: British Geotechn
+ ical Association (BGA)\nKind: Course / webinar\nThree lectures by Chin Pan
+ g: Leeds 17 Nov\, Belfast 18 Nov (page ends -2/)\, Glasgow 19 Nov (page en
+ ds -3/).\nEvent website: https://www.britishgeotech.org/event/bga-touring-
+ lecture-beyond-automation-responsible-ai-workflows-in-geotechnical-modelli
+ ng-and-monitoring/\nFound by the weekly calendar refresh\; check the dates
+  on the event's website
+LOCATION:Leeds\, United Kingdom
+URL:https://www.britishgeotech.org/event/bga-touring-lecture-beyond-automat
+ ion-responsible-ai-workflows-in-geotechnical-modelling-and-monitoring/
+CATEGORIES:Course / webinar
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:arms14-2026@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261122
+DTEND;VALUE=DATE:20261127
+SUMMARY:ARMS14 – 14th Asian Rock Mechanics Symposium – Rock Mechanics f
+ or the Next Generation – Innovations\, Sustainability\, and Resilience 
+ – the 2026 ISRM International Symposium
+DESCRIPTION:ARMS14 – 14th Asian Rock Mechanics Symposium – Rock Mechani
+ cs for the Next Generation – Innovations\, Sustainability\, and Resilien
+ ce – the 2026 ISRM International Symposium\nOrganiser: ISRM\nKind: Other
+  conference\nEvent website: https://isrm.net/conference/show/6382\nFound b
+ y the weekly calendar refresh\; check the dates on the event's website
+LOCATION:Fukuoka\, Japan
+URL:https://isrm.net/conference/show/6382
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:italian-underground-conference-congress-2026@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261126
+DTEND;VALUE=DATE:20261127
+SUMMARY:Italian Underground Conference / Congress
+DESCRIPTION:Italian Underground Conference / Congress\nKind: Other conferen
+ ce\nITA recognised event\; place and last day not published\, so check bot
+ h.\nEvent website: https://about.ita-aites.org/future-events/2652/italian-
+ underground-conference-congress?tmpl=component\nFound by the weekly calend
+ ar refresh\; check the dates on the event's website
+URL:https://about.ita-aites.org/future-events/2652/italian-underground-conf
+ erence-congress?tmpl=component
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:geotec-hanoi-2026@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261126
+DTEND;VALUE=DATE:20261127
+SUMMARY:The 6th International Conference on Geotechnics for Sustainable Inf
+ rastructure Development (GEOTEC HANOI 2026)
+DESCRIPTION:The 6th International Conference on Geotechnics for Sustainable
+  Infrastructure Development\nKind: ISSMGE-supported\nLast day not publishe
+ d\; check it.\nEvent website: https://www.issmge.org/events/geotec-hanoi-2
+ 026-gh2026\nFound by the weekly calendar refresh\; check the dates on the 
+ event's website
+LOCATION:Hanoi\, Vietnam
+URL:https://www.issmge.org/events/geotec-hanoi-2026-gh2026
+CATEGORIES:ISSMGE-supported
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:bga-fleming-award-event-2026@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261201
+DTEND;VALUE=DATE:20261202
+SUMMARY:BGA Fleming Award Event 2026
+DESCRIPTION:BGA Fleming Award Event 2026\nOrganiser: British Geotechnical A
+ ssociation (BGA)\nKind: Course / webinar\nAt ICE\, 18:30–20:00.\nEvent w
+ ebsite: https://www.britishgeotech.org/event/bga-fleming-award-event-2026/
+ \nFound by the weekly calendar refresh\; check the dates on the event's we
+ bsite
+LOCATION:London\, United Kingdom
+URL:https://www.britishgeotech.org/event/bga-fleming-award-event-2026/
+CATEGORIES:Course / webinar
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:tunnelling-asia-2026@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261203
+DTEND;VALUE=DATE:20261204
+SUMMARY:TUNNELLING ASIA 2026: International Conference & Exhibition
+DESCRIPTION:TUNNELLING ASIA 2026: International Conference & Exhibition\nKi
+ nd: Other conference\nITA supported event\; place and last day not publish
+ ed\, so check both.\nEvent website: https://about.ita-aites.org/future-eve
+ nts/2654/tunnelling-asia-2026-international-conference-exhibition?tmpl=com
+ ponent\nFound by the weekly calendar refresh\; check the dates on the even
+ t's website
+URL:https://about.ita-aites.org/future-events/2654/tunnelling-asia-2026-int
+ ernational-conference-exhibition?tmpl=component
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:world-tunnel-day-2026-itaym@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261207
+DTEND;VALUE=DATE:20261208
+SUMMARY:World Tunnel Day 2026 – ITAym
+DESCRIPTION:World Tunnel Day 2026 – ITAym\nOrganiser: ITA-AITES Young Mem
+ bers (ITAym)\nKind: Course / webinar\nPlace and last day not published\; c
+ heck the format and whether it has a technical programme.\nEvent website: 
+ https://about.ita-aites.org/future-events/2658/world-tunnel-day-2026-itaym
+ ?tmpl=component\nFound by the weekly calendar refresh\; check the dates on
+  the event's website
+URL:https://about.ita-aites.org/future-events/2658/world-tunnel-day-2026-it
+ aym?tmpl=component
+CATEGORIES:Course / webinar
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:colloque-national-sur-la-geotechnique-national-col-2026@geotech-news-de
+ sk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261208
+DTEND;VALUE=DATE:20261209
+SUMMARY:Colloque National sur la Géotechnique (National Colloquium on Geot
+ echnics)
+DESCRIPTION:Colloque National sur la Géotechnique (National Colloquium on 
+ Geotechnics)\nKind: ISSMGE-supported\nLast day not published\; also listed
+  on the ITA and GeoEngineer calendars.\nEvent website: https://www.issmge.
+ org/events/colloque-national-sur-la-gotechnique\nFound by the weekly calen
+ dar refresh\; check the dates on the event's website
+LOCATION:Marrakech\, Morocco
+URL:https://www.issmge.org/events/colloque-national-sur-la-gotechnique
+CATEGORIES:ISSMGE-supported
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:nepal-tunnelling-conference-2026@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261210
+DTEND;VALUE=DATE:20261211
+SUMMARY:Nepal Tunnelling Conference 2026
+DESCRIPTION:Nepal Tunnelling Conference 2026\nKind: Other conference\nITA r
+ ecognised event\; city and last day not published\, so check both.\nEvent 
+ website: https://about.ita-aites.org/future-events/2666/nepal-tunnelling-c
+ onference-2026?tmpl=component\nFound by the weekly calendar refresh\; chec
+ k the dates on the event's website
+LOCATION:Nepal
+URL:https://about.ita-aites.org/future-events/2666/nepal-tunnelling-confere
+ nce-2026?tmpl=component
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:underground-construction-association-uca-2027-geor@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20270119
+DTEND;VALUE=DATE:20270120
+SUMMARY:Underground Construction Association (UCA) 2027 George A. Fox Confe
+ rence
+DESCRIPTION:Underground Construction Association (UCA) 2027 George A. Fox C
+ onference\nOrganiser: Underground Construction Association (UCA)\nKind: Ot
+ her conference\nITA supported event\; last day not published\, so check it
+ .\nEvent website: https://about.ita-aites.org/future-events/2656/undergrou
+ nd-construction-association-uca-2027-george-a-fox-conference?tmpl=componen
+ t\nFound by the weekly calendar refresh\; check the dates on the event's w
+ ebsite
+LOCATION:New York\, United States
+URL:https://about.ita-aites.org/future-events/2656/underground-construction
+ -association-uca-2027-george-a-fox-conference?tmpl=component
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:the-iii-international-research-and-practical-confe-2027@geotech-news-de
+ sk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20270210
+DTEND;VALUE=DATE:20270213
+SUMMARY:The III International Research and Practical Conference "Geotechnic
+ al Engineering in Cold Regions. The Basis of Infrastructure Safety in Glob
+ al Changes"
+DESCRIPTION:The III International Research and Practical Conference "Geotec
+ hnical Engineering in Cold Regions. The Basis of Infrastructure Safety in 
+ Global Changes"\nKind: ISSMGE-supported\nGeoEngineer lists this event twic
+ e.\nEvent website: https://www.issmge.org/events/the-iii-international-res
+ earch-and-practical-conference-on-geotechnical-engineering-in-cold-regions
+ -the-basis-of-infrastructure-safety-in-global-changes\nFound by the weekly
+  calendar refresh\; check the dates on the event's website
+LOCATION:Moscow\, Russia
+URL:https://www.issmge.org/events/the-iii-international-research-and-practi
+ cal-conference-on-geotechnical-engineering-in-cold-regions-the-basis-of-in
+ frastructure-safety-in-global-changes
+CATEGORIES:ISSMGE-supported
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
 UID:geo-congress-2027@geotech-news-desk
-DTSTAMP:20261025T000000Z
+DTSTAMP:20261025T070832Z
 DTSTART;VALUE=DATE:20270301
 DTEND;VALUE=DATE:20270306
 SUMMARY:Geo-Congress 2027\, part of ASCE2027
@@ -28,7 +398,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:geo-congress-2027-deadline-abstracts@geotech-news-desk
-DTSTAMP:20261025T000000Z
+DTSTAMP:20261025T070832Z
 DTSTART;VALUE=DATE:20260304
 DTEND;VALUE=DATE:20260305
 SUMMARY:Deadline: Abstracts – Geo-Congress 2027
@@ -41,8 +411,43 @@ CATEGORIES:Call for papers
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
+UID:grout27-2027@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20270317
+DTEND;VALUE=DATE:20270320
+SUMMARY:7th International Conference on Grouting and Deep Mixing (Grout27)
+DESCRIPTION:7th International Conference on Grouting and Deep Mixing\nOrgan
+ iser: Deep Foundations Institute (DFI) with the International Conference o
+ n Grouting (ICOG)\nKind: Other conference\nCall for abstracts announced bu
+ t no closing date seen\; check the deadline and the venue.\nEvent website:
+  https://dfi-events.org/grout27/\nFound by the weekly calendar refresh\; c
+ heck the dates on the event's website
+URL:https://dfi-events.org/grout27/
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:geomandu-2027@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20270317
+DTEND;VALUE=DATE:20270318
+SUMMARY:GeoMandu 2027\, 11th AYGEC and 1st SACG: Mountain Geotechnics for I
+ nfrastructure Development
+DESCRIPTION:GeoMandu 2027\, 11th AYGEC and 1st SACG: Mountain Geotechnics f
+ or Infrastructure Development\nKind: ISSMGE-supported\nLast day not publis
+ hed\; check it and any call for abstracts.\nEvent website: https://www.iss
+ mge.org/events/geomandu-2027-11th-aygec-and-1st-sacg-mountain-geotechnics-
+ for-infrastructure-development\nFound by the weekly calendar refresh\; che
+ ck the dates on the event's website
+LOCATION:Kathmandu\, Nepal
+URL:https://www.issmge.org/events/geomandu-2027-11th-aygec-and-1st-sacg-mou
+ ntain-geotechnics-for-infrastructure-development
+CATEGORIES:ISSMGE-supported
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
 UID:is-gi-2027@geotech-news-desk
-DTSTAMP:20261025T000000Z
+DTSTAMP:20261025T070832Z
 DTSTART;VALUE=DATE:20270412
 DTEND;VALUE=DATE:20270415
 SUMMARY:2nd International Symposium on Ground Improvement (IS-GI 2027)
@@ -57,7 +462,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:is-gi-2027-deadline-abstracts@geotech-news-desk
-DTSTAMP:20261025T000000Z
+DTSTAMP:20261025T070832Z
 DTSTART;VALUE=DATE:20260515
 DTEND;VALUE=DATE:20260516
 SUMMARY:Deadline: Abstracts – IS-GI 2027
@@ -69,8 +474,26 @@ CATEGORIES:Call for papers
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
+UID:young-professionals-think-deep-programme-antwerp-2027@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20270420
+DTEND;VALUE=DATE:20270421
+SUMMARY:Young Professionals Think Deep Programme – Antwerp
+DESCRIPTION:Young Professionals Think Deep Programme – Antwerp\nOrganiser
+ : ITA-AITES\nKind: Course / webinar\nLast day not published\; takes place 
+ just before WTC 2027 (23 April\, Antwerp).\nEvent website: https://about.i
+ ta-aites.org/future-events/2665/young-professionals-think-deep-programme-a
+ ntwerp?tmpl=component\nFound by the weekly calendar refresh\; check the da
+ tes on the event's website
+LOCATION:Antwerp\, Belgium
+URL:https://about.ita-aites.org/future-events/2665/young-professionals-thin
+ k-deep-programme-antwerp?tmpl=component
+CATEGORIES:Course / webinar
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
 UID:wtc-2027@geotech-news-desk
-DTSTAMP:20261025T000000Z
+DTSTAMP:20261025T070832Z
 DTSTART;VALUE=DATE:20270423
 DTEND;VALUE=DATE:20270430
 SUMMARY:ITA-AITES World Tunnel Congress 2027 (WTC 2027)
@@ -87,7 +510,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:wtc-2027-deadline-abstracts@geotech-news-desk
-DTSTAMP:20261025T000000Z
+DTSTAMP:20261025T070832Z
 DTSTART;VALUE=DATE:20260610
 DTEND;VALUE=DATE:20260611
 SUMMARY:Deadline: Abstracts – WTC 2027
@@ -100,8 +523,117 @@ CATEGORIES:Call for papers
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
+UID:ifcee-2027@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20270511
+DTEND;VALUE=DATE:20270515
+SUMMARY:International Foundations Congress and Equipment Expo 2027 (IFCEE 2
+ 027)
+DESCRIPTION:International Foundations Congress and Equipment Expo 2027\nOrg
+ aniser: Deep Foundations Institute (DFI)\nKind: Other conference\nFull nam
+ e and organiser were inferred from "IFCEE 2027" on the DFI calendar\; chec
+ k both\, and the place.\nEvent website: https://www.ifcee.com/\nFound by t
+ he weekly calendar refresh\; check the dates on the event's website
+URL:https://www.ifcee.com/
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:sdc2027@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20270511
+DTEND;VALUE=DATE:20270512
+SUMMARY:SDC2027 – 5th International Conference on Shaft Design & Construc
+ tion
+DESCRIPTION:SDC2027 – 5th International Conference on Shaft Design & Cons
+ truction\nKind: Other conference\nITA endorsed event\; place and last day 
+ not published\, so check both.\nEvent website: https://about.ita-aites.org
+ /future-events/2549/sdc2027-5th-international-conference-on-shaft-design-c
+ onstruction?tmpl=component\nFound by the weekly calendar refresh\; check t
+ he dates on the event's website
+URL:https://about.ita-aites.org/future-events/2549/sdc2027-5th-internationa
+ l-conference-on-shaft-design-construction?tmpl=component
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:cpt-27-2027@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20270512
+DTEND;VALUE=DATE:20270513
+SUMMARY:CPT'27: International Symposium on Cone Penetration Testing
+DESCRIPTION:CPT'27: International Symposium on Cone Penetration Testing\nKi
+ nd: Other conference\nLast day not published\; check whether it is a TC sy
+ mposium and whether the call for abstracts is open.\nEvent website: https:
+ //www.issmge.org/events/cpt27-international-symposium-on-cone-penetration-
+ testing\nFound by the weekly calendar refresh\; check the dates on the eve
+ nt's website
+LOCATION:Vancouver\, Canada
+URL:https://www.issmge.org/events/cpt27-international-symposium-on-cone-pen
+ etration-testing
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:icpe2027@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20270602
+DTEND;VALUE=DATE:20270603
+SUMMARY:The 4th International Conference on Press-in Engineering 2027 (ICPE
+ 2027)
+DESCRIPTION:The 4th International Conference on Press-in Engineering 2027\n
+ Kind: Other conference\nLast day not published\; listed on the ISSMGE cale
+ ndar without the ISSMGE-event mark.\nEvent website: https://www.issmge.org
+ /events/the-4th-international-conference-on-press-in-engineering-2027-icpe
+ 2027\nFound by the weekly calendar refresh\; check the dates on the event'
+ s website
+LOCATION:Papendrecht\, Netherlands
+URL:https://www.issmge.org/events/the-4th-international-conference-on-press
+ -in-engineering-2027-icpe2027
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:xviii-danube-european-conference-on-geotechnical-e-2027@geotech-news-de
+ sk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20270609
+DTEND;VALUE=DATE:20270610
+SUMMARY:XVIII Danube-European Conference on Geotechnical Engineering
+DESCRIPTION:XVIII Danube-European Conference on Geotechnical Engineering\nK
+ ind: ISSMGE conference\nLast day not published\; decide whether this sub-r
+ egional series counts as a regional conference or as ISSMGE-supported.\nEv
+ ent website: https://www.issmge.org/events/xviii-danube-european-conferenc
+ e-on-geotechnical-engineering\nFound by the weekly calendar refresh\; chec
+ k the dates on the event's website
+LOCATION:Budapest\, Hungary
+URL:https://www.issmge.org/events/xviii-danube-european-conference-on-geote
+ chnical-engineering
+CATEGORIES:ISSMGE conference
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:dfhm9-2027@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20270614
+DTEND;VALUE=DATE:20270615
+SUMMARY:9th International Conference on Debris Flow Hazard Mitigation (DFHM
+ 9)
+DESCRIPTION:9th International Conference on Debris Flow Hazard Mitigation\n
+ Kind: Other conference\nLast day not published\; listed on the ISSMGE cale
+ ndar without the ISSMGE-event mark.\nEvent website: https://www.issmge.org
+ /events/9th-international-conference-on-debris-flow-hazard-mitigation-dfhm
+ 9\nFound by the weekly calendar refresh\; check the dates on the event's w
+ ebsite
+LOCATION:Daejeon\, South Korea
+URL:https://www.issmge.org/events/9th-international-conference-on-debris-fl
+ ow-hazard-mitigation-dfhm9
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
 UID:icsge-2027@geotech-news-desk
-DTSTAMP:20261025T000000Z
+DTSTAMP:20261025T070832Z
 DTSTART;VALUE=DATE:20270628
 DTEND;VALUE=DATE:20270702
 SUMMARY:International Conference on Sustainability in Geotechnical Engineer
@@ -117,7 +649,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:icsge-2027-deadline-abstracts@geotech-news-desk
-DTSTAMP:20261025T000000Z
+DTSTAMP:20261025T070832Z
 DTSTART;VALUE=DATE:20260715
 DTEND;VALUE=DATE:20260716
 SUMMARY:Deadline: Abstracts – ICSGE 2027
@@ -130,8 +662,39 @@ CATEGORIES:Call for papers
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
+UID:s3-2027@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20270810
+DTEND;VALUE=DATE:20270813
+SUMMARY:S3 2027
+DESCRIPTION:S3 2027\nOrganiser: Deep Foundations Institute (DFI)\nKind: Oth
+ er conference\nDFI gives only "S3 2027"\; check the full name\, the place 
+ and the subject.\nEvent website: https://dfi-events.org/s3-27/\nFound by t
+ he weekly calendar refresh\; check the dates on the event's website
+URL:https://dfi-events.org/s3-27/
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:eygec-2027@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20270901
+DTEND;VALUE=DATE:20270902
+SUMMARY:30th European Young Geotechnical Engineers Conference (EYGEC 2027)
+DESCRIPTION:30th European Young Geotechnical Engineers Conference\nKind: IS
+ SMGE-supported\nLast day not published\; check it and how participants are
+  nominated.\nEvent website: https://www.issmge.org/events/30th-european-yo
+ ung-geotechnical-engineers-conference-eygec-2027\nFound by the weekly cale
+ ndar refresh\; check the dates on the event's website
+LOCATION:Sofia\, Bulgaria
+URL:https://www.issmge.org/events/30th-european-young-geotechnical-engineer
+ s-conference-eygec-2027
+CATEGORIES:ISSMGE-supported
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
 UID:is-ankara-2027@geotech-news-desk
-DTSTAMP:20261025T000000Z
+DTSTAMP:20261025T070832Z
 DTSTART;VALUE=DATE:20270914
 DTEND;VALUE=DATE:20270918
 SUMMARY:9th International Symposium on Deformation Characteristics of Geoma
@@ -148,7 +711,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:is-ankara-2027-deadline-abstracts@geotech-news-desk
-DTSTAMP:20261025T000000Z
+DTSTAMP:20261025T070832Z
 DTSTART;VALUE=DATE:20260921
 DTEND;VALUE=DATE:20260922
 SUMMARY:Deadline: Abstracts – IS-Ankara 2027
@@ -161,8 +724,147 @@ CATEGORIES:Call for papers
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
+UID:energy-geotechnics-2027@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20270914
+DTEND;VALUE=DATE:20270915
+SUMMARY:Energy Geotechnics
+DESCRIPTION:Energy Geotechnics\nOrganiser: British Geotechnical Association
+  (BGA)\nKind: Other conference\nAt the University of Leeds\; check the ful
+ l title\, the last day and any call for abstracts.\nEvent website: https:/
+ /www.britishgeotech.org/event/energy-geotechnics/\nFound by the weekly cal
+ endar refresh\; check the dates on the event's website
+LOCATION:Leeds\, United Kingdom
+URL:https://www.britishgeotech.org/event/energy-geotechnics/
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:numge-2027@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20270921
+DTEND;VALUE=DATE:20270925
+SUMMARY:11th European Conference on Numerical Methods in Geotechnical Engin
+ eering (NUMGE 2027)
+DESCRIPTION:11th European Conference on Numerical Methods in Geotechnical E
+ ngineering\nOrganiser: Institute of Soil Mechanics\, Foundation Engineerin
+ g and Computational Geotechnics\, Graz University of Technology\nKind: ISS
+ MGE-supported\nSessions and workshops (closed): 14 Aug 2026\nAbstracts (cl
+ osed): 1 Sep 2026\nNotification of accepted abstracts: 11 Dec 2026\nManusc
+ ripts: 19 Mar 2027\nFinal papers: 30 May 2027\nA late call for abstracts f
+ or TC203 Special Session SP_03 was posted on 2026-10-06 with no closing da
+ te seen\; check https://www.issmge.org/news/call-for-abstracts-numge-2027-
+ special-session-sp-03-dynamic-soil-structure-interaction-of-critical-infra
+ structure-systems\nEvent website: https://www.issmge.org/events/numge2027\
+ nFound by the weekly calendar refresh\; check the dates on the event's web
+ site
+LOCATION:Graz\, Austria
+URL:https://www.issmge.org/events/numge2027
+CATEGORIES:ISSMGE-supported
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:numge-2027-deadline-sessions-and-workshops-closed@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20260814
+DTEND;VALUE=DATE:20260815
+SUMMARY:Deadline: Sessions and workshops (closed) – NUMGE 2027
+DESCRIPTION:Sessions and workshops (closed) deadline for 11th European Conf
+ erence on Numerical Methods in Geotechnical Engineering (NUMGE 2027) (21
+ –24 Sep 2027\, Graz\, Austria).\nEvent website: https://www.issmge.org/e
+ vents/numge2027
+URL:https://www.issmge.org/events/numge2027
+CATEGORIES:Deadline
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:numge-2027-deadline-abstracts-closed@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20260901
+DTEND;VALUE=DATE:20260902
+SUMMARY:Deadline: Abstracts (closed) – NUMGE 2027
+DESCRIPTION:Abstracts (closed) deadline for 11th European Conference on Num
+ erical Methods in Geotechnical Engineering (NUMGE 2027) (21–24 Sep 2027\
+ , Graz\, Austria).\nEvent website: https://www.issmge.org/events/numge2027
+URL:https://www.issmge.org/events/numge2027
+CATEGORIES:Call for papers
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:numge-2027-deadline-notification-of-accepted-abstracts@geotech-news-des
+ k
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261211
+DTEND;VALUE=DATE:20261212
+SUMMARY:Deadline: Notification of accepted abstracts – NUMGE 2027
+DESCRIPTION:Notification of accepted abstracts deadline for 11th European C
+ onference on Numerical Methods in Geotechnical Engineering (NUMGE 2027) (2
+ 1–24 Sep 2027\, Graz\, Austria).\nEvent website: https://www.issmge.org/
+ events/numge2027
+URL:https://www.issmge.org/events/numge2027
+CATEGORIES:Call for papers
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:numge-2027-deadline-manuscripts@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20270319
+DTEND;VALUE=DATE:20270320
+SUMMARY:Deadline: Manuscripts – NUMGE 2027
+DESCRIPTION:Manuscripts deadline for 11th European Conference on Numerical 
+ Methods in Geotechnical Engineering (NUMGE 2027) (21–24 Sep 2027\, Graz\
+ , Austria).\nEvent website: https://www.issmge.org/events/numge2027
+URL:https://www.issmge.org/events/numge2027
+CATEGORIES:Call for papers
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:numge-2027-deadline-final-papers@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20270530
+DTEND;VALUE=DATE:20270531
+SUMMARY:Deadline: Final papers – NUMGE 2027
+DESCRIPTION:Final papers deadline for 11th European Conference on Numerical
+  Methods in Geotechnical Engineering (NUMGE 2027) (21–24 Sep 2027\, Graz
+ \, Austria).\nEvent website: https://www.issmge.org/events/numge2027
+URL:https://www.issmge.org/events/numge2027
+CATEGORIES:Call for papers
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:dfi52-2027@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20271101
+DTEND;VALUE=DATE:20271105
+SUMMARY:DFI's 52nd Annual Conference on Deep Foundations (DFI52)
+DESCRIPTION:DFI's 52nd Annual Conference on Deep Foundations\nOrganiser: De
+ ep Foundations Institute (DFI)\nKind: Other conference\nThe year 2027 is i
+ nferred from the calendar order\, not stated\; confirm it and the venue.\n
+ Event website: https://dfi-events.org/dfi52/\nFound by the weekly calendar
+  refresh\; check the dates on the event's website
+URL:https://dfi-events.org/dfi52/
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:10iceg-2027@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20271101
+DTEND;VALUE=DATE:20271102
+SUMMARY:The 10th International Congress on Environmental Geotechnics (10ICE
+ G)
+DESCRIPTION:The 10th International Congress on Environmental Geotechnics\nK
+ ind: ISSMGE-supported\nLast day not published\; check it and any call for 
+ abstracts.\nEvent website: https://www.issmge.org/events/10iceg\nFound by 
+ the weekly calendar refresh\; check the dates on the event's website
+LOCATION:Kyoto\, Japan
+URL:https://www.issmge.org/events/10iceg
+CATEGORIES:ISSMGE-supported
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
 UID:18arc-2027@geotech-news-desk
-DTSTAMP:20261025T000000Z
+DTSTAMP:20261025T070832Z
 DTSTART;VALUE=DATE:20271109
 DTEND;VALUE=DATE:20271114
 SUMMARY:18th Asian Regional Conference on Soil Mechanics and Geotechnical E
@@ -174,6 +876,74 @@ DESCRIPTION:18th Asian Regional Conference on Soil Mechanics and Geotechnic
  SSMGE Magazine editors
 LOCATION:Bangkok\, Thailand
 URL:https://www.issmge.org/events/18arc
+CATEGORIES:ISSMGE conference
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:vsoe-2027@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20271125
+DTEND;VALUE=DATE:20271126
+SUMMARY:The Fourth Vietnam Symposium on Advances in Offshore Engineering (V
+ SOE 2027)
+DESCRIPTION:The Fourth Vietnam Symposium on Advances in Offshore Engineerin
+ g\nKind: Other conference\nLast day not published\; listed on the ISSMGE c
+ alendar without the ISSMGE-event mark.\nEvent website: https://www.issmge.
+ org/events/the-fourth-vietnam-symposium-on-advances-in-offshore-engineerin
+ g-vsoe-2027\nFound by the weekly calendar refresh\; check the dates on the
+  event's website
+LOCATION:Ho Chi Minh City\, Vietnam
+URL:https://www.issmge.org/events/the-fourth-vietnam-symposium-on-advances-
+ in-offshore-engineering-vsoe-2027
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:xiii-chilean-geotechnical-conference-2027@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20271201
+DTEND;VALUE=DATE:20271202
+SUMMARY:XIII Chilean Geotechnical Conference
+DESCRIPTION:XIII Chilean Geotechnical Conference\nKind: ISSMGE-supported\nL
+ ast day not published.\nEvent website: https://www.issmge.org/events/xiii-
+ chilean-geotechnical-conference\nFound by the weekly calendar refresh\; ch
+ eck the dates on the event's website
+LOCATION:Punta Arenas\, Chile
+URL:https://www.issmge.org/events/xiii-chilean-geotechnical-conference
+CATEGORIES:ISSMGE-supported
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:ecpmg-2028@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20280620
+DTEND;VALUE=DATE:20280621
+SUMMARY:6th European Conference on Physical Modelling in Geotechnics (ECPMG
+  2028)
+DESCRIPTION:6th European Conference on Physical Modelling in Geotechnics\nK
+ ind: ISSMGE-supported\nLast day not published\; check it.\nEvent website: 
+ https://www.issmge.org/events/ecpmg-2028\nFound by the weekly calendar ref
+ resh\; check the dates on the event's website
+LOCATION:Southampton\, United Kingdom
+URL:https://www.issmge.org/events/ecpmg-2028
+CATEGORIES:ISSMGE-supported
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:ecsmge-2028@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20280820
+DTEND;VALUE=DATE:20280826
+SUMMARY:19th European Conference on Soil Mechanics and Geotechnical Enginee
+ ring (ECSMGE 2028)
+DESCRIPTION:19th European Conference on Soil Mechanics and Geotechnical Eng
+ ineering\nOrganiser: Turkish Society for Soil Mechanics and Geotechnical E
+ ngineering\nKind: ISSMGE conference\nISSMGE and the welcome letter say 20
+ –25 Aug but the site banner says 21–25 Aug\; confirm the first day.\nE
+ vent website: https://www.ecsmge-2028.com/\nFound by the weekly calendar r
+ efresh\; check the dates on the event's website
+LOCATION:Istanbul\, Türkiye
+URL:https://www.ecsmge-2028.com/
 CATEGORIES:ISSMGE conference
 TRANSP:TRANSPARENT
 END:VEVENT

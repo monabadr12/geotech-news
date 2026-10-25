@@ -1,0 +1,29 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:DFI51
+NAME:DFI51
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:dfi51-2026@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261102
+DTEND;VALUE=DATE:20261106
+SUMMARY:DFI's 51st Annual Conference on Deep Foundations (DFI51)
+DESCRIPTION:DFI's 51st Annual Conference on Deep Foundations\nOrganiser: De
+ ep Foundations Institute (DFI)\nKind: Other conference\nTheme: Sea Level I
+ mpacts: Navigating Challenges Together\; the DFI home page banner links to
+  the wrong page (ca-golf26).\nEvent website: https://dfi-events.org/dfi51/
+ \nFound by the weekly calendar refresh\; check the dates on the event's we
+ bsite
+LOCATION:Orlando\, United States
+URL:https://dfi-events.org/dfi51/
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

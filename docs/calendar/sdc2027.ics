@@ -1,0 +1,30 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:SDC2027
+NAME:SDC2027
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:sdc2027@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20270511
+DTEND;VALUE=DATE:20270512
+SUMMARY:SDC2027 – 5th International Conference on Shaft Design & Construc
+ tion
+DESCRIPTION:SDC2027 – 5th International Conference on Shaft Design & Cons
+ truction\nKind: Other conference\nITA endorsed event\; place and last day 
+ not published\, so check both.\nEvent website: https://about.ita-aites.org
+ /future-events/2549/sdc2027-5th-international-conference-on-shaft-design-c
+ onstruction?tmpl=component\nFound by the weekly calendar refresh\; check t
+ he dates on the event's website
+URL:https://about.ita-aites.org/future-events/2549/sdc2027-5th-internationa
+ l-conference-on-shaft-design-construction?tmpl=component
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

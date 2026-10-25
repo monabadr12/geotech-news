@@ -1,0 +1,29 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:ITACET Lunchtime Lecture Series #60
+NAME:ITACET Lunchtime Lecture Series #60
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:itacet-lunchtime-lecture-series-60-2026@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261110
+DTEND;VALUE=DATE:20261111
+SUMMARY:ITACET Lunchtime Lecture Series #60
+DESCRIPTION:ITACET Lunchtime Lecture Series #60\nOrganiser: ITA-AITES / ITA
+ CET Foundation\nKind: Course / webinar\nLast day\, place\, topic and forma
+ t not published\; check whether it is online.\nEvent website: https://abou
+ t.ita-aites.org/future-events/2671/itacet-lunchtime-lecture-series-60?tmpl
+ =component\nFound by the weekly calendar refresh\; check the dates on the 
+ event's website
+URL:https://about.ita-aites.org/future-events/2671/itacet-lunchtime-lecture
+ -series-60?tmpl=component
+CATEGORIES:Course / webinar
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

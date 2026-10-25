@@ -1,0 +1,29 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:EYGEC 2027
+NAME:EYGEC 2027
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:eygec-2027@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20270901
+DTEND;VALUE=DATE:20270902
+SUMMARY:30th European Young Geotechnical Engineers Conference (EYGEC 2027)
+DESCRIPTION:30th European Young Geotechnical Engineers Conference\nKind: IS
+ SMGE-supported\nLast day not published\; check it and how participants are
+  nominated.\nEvent website: https://www.issmge.org/events/30th-european-yo
+ ung-geotechnical-engineers-conference-eygec-2027\nFound by the weekly cale
+ ndar refresh\; check the dates on the event's website
+LOCATION:Sofia\, Bulgaria
+URL:https://www.issmge.org/events/30th-european-young-geotechnical-engineer
+ s-conference-eygec-2027
+CATEGORIES:ISSMGE-supported
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

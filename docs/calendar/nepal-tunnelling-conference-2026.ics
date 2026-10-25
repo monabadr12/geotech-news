@@ -1,0 +1,29 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Nepal Tunnelling Conference 2026
+NAME:Nepal Tunnelling Conference 2026
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:nepal-tunnelling-conference-2026@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261210
+DTEND;VALUE=DATE:20261211
+SUMMARY:Nepal Tunnelling Conference 2026
+DESCRIPTION:Nepal Tunnelling Conference 2026\nKind: Other conference\nITA r
+ ecognised event\; city and last day not published\, so check both.\nEvent 
+ website: https://about.ita-aites.org/future-events/2666/nepal-tunnelling-c
+ onference-2026?tmpl=component\nFound by the weekly calendar refresh\; chec
+ k the dates on the event's website
+LOCATION:Nepal
+URL:https://about.ita-aites.org/future-events/2666/nepal-tunnelling-confere
+ nce-2026?tmpl=component
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

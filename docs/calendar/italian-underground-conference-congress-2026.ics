@@ -1,0 +1,28 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Italian Underground Conference / Congress
+NAME:Italian Underground Conference / Congress
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:italian-underground-conference-congress-2026@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261126
+DTEND;VALUE=DATE:20261127
+SUMMARY:Italian Underground Conference / Congress
+DESCRIPTION:Italian Underground Conference / Congress\nKind: Other conferen
+ ce\nITA recognised event\; place and last day not published\, so check bot
+ h.\nEvent website: https://about.ita-aites.org/future-events/2652/italian-
+ underground-conference-congress?tmpl=component\nFound by the weekly calend
+ ar refresh\; check the dates on the event's website
+URL:https://about.ita-aites.org/future-events/2652/italian-underground-conf
+ erence-congress?tmpl=component
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

@@ -1,0 +1,30 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:ARMS14
+NAME:ARMS14
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:arms14-2026@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261122
+DTEND;VALUE=DATE:20261127
+SUMMARY:ARMS14 – 14th Asian Rock Mechanics Symposium – Rock Mechanics f
+ or the Next Generation – Innovations\, Sustainability\, and Resilience 
+ – the 2026 ISRM International Symposium
+DESCRIPTION:ARMS14 – 14th Asian Rock Mechanics Symposium – Rock Mechani
+ cs for the Next Generation – Innovations\, Sustainability\, and Resilien
+ ce – the 2026 ISRM International Symposium\nOrganiser: ISRM\nKind: Other
+  conference\nEvent website: https://isrm.net/conference/show/6382\nFound b
+ y the weekly calendar refresh\; check the dates on the event's website
+LOCATION:Fukuoka\, Japan
+URL:https://isrm.net/conference/show/6382
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

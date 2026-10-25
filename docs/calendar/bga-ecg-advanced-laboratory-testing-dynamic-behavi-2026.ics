@@ -1,0 +1,32 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:BGA ECG Advanced Laboratory Testing & Dynamic Behaviour of Soi
+ ls
+NAME:BGA ECG Advanced Laboratory Testing & Dynamic Behaviour of Soils
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:bga-ecg-advanced-laboratory-testing-dynamic-behavi-2026@geotech-news-de
+ sk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261110
+DTEND;VALUE=DATE:20261111
+SUMMARY:BGA ECG Advanced Laboratory Testing & Dynamic Behaviour of Soils
+DESCRIPTION:BGA ECG Advanced Laboratory Testing & Dynamic Behaviour of Soil
+ s\nOrganiser: BGA Early Career Group\nKind: Course / webinar\nSpeaker Dani
+ el Shirkavand\, 18:30–20:00.\nEvent website: https://www.britishgeotech.
+ org/event/bga-ecg-advanced-laboratory-testing-dynamic-behaviour-of-soils/\
+ nFound by the weekly calendar refresh\; check the dates on the event's web
+ site
+LOCATION:Online
+URL:https://www.britishgeotech.org/event/bga-ecg-advanced-laboratory-testin
+ g-dynamic-behaviour-of-soils/
+CATEGORIES:Course / webinar
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

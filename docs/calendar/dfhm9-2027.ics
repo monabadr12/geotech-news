@@ -1,0 +1,31 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:DFHM9
+NAME:DFHM9
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:dfhm9-2027@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20270614
+DTEND;VALUE=DATE:20270615
+SUMMARY:9th International Conference on Debris Flow Hazard Mitigation (DFHM
+ 9)
+DESCRIPTION:9th International Conference on Debris Flow Hazard Mitigation\n
+ Kind: Other conference\nLast day not published\; listed on the ISSMGE cale
+ ndar without the ISSMGE-event mark.\nEvent website: https://www.issmge.org
+ /events/9th-international-conference-on-debris-flow-hazard-mitigation-dfhm
+ 9\nFound by the weekly calendar refresh\; check the dates on the event's w
+ ebsite
+LOCATION:Daejeon\, South Korea
+URL:https://www.issmge.org/events/9th-international-conference-on-debris-fl
+ ow-hazard-mitigation-dfhm9
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

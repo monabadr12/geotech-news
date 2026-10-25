@@ -1,0 +1,40 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:2026 Geotechnical Engineering Proceedings Lecture: Strains in 
+ sprayed concrete tunnel linings at Heathrow Terminal 4 and back-calculatio
+ n of stress
+NAME:2026 Geotechnical Engineering Proceedings Lecture: Strains in sprayed 
+ concrete tunnel linings at Heathrow Terminal 4 and back-calculation of str
+ ess
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:2026-geotechnical-engineering-proceedings-lecture@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261104
+DTEND;VALUE=DATE:20261105
+SUMMARY:2026 Geotechnical Engineering Proceedings Lecture: Strains in spray
+ ed concrete tunnel linings at Heathrow Terminal 4 and back-calculation of 
+ stress
+DESCRIPTION:2026 Geotechnical Engineering Proceedings Lecture: Strains in s
+ prayed concrete tunnel linings at Heathrow Terminal 4 and back-calculation
+  of stress\nOrganiser: British Geotechnical Association (BGA)\nKind: Cours
+ e / webinar\nEvening lecture by Dr Benoît Jones at ICE\, One Great George
+  Street\, 18:30–20:30.\nEvent website: https://www.britishgeotech.org/ev
+ ent/the-2026-geotechnical-engineering-proceedings-lecture-strains-in-spray
+ ed-concrete-tunnel-linings-at-heathrow-terminal-4-and-back-calculation-of-
+ stress/\nFound by the weekly calendar refresh\; check the dates on the eve
+ nt's website
+LOCATION:London\, United Kingdom
+URL:https://www.britishgeotech.org/event/the-2026-geotechnical-engineering-
+ proceedings-lecture-strains-in-sprayed-concrete-tunnel-linings-at-heathrow
+ -terminal-4-and-back-calculation-of-stress/
+CATEGORIES:Course / webinar
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

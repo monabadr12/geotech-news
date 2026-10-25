@@ -1,0 +1,36 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:BGA Touring Lecture – Beyond Automation: Responsible AI Work
+ flows in Geotechnical Modelling and Monitoring
+NAME:BGA Touring Lecture – Beyond Automation: Responsible AI Workflows in
+  Geotechnical Modelling and Monitoring
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:bga-touring-lecture-beyond-automation-responsible-2026@geotech-news-des
+ k
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261117
+DTEND;VALUE=DATE:20261120
+SUMMARY:BGA Touring Lecture – Beyond Automation: Responsible AI Workflows
+  in Geotechnical Modelling and Monitoring
+DESCRIPTION:BGA Touring Lecture – Beyond Automation: Responsible AI Workf
+ lows in Geotechnical Modelling and Monitoring\nOrganiser: British Geotechn
+ ical Association (BGA)\nKind: Course / webinar\nThree lectures by Chin Pan
+ g: Leeds 17 Nov\, Belfast 18 Nov (page ends -2/)\, Glasgow 19 Nov (page en
+ ds -3/).\nEvent website: https://www.britishgeotech.org/event/bga-touring-
+ lecture-beyond-automation-responsible-ai-workflows-in-geotechnical-modelli
+ ng-and-monitoring/\nFound by the weekly calendar refresh\; check the dates
+  on the event's website
+LOCATION:Leeds\, United Kingdom
+URL:https://www.britishgeotech.org/event/bga-touring-lecture-beyond-automat
+ ion-responsible-ai-workflows-in-geotechnical-modelling-and-monitoring/
+CATEGORIES:Course / webinar
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

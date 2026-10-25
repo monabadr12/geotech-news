@@ -1,0 +1,77 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:NUMGE 2027
+NAME:NUMGE 2027
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:numge-2027@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20270921
+DTEND;VALUE=DATE:20270925
+SUMMARY:11th European Conference on Numerical Methods in Geotechnical Engin
+ eering (NUMGE 2027)
+DESCRIPTION:11th European Conference on Numerical Methods in Geotechnical E
+ ngineering\nOrganiser: Institute of Soil Mechanics\, Foundation Engineerin
+ g and Computational Geotechnics\, Graz University of Technology\nKind: ISS
+ MGE-supported\nSessions and workshops (closed): 14 Aug 2026\nAbstracts (cl
+ osed): 1 Sep 2026\nNotification of accepted abstracts: 11 Dec 2026\nManusc
+ ripts: 19 Mar 2027\nFinal papers: 30 May 2027\nA late call for abstracts f
+ or TC203 Special Session SP_03 was posted on 2026-10-06 with no closing da
+ te seen\; check https://www.issmge.org/news/call-for-abstracts-numge-2027-
+ special-session-sp-03-dynamic-soil-structure-interaction-of-critical-infra
+ structure-systems\nEvent website: https://www.issmge.org/events/numge2027\
+ nFound by the weekly calendar refresh\; check the dates on the event's web
+ site
+LOCATION:Graz\, Austria
+URL:https://www.issmge.org/events/numge2027
+CATEGORIES:ISSMGE-supported
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:numge-2027-deadline-notification-of-accepted-abstracts@geotech-news-des
+ k
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261211
+DTEND;VALUE=DATE:20261212
+SUMMARY:Deadline: Notification of accepted abstracts – NUMGE 2027
+DESCRIPTION:Notification of accepted abstracts deadline for 11th European C
+ onference on Numerical Methods in Geotechnical Engineering (NUMGE 2027) (2
+ 1–24 Sep 2027\, Graz\, Austria).\nEvent website: https://www.issmge.org/
+ events/numge2027
+URL:https://www.issmge.org/events/numge2027
+CATEGORIES:Call for papers
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:numge-2027-deadline-manuscripts@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20270319
+DTEND;VALUE=DATE:20270320
+SUMMARY:Deadline: Manuscripts – NUMGE 2027
+DESCRIPTION:Manuscripts deadline for 11th European Conference on Numerical 
+ Methods in Geotechnical Engineering (NUMGE 2027) (21–24 Sep 2027\, Graz\
+ , Austria).\nEvent website: https://www.issmge.org/events/numge2027
+URL:https://www.issmge.org/events/numge2027
+CATEGORIES:Call for papers
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:numge-2027-deadline-final-papers@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20270530
+DTEND;VALUE=DATE:20270531
+SUMMARY:Deadline: Final papers – NUMGE 2027
+DESCRIPTION:Final papers deadline for 11th European Conference on Numerical
+  Methods in Geotechnical Engineering (NUMGE 2027) (21–24 Sep 2027\, Graz
+ \, Austria).\nEvent website: https://www.issmge.org/events/numge2027
+URL:https://www.issmge.org/events/numge2027
+CATEGORIES:Call for papers
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

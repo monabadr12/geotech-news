@@ -1,0 +1,29 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:GEOTEC HANOI 2026
+NAME:GEOTEC HANOI 2026
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:geotec-hanoi-2026@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20261126
+DTEND;VALUE=DATE:20261127
+SUMMARY:The 6th International Conference on Geotechnics for Sustainable Inf
+ rastructure Development (GEOTEC HANOI 2026)
+DESCRIPTION:The 6th International Conference on Geotechnics for Sustainable
+  Infrastructure Development\nKind: ISSMGE-supported\nLast day not publishe
+ d\; check it.\nEvent website: https://www.issmge.org/events/geotec-hanoi-2
+ 026-gh2026\nFound by the weekly calendar refresh\; check the dates on the 
+ event's website
+LOCATION:Hanoi\, Vietnam
+URL:https://www.issmge.org/events/geotec-hanoi-2026-gh2026
+CATEGORIES:ISSMGE-supported
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

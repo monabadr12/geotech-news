@@ -1,0 +1,30 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:ECSMGE 2028
+NAME:ECSMGE 2028
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:ecsmge-2028@geotech-news-desk
+DTSTAMP:20261025T070832Z
+DTSTART;VALUE=DATE:20280820
+DTEND;VALUE=DATE:20280826
+SUMMARY:19th European Conference on Soil Mechanics and Geotechnical Enginee
+ ring (ECSMGE 2028)
+DESCRIPTION:19th European Conference on Soil Mechanics and Geotechnical Eng
+ ineering\nOrganiser: Turkish Society for Soil Mechanics and Geotechnical E
+ ngineering\nKind: ISSMGE conference\nISSMGE and the welcome letter say 20
+ –25 Aug but the site banner says 21–25 Aug\; confirm the first day.\nE
+ vent website: https://www.ecsmge-2028.com/\nFound by the weekly calendar r
+ efresh\; check the dates on the event's website
+LOCATION:Istanbul\, Türkiye
+URL:https://www.ecsmge-2028.com/
+CATEGORIES:ISSMGE conference
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR
