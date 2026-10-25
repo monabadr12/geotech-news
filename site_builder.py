@@ -63,9 +63,10 @@ USE_STEPS = [
 USE_TITLE = "Before you use a story"
 # What the news desk itself does to keep to them (the Method page, the README and the Word report)
 USE_DONE = [
-    "The website, the downloads, the e-mails and the archive in the repository show no publisher's text beyond the "
-    "headline: no feed summaries, no paper abstracts and no images from the sources. Each headline names its source "
-    "and links to the original article.",
+    "The website, the downloads, the e-mails and the current archive files in the repository show no publisher's "
+    "text beyond the headline: no feed summaries, no paper abstracts and no images from the sources. Each headline "
+    "names its source and links to the original article. (Earlier versions of the archive in the repository's "
+    "history, saved before 25 October 2026, still hold the feed summaries and abstracts removed that day.)",
     "Headlines from non-English sources are shown in Claude's English translation, labelled as such, with the "
     "original headline beside it.",
     "The magazine angle and the note on why a paper matters are written by Claude in its own words, never copied "
@@ -684,7 +685,8 @@ def brief_card(win, b, cfg, current, root, opts):
         picks.append(f"<li style='--tc:{theme_color(t)}'><span class='lt'>{theme_icon(t)}{esc(t)}</span>"
                      f"<a href='{esc(s.get('link', '#'))}' target='_blank' rel='noopener' dir='auto'>"
                      f"{esc(s.get('title_en') or s.get('title', ''))}</a>"
-                     f"<span class='lf'>{esc(chosen[0].get('format', ''))} · {esc(s.get('source', ''))}{more}</span></li>")
+                     + (original_line(s) if s.get("title_en") else "")
+                     + f"<span class='lf'>{esc(chosen[0].get('format', ''))} · {esc(s.get('source', ''))}{more}</span></li>")
     also = ", ".join(count(len(b.get(k) or []), one) for k, one in
                      (("feature_leads", "feature lead"), ("a2i_topics", "Academia-to-Industry topic"), ("gaps", "gap")))
     status = "final" if final else "draft"

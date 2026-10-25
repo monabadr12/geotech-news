@@ -59,6 +59,7 @@ NAVY, NAVY2, ACCENT, INK, MUTED, LINE = "16324F", "23466B", "C9A227", "1B2430", 
 LINK, PAPER, INPUT_FILL, EDIT_FILL, WHITE = "1D5A8A", "F4F6F9", "FFF4CC", "FFFBEF", "FFFFFF"
 ACCENT_INK = "8A6410"
 NOT_RATED = "Not rated"
+TRANSLATED = "English headline translated by Claude"   # as site_builder.TRANSLATED
 STANDARD_USES = ["Feature lead", "News brief", "Academia-to-Industry topic", "Regional insight", "Watch only"]
 USE_COLORS = {"Feature lead": "D38B00", "News brief": "2563D6", "Academia-to-Industry topic": "6B4FD6",
               "Regional insight": "1F9D63", "Watch only": "8A94A3", NOT_RATED: "B8C0CA", "": "B8C0CA"}
@@ -656,8 +657,10 @@ def _lists_sheet(ws, ctx):
         put(ws, r, 14, F(f'=IFERROR(LARGE({keys},M{r}),"")'), fmt="0")
         put(ws, r, 15, F(f'=IF(N{r}="","",MATCH(N{r},{keys},0))'))
         put(ws, r, 16, F(f'=IF(O{r}="","",INDEX({ctx.rng("url")},O{r})&"")'))
+        # a translated headline (one with an Original headline) says it is Claude's translation
         put(ws, r, 17, F(f'=IF(O{r}="","",IF(LEN(INDEX({ctx.rng("headline")},O{r}))>120,'
-                         f'LEFT(INDEX({ctx.rng("headline")},O{r}),118)&"…",INDEX({ctx.rng("headline")},O{r})&""))'))
+                         f'LEFT(INDEX({ctx.rng("headline")},O{r}),118)&"…",INDEX({ctx.rng("headline")},O{r})&"")'
+                         f'&IF(INDEX({ctx.rng("original")},O{r})&""<>""," (Claude\'s translation)",""))'))
     ws.column_dimensions["P"].width = ws.column_dimensions["Q"].width = 40
     page_setup(ws, "1:1")
 
@@ -936,7 +939,8 @@ def _by_theme_sheet(ws, ctx):
             mid = Alignment(horizontal="center", vertical="top")
             put(ws, row, 1, s["no"], f=font(9, color=MUTED), al=mid)
             put(ws, row, 2, s["rel"], f=font(10, True), al=mid, fmt='0;-0;"\u2013"')
-            put(ws, row, 3, s["headline"], f=font(10, True, INK), al=top)
+            shown = s["headline"] + (f"\n({TRANSLATED} · Original: {s['original']})" if s["original"] else "")
+            put(ws, row, 3, shown, f=font(10, True, INK), al=top)
             if s["url"]:
                 put(ws, row, 4, "Open article", f=font(9, color=LINK, underline="single"), al=mid).hyperlink = s["url"]
             put(ws, row, 5, s["use"], f=font(9, True, USE_COLORS.get(s["use"], MUTED)), al=top)
@@ -948,7 +952,7 @@ def _by_theme_sheet(ws, ctx):
             put(ws, row, 9, about or None, f=font(9, color=INK), al=top)
             for c in range(1, last_col + 1):
                 ws.cell(row=row, column=c).border = Border(bottom=THIN)
-            lines = max(lines_needed(s["headline"], 56), lines_needed(about, 50), lines_needed(s["source"], 20))
+            lines = max(lines_needed(shown, 56), lines_needed(about, 50), lines_needed(s["source"], 20))
             ws.row_dimensions[row].height = min(max(lines, 1), 5) * 12.5 + 4
             ws.row_dimensions[row].outline_level = 1
             row += 1

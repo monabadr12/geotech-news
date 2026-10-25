@@ -641,6 +641,14 @@ def event_place(e):
     return ", ".join(b for b in bits if b) + (" and online" if e.get("online") else "")
 
 
+def m_original(s, size=13):
+    """Under a translated headline in an e-mail: that it is Claude's translation, and the publisher's own headline."""
+    if not s.get("title_en"):
+        return ""
+    return (f"<div style='font:{size}px {FONT};color:{MUTED};margin-top:2px'>{site_builder.TRANSLATED} · Original: "
+            f"<span dir='auto'>{esc(s.get('title') or '')}</span></div>")
+
+
 def m_story(s, url, note=""):
     """One story in an e-mail: theme, headline, original headline, where and when, angle."""
     color = site_builder.theme_color(s.get("theme") or "General")
@@ -655,9 +663,7 @@ def m_story(s, url, note=""):
              f"{esc(s.get('theme') or 'General')}</div>",
              f"<a href='{esc(site_builder.safe_url(s.get('link')))}' dir='auto' style='font:600 15px/1.4 {FONT};color:{INK}'>"
              f"{esc(headline(s))}</a>"]
-    if s.get("title_en"):
-        parts.append(f"<div style='font:13px {FONT};color:{MUTED};margin-top:2px'>{site_builder.TRANSLATED} · Original: "
-                     f"<span dir='auto'>{esc(s.get('title') or '')}</span></div>")
+    parts.append(m_original(s))
     parts.append(f"<div style='font:12px {FONT};color:{MUTED};margin-top:3px'>{' · '.join(m for m in meta if m)}</div>")
     if s.get("angle"):  # Claude's own words; the publisher's text is never sent
         parts.append(f"<div style='font:italic 14px/1.5 {SERIF};color:#333;margin-top:5px'>{esc(s['angle'])}</div>")
@@ -713,7 +719,8 @@ def follow_up_note(s, url, groups_by_id):
 def alert_subject(stories, opts):
     level = "5/5" if opts["min_relevance"] >= 5 else f"{opts['min_relevance']}/5+"
     if len(stories) == 1:
-        return f"New {level} story: {headline(stories[0])}"[:180]
+        tail = " (translated by Claude)" if stories[0].get("title_en") else ""
+        return f"New {level} story: {headline(stories[0])}"[:180 - len(tail)] + tail
     return f"{len(stories)} new {level} stories"
 
 
@@ -786,7 +793,7 @@ def render_week_email(W, cfg):
         body.append(m_h2("Also rated 5 / 5"))
         body += [f"<div class='m-gap' style='font:13.5px/1.45 {FONT};margin:0 0 8px'>"
                  f"<a href='{esc(site_builder.safe_url(s.get('link')))}' dir='auto' style='color:{INK};font-weight:600'>{esc(headline(s))}</a>"
-                 f"<div style='font:12px {FONT};color:{MUTED}'>{esc(s.get('source') or '')} · "
+                 + m_original(s, 12) + f"<div style='font:12px {FONT};color:{MUTED}'>{esc(s.get('source') or '')} · "
                  f"{esc(site_builder.nice_date(story_day(s)))} · "
                  f"<span style='color:{site_builder.theme_color(s.get('theme') or 'General')}'>{esc(s.get('theme') or 'General')}</span>"
                  + (f" · {esc(where(s))}" if where(s) else "") + (f" · Check with: {esc(primary(s))}" if primary(s) else "")
@@ -1120,7 +1127,8 @@ def week_body(W, cfg, rec, opts, older, newer, last_key):
         out.append(week_list(
             f"<li style='--tc:{site_builder.theme_color(s.get('theme') or 'General')}'>"
             f"<a href='{esc(site_builder.safe_url(s.get('link')))}' target='_blank' rel='noopener' dir='auto'>{esc(headline(s))}</a>"
-            f"<span class='wk-meta'>{esc(s.get('source') or '')} · {esc(site_builder.nice_date(story_day(s)))} · "
+            + (site_builder.original_line(s) if s.get("title_en") else "")
+            + f"<span class='wk-meta'>{esc(s.get('source') or '')} · {esc(site_builder.nice_date(story_day(s)))} · "
             f"<span class='wk-theme'>{esc(s.get('theme') or 'General')}</span>"
             + (f" · {esc(where(s))}" if where(s) else "") + (f" · Check with: {esc(primary(s))}" if primary(s) else "")
             + "</span></li>" for s in W["more5"]))
@@ -1242,6 +1250,7 @@ def index_body(summaries, cfg, rec, opts, last_key):
                    f"<span class='wk-figs'>{plural(F['stories'], 'story', 'stories')} · {F['top']} rated 5 / 5 · "
                    f"{plural(F['digests'], 'digest')}{' · ' + plural(F['papers'], 'paper') if F['papers'] else ''}</span>"
                    + (f"<span class='wk-lead' dir='auto'>{esc(headline(lead))}</span>" if lead else "")
+                   + (f"<span class='wk-figs'>{site_builder.TRANSLATED}</span>" if lead and lead.get("title_en") else "")
                    + f"{strip(W['themes'])}</a>")
     out.append("</div>")
     return "".join(out)

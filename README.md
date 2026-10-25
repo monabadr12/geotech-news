@@ -57,7 +57,8 @@ with the five steps of *Before you use a story*.
 During triage Claude reads the country each story is about (an ISO code such as `CO` or `GB`) and the town, region or
 site it names: where the event, project or site is, which is often not the outlet's country or the Google News edition
 that found the story. A story about several countries, or a general market or research result, counts as global.
-Stories archived before this was added (or whose triage failed) are located in batches after each scan, newest first.
+Stories archived before this was added (or whose triage failed) are located in batches after each scan, newest first;
+the scan's own stories that Claude did not rate come first, while their feed summaries are still there to read.
 The **World map** page plots the stories by country, compares them with the member-society countries of ISSMGE's six
 regions and marks the member countries with no stories in the period, so regional gaps are easy to spot when planning an
 issue. The issue pages and the weekly summaries show the same regional figures. Settings and the ISSMGE member lists are
@@ -207,13 +208,17 @@ with a click), on the Method & sources page (*Using the stories: copyright*), on
 foot of the weekly summary e-mail and page, in the Word website report and in each issue brief.
 
 What the system does to follow them:
-* **No publisher's text beyond the headline is published or kept.** The scanner reads the feeds' summaries and the
+* **No publisher's text beyond the headline is published or saved.** The scanner reads the feeds' summaries and the
   papers' abstracts during the scan (for the keyword score and for Claude's reading), but saves every story with an
-  empty `summary` and every paper with an empty `abstract`, so neither the archive in `data/digests/` (public in this
-  repository) nor anything built from it — website pages, search data (`docs/exports/*.json`), CSV and Excel files,
-  the Word report, issue briefs, e-mails, the AI assistant's context — contains them. A story without an angle shows
-  its headline and source only. `python scanner.py --clear-publisher-text` empties any summaries and abstracts left in
-  older digests (it was run once on 25 October 2026 and changes nothing else; running it again is safe).
+  empty `summary` and every paper with an empty `abstract`, so neither the current archive files in `data/digests/`
+  (public in this repository) nor anything built from them — website pages, search data (`docs/exports/*.json`), CSV
+  and Excel files, the Word report, issue briefs, e-mails, the AI assistant's context — contain them. A story without
+  an angle shows its headline and source only. `python scanner.py --clear-publisher-text` empties any summaries and
+  abstracts left in older digests (it was run once on 25 October 2026 and changes nothing else; running it again is
+  safe). *Earlier versions* of the files in the repository's Git history (the digests, workbooks and search data
+  committed before 25 October 2026) still hold the feed summaries and abstracts saved until then. Removing them takes a
+  history rewrite (for example `git filter-repo`, blanking `summary` and `abstract` in `data/digests/*.json` and
+  dropping the old `docs/exports/` files) and a force-push of `main`, which only the repository owner should decide on.
 * **Headlines identify the article** and always come with the source's name and a link to the original. Headlines of
   foreign stories are shown in Claude's English translation, labelled *English headline translated by Claude*, with
   the original headline beside it.

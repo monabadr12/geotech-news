@@ -220,6 +220,7 @@ h1 { font: 700 34px/1.15 var(--serif); margin: 0 0 10px; letter-spacing: -.01em;
 .story-title { font: 650 16.5px/1.4 var(--sans); font-weight: 650; color: var(--ink); text-decoration: none; }
 .story-title:hover { color: var(--link); text-decoration: underline; }
 .orig { font-size: 13px; color: var(--muted); margin-top: 3px; }
+.lineup .orig, .wk-list .orig { margin-top: 0; font-size: 12.5px; overflow-wrap: anywhere; }
 .angle { margin: 10px 0 0; font: 15.5px/1.5 var(--serif); padding: 8px 12px; border-radius: 8px; background: color-mix(in srgb, var(--tc) 6%, var(--surface)); }
 .angle span { display: block; font: 700 10.5px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--tc); margin-bottom: 2px; }
 /* whom to check the facts with (Claude), and the label of a translated headline */

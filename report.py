@@ -13,6 +13,7 @@ import yaml
 from docx import Document
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.opc.constants import RELATIONSHIP_TYPE
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
@@ -76,6 +77,21 @@ def bullet(doc, text, bold_prefix=""):
         p.add_run(bold_prefix).bold = True
     p.add_run(text)
     return p
+
+
+def hyperlink(p, text, url, bold=False):
+    """A run linked to url, as a real Word hyperlink (anything but a web link stays plain text)."""
+    run = p.add_run(text)
+    run.bold = bold
+    url = str(url or "").strip()
+    if not url.lower().startswith(("http://", "https://")):
+        return run
+    run.font.color.rgb, run.font.underline = rgb("1D5A8A"), True
+    link = OxmlElement("w:hyperlink")
+    link.set(qn("r:id"), p.part.relate_to(url, RELATIONSHIP_TYPE.HYPERLINK, is_external=True))
+    link.append(run._r)  # moves the run from the paragraph into the link
+    p._p.append(link)
+    return run
 
 
 def heading(doc, text, level=1):
@@ -464,9 +480,10 @@ def write_report(path, cfg, digests, windows, theme_color, site_url, changelog_p
         doc.add_paragraph(f"{len(papers)} new papers from {len(journals)} journals were picked up for Academia-to-Industry topics.")
         table(doc, ["Journal", "Papers"], journals.most_common(), [12, 3])
         best = sorted(papers, key=lambda pp: -(pp.get("relevance") or 0))[:8]
-        for pp in best:
-            bullet(doc, f" — {pp.get('journal', '')}, {pp.get('published', '')}" + (f". {pp['angle']}" if pp.get("angle") else ""),
-                   bold_prefix=pp.get("title", ""))
+        for pp in best:  # the title is the link to the paper, with the journal named after it
+            p = doc.add_paragraph(style="List Bullet")
+            hyperlink(p, pp.get("title", ""), pp.get("link"), bold=True)
+            p.add_run(f" — {pp.get('journal', '')}, {pp.get('published', '')}" + (f". {pp['angle']}" if pp.get("angle") else ""))
     else:
         doc.add_paragraph("No research papers have been collected in this issue window yet.")
 

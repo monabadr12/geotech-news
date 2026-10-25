@@ -681,16 +681,28 @@ def country_code(text):
 
 
 PRIMARY_SOURCE_WORDS = 12
+# words a shortened answer must not end on ("… the regional geological survey and")
+DANGLING = {"and", "or", "of", "the", "a", "an", "with", "for", "to", "its", "their", "in", "at", "on", "by",
+            "from", "&"}
 
 
 def primary_source(text):
     """Claude's "who to check the facts with" on one line, at most PRIMARY_SOURCE_WORDS words and 120
-    characters ("" when unclear, or when Claude answered "none", "unknown" or the like)."""
+    characters ("" when unclear, or when Claude answered "none", "unknown" or the like). A longer answer is
+    shortened at a word, without a dangling "and", "of" or the like, and ends in "…"."""
     words = " ".join(str(text or "").split()).strip(" .;:-–—").split(" ")
     out = " ".join(words[:PRIMARY_SOURCE_WORDS])
     if out.casefold() in ("", "none", "n/a", "na", "unknown", "unclear", "not clear", "-"):
         return ""
-    return out if len(out) <= 120 else out[:119].rsplit(" ", 1)[0] + "…"
+    cut = len(words) > PRIMARY_SOURCE_WORDS
+    if len(out) > 120:
+        out, cut = out[:119].rsplit(" ", 1)[0], True
+    if not cut:
+        return out
+    kept = out.split(" ")
+    while len(kept) > 1 and kept[-1].rstrip(",;:").casefold() in DANGLING:
+        kept.pop()
+    return " ".join(kept).rstrip(" ,;:-–—") + "…"
 
 
 def claude_triage(items, cfg, notes):
@@ -871,8 +883,12 @@ def crossref_date(item, today):
 
 def paper_text(p):
     """What a paper's keyword score reads: its title and, during the scan, its abstract. The archive keeps
-    no abstracts (see clear_publisher_text), so the keyword concepts found in the abstract stand in for it."""
-    return f"{p['title']} {p.get('abstract') or ''} {' '.join(p.get('keywords') or [])}"
+    no abstracts (see clear_publisher_text), so for an archived paper the keyword concepts found in the abstract
+    stand in for it, kept apart by " | " so that two of them never make up a longer term ("tunnel" and
+    "collapse" are not "tunnel collapse")."""
+    if p.get("abstract"):
+        return f"{p['title']} {p['abstract']}"
+    return " | ".join([p["title"], *(p.get("keywords") or [])])
 
 
 def paper_rank(p, cfg, compiled):
@@ -1048,8 +1064,10 @@ def clear_archive(folder=None):
 def story_text(s):
     """What a story's keyword score reads: its headline and, during the scan, its feed summary. The archive
     keeps no summaries, so the keyword concepts found in the summary stand in for it when an archived story
-    is scored again."""
-    return f"{s['title']} {s.get('summary') or ''} {' '.join(s.get('keywords') or [])}"
+    is scored again, kept apart by " | " as in paper_text."""
+    if s.get("summary"):
+        return f"{s['title']} {s['summary']}"
+    return " | ".join([s["title"], *(s.get("keywords") or [])])
 
 
 def rescore_unrated(stories, cfg):
@@ -1229,14 +1247,14 @@ def main():
         "keywords": i["hits"][:6], "score": i["score"], "rank": i["rank"],
         # where the story happened, as Claude read it ("" = global), and whom to check the facts
         # with; stories Claude did not rate have no "country" yet, so geomap.locate_missing()
-        # locates them later
+        # locates them below, while their feed summaries are still here to read
         **({"country": i.get("country", ""), "place": i.get("place", ""),
             "primary_source": i.get("primary_source", "")} if i["relevance"] else {}),
     } for i in selected]
 
     import geomap, storylines  # (they import this module, so not at the top)
     storylines.link(stories, now, cfg, notes)  # follow-up reports joined to the earlier event
-    geomap.locate_missing(cfg, notes)          # archived stories that have no country yet
+    geomap.locate_missing(cfg, notes, today=stories)  # today's and archived stories with no country yet
     save_digest(now, stories, failures, notes, ai_used, new_count, cfg, papers)
     site_builder.build(cfg)
     # e-mail (alerts for 5/5 stories, the Monday summary) is sent by notify.py, a later workflow step

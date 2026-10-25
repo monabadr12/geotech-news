@@ -411,6 +411,10 @@
       }).sort(function (a, b) { return a.last < b.last ? 1 : a.last > b.last ? -1 : 0; });
       return archive._lines;
     }
+    /* a story's headline for Claude: a translated one is marked as such, with the original */
+    function headText(s) {
+      return (s.te || s.t) + (s.te ? " (Claude's translation; original: " + s.t + ")" : "");
+    }
     function storylineHead(g) {
       return g.title + (g.where ? " | " + g.where : "") + " | " + g.reports.length + " reports, " + g.first + " to " + g.last +
         " | latest stage: " + (g.reports[g.reports.length - 1].sg || "Update");
@@ -492,7 +496,7 @@
       var text = chosen.map(function (x, i) {
         var s = x.s, where = placeText(s);
         return "[" + (i + 1) + "] " + (s.p || s.d) + " | " + windowLabel(s.w) + " | " + s.th + " | " + (s.r ? s.r + "/5" : "keyword-ranked") +
-          (s.u ? " | " + s.u : "") + " | " + (s.te || s.t) + (s.te ? " (Claude's translation; original: " + s.t + ")" : "") +
+          (s.u ? " | " + s.u : "") + " | " + headText(s) +
           (s.a ? " | angle: " + s.a : "") + " | " + s.s + (where ? " | where: " + where : "") + (s.c ? " | " + s.c + " edition" : "") +
           (s.ps ? " | check with: " + s.ps : "") +
           (s.st ? " | developing story: " + s.st : "") + ((s.k && s.k.length) ? " | keywords: " + s.k.join(", ") : "") + " | " + s.l;
@@ -508,7 +512,7 @@
       var timelines = named.map(function (x) {
         var g = x.g;
         return "Developing story: " + storylineHead(g) + "\n" + g.reports.slice(-15).map(function (s) {
-          return "  - " + (s.p || s.d) + " | " + (s.sg || "Update") + " | " + (s.te || s.t) + " | " + s.s + " | " + s.l;
+          return "  - " + (s.p || s.d) + " | " + (s.sg || "Update") + " | " + headText(s) + " | " + s.s + " | " + s.l;
         }).join("\n");
       }).join("\n");
       return "Archive stories retrieved for this question (" + chosen.length + " of " + stories.length + " archived" +

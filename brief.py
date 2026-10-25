@@ -247,7 +247,8 @@ def developing_line(g, refs):
     parts = [g["title"], g["where"] or "not located",
              f"{g['reports']} reports ({g['in_window']} in this window), {g['first']} to {g['last']}",
              "stages: " + " → ".join(g["stages"]),
-             f"latest: {latest['published']}, {latest['stage']}: {latest.get('title_en') or latest['title']}"]
+             f"latest: {latest['published']}, {latest['stage']}: {latest.get('title_en') or latest['title']}"
+             + (f" (Claude's translation; original: {latest['title']})" if latest.get("title_en") else "")]
     if refs:
         parts.append("listed as " + ", ".join(refs))
     return "- " + " | ".join(clip(p, 260) for p in parts)
@@ -731,6 +732,14 @@ def story_lines(cell_or_doc, s, size=9.5, first=None):
         add(p, s["primary_source"], size - 1.5, color="23466B")
 
 
+def translation_run(p, s, size=8.5):
+    """' (English headline translated by Claude · Original: …)' after a translated headline in a list."""
+    if s.get("title_en"):
+        add(p, f"  ({site_builder.TRANSLATED} · Original: ", size, italic=True, color=report.MUTED)
+        add(p, s.get("title", ""), size, color=report.MUTED)
+        add(p, ")", size, italic=True, color=report.MUTED)
+
+
 def check_run(p, s):
     """' · Check with: …' after a story's source line in a list."""
     if s.get("primary_source"):
@@ -789,6 +798,7 @@ def linked_items(doc, title, stories, papers=()):
     for s in stories:
         p = doc.add_paragraph(style="List Bullet")
         hyperlink(p, s.get("title_en") or s.get("title", ""), s.get("link"), 10)
+        translation_run(p, s)
         add(p, "  " + story_meta(s), 8.5, color=report.MUTED)
         check_run(p, s)
     for x in papers:
@@ -930,6 +940,7 @@ def developing_docx(doc, developing, label):
             q = doc.add_paragraph(style="List Bullet 2")
             add(q, f"Latest ({latest.get('stage', 'Update')}): ", 9.5, bold=True)
             hyperlink(q, latest.get("title_en") or latest.get("title", ""), latest.get("link"), 9.5)
+            translation_run(q, latest)
             add(q, "  " + " · ".join(x for x in (latest.get("source", ""), date_text(latest.get("published"))) if x),
                 8.5, color=report.MUTED)
 
@@ -1084,6 +1095,7 @@ def write_docx(path, b, cfg, theme_color, primary=None):
         for s in w.get("stories") or []:
             q = doc.add_paragraph(style="List Bullet 2")
             hyperlink(q, s.get("title_en") or s.get("title", ""), s.get("link"), 9.5)
+            translation_run(q, s)
             add(q, "  " + story_meta(s), 8.5, color=report.MUTED)
             check_run(q, s)
 
