@@ -160,8 +160,14 @@ after every scan, so save your own copy for the planning columns.
 
 ### How the digest is balanced
 No theme may take more than 30 % of a digest (`max_share_per_theme` in `config.yaml`; 18 of 60 stories). Themes take
-turns, the theme with the best story first, so every theme that has stories is represented. Several outlets reporting the
-same event are merged into one story. A second scan on the same day merges with the morning's digest and re-balances it.
+turns, the theme with the best story first, so every theme that has stories is represented. No website may give more
+than 5 stories (`max_per_source`; 0 = no limit): a website keeps its five best, and each place this frees goes to the
+next story of the same theme, or, when Claude's translations show that another website reported the same event, to
+that website's report. Up to 15 stories from one website go to Claude. Several outlets reporting the same event are
+merged into one story, and copies of one story in several languages count once: Vietnam.vn, for example, publishes
+each story in Vietnamese, English, Chinese and other languages, and Google News lists every copy, so once Claude has
+translated the headlines, copies whose English headlines match are merged and the best one is kept. A second scan on
+the same day merges with the morning's digest and re-balances it.
 
 ### Website report (Word)
 `docs/reports/site-report.docx` is regenerated after every scan: status at a glance, an automatic review of the
