@@ -345,7 +345,10 @@
     a.rel = "noopener";
     a.dir = "auto";
     li.appendChild(a);
-    if (r[4]) { var o = el("span", "mp-orig", "Original: " + r[3]); o.dir = "auto"; li.appendChild(o); }
+    if (r[4]) {  // the English headline is Claude's translation
+      var o = el("span", "mp-orig", "Translated by Claude · Original: "), t = el("span", "", r[3]);
+      t.dir = "auto"; o.appendChild(t); li.appendChild(o);
+    }
     var meta = el("span", "mp-meta"), theme = el("span", "mp-theme");
     theme.appendChild(el("i", "mp-dot"));
     theme.appendChild(document.createTextNode(D.themes[r[1]] || ""));
