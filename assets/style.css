@@ -693,9 +693,6 @@ table.heat thead th:first-child { position: sticky; left: 0; z-index: 1; }  /* t
 .sl-chip::before { content: ""; flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--sl-dot);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--sl-dot) 22%, transparent); }
 a.sl-chip:hover { border-color: var(--sl-dot); text-decoration: underline; }
-/* story_card writes the chip's link for both page depths; the body's data-root shows the one that works there */
-.sl-chip.sl-up, body[data-root="../"] .sl-chip.sl-top { display: none; }
-body[data-root="../"] .sl-chip.sl-up { display: inline-flex; }
 .sl-demo { vertical-align: 1px; margin: 0 2px; }
 
 .sl-how { display: flex; gap: 12px; align-items: flex-start; background: var(--surface); border: 1px solid var(--line);

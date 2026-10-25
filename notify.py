@@ -1103,7 +1103,7 @@ def week_body(W, cfg, rec, opts, older, newer, last_key):
     if W["top"]:
         out.append("<h2 class='section-h'>Top stories of the week</h2><p class='hint'>The best-rated story of each theme in "
                    "turn, with the magazine angle Claude suggests.</p>")
-        out += [site_builder.story_card(s, show_theme=True) for s in W["top"]]
+        out += [site_builder.story_card(s, show_theme=True, root=root) for s in W["top"]]
     if W["more5"]:
         out.append("<h2 class='section-h'>Also rated 5 / 5</h2>")
         out.append(week_list(

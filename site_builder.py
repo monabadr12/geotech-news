@@ -318,7 +318,7 @@ def rating(s):
     return f"<span class='rel rel-{rel}' title='Geotechnical relevance: {rel} of 5'>{'<i></i>' * 5}<b>{rel}/5</b></span>"
 
 
-def story_card(s, show_theme=False, root=None):
+def story_card(s, show_theme=False, root=""):
     shown = s.get("title_en") or s["title"]
     when = nice_date(s.get("published") or s.get("_digest", ""))
     region = COUNTRIES.get(s.get("region", ""), s.get("region", ""))
@@ -347,13 +347,11 @@ def story_card(s, show_theme=False, root=None):
         parts.append(f"<p class='summary'>{esc(s['summary'][:260])}…</p>")
     parts.append("<div class='story-meta'>")
     if sl:
-        # "Developing story · 4 reports", and for a follow-up the stage it reports. Cards appear on pages at the
-        # top of the site and one folder down (digests/, issues/): without a root both links are written and
-        # style.css shows the one that fits the page (body data-root), so every existing call keeps working.
+        # "Developing story · 4 reports", and for a follow-up the stage it reports; root: "" at the top of the
+        # site, "../" one folder down (digests/, issues/, weekly/)
         label = f"Developing story · {sl['size']} reports" + (f" · {sl['stage']}" if s.get("storyline") == sl["id"] else "")
-        for r, cls in ([(root, "")] if root is not None else [("", " sl-top"), ("../", " sl-up")]):
-            parts.append(f"<a class='sl-chip{cls}' href='{r}developing.html#{esc(sl['id'])}' "
-                         f"title='{esc(sl['title'])}'>{esc(label)}</a>")
+        parts.append(f"<a class='sl-chip' href='{root}developing.html#{esc(sl['id'])}' "
+                     f"title='{esc(sl['title'])}'>{esc(label)}</a>")
     if s.get("use"):
         slug_ = s["use"].split()[0].lower().strip("-")
         parts.append(f"<span class='use use-{esc(slug_)}'>{esc(s['use'])}</span>")
@@ -381,7 +379,7 @@ def filtered(uses, sections):
     return f"<div class='filter-scope'>{filter_bar(uses)}{sections}</div>"
 
 
-def theme_sections(stories, order=None, show_theme=False):
+def theme_sections(stories, order=None, show_theme=False, root=""):
     by_theme = {}
     for s in stories:
         by_theme.setdefault(s["theme"], []).append(s)
@@ -396,7 +394,7 @@ def theme_sections(stories, order=None, show_theme=False):
         items = sorted(by_theme[t], key=lambda s: (-(s.get("relevance") or 0), -s["rank"]))
         out.append(f"<section class='theme-section' id='{slug(t)}' style='--tc:{theme_color(t)}'>"
                    f"<h2><span class='ticon'>{theme_icon(t)}</span>{esc(t)} <span class='count'>{len(items)}</span></h2>")
-        out += [story_card(s, show_theme) for s in items]
+        out += [story_card(s, show_theme, root) for s in items]
         out.append("</section>")
     return "".join(out)
 
@@ -504,7 +502,7 @@ def digest_body(d, cfg, root, uses, prev_d=None, next_d=None, latest=False, brie
                     + (f" and the {'final' if brief.get('status') == 'final' else 'draft'} issue brief" if brief else "")
                     + " →</span></a>")
     news = [("<p class='empty'>No new geotechnical stories met the threshold in this period.</p>" if not stories
-             else filtered(uses, theme_sections(stories))),
+             else filtered(uses, theme_sections(stories, root=root))),
             research_section(papers, "Papers that geotechnical journals published in the last few days, for the "
                                      "Academia-to-Industry pages, best rated for use in practice first. Titles open "
                                      "the paper through its DOI.")]
@@ -815,11 +813,11 @@ def issue_body(win, stories, digests, cfg, uses, current, brief=None, brief_opts
     body.append(extras.get("coverage", ""))
     if best:
         body.append("<h2 class='section-h'>Strongest leads</h2><p class='hint'>Stories rated 5 / 5 or suggested as feature leads.</p>"
-                    "<div class='shortlist'>" + "".join(story_card(s, show_theme=True) for s in best) + "</div>")
+                    "<div class='shortlist'>" + "".join(story_card(s, show_theme=True, root=root) for s in best) + "</div>")
     body.append(extras.get("developing", ""))
     body.append(extras.get("events", ""))
     body.append("<h2 class='section-h'>All stories by theme</h2>")
-    body.append(filtered(uses, theme_sections(stories, order=order)))
+    body.append(filtered(uses, theme_sections(stories, order=order, root=root)))
     body.append(research)
     body.append(f"<h2 class='section-h'>Daily digests in this window</h2><ul class='digest-list'>{dlist}</ul>")
     return "".join(body)
@@ -1765,7 +1763,7 @@ def write(path, text):
 
 def csv_text(value):
     """Spreadsheets run cells starting with = + - @ as formulas; keep feed text as text."""
-    return "'" + value if isinstance(value, str) and value[:1] in "=+-@" else value
+    return "'" + value if isinstance(value, str) and value.startswith(("=", "+", "-", "@")) else value
 
 
 def storyline_text(s):
