@@ -178,7 +178,9 @@ recorded as sent, the change log and open items. The change log and open items a
 
 ### How the archive works
 * Each scan saves its stories to `data/digests/YYYY-MM-DD.json`. **These files are the archive** —
-  they are kept forever in the repository (and in its Git history).
+  they are kept forever in the repository (and in its Git history). Each issue page gathers every story of its
+  quarter, so nothing is lost by the time the issue is planned. (The 45-day memory in `data/seen.json` only stops
+  the same article being picked up twice; it never removes anything from the archive.)
 * Everything in `docs/` (the website, workbooks and report) is rebuilt from those files on every run, so the design
   can be changed at any time without losing anything.
 * Issue windows are calendar quarters by default (Jan–Mar, Apr–Jun, Jul–Sep, Oct–Dec). If the magazine's
@@ -344,7 +346,7 @@ now**.
 | `tools/make_world.py` | Rebuilds `assets/world.json` from Natural Earth (only needed to change the map's outlines). |
 | `.github/workflows/` | The daily scan (`scan.yml`), the issue brief (`brief.yml`), the events calendar and weekly summary (`extras.yml`) and Check feeds (`check-feeds.yml`). |
 | `data/digests/` | **The permanent archive**, one file per day. |
-| `data/seen.json` | Stories already shown (45-day memory, so nothing repeats). |
+| `data/seen.json` | Links the scanner has already read in the last 45 days, so the same article is not picked up twice. It only prevents repeats: nothing is removed from the archive, and the digests in `data/digests/` are kept permanently. |
 | `docs/` | The generated website (do not edit by hand). |
 
 ## Notes
