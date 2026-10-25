@@ -50,10 +50,11 @@
     brief: { file: "brief.yml", key: KEYS.brief, button: "Generate / update brief", noun: "issue brief", minutes: "3–6",
       wait: "This page will follow Claude while it drafts the brief and tell you when the Word file is ready.",
       done: "The issue brief is ready. The website refreshes about a minute later — <a href='#' class='reload-link'>reload the page</a> to download it." },
-    events: { file: "extras.yml", key: KEYS.events, button: "Refresh calendar", noun: "calendar refresh", minutes: "3–6",
+    /* task: the "What to do" choice; extras.yml names each run after it, so a run of the other task is not taken for this one */
+    events: { file: "extras.yml", task: "refresh the events calendar", key: KEYS.events, button: "Refresh calendar", noun: "calendar refresh", minutes: "3–6",
       wait: "This page will follow Claude while it reads the organisers' calendars and tell you when the calendar is updated.",
       done: "The events calendar is updated. The website refreshes about a minute later — <a href='#' class='reload-link'>reload the page</a>." },
-    weekly: { file: "extras.yml", key: KEYS.weekly, button: "Send summary now", noun: "weekly summary", minutes: "1–2",
+    weekly: { file: "extras.yml", task: "send the weekly summary now", key: KEYS.weekly, button: "Send summary now", noun: "weekly summary", minutes: "1–2",
       wait: "This page will follow the run and tell you when the e-mail has gone.",
       done: "The weekly summary was sent. The website refreshes about a minute later — <a href='#' class='reload-link'>reload the page</a>." }
   };
@@ -73,9 +74,11 @@
         return r.json();
       }).then(function (j) {
         if (!store.get(w.key)) { setRunning(false); return; }  // dismissed
-        var run = (j.workflow_runs || []).filter(function (x) {
+        var dispatched = (j.workflow_runs || []).filter(function (x) {
           return x.event === "workflow_dispatch" && new Date(x.created_at).getTime() >= started - 60000;
-        })[0];  // newest first
+        });  // newest first
+        var run = dispatched.filter(function (x) { return !w.task || x.display_title === w.task; })[0];
+        var other = !run && w.task ? dispatched[0] : null;  // the same workflow, run for its other task
         var mins = Math.max(0, Math.round((Date.now() - started) / 60000));
         if (!run) {
           if (Date.now() - started > 10 * 60000) {
@@ -83,8 +86,10 @@
             toast("No " + w.noun + " was started on GitHub. Press <b>" + w.button + "</b> again, then <b>Run workflow</b> on the GitHub page.", "err", true);
             return;
           }
-          say("On the GitHub tab, press <b>Run workflow</b>" + (how ? ", " + how + "," : "") + " and then the green <b>Run workflow</b> button. " +
-            w.wait + " <a href='" + page + "' target='_blank' rel='noopener'>Open GitHub again</a>", "");
+          say((other ? "The run started on GitHub is “" + esc(other.display_title) + "”, not the " + w.noun + ". " +
+              "On the GitHub tab, press <b>Run workflow</b> again" : "On the GitHub tab, press <b>Run workflow</b>") +
+            (how ? ", " + how + "," : "") + " and then the green <b>Run workflow</b> button. " +
+            w.wait + " <a href='" + page + "' target='_blank' rel='noopener'>Open GitHub again</a>", other ? "err" : "");
         } else if (run.status !== "completed") {
           say(noun + " " + (run.status === "queued" ? "queued" : "running") + " · " + mins + " min so far. It usually takes " + w.minutes + " minutes. " +
             "<a href='" + esc(run.html_url) + "' target='_blank' rel='noopener'>Watch on GitHub</a>", "");
