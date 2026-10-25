@@ -485,21 +485,27 @@ def same_name(a, b):
     return bool(wa and wa == wb or sa and sa == sb or overlap(a, b) >= 0.75)
 
 
+def named_alike(a, b):
+    """The names agree in part, or one names the other's acronym ("18ARC" for the 18th Asian
+    Regional Conference)."""
+    sa, sb = acronym(a), acronym(b)
+    return overlap(a, b) >= 0.3 or bool(sa and sa in words(b["name"]) or sb and sb in words(a["name"]))
+
+
 def same_event(a, b):
-    """Two entries for one event: the same name, acronym or link in the same year, or the
-    same start day in the same city with names that agree in part. A TC workshop that starts on
-    a conference's first day in the same city is an event of its own."""
+    """Two entries for one event: the same name or acronym in the same year, the same link with
+    most of the name shared, or the same start day with names that agree in part and the same
+    link or city. A TC workshop that starts on a conference's first day in the same city is an
+    event of its own, and so are two webinars that both link to the organiser's events page."""
     if first_day(a["start"]).year != first_day(b["start"]).year:
         return False
     if same_name(a, b):
         return True
-    share = overlap(a, b)
-    if norm_url(a["url"]) == norm_url(b["url"]) and (a["start"] == b["start"] or share >= 0.5):
+    same_link = norm_url(a["url"]) == norm_url(b["url"])
+    if same_link and overlap(a, b) >= 0.5:
         return True
-    if not (a["start"] == b["start"] and a["city"] and a["city"].lower() == b["city"].lower()):
-        return False
-    sa, sb = acronym(a), acronym(b)  # one names the other's acronym: "18ARC" for the 18th Asian Regional Conference
-    return share >= 0.3 or bool(sa and sa in words(b["name"]) or sb and sb in words(a["name"]))
+    same_city = bool(a["city"] and a["city"].lower() == b["city"].lower())
+    return a["start"] == b["start"] and (same_link or same_city) and named_alike(a, b)
 
 
 def assign_ids(events):
