@@ -53,8 +53,20 @@ EXTRACT_TOKENS = 32000
 RETRY_DAYS = 2  # after a failed refresh the daily scan waits this long (only a day when Claude was busy)
 
 DEFAULTS = {"model": "claude-opus-5-5", "effort": "medium", "extract_effort": "low", "refresh_days": 7,
-            "months_ahead": 24, "deadline_days": 90, "keep_days": 7, "max_searches": 10, "max_fetches": 15,
-            "max_continuations": 4}
+            "months_ahead": 24, "deadline_days": 90, "keep_days": 7, "max_searches": 10, "max_fetches": 12,
+            "max_page_tokens": 12000, "max_continuations": 3, "max_cost_usd": 3.0}
+# list prices in US$ per million tokens (input, output, cache read, 5-minute cache write) and per web
+# search, for the cost line in the log; a model not listed here gets token counts only
+PRICES = {"claude-opus-5-5": (4.0, 20.0, 0.20, 5.0), "claude-sonnet-5-5": (2.0, 10.0, 0.10, 2.5),
+          "claude-haiku-5-5": (0.10, 0.50, 0.01, 0.125), "claude-opus-5": (5.0, 25.0, 0.50, 6.25),
+          "claude-fable-5-1": (10.0, 50.0, 0.25, 12.5)}
+SEARCH_PRICE = 0.01
+BUSY_ERRORS = {"overloaded_error", "api_error", "rate_limit_error"}  # Claude busy: worth trying again tomorrow
+# sent when the research reaches its limit: Claude writes its event blocks after its last search, so
+# rather than stop with no notes it is asked to write them now from what it has read
+WRAP_UP = ("The time and budget for this research are used up. Make no more searches or fetches. Write the blocks "
+           "now, in the format asked for, for every event you have found so far, and nothing else.")
+spent = []  # (model, usage, stopped part-way) of every request this refresh made, for the cost line
 DEFAULT_CALENDARS = [
     {"name": "ISSMGE events", "url": "https://www.issmge.org/events"},
     {"name": "ISSMGE news (calls for abstracts)", "url": "https://www.issmge.org/news"},
@@ -133,12 +145,14 @@ def settings(cfg):
                 value = default
             out[name] = value
             continue
+        kind = float if isinstance(default, float) else int
         try:
             if isinstance(value, bool):
                 raise ValueError
-            out[name] = default if value is None else max(0, int(value))
+            out[name] = default if value is None else max(kind(0), kind(value))
         except (TypeError, ValueError):
-            print(f"config.yaml, events: {name}: {value!r} is not a whole number; using {default}.")
+            print(f"config.yaml, events: {name}: {value!r} is not a {'number' if kind is float else 'whole number'}; "
+                  f"using {default}.")
             out[name] = default
     cals = e.get("calendars") if isinstance(e.get("calendars"), list) else DEFAULT_CALENDARS
     out["calendars"] = [{"name": text(c.get("name"), 80) or c.get("url"), "url": c["url"]} for c in cals
@@ -1068,10 +1082,20 @@ def extract_schema():
 def api_call(client, raw, key, model, what, **request):
     """One streamed request; its final message, or ScanError with a clear reason."""
     import anthropic  # only needed when a key is configured
+    try:
+        import httpx2 as http  # the HTTP library of anthropic 2.x
+    except ImportError:
+        import httpx as http
 
     try:
         with client.messages.stream(model=model, **request) as stream:
-            return stream.get_final_message()
+            try:
+                response = stream.get_final_message()
+            except Exception:
+                record_partial(stream, model)
+                raise
+        spent.append((model, response.usage, False))
+        return response
     except (anthropic.AuthenticationError, anthropic.PermissionDeniedError) as ex:
         if WEB_OFF.search(scanner.api_message(ex)):
             raise ScanError(web_off_note(ex)) from None
@@ -1084,10 +1108,25 @@ def api_call(client, raw, key, model, what, **request):
             raise ScanError(web_off_note(ex)) from None
         raise ScanError(f"Claude could not take the {what} request ({scanner.api_message(ex)}).") from None
     except anthropic.APIError as ex:
-        busy = isinstance(ex, anthropic.APIConnectionError) or (
+        body = getattr(ex, "body", None)
+        error = body.get("error") if isinstance(body, dict) else None
+        kind = error.get("type") if isinstance(error, dict) else None  # an error inside the stream comes with status 200
+        busy = isinstance(ex, anthropic.APIConnectionError) or kind in BUSY_ERRORS or (
             isinstance(ex, anthropic.APIStatusError) and (ex.status_code == 429 or ex.status_code >= 500))
         raise ScanError(f"Claude returned an error or could not be reached during the {what} "
                         f"({scanner.api_message(ex)}).", transient=busy) from None
+    except http.TransportError as ex:  # the connection dropped while Claude was answering
+        raise ScanError(f"the connection to Claude dropped during the {what} ({type(ex).__name__}).",
+                        transient=True) from None
+
+
+def record_partial(stream, model):
+    """A request that failed part-way (an error inside the stream) is billed for what it did: record that."""
+    try:
+        usage = stream.current_message_snapshot.usage
+    except Exception:  # the stream broke before Claude started
+        return
+    spent.append((model, usage, True))
 
 
 def web_off_note(ex):
@@ -1110,10 +1149,11 @@ def read_turns(turns):
     notes, hosts, failed, codes = [], set(), [], Counter()
     asked = {}  # tool_use_id -> what was asked (the url fetched or the query searched)
     for response in turns:
+        notes.append("")  # each request's notes start on a line of their own
         for block in response.content:
             kind = getattr(block, "type", "")
             if kind == "text":
-                notes.append(block.text)
+                notes[-1] += block.text
                 for c in getattr(block, "citations", None) or []:
                     if getattr(c, "url", ""):
                         hosts.add(host(c.url))
@@ -1142,29 +1182,73 @@ def read_turns(turns):
     if codes.get("too_many_requests") or codes.get("unavailable"):
         tool_notes.append("The web tools were busy or unavailable for part of the refresh, so some calendars may "
                           "not have been read.")
-    # cited passages come as separate text blocks within one sentence, so the blocks are joined as they are
-    return "".join(notes).strip(), hosts, tool_notes
+    # cited passages come as separate text blocks within one sentence, so a request's blocks are joined as
+    # they are; the notes of separate requests (a continuation, the write-up) are kept apart
+    return "\n\n".join(n.strip() for n in notes if n.strip()), hosts, tool_notes
 
 
 def research(client, opts, prompt, raw, key):
     """Claude reads the calendars with web search and web fetch; (notes, web hosts seen, tool notes)."""
     tool_opts = {"blocked_domains": opts["blocked_domains"]} if opts["blocked_domains"] else {}
+    # max_content_tokens caps how much of each page enters the conversation, and caching lets every
+    # later step of the research (and each continuation) re-read what came before at a small fraction of
+    # the price (the API caches each tool result once the request carries a cache marker)
+    fetch_cap = {"max_content_tokens": opts["max_page_tokens"]} if opts["max_page_tokens"] else {}
     tools = [{"type": "web_search_20260209", "name": "web_search", "max_uses": opts["max_searches"], **tool_opts},
-             {"type": "web_fetch_20260209", "name": "web_fetch", "max_uses": opts["max_fetches"], **tool_opts}]
+             {"type": "web_fetch_20260209", "name": "web_fetch", "max_uses": opts["max_fetches"], **fetch_cap,
+              **tool_opts}]
+    system = [{"type": "text", "text": SYSTEM_RESEARCH, "cache_control": {"type": "ephemeral"}}]
+
+    def ask(conversation):
+        return api_call(client, raw, key, opts["model"], "calendar research", max_tokens=RESEARCH_TOKENS,
+                        system=system, tools=tools, output_config={"effort": opts["effort"]},
+                        cache_control={"type": "ephemeral"}, messages=conversation)
+
+    if opts["model"] not in PRICES:
+        print(f"Events calendar: no list price is known for {opts['model']}, so the spending limit assumes the "
+              "dearest known prices.")
     messages = [{"role": "user", "content": prompt}]
-    turns, extra = [], []
+    turns, extra, limit = [], [], ""
     for _ in range(opts["max_continuations"] + 1):
-        response = api_call(client, raw, key, opts["model"], "calendar research", max_tokens=RESEARCH_TOKENS,
-                            system=SYSTEM_RESEARCH, tools=tools, output_config={"effort": opts["effort"]},
-                            messages=messages)
+        try:
+            response = ask(messages)
+        except ScanError as ex:
+            if not turns or ex.transient:
+                raise  # nothing read yet, or Claude was busy: the next daily scan tries again
+            # a continuation failed for good: the notes Claude made before it are used
+            print(f"Events calendar: a continuation of the research failed: {ex}")
+            extra.append("Claude's research stopped part-way; the notes it had made by then were used.")
+            break
         turns.append(response)
         if response.stop_reason != "pause_turn":
             break
         # the server paused a long run of searches: send the paused turn back and it carries on
         messages.append({"role": "assistant", "content": response.content})
+        cost = spent_cost(assume_dearest=True)
+        if cost >= 0.8 * opts["max_cost_usd"]:  # every continuation may search and fetch again: cap the cost here
+            limit = f"the spending limit (about US${cost:.2f} spent, max_cost_usd US${opts['max_cost_usd']:g})"
+            break
     else:
-        extra.append(f"Claude was still reading after {opts['max_continuations']} continuations; the notes it had "
-                     "made by then were used.")
+        limit = f"{opts['max_continuations']} continuations (max_continuations)"
+    if limit:
+        print(f"Events calendar: the research reached {limit}; asking Claude to write up what it has found.")
+        try:
+            if turns[-1].content and getattr(turns[-1].content[-1], "type", "") == "server_tool_use":
+                # the turn paused with a search or fetch still to run, and a system message may not follow
+                # that: the pending step runs first (one more plain continuation)
+                response = ask(messages)
+                turns.append(response)
+                if response.stop_reason == "pause_turn":
+                    messages.append({"role": "assistant", "content": response.content})
+            if turns[-1].stop_reason == "pause_turn":
+                turns.append(ask(messages + [{"role": "system", "content": WRAP_UP}]))
+        except ScanError as ex:
+            if ex.transient:
+                raise  # Claude was busy: the next daily scan tries again
+            print(f"Events calendar: the write-up request failed: {ex}")
+        extra.append("Claude's research reached its limit for one refresh, so Claude wrote up the events it had found "
+                     "by then." if turns[-1].stop_reason == "end_turn" else
+                     "Claude's research reached its limit for one refresh; the notes made by then were used.")
     stop = turns[-1].stop_reason
     if stop == "refusal":
         raise ScanError("Claude declined the calendar research.")
@@ -1302,6 +1386,42 @@ def record_failure(now, note, transient):
     return retry
 
 
+def spent_cost(assume_dearest=False):
+    """What this refresh has cost so far at list prices (US$), or None for a model without a price
+    (assume_dearest: cost such a model at the dearest known prices instead, for the spending limit)."""
+    total = 0.0
+    for model, u, _ in spent:
+        price = PRICES.get(model) or (max(PRICES.values()) if assume_dearest else None)
+        if not price:
+            return None
+        tools = u.server_tool_use
+        total += ((u.input_tokens or 0) * price[0] + (u.output_tokens or 0) * price[1]
+                  + (u.cache_read_input_tokens or 0) * price[2] + (u.cache_creation_input_tokens or 0) * price[3]) / 1e6
+        total += ((getattr(tools, "web_search_requests", 0) or 0) if tools else 0) * SEARCH_PRICE
+    return total
+
+
+def spent_line():
+    """Tokens, searches and pages this refresh used, with the cost at list prices when the model is known."""
+    if not spent:
+        return ""
+    sums = Counter()
+    for model, u, _ in spent:
+        part = {"in": u.input_tokens or 0, "out": u.output_tokens or 0, "read": u.cache_read_input_tokens or 0,
+                "write": u.cache_creation_input_tokens or 0,
+                "searches": getattr(u.server_tool_use, "web_search_requests", 0) or 0 if u.server_tool_use else 0,
+                "pages": getattr(u.server_tool_use, "web_fetch_requests", 0) or 0 if u.server_tool_use else 0}
+        sums.update(part)
+    cost = spent_cost()
+    broken = sum(1 for *_, partial in spent if partial)
+    line = (f"Events calendar: {len(spent)} request(s)"
+            + (f" ({broken} stopped part-way)" if broken else "") + f" used {sums['in'] + sums['read'] + sums['write']:,} input tokens "
+            f"({sums['read']:,} read from the cache), {sums['out']:,} output tokens, "
+            f"{site_builder.count(sums['searches'], 'web search', 'web searches')} and "
+            f"{site_builder.count(sums['pages'], 'page')} opened")
+    return line + (f"; about US${cost:.2f} at list prices." if cost is not None else ".")
+
+
 def scan(cfg, now, notes, force=False):
     """Refresh data/events.json with the events Claude finds on the organisers' calendars.
     Returns the number of events this refresh found (0 when it was not due, had no key or failed:
@@ -1326,6 +1446,7 @@ def scan(cfg, now, notes, force=False):
     import anthropic  # only needed when a key is configured
 
     client = anthropic.Anthropic(api_key=key, max_retries=3)
+    spent.clear()
     today = now.date()
     curated = read_curated([])
     old = read_found()
@@ -1340,6 +1461,8 @@ def scan(cfg, now, notes, force=False):
         retry = record_failure(now, str(ex), ex.transient)
         note = (f"Events calendar not refreshed: {ex} The calendar keeps the events it had; the daily scan tries "
                 f"again on {nice(retry.isoformat())}.")
+        if spent_line():
+            print(spent_line())
         print(note)
         notes.append(note)
         return 0
@@ -1354,6 +1477,7 @@ def scan(cfg, now, notes, force=False):
                 f"tries again on {nice(retry.isoformat())}.")
         for n in run_notes:
             print("  " + n)
+        print(spent_line())
         print(note)
         notes.append(note)
         return 0
@@ -1366,6 +1490,7 @@ def scan(cfg, now, notes, force=False):
     print(f"Events calendar refreshed: {FOUND_FILE.relative_to(ROOT)}")
     for n in run_notes:
         print("  " + n)
+    print(spent_line())
     notes.extend(run_notes)
     return distinct
 
