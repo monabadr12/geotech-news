@@ -284,6 +284,165 @@ def source_cap(cfg):
         return 5
 
 
+# ------------------------------------------------------------------ the suggested issue layout and the planning sheet
+# Who fills a section of the magazine (config.yaml issue_layout: source), as the pages and the brief name it
+LAYOUT_SOURCES = {"scanner": "Scanner", "society": "Society", "editor": "Editor", "mixed": "Society + scanner"}
+LAYOUT_COLORS = {"scanner": "#0b97a5", "society": "#9a7b1c", "editor": "#6b4fd6", "mixed": "#1f9d63"}
+SOURCE_WORDS = {"news desk": "scanner", "news-desk": "scanner", "issmge": "society", "editors": "editor",
+                "society + scanner": "mixed", "scanner + society": "mixed", "society and scanner": "mixed"}
+# The magazine's suggested layout: (name, source, slots, pages, what goes there). Used when config.yaml has no
+# issue_layout, or none of its sections can be read; config.yaml carries the same list for the editors to change.
+DEFAULT_LAYOUT = [
+    ("Cover story", "scanner", 1, "4-6",
+     "A developing story or a 5/5 feature lead: the quarter's strongest story, told at length"),
+    ("Welcome from the President", "society", 0, "1-2", "The President's message, from ISSMGE"),
+    ("Message from the Editor", "editor", 0, "1", "The editor's introduction to the issue"),
+    ("From the Board / Vice-Presidents' reports", "society", 0, "4-8",
+     "Reports from the Board and the regional Vice-Presidents"),
+    ("ISSMGE Highlights", "society", 0, "3-4",
+     "ISSMGE news and decisions; the dates of the quarter's ISSMGE events come from the events calendar"),
+    ("Geotechnics in the News", "scanner", 10, "4-6", "8-12 short news items spread across the eight themes"),
+    ("Lessons from the Field", "scanner", 1, "3-4",
+     "A developing story told from the failure to the inquiry and the repair"),
+    ("From Research to Practice", "scanner", 2, "2-3", "Research papers with a clear use in practice"),
+    ("Global News from Member Societies + Regional Insight", "mixed", 6, "4-6",
+     "Member societies' news, plus one story per ISSMGE region from the news desk; the world map shows the "
+     "member-society countries with no stories"),
+    ("Technical Committees Activities", "society", 0, "3-5",
+     "TC reports and news; the TC symposia of the quarter come from the events calendar"),
+    ("Young Members' Arena", "society", 0, "2", "Young members' news, events and profiles"),
+    ("Education & Innovation", "mixed", 2, "2-3",
+     "Courses and education news from the society, plus Digital Geotechnics stories from the news desk"),
+    ("Corporate Associates Corner", "society", 0, "3-6", "News and project pieces from ISSMGE's corporate associates"),
+    ("Heritage / Time Capsule", "society", 0, "1-2", "A look back at the profession's history"),
+    ("In Memory", "society", 0, "as needed", "Obituaries"),
+    ("Upcoming Events & Calls for Papers", "scanner", 8, "1-2",
+     "Conferences, courses and call-for-papers deadlines from the events calendar"),
+]
+MAX_SECTIONS, MAX_SLOTS = 40, 20
+_layout_notes = set()
+
+
+def layout_note(text):
+    """A problem with config.yaml's issue_layout, printed once per run (the pages and the brief all read it)."""
+    if text not in _layout_notes:
+        _layout_notes.add(text)
+        print("config.yaml, issue_layout: " + text)
+
+
+def default_layout():
+    return [{"name": n, "source": s, "slots": k, "pages": p, "use": u} for n, s, k, p, u in DEFAULT_LAYOUT]
+
+
+def one_line(value, n):
+    text = " ".join(str(value if value is not None else "").split())
+    return text if len(text) <= n else text[:n - 1].rstrip() + "…"
+
+
+def issue_layout(cfg):
+    """The sections of an issue (config.yaml issue_layout), in order, each {name, source, slots, pages, use}.
+    What cannot be read is repaired or left out with a note in the log (a section without a name is left out, an
+    unknown source or a slot count that is not a whole number falls back to a sensible value, a repeated name is
+    numbered), and a layout with no readable section gives the suggested one, so a typo never stops the scan
+    or the build. slots is 0 for society and editor sections and at least 1 for scanner sections."""
+    raw = cfg.get("issue_layout")
+    if raw is None:
+        return default_layout()
+    if not isinstance(raw, list):
+        layout_note(f"it should be a list of sections (each starting with '- name:'), not {raw!r:.60}; "
+                    "using the suggested layout.")
+        return default_layout()
+    if len(raw) > MAX_SECTIONS:
+        layout_note(f"only the first {MAX_SECTIONS} of its {len(raw)} sections are used.")
+    out, seen = [], set()
+    for i, entry in enumerate(raw[:MAX_SECTIONS], 1):
+        if isinstance(entry, str) and entry.strip():
+            entry = {"name": entry}  # a bare name
+        if not isinstance(entry, dict) or not one_line(entry.get("name"), 80):
+            layout_note(f"section {i} has no name, so it is left out.")
+            continue
+        name = one_line(entry["name"], 80)
+        word = one_line(entry.get("source"), 40).lower()
+        source = SOURCE_WORDS.get(word, word)
+        value = entry.get("slots")
+        try:
+            if isinstance(value, bool):
+                raise ValueError
+            slots = None if value is None or value == "" else int(value)
+        except (TypeError, ValueError):
+            layout_note(f"{name}: slots: {value!r} is not a whole number.")
+            slots = None
+        if source not in LAYOUT_SOURCES:
+            guess = "mixed" if slots else "society"
+            layout_note(f"{name}: " + (f"source: {entry.get('source')!r} is not one of {', '.join(LAYOUT_SOURCES)}"
+                                       if word else "no source is given") + f"; treated as {guess}.")
+            source = guess
+        if slots is None:
+            slots = 1 if source in ("scanner", "mixed") else 0
+        if slots < 0 or slots > MAX_SLOTS:
+            layout_note(f"{name}: slots: {slots} is outside 0-{MAX_SLOTS}.")
+            slots = min(max(slots, 0), MAX_SLOTS)
+        if source in ("society", "editor") and slots:
+            layout_note(f"{name}: a {source} section takes no items from the news desk, so slots: {slots} is "
+                        "ignored (source: mixed takes both).")
+            slots = 0
+        if source == "scanner" and not slots:
+            layout_note(f"{name}: a scanner section needs at least one slot; it gets 1.")
+            slots = 1
+        base, k = name, 2
+        while name.casefold() in seen:  # the planning sheet tells sections apart by name
+            name, k = f"{base} ({k})", k + 1
+        seen.add(name.casefold())
+        out.append({"name": name, "source": source, "slots": slots, "pages": one_line(entry.get("pages"), 20),
+                    "use": one_line(entry.get("use"), 240)})
+    if not out:
+        layout_note("no section could be read; using the suggested layout.")
+        return default_layout()
+    return out
+
+
+PAGES = re.compile(r"^\s*(\d+)\s*(?:[-–]\s*(\d+))?\s*$")
+
+
+def pages_range(text):
+    """(4, 6) for '4-6', (1, 1) for '1', None for 'as needed'."""
+    m = PAGES.match(str(text or ""))
+    if not m:
+        return None
+    lo, hi = int(m[1]), int(m[2] or m[1])
+    return (min(lo, hi), max(lo, hi))
+
+
+def pages_text(text):
+    """'4–6 pages', '1 page', or the text as written ('as needed')."""
+    r = pages_range(text)
+    if not r:
+        return str(text or "")
+    return f"{r[0]} page" if r == (1, 1) else (f"{r[0]} pages" if r[0] == r[1] else f"{r[0]}–{r[1]} pages")
+
+
+def layout_pages(layout):
+    """'about 45–68 pages' for the whole layout ("" when no section gives a number)."""
+    ranges = [r for r in (pages_range(s.get("pages")) for s in layout) if r]
+    if not ranges:
+        return ""
+    lo, hi = sum(r[0] for r in ranges), sum(r[1] for r in ranges)
+    return f"about {lo} pages" if lo == hi else f"about {lo}–{hi} pages"
+
+
+def source_label(section):
+    """'Scanner · 10 items', 'Society + scanner · 6 items', 'Society', 'Editor'."""
+    label = LAYOUT_SOURCES.get(section.get("source"), "Society")
+    return label + (f" · {count(section['slots'], 'item')}" if section.get("slots") else "")
+
+
+def planning_sheet(cfg):
+    """Web address of the shared planning sheet (config.yaml planning: sheet_url), "" when not set."""
+    p = cfg.get("planning")
+    url = safe_url((p if isinstance(p, dict) else {}).get("sheet_url"))
+    return "" if url == "#" else url
+
+
 _theme_colors = {}
 
 
@@ -689,6 +848,8 @@ def brief_card(win, b, cfg, current, root, opts):
                      + f"<span class='lf'>{esc(chosen[0].get('format', ''))} · {esc(s.get('source', ''))}{more}</span></li>")
     also = ", ".join(count(len(b.get(k) or []), one) for k, one in
                      (("feature_leads", "feature lead"), ("a2i_topics", "Academia-to-Industry topic"), ("gaps", "gap")))
+    if b.get("toc"):  # briefs written since the issue layout was added
+        also = f"a proposed table of contents for the {count(len(b['toc']), 'section')} of the issue, " + also
     status = "final" if final else "draft"
     return (f"<section class='brief {status}' id='brief'><div class='brief-head'><span class='brief-mark'>{icon('doc')}</span>"
             f"<div><p class='eyebrow'>Issue brief <span class='badge {status}'>{status.title()}</span></p>"
@@ -699,6 +860,34 @@ def brief_card(win, b, cfg, current, root, opts):
             + (", the window's developing stories and the events and deadlines ahead." if "developing" in b else ".") + "</p>"
             f"<div class='actions'><a class='btn primary' href='{root}{brief_file(key)}' download>{icon('download')}"
             f"Issue brief (Word)</a>{gen}</div></section>")
+
+
+def layout_panel(layout, cfg, sheet=""):
+    """Issue pages: the magazine's suggested table of contents (config.yaml issue_layout), with the sections the
+    news desk fills and how many items it proposes for each."""
+    if not layout:
+        return ""
+    items = []
+    for i, s in enumerate(layout, 1):
+        items.append(f"<li class='toc-{s['source']}'>"
+                     f"<span class='toc-n'>{i}</span><span class='toc-body'><b>{esc(s['name'])}</b>"
+                     + (f"<small>{esc(s['use'])}</small>" if s.get("use") else "") + "</span>"
+                     f"<span class='toc-tags'><span class='toc-src'>{esc(source_label(s))}</span>"
+                     + (f"<span class='toc-pp'>{esc(pages_text(s['pages']))}</span>" if s.get("pages") else "")
+                     + "</span></li>")
+    fed = sum(1 for s in layout if s["source"] in ("scanner", "mixed"))
+    repo = repository(cfg)
+    where = (f"<a href='https://github.com/{esc(repo)}/blob/main/config.yaml' target='_blank' rel='noopener'>"
+             "config.yaml</a>" if "/" in repo else "config.yaml") + " (<code>issue_layout</code>)"
+    total = " · ".join(x for x in (count(len(layout), "section"), f"{fed} fed by the scanner", layout_pages(layout)) if x)
+    return ("<section class='toc-panel' id='layout'><div class='section-row'><h2 class='section-h'>Suggested table of "
+            f"contents</h2><span class='toc-total'>{esc(total)}</span></div><p class='hint'>The magazine's suggested "
+            "layout. <b>Scanner</b> sections are filled from this quarter's stories, research papers and events, and "
+            "the issue brief proposes the items for each; <b>Society</b> and <b>Editor</b> sections come from ISSMGE "
+            f"and the editorial team. Change the sections in {where}."
+            + (f" The <a href='{esc(sheet)}' target='_blank' rel='noopener'>shared planning sheet</a> has an issue "
+               "plan for each quarter built from this layout." if sheet else "")
+            + f"</p><ol class='toc-list'>{''.join(items)}</ol></section>")
 
 
 # ------------------------------------------------------------------ the map, developing stories, events and weekly summaries on the main pages
@@ -892,8 +1081,11 @@ def issue_body(win, stories, digests, cfg, uses, current, brief=None, brief_opts
                 f"{'journal' if journals == 1 else 'journals'} in this window, for the Academia-to-Industry pages. "
                 f"{'The 24 best rated for use in practice are shown; all' if len(papers) > 24 else 'All'} of them are "
                 "in the Excel workbook (Research sheet) and on the Search page.", limit=24)
+    sheet = planning_sheet(cfg)
     actions = (f"<div class='actions'><a class='btn primary' href='{root}exports/{win['key']}.xlsx' download>{icon('sheet')}Excel workbook</a>"
-               f"<a class='btn light' href='{root}exports/{win['key']}.csv' download>{icon('download')}CSV</a>"
+               + (f"<a class='btn light' href='{esc(sheet)}' target='_blank' rel='noopener'>{icon('sheet')}"
+                  "Shared planning sheet (Google Sheets)</a>" if sheet else "")
+               + f"<a class='btn light' href='{root}exports/{win['key']}.csv' download>{icon('download')}CSV</a>"
                f"<a class='btn light' href='{root}search.html?q_window={win['key']}'>{icon('search')}Search this window</a>"
                f"<button class='btn light' type='button' onclick='window.print()'>{icon('print')}Print / PDF</button></div>")
     body = [hero(eyebrow, f"{win['label']} <span class='h1-sub'>{esc(win['span'])}</span>",
@@ -906,6 +1098,7 @@ def issue_body(win, stories, digests, cfg, uses, current, brief=None, brief_opts
     body.append(use_note(root))
     if brief_opts:
         body.append(brief_card(win, brief, cfg, current, root, brief_opts))
+    body.append(layout_panel(issue_layout(cfg), cfg, sheet))
     body.append("<h2 class='section-h'>Theme overview</h2><div class='table-wrap'><table class='overview'>"
                 "<thead><tr><th scope='col'>Theme</th><th scope='col'>Stories</th><th scope='col'>Rated 5</th>"
                 "<th scope='col'>Rated 4</th><th scope='col'>Feature leads</th><th scope='col'>Academia-to-Industry</th>"
@@ -1038,6 +1231,8 @@ def features_html(cfg):
         return o if isinstance(o, dict) else {}
 
     m, sl, ev, al = opts("geomap"), opts("storylines"), opts("events"), opts("notify")
+    layout = issue_layout(cfg)
+    fed = sum(1 for x in layout if x["source"] in ("scanner", "mixed"))
 
     def model_name(model):  # "Claude Opus 5.5" for claude-opus-5-5
         return optional("storylines", "model_name", model, default=model) if model else ""
@@ -1085,10 +1280,19 @@ def features_html(cfg):
          + "E-mail goes out through the AI assistant's Google connector or a mail server, as set up in the README; "
            "nothing is sent twice. Each week's summary is also on the website: <a href='weekly/index.html'>Weekly "
            "summaries</a>, linked from the Archive."),
+        ("#1f9d63", "sheet", "Issue layout and the shared planning sheet",
+         f"Each issue page shows the magazine's suggested table of contents ({count(len(layout), 'section')}, "
+         f"{fed} of them fed by the scanner; <code>issue_layout</code> in config.yaml), and the issue brief proposes "
+         "the items for those sections. The AI assistant's Google connector can also keep a shared planning sheet in "
+         "Google Sheets: every morning it adds the new stories and papers of the current and the previous quarter "
+         "and refreshes the news desk's columns, but never the team's Status, Assigned to and Editor notes, and it "
+         "gives each quarter an issue plan built from the layout."
+         + (" The issue pages link to it." if planning_sheet(cfg) else " Setting it up is described in the README.")),
     ]
     lis = "".join(f"<li style='--tc:{c}'><b><span class='ticon sm'>{icon(ic)}</span>{esc(title)}</b><p>{text}</p></li>"
                   for c, ic, title, text in items)
-    return f"<h2 class='section-h'>Map, developing stories, events and e-mail</h2><ul class='about-features'>{lis}</ul>"
+    return (f"<h2 class='section-h'>Map, developing stories, events, e-mail and planning</h2>"
+            f"<ul class='about-features'>{lis}</ul>")
 
 
 def use_box(root="", more=True):
@@ -1144,6 +1348,8 @@ def about_body(cfg, latest, brief_opts):
     if latest and latest.get("failures"):
         failed = ("<h2 class='section-h'>Sources that failed on the latest run</h2><ul class='plain'>"
                   + "".join(f"<li><b>{esc(n)}</b>: {esc(e)}</li>" for n, e in latest["failures"]) + "</ul>")
+    layout = issue_layout(cfg)
+    fed = sum(1 for x in layout if x["source"] in ("scanner", "mixed"))
     stats = (stat(len(feeds), "websites read directly") + stat(n_core * editions + n_extra, "news searches")
              + stat(n_foreign, "non-English searches") + stat(len(cfg["keywords"]) + n_ml, "weighted keywords"))
     actions = (f"<div class='actions'><a class='btn primary' href='reports/site-report.docx' download>{icon('doc')}"
@@ -1159,7 +1365,7 @@ def about_body(cfg, latest, brief_opts):
 <li><b>Triage.</b> Up to {ccfg.get('max_candidates', 80)} candidates go to Claude, which rates each 1–5 for geotechnical substance (below {ccfg.get('min_relevance', 3)} is dropped), confirms the theme, suggests a use, writes a one-sentence magazine angle in its own words, translates non-English headlines, reads where each story happened (the country and the town, region or site) and names the primary source to check the facts with. Claude then checks whether any new story follows up an earlier one (see below).</li>
 {research_step}
 <li><b>Publish & archive.</b> Up to {cfg.get('max_items', 40)} stories per digest.{site_rule} Every digest is stored permanently, grouped into three-month issue windows, and exported to Excel.</li>
-<li><b>Issue brief.</b> In the last {brief_opts['days_before_end']} days of each quarter Claude reads the quarter's stories rated {brief_opts['min_relevance']} / 5 or higher (at most {brief_opts['max_per_theme']} per theme) and any research papers, and drafts the brief for the editorial meeting as a Word document: an overview, a proposed line-up per theme, feature leads with the kinds of experts to approach, Academia-to-Industry topics, a regional-balance check, gaps worth covering and a watch list. The draft is refreshed every {count(brief_opts['refresh_days'], 'day')} and the final brief is written the day after the quarter closes. <b>Generate / update brief</b> on an issue page starts one on GitHub at any time.</li></ol>
+<li><b>Issue brief.</b> In the last {brief_opts['days_before_end']} days of each quarter Claude reads the quarter's stories rated {brief_opts['min_relevance']} / 5 or higher (at most {brief_opts['max_per_theme']} per theme) and any research papers, and drafts the brief for the editorial meeting as a Word document: a proposed table of contents that follows the magazine's suggested layout ({count(len(layout), 'section')}; the items for the {fed} sections the scanner feeds, and what to collect for the others), an overview, a proposed line-up per theme, feature leads with the kinds of experts to approach, Academia-to-Industry topics, a regional-balance check, gaps worth covering and a watch list. The draft is refreshed every {count(brief_opts['refresh_days'], 'day')} and the final brief is written the day after the quarter closes. <b>Generate / update brief</b> on an issue page starts one on GitHub at any time.</li></ol>
 {copyright_html()}
 {features_html(cfg)}
 <h2 class="section-h">Magazine themes</h2><p class="hint">Words that suggest each theme (English keywords found in any language count too).</p><ul class="theme-list">{themes}</ul>
@@ -2064,13 +2270,16 @@ def build(cfg):
         compact += [{"d": p["_digest"], "w": key, "t": p["title"], "te": "", "l": p["link"],
                      "s": p.get("journal", ""), "c": "", "p": (p.get("published") or "")[:10], "th": p["theme"],
                      "r": p.get("relevance") or 0, "u": A2I, "a": p.get("angle", ""), "k": p.get("keywords", []),
-                     "rk": paper_rank(p), "kind": "paper", "au": p.get("authors", "")}
+                     "rk": paper_rank(p), "kind": "paper", "au": p.get("authors", ""), "id": p.get("id") or p["link"]}
                     for p in w["papers"]]
         write(DOCS / "exports" / f"{key}.json", json.dumps(compact, ensure_ascii=False, separators=(",", ":")))
     write(DOCS / "exports" / "index.json",
           json.dumps([w["win"] | {"stories": len(w["stories"]), "papers": len(w["papers"])} for w in windows],
                      ensure_ascii=False))
     write(DOCS / "exports" / "countries.json", json.dumps(dict(sorted(names.items())), ensure_ascii=False))
+    # the suggested issue layout, for the shared planning sheet's issue plan tabs (assistant/bridge.gs)
+    layout = issue_layout(cfg)
+    write(DOCS / "exports" / "layout.json", json.dumps({"sections": layout}, ensure_ascii=False, indent=1))
     exports.write_workbook(
         DOCS / "exports" / "geotech-news-archive.xlsx", "Geotechnical News · Whole archive",
         f"All {len(windows)} issue windows", [s for w in windows for s in w["stories"]], order, theme_color,
@@ -2079,7 +2288,8 @@ def build(cfg):
         papers=[p for w in windows for p in w["papers"]], events=ev_coming, deadlines=ev_calls, events_asof=today,
         checklist=use_steps_text(), checklist_title=USE_TITLE)
     report.write_report(DOCS / "reports" / "site-report.docx", cfg, digests, windows, theme_color,
-                        site_url(cfg), CHANGELOG, groups=groups, checklist=(USE_TITLE, use_steps_text(), USE_DONE))
+                        site_url(cfg), CHANGELOG, groups=groups, checklist=(USE_TITLE, use_steps_text(), USE_DONE),
+                        planning=(layout, planning_sheet(cfg)))
 
     write(DOCS / "archive.html", page(cfg, "Archive", archive_body(windows, cfg, today_key, briefs, weeks), "", "archive"))
     write(DOCS / "search.html", page(cfg, "Search the archive", search_body(cfg, use_list, windows), "", "search"))

@@ -627,6 +627,114 @@ brief:
   days_before_end: 21      # automatic draft in the last 21 days of the quarter
   refresh_days: 7          # the draft is rewritten when it is 7 days old
 
+# ---- Suggested issue layout (table of contents) ---------------------
+# The sections of an issue, in the order they appear in the magazine. The
+# issue pages show this layout, the issue brief proposes a table of contents
+# that follows it, and the shared planning sheet's "Issue plan" tab is built
+# from it (README: "Suggested issue layout").
+# Rename, reorder, add or remove sections freely. Each section has:
+#   name     the section's title
+#   source   scanner  - filled from the news desk's stories, papers and events
+#            society  - contributed by ISSMGE (the Board, TCs, member societies...)
+#            editor   - written by the editor
+#            mixed    - a society contribution plus items from the news desk
+#   slots    how many items the news desk proposes (0 for society and editor sections)
+#   pages    the usual length, as text ("4-6", "1", "as needed")
+#   use      what goes there and which part of the news desk feeds it; the
+#            issue brief reads this when it chooses the items
+# A section that cannot be read is repaired or left out with a note in the log;
+# if no section can be read, the layout below is used.
+issue_layout:
+  - name: Cover story
+    source: scanner
+    slots: 1
+    pages: "4-6"
+    use: "A developing story or a 5/5 feature lead: the quarter's strongest story, told at length"
+  - name: Welcome from the President
+    source: society
+    slots: 0
+    pages: "1-2"
+    use: "The President's message, from ISSMGE"
+  - name: Message from the Editor
+    source: editor
+    slots: 0
+    pages: "1"
+    use: "The editor's introduction to the issue"
+  - name: From the Board / Vice-Presidents' reports
+    source: society
+    slots: 0
+    pages: "4-8"
+    use: "Reports from the Board and the regional Vice-Presidents"
+  - name: ISSMGE Highlights
+    source: society
+    slots: 0
+    pages: "3-4"
+    use: "ISSMGE news and decisions; the dates of the quarter's ISSMGE events come from the events calendar"
+  - name: Geotechnics in the News
+    source: scanner
+    slots: 10
+    pages: "4-6"
+    use: "8-12 short news items spread across the eight themes"
+  - name: Lessons from the Field
+    source: scanner
+    slots: 1
+    pages: "3-4"
+    use: "A developing story told from the failure to the inquiry and the repair"
+  - name: From Research to Practice
+    source: scanner
+    slots: 2
+    pages: "2-3"
+    use: "Research papers with a clear use in practice"
+  - name: Global News from Member Societies + Regional Insight
+    source: mixed
+    slots: 6
+    pages: "4-6"
+    use: "Member societies' news, plus one story per ISSMGE region from the news desk; the world map shows the member-society countries with no stories"
+  - name: Technical Committees Activities
+    source: society
+    slots: 0
+    pages: "3-5"
+    use: "TC reports and news; the TC symposia of the quarter come from the events calendar"
+  - name: Young Members' Arena
+    source: society
+    slots: 0
+    pages: "2"
+    use: "Young members' news, events and profiles"
+  - name: Education & Innovation
+    source: mixed
+    slots: 2
+    pages: "2-3"
+    use: "Courses and education news from the society, plus Digital Geotechnics stories from the news desk"
+  - name: Corporate Associates Corner
+    source: society
+    slots: 0
+    pages: "3-6"
+    use: "News and project pieces from ISSMGE's corporate associates"
+  - name: Heritage / Time Capsule
+    source: society
+    slots: 0
+    pages: "1-2"
+    use: "A look back at the profession's history"
+  - name: In Memory
+    source: society
+    slots: 0
+    pages: "as needed"
+    use: "Obituaries"
+  - name: Upcoming Events & Calls for Papers
+    source: scanner
+    slots: 8
+    pages: "1-2"
+    use: "Conferences, courses and call-for-papers deadlines from the events calendar"
+
+# ---- Shared planning sheet (Google Sheets) ---------------------------
+# The AI assistant's Google connector (assistant/bridge.gs) can keep a planning
+# sheet for the editorial team: run setupPlanningSheet once (README: "Shared
+# planning sheet (Google Sheets)") and paste the address it logs below. The
+# issue pages then show a "Shared planning sheet (Google Sheets)" button. Only
+# people the sheet is shared with (Google's Share button) can open it.
+planning:
+  sheet_url: ""
+
 # ---- World map (map.html) -------------------------------------------
 # Stories are plotted by the country Claude reads in each story. The ISSMGE
 # regions and their member-society countries show where coverage is thin.

@@ -331,10 +331,12 @@ def email_section(doc, cfg, data_dir):
                           "(Archive → Weekly summaries).")
 
 
-def write_report(path, cfg, digests, windows, theme_color, site_url, changelog_path, groups=None, checklist=None):
+def write_report(path, cfg, digests, windows, theme_color, site_url, changelog_path, groups=None, checklist=None,
+                 planning=None):
     """groups: storylines.groups() of the archive (the developing stories), worked out once by the site build.
     checklist: (title, the steps to follow before using a story, what the news desk does to keep to them),
-    from site_builder (USE_TITLE, use_steps_text(), USE_DONE)."""
+    from site_builder (USE_TITLE, use_steps_text(), USE_DONE). planning: (the suggested issue layout, the shared
+    planning sheet's address or ""), from site_builder (issue_layout(), planning_sheet())."""
     log = yaml.safe_load(changelog_path.read_text(encoding="utf-8")) if changelog_path.exists() else {}
     latest = digests[0] if digests else None
     data_dir = changelog_path.parent
@@ -488,7 +490,7 @@ def write_report(path, cfg, digests, windows, theme_color, site_url, changelog_p
         doc.add_paragraph("No research papers have been collected in this issue window yet.")
 
     # ---- issue briefs
-    section_heading("Issue briefs")
+    section_heading("Issue briefs and planning")
     briefs = []
     for f in sorted((data_dir / "briefs").glob("*.json"), reverse=True):
         try:
@@ -498,13 +500,25 @@ def write_report(path, cfg, digests, windows, theme_color, site_url, changelog_p
         briefs.append((f.stem, b.get("status", "draft"), str(b.get("generated", ""))[:16].replace("T", " "),
                        f"{b.get('stories_considered', b.get('n_stories', '—'))} stories"))
     if briefs:
-        doc.add_paragraph("Claude drafts a brief for each issue window: a proposed line-up per theme, feature leads, "
-                          "Academia-to-Industry topics, a regional-balance check, gaps worth covering, and the window's "
-                          "developing stories and events.")
+        doc.add_paragraph("Claude drafts a brief for each issue window: a proposed table of contents that follows the "
+                          "suggested issue layout (in briefs written since 26 October 2026), a proposed line-up per "
+                          "theme, feature leads, Academia-to-Industry topics, a regional-balance check, gaps worth "
+                          "covering, and the window's developing stories and events.")
         table(doc, ["Issue window", "Status", "Generated (UTC)", "Drafted from"], briefs, [3.5, 2.5, 5, 6])
     else:
         doc.add_paragraph("No issue brief has been generated yet. Drafts appear automatically in the last weeks of each "
                           "quarter, a final brief right after it closes, and any time from the issue page.")
+    layout, sheet = planning or ([], "")
+    if layout:
+        fed = [x for x in layout if x.get("source") in ("scanner", "mixed")]
+        doc.add_paragraph(f"Suggested issue layout (config.yaml, issue_layout): {len(layout)} sections, {len(fed)} of "
+                          "them fed by the scanner (" + "; ".join(f"{x['name']}: {x['slots']}" for x in fed)
+                          + " items). The issue pages show it, the brief's table of contents follows it and the shared "
+                          "planning sheet builds its issue plan tabs from it.")
+    doc.add_paragraph("Shared planning sheet (Google Sheets): " + (
+        f"linked from the issue pages ({sheet})." if sheet else
+        "not linked yet. Run setupPlanningSheet once in the AI assistant's Apps Script project, then paste the address "
+        "it logs into config.yaml under planning, sheet_url (README, Shared planning sheet)."))
 
     # ---- events calendar
     section_heading("Events calendar")
