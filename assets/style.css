@@ -206,6 +206,14 @@ h1 { font: 700 34px/1.15 var(--serif); margin: 0 0 10px; letter-spacing: -.01em;
 .theme-section h2 { display: flex; align-items: center; gap: 10px; font: 700 21px var(--serif); margin: 32px 0 12px; padding-bottom: 8px;
   border-bottom: 3px solid color-mix(in srgb, var(--tc) 70%, transparent); }
 .theme-section h2 .count { font: 700 12px var(--sans); color: #fff; background: var(--tc); border-radius: 99px; padding: 2px 9px; }
+/* smaller local stories (rated 3): closed at the end of a day's stories (site_builder.small_section) */
+.small-stories { margin: 34px 0 0; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius); }
+.small-stories > summary { cursor: pointer; padding: 13px 16px; font: 700 18px var(--serif); color: var(--ink); }
+.small-stories > summary:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; border-radius: var(--radius); }
+.small-stories[open] > summary { border-bottom: 1px solid var(--line); margin-bottom: 12px; }
+.small-n { font: 600 14px var(--sans); color: var(--muted); }
+.small-body { padding: 0 14px 4px; }
+.small-body > .hint { margin: 0 0 12px; }
 .ticon { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; flex: none;
   background: var(--tc); color: #fff; box-shadow: 0 3px 10px color-mix(in srgb, var(--tc) 40%, transparent); }
 .ticon .ico { width: 19px; height: 19px; }
@@ -1002,6 +1010,7 @@ a.sl-chip:hover { border-color: var(--sl-dot); text-decoration: underline; }
 .wk-themes .ico { width: 14px; height: 14px; color: var(--tc); }
 .wk-themes b { background: color-mix(in srgb, var(--tc) 18%, var(--surface)); color: var(--ink); border-radius: 99px;
   padding: 0 7px; font-size: 11.5px; }
+.wk-small { margin: 10px 0 0; font-size: 14px; color: var(--muted); }  /* the week's 3s, counted, not listed */
 .wk-list { list-style: none; margin: 0 0 6px; padding: 0; display: grid; gap: 8px; }
 .wk-list li { display: flex; flex-direction: column; gap: 3px; min-width: 0; background: var(--surface); border: 1px solid var(--line);
   border-left: 4px solid var(--tc, var(--brand-2)); border-radius: 10px; padding: 10px 14px; box-shadow: var(--shadow); }

@@ -540,7 +540,7 @@ def page(cfg, title, body, root, active, description="", head=""):
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{root}assets/style.css">{head}
-</head><body data-root="{root}" data-repo="{esc(repository(cfg))}" data-assistant="{esc(assistant_endpoint(cfg))}">
+</head><body data-root="{root}" data-repo="{esc(repository(cfg))}" data-assistant="{esc(assistant_endpoint(cfg))}" data-rating-from="{RULE_START}">
 <header class="masthead"><div class="wrap masthead-inner">
 <a class="brand" href="{root}index.html"><span class="brand-mark" aria-hidden="true">{FAVICON}</span>
 <span><span class="brand-name">Geotechnical News Desk</span><span class="brand-sub">{esc(mag)} · editorial monitoring</span></span></a>
@@ -560,7 +560,65 @@ def rating(s):
     rel = s.get("relevance") or 0
     if not rel:
         return f"<span class='rel rel-kw' title='Not AI-rated; ranked by keyword score'>Score {s.get('score', 0)}</span>"
-    return f"<span class='rel rel-{rel}' title='Geotechnical relevance: {rel} of 5'>{'<i></i>' * 5}<b>{rel}/5</b></span>"
+    return f"<span class='rel rel-{rel}' title='{esc(rating_tip(rel, s.get('_digest', '')))}'>{'<i></i>' * 5}<b>{rel}/5</b></span>"
+
+
+def rating_tip(rel, day=""):
+    """'Rating 4 of 5: geotechnical, national or regional importance' (as app.js shows in Search); a 3-5 from a
+    digest before RULE_START measured geotechnical substance alone."""
+    if rel >= 3 and day and str(day)[:10] < RULE_START:
+        return f"Rating {rel} of 5, given before {long_date(RULE_START)} for geotechnical substance alone, without size"
+    meaning = RATING_MEANING.get(rel)
+    if not meaning:
+        return f"Rating {rel} of 5"
+    return f"Rating {rel} of 5: " + (f"geotechnical, {meaning}" if rel >= 3 else meaning)
+
+
+def long_date(day):
+    """'27 October 2026' (day: a date or an ISO date)."""
+    day = day if isinstance(day, dt.date) else dt.date.fromisoformat(str(day)[:10])
+    return f"{day.day} {day:%B %Y}"
+
+
+# How Claude rates a story from RULE_START, the first scan with this rule (scanner.py, the triage prompt), in two
+# steps: is it truly geotechnical (1 = not, 2 = the ground only in passing), and, for a geotechnical story, how big
+# it is (3-5). The daily page and the weekly summary list the 4s and 5s; the 3s are folded at the end of the day's
+# page under SMALL_TITLE and counted in the weekly summary, and every other page, list and download keeps them all.
+# The digests before RULE_START were rated by geotechnical substance alone (a 3 was a clear ground-engineering
+# element, worth a brief). RULE_START is given to the Method page, the Excel workbooks (EARLIER_RATINGS) and, on
+# every page's <body data-rating-from>, to the AI assistant (app.js); the README states the same date.
+RULE_START = "2026-10-27"
+RULE_LAST_OLD = dt.date.fromisoformat(RULE_START) - dt.timedelta(days=1)  # the last day rated the old way
+EARLIER_RATINGS = (f"Ratings in the digests up to and including {long_date(RULE_LAST_OLD)} measured geotechnical "
+                   "substance alone, without size.")
+RATING_MEANING = {5: "international importance or a landmark project", 4: "national or regional importance",
+                  3: "local or small", 2: "the ground is mentioned only in passing", 1: "not geotechnical"}
+SMALL_TITLE = "Smaller local stories (rated 3)"
+
+
+def split_small(stories):
+    """(main, small): small are the stories rated exactly 3, main all the others (rated 4 or 5, or keyword-ranked,
+    with no rating, when Claude was not used), each list in its original order."""
+    return ([s for s in stories if s.get("relevance") != 3], [s for s in stories if s.get("relevance") == 3])
+
+
+def small_section(small, order, root="", day=""):
+    """The day's smaller local stories, closed at the end of its stories (their full cards, by theme, best first).
+    The filter bar above (app.js) filters them too and keeps the count in the summary line. day: the digest's
+    date; a digest from before RULE_START says what a 3 meant then."""
+    if not small:
+        return ""
+    place = {t: i for i, t in enumerate(order)}
+    items = sorted(small, key=lambda s: (place.get(s["theme"], len(place)), -(s.get("rank") or 0)))
+    what = (f"Rated before the size rule began ({long_date(RULE_START)}), when a 3 meant a clear ground-engineering "
+            "element worth a brief." if day and str(day)[:10] < RULE_START else
+            "Stories that are truly geotechnical but local or small.")
+    return (f"<details class='small-stories' id='smaller'><summary><span class='small-t'>{SMALL_TITLE}</span> "
+            f"<span class='small-n'>— {len(small)}</span></summary><div class='small-body'>"
+            f"<p class='hint'>{what} They stay in the "
+            f"<a href='{root}archive.html'>archive</a>, <a href='{root}search.html'>Search</a>, the "
+            f"<a href='{root}map.html'>world map</a>, the issue pages and the downloads.</p>"
+            + "".join(story_card(s, show_theme=True, root=root) for s in items) + "</div></details>")
 
 
 TRANSLATED = "English headline translated by Claude"
@@ -742,16 +800,25 @@ def digest_body(d, cfg, root, uses, prev_d=None, next_d=None, latest=False, brie
     """A daily digest page. On the Latest page, side is the column beside the news (this week, upcoming
     events and deadlines, developing stories) and week the {"key", "label"} of the week's summary page."""
     win = issue_window(d["date"], start_month(cfg))
-    stories, papers = d["stories"], d.get("papers", [])
-    themes = len({s["theme"] for s in stories})
+    # each story knows its digest, for its rating's tooltip (a 3-5 from before RULE_START meant substance alone)
+    stories = [dict(s, _digest=s.get("_digest") or d["date"]) for s in d["stories"]]
+    papers = d.get("papers", [])
+    main, small = split_small(stories)  # the 3s are folded at the end; the figures at the top count the main list
+    themes = len({s["theme"] for s in main})
     eyebrow = (f"{'Latest digest' if latest else 'Daily digest'} · "
                f"<a href='{root}issues/{win['key']}.html'>{win['label']} issue window</a>"
                + (f" · <a href='{root}weekly/{week['key']}.html'>{esc(week['label'])} summary</a>" if week else ""))
-    stats = (stat(len(stories), "stories selected") + stat(d.get("new_items", 0), "new items scanned")
+    if small:
+        top = (stat(len(main), ("story" if len(main) == 1 else "stories")
+                    + (" rated 4–5" if all((s.get("relevance") or 0) >= 4 for s in main) else " in the main list"))
+               + stat(len(small), f"smaller local {'one' if len(small) == 1 else 'ones'} (rated 3), below"))
+    else:
+        top = stat(len(stories), "stories selected")
+    stats = (top + stat(d.get("new_items", 0), "new items scanned")
              + stat(themes, "themes") + stat("AI" if d.get("ai_used") else "Keywords", "triage method"))
     if papers:
         stats += stat(len(papers), "new research papers")
-    extra = theme_strip(stories, theme_order(cfg))
+    extra = theme_strip(main, theme_order(cfg))
     head = [hero(eyebrow, esc(nice_date(d["date"], weekday=True)), stats=stats, extra=extra)]
     if latest:
         head.append(f"<a class='callout' href='{root}issues/{win['key']}.html'>{icon('sheet')}<span><b>Building the "
@@ -761,8 +828,10 @@ def digest_body(d, cfg, root, uses, prev_d=None, next_d=None, latest=False, brie
                     + " →</span></a>")
     if stories or papers:
         head.append(use_note(root))
+    listed = (theme_sections(main, root=root) if main else
+              "<p class='empty'>No story in this digest was rated 4 or 5: the smaller local stories are below.</p>")
     news = [("<p class='empty'>No new geotechnical stories met the threshold in this period.</p>" if not stories
-             else filtered(uses, theme_sections(stories, root=root))),
+             else filtered(uses, listed + small_section(small, theme_order(cfg), root, d["date"]))),
             research_section(papers, "Papers that geotechnical journals published in the last few days, for the "
                                      "Academia-to-Industry pages, best rated for use in practice first. Titles open "
                                      "the paper through its DOI.")]
@@ -909,7 +978,8 @@ def week_span(key):
 
 def weeks_of(digests):
     """The archive's ISO weeks, newest first, as the weekly summary pages (notify.py) list them:
-    [{"key", "label", "span", "digests", "stories", "top", "sent"}]; [] without notify.py."""
+    [{"key", "label", "span", "digests", "stories", "small", "top", "sent"}]; [] without notify.py. As in the
+    summary, "stories" are the ones it lists (rated 4 or 5, or keyword-ranked) and "small" the 3s it only counts."""
     week_key = feature("notify", "week_key")
     if not callable(week_key):
         return []
@@ -925,18 +995,24 @@ def weeks_of(digests):
             continue
         if key not in by_key:
             by_key[key] = {"key": key, "label": f"Week {int(key[-2:])}", "span": week_span(key), "digests": 0,
-                           "ids": set(), "top": 0, "sent": str(sent.get(key) or "")}
+                           "ids": set(), "small_ids": set(), "top": 0, "sent": str(sent.get(key) or "")}
             out.append(by_key[key])
         w = by_key[key]
         w["digests"] += 1
         for s in d["stories"]:
             sid = s.get("id") or id(s)  # a hand-edited story may have lost its id
-            if sid not in w["ids"]:
-                w["ids"].add(sid)
+            if sid not in w["ids"] and sid not in w["small_ids"]:
+                w["small_ids" if s.get("relevance") == 3 else "ids"].add(sid)
                 w["top"] += s.get("relevance") == 5
     for w in out:
-        w["stories"] = len(w.pop("ids"))
+        w["stories"], w["small"] = len(w.pop("ids")), len(w.pop("small_ids"))
     return out
+
+
+def week_figures(w):
+    """'8 stories and 6 smaller local ones' (the second part only when the week had 3s), as on the week cards."""
+    return count(w["stories"], "story", "stories") + (f" and {w['small']} smaller local "
+                                                      f"{'one' if w['small'] == 1 else 'ones'}" if w.get("small") else "")
 
 
 def report_stage(s, sl):
@@ -958,7 +1034,7 @@ def side_column(weeks, groups, cfg, today):
         links.append("<li><a href='weekly/index.html'>All weekly summaries</a></li>")
         parts.append(f"<section class='side-card'><p class='eyebrow'>{icon('book')}{'This week' if running else 'Latest week'}</p>"
                      f"<h2><a href='weekly/{w['key']}.html'>{w['label']}</a> <span>{esc(w['span'])}</span></h2>"
-                     f"<p class='side-figs'>{count(w['stories'], 'story', 'stories')} · {w['top']} rated 5 / 5 · "
+                     f"<p class='side-figs'>{week_figures(w)} · {w['top']} rated 5 / 5 · "
                      f"{count(w['digests'], 'daily digest')}{' so far' if running else ''}</p>"
                      f"<ul class='side-links'>{''.join(links)}</ul></section>")
     parts.append(optional("events", "sidebar", cfg, "", today, limit=6, default="") or "")
@@ -1035,7 +1111,7 @@ def weeks_section(weeks, cfg, root, limit=3):
     cards = "".join(
         f"<a class='wk-card' href='{root}weekly/{w['key']}.html'><span class='wk-card-head'><span><b>{w['label']}</b>"
         f"<span class='wk-span'>{esc(w['span'])}</span></span>" + ("<span class='wk-chip ok'>E-mailed</span>" if w["sent"] else "")
-        + f"</span><span class='wk-figs'>{count(w['stories'], 'story', 'stories')} · {w['top']} rated 5 / 5 · "
+        + f"</span><span class='wk-figs'>{week_figures(w)} · {w['top']} rated 5 / 5 · "
         f"{count(w['digests'], 'digest')}</span></a>" for w in weeks[:limit])
     return (f"<section class='weeks'><div class='section-row'><h2 class='section-h'>Weekly summaries</h2>"
             f"<a href='{root}weekly/index.html'>All {count(len(weeks), 'week')} →</a></div>"
@@ -1072,7 +1148,7 @@ def issue_body(win, stories, digests, cfg, uses, current, brief=None, brief_opts
                     f"<span>{len(d['stories'])} stories</span></li>" for d in digests)
     eyebrow = (f"<a href='{root}archive.html'>Archive</a> · Issue window"
                + (" · <span class='badge'>In progress</span>" if current else ""))
-    stats = (stat(summ["stories"], "stories") + stat(len(digests), "daily digests")
+    stats = (stat(summ["stories"], "stories") + stat(len(digests), "daily digest" if len(digests) == 1 else "daily digests")
              + stat(summ["top"], "rated 5 / 5") + stat(summ["features"], "feature leads"))
     if papers:
         stats += stat(len(papers), "research papers")
@@ -1126,7 +1202,7 @@ def archive_body(windows, cfg, current_key, briefs=None, weeks=()):
     if not windows:
         return hero("Archive", "All digests") + "<p class='empty'>The archive is empty. It fills automatically after the first scan.</p>"
     total = sum(len(w["stories"]) for w in windows)
-    stats = (stat(len(windows), "issue windows") + stat(sum(len(w["digests"]) for w in windows), "daily digests")
+    stats = (stat(len(windows), "issue window" if len(windows) == 1 else "issue windows") + stat(sum(len(w["digests"]) for w in windows), "daily digests")
              + stat(total, "stories archived"))
     actions = (f"<div class='actions'><a class='btn primary' href='{root}exports/geotech-news-archive.xlsx' download>"
                f"{icon('sheet')}Whole archive (Excel)</a><a class='btn light' href='{root}reports/site-report.docx' download>"
@@ -1274,9 +1350,11 @@ def features_html(cfg):
          "over the same event found by the refresh. The <a href='events.html'>Events</a> page offers the whole calendar "
          "as a feed (<code>events.ics</code>) for Outlook, Google or Apple Calendar."),
         ("#6b4fd6", "send", "Alerts and the weekly summary (e-mail)",
-         (f"After each scan, one e-mail lists any new story rated {level}. " if al.get("story_alerts", True) else "")
+         (f"After each scan, one e-mail lists any new story rated {level}"
+          + (f" ({RATING_MEANING[5]})" if level == "5 / 5" else "") + ". " if al.get("story_alerts", True) else "")
          + (f"Every {al.get('weekday', 'Monday')} morning the editorial team receives the summary of the week before: "
-            "the top stories of each theme, developing stories, regional coverage, events and deadlines in the next "
+            "the top stories of each theme, rated 4 and 5 (the smaller local stories, rated 3, are counted and left in "
+            "the archive), developing stories, regional coverage, events and deadlines in the next "
             f"{al.get('events_days', 60)} days, and new research. " if al.get("weekly_summary", True) else "")
          + "E-mail goes out through the AI assistant's Google connector or a mail server, as set up in the README; "
            "nothing is sent twice. Each week's summary is also on the website: <a href='weekly/index.html'>Weekly "
@@ -1363,9 +1441,9 @@ def about_body(cfg, latest, brief_opts):
 <h2 class="section-h">Each run</h2><ol class="steps">
 <li><b>Collect.</b> {len(feeds)} websites and {n_core * editions + n_extra} Google News searches ({n_core} core searches in {editions} English editions, plus {n_extra} further searches including {n_foreign} in other languages). The scan runs every day at 05:00 Cairo time, and on demand: <b>Scan now</b> opens the scan's page on GitHub, where you press <b>Run workflow</b>; the website then follows the scan and tells you when the new digest is ready. Each run looks back {cfg.get('lookback_hours', 60)} hours. So that the same article is not picked up twice, the scanner remembers the links it has already read for 45 days; this only prevents repeats and never removes anything from the archive, where every digest is kept permanently and each issue page gathers the whole quarter.</li>
 <li><b>Score and categorise.</b> Headlines and the feeds' summaries (read during the scan; no longer saved, never shown) are scored against {len(cfg['keywords'])} English keywords and {n_ml} terms in {len(languages)} other languages. Each foreign term counts as its English equivalent (for example <i>glissement de terrain</i>, <i>deslizamiento</i>, <i>longsor</i> and <i>انهيار أرضي</i> all count as “landslide”), so every story is filed under an English theme. Specialist sources earn bonus points, noise terms lose points, near-identical headlines are merged. A story needs {cfg.get('min_keyword_score', 3)} points to go forward.</li>
-<li><b>Triage.</b> Up to {ccfg.get('max_candidates', 80)} candidates go to Claude, which rates each 1–5 for geotechnical substance (below {ccfg.get('min_relevance', 3)} is dropped), confirms the theme, suggests a use, writes a one-sentence magazine angle in its own words, translates non-English headlines, reads where each story happened (the country and the town, region or site) and names the primary source to check the facts with. Claude then checks whether any new story follows up an earlier one (see below).</li>
+<li><b>Triage.</b> Up to {ccfg.get('max_candidates', 80)} candidates go to Claude, which rates each 1–5 in two steps. First: is the story truly geotechnical, with a clear ground-engineering element? If not, it gets 1 (not geotechnical) or 2 (the ground is mentioned only in passing), however big the news. Then, only for a geotechnical story, its size and importance: 3 = {RATING_MEANING[3]}, 4 = {RATING_MEANING[4]}, 5 = {RATING_MEANING[5]}. Importance is judged by the consequences and lessons for ground engineering, not by how much the media covered the story. Stories rated {ccfg.get('min_relevance', 3)} or more are kept. This rule applies from the scan of {long_date(RULE_START)}. {EARLIER_RATINGS} Claude also confirms the theme, suggests a use, writes a one-sentence magazine angle in its own words, translates non-English headlines, reads where each story happened (the country and the town, region or site) and names the primary source to check the facts with. Claude then checks whether any new story follows up an earlier one (see below).</li>
 {research_step}
-<li><b>Publish & archive.</b> Up to {cfg.get('max_items', 40)} stories per digest.{site_rule} Every digest is stored permanently, grouped into three-month issue windows, and exported to Excel.</li>
+<li><b>Publish & archive.</b> Up to {cfg.get('max_items', 40)} stories per digest.{site_rule} The day's page lists the stories rated 4 and 5 by theme; those rated 3 are in a closed section at the end, <b>{SMALL_TITLE}</b>, and the weekly summary counts them without listing them. Stories without a rating (ranked by keywords when Claude is not used) are listed as usual. Every story, the 3s included, stays in the archive, Search, the world map, the issue pages and the downloads. Every digest is stored permanently, grouped into three-month issue windows, and exported to Excel.</li>
 <li><b>Issue brief.</b> In the last {brief_opts['days_before_end']} days of each quarter Claude reads the quarter's stories rated {brief_opts['min_relevance']} / 5 or higher (at most {brief_opts['max_per_theme']} per theme) and any research papers, and drafts the brief for the editorial meeting as a Word document: a proposed table of contents that follows the magazine's suggested layout ({count(len(layout), 'section')}; the items for the {fed} sections the scanner feeds, and what to collect for the others), an overview, a proposed line-up per theme, feature leads with the kinds of experts to approach, Academia-to-Industry topics, a regional-balance check, gaps worth covering and a watch list. The draft is refreshed every {count(brief_opts['refresh_days'], 'day')} and the final brief is written the day after the quarter closes. <b>Generate / update brief</b> on an issue page starts one on GitHub at any time.</li></ol>
 {copyright_html()}
 {features_html(cfg)}
@@ -2052,7 +2130,8 @@ def render_email(d, cfg):
     url = site_url(cfg)
     rows = []
     by_theme = {}
-    for s in d["stories"]:
+    main, small = split_small(d["stories"])  # as on the day's page: the 3s are listed briefly at the end
+    for s in main:
         by_theme.setdefault(s["theme"], []).append(s)
     for t in sorted(by_theme, key=lambda t: -max(i["rank"] for i in by_theme[t])):
         rows.append(f"<h2 style='font:600 15px Arial,sans-serif;color:{theme_color(t)};border-bottom:2px solid {theme_color(t)};"
@@ -2070,6 +2149,18 @@ def render_email(d, cfg):
                 + (f"<div style='font:12.5px Arial,sans-serif;color:#1b2430;margin-top:4px'><b>Check with:</b> "
                    f"{esc(s['primary_source'])}</div>" if s.get("primary_source") else "")
                 + "</div>")
+    if small:
+        place = {t: i for i, t in enumerate(theme_order(cfg))}
+        rows.append("<h2 style='font:600 15px Arial,sans-serif;color:#5b6573;border-bottom:2px solid #c3cad4;"
+                    f"padding-bottom:4px;margin:26px 0 8px'>{SMALL_TITLE} — {len(small)}</h2>")
+        for s in sorted(small, key=lambda s: (place.get(s["theme"], len(place)), -s["rank"])):
+            rows.append(
+                "<div style='margin:0 0 9px;font:13.5px/1.45 Arial,sans-serif'>"
+                f"<a href='{esc(s['link'])}' style='font-weight:600;color:#1b2430'>{esc(s.get('title_en') or s['title'])}</a>"
+                + (f"<div style='font:12px Arial,sans-serif;color:#5b6573'>{TRANSLATED} · Original: "
+                   f"<span dir='auto'>{esc(s['title'])}</span></div>" if s.get("title_en") else "")
+                + f"<div style='font:12px Arial,sans-serif;color:#5b6573'>{esc(s['theme'])} · {esc(s['source'])}"
+                + (f" · Check with: {esc(s['primary_source'])}" if s.get("primary_source") else "") + "</div></div>")
     papers = sorted(d.get("papers", []), key=lambda p: -paper_rank(p))[:8]
     if papers:
         rows.append("<h2 style='font:600 15px Arial,sans-serif;color:#5137b0;border-bottom:2px solid #5137b0;"
@@ -2088,7 +2179,9 @@ def render_email(d, cfg):
     return ("<html><body style='margin:0;background:#f4f5f3'><div style='max-width:680px;margin:0 auto;background:#fff;padding:24px 26px'>"
             f"<div style='font:600 12px Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#9a7b1c'>Geotechnical News Desk</div>"
             f"<h1 style='font:600 24px Georgia,serif;color:#16324f;margin:4px 0 6px'>{esc(nice_date(d['date'], weekday=True))}</h1>"
-            f"<div style='font:13px Arial,sans-serif;color:#5b6573'>{len(d['stories'])} stories selected from {d.get('new_items', 0)} new items</div>"
+            f"<div style='font:13px Arial,sans-serif;color:#5b6573'>{len(d['stories'])} stories selected from {d.get('new_items', 0)} new items"
+            + ("; the smaller local one (rated 3) is listed at the end" if len(small) == 1 else
+               f"; the {len(small)} smaller local ones (rated 3) are listed at the end" if small else "") + "</div>"
             f"{link}{''.join(rows)}{link}{use_steps_email()}</div></body></html>")
 
 
@@ -2253,7 +2346,7 @@ def build(cfg):
             f"Issue window {w['win']['span']}", w["stories"], order, theme_color,
             [(nice_date(d["date"]), len(d["stories"])) for d in reversed(w["digests"])], "daily digest",
             digest_count=len(w["digests"]), windows=[key], papers=w["papers"], events=ev_coming, deadlines=ev_calls,
-            events_asof=today, checklist=use_steps_text(), checklist_title=USE_TITLE)
+            events_asof=today, checklist=use_steps_text(), checklist_title=USE_TITLE, earlier_ratings=EARLIER_RATINGS)
         # what Search and the AI assistant read: the headline (and Claude's translation), the source and link,
         # and what Claude wrote (angle, place, primary source to check, "ps"); never the publisher's text
         compact = [{"d": s["_digest"], "w": key, "t": s["title"], "te": s.get("title_en", ""), "l": s["link"],
@@ -2287,7 +2380,7 @@ def build(cfg):
         [(w["win"]["label"], len(w["stories"])) for w in reversed(windows)], "issue window",
         digest_count=len(digests), windows=[w["win"]["key"] for w in windows],
         papers=[p for w in windows for p in w["papers"]], events=ev_coming, deadlines=ev_calls, events_asof=today,
-        checklist=use_steps_text(), checklist_title=USE_TITLE)
+        checklist=use_steps_text(), checklist_title=USE_TITLE, earlier_ratings=EARLIER_RATINGS)
     report.write_report(DOCS / "reports" / "site-report.docx", cfg, digests, windows, theme_color,
                         site_url(cfg), CHANGELOG, groups=groups, checklist=(USE_TITLE, use_steps_text(), USE_DONE),
                         planning=(layout, planning_sheet(cfg)))

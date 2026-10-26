@@ -65,11 +65,12 @@ USE_COLORS = {"Feature lead": "D38B00", "News brief": "2563D6", "Academia-to-Ind
               "Regional insight": "1F9D63", "Watch only": "8A94A3", NOT_RATED: "B8C0CA", "": "B8C0CA"}
 REL_COLORS = {5: "1E7B4F", 4: "4DA06E", 3: "D9A21B", 2: "A3ADB8", 1: "C9CED6", 0: "B8C0CA"}
 REL_LABELS = {5: "5 / 5", 4: "4 / 5", 3: "3 / 5", 2: "2 / 5", 1: "1 / 5", 0: "Keyword-ranked"}
-REL_MEANING = {5: "Rich geotechnical lesson or a major ground-related event",
-               4: "Strong ground-engineering content",
-               3: "Clear ground-engineering element, worth a brief",
-               2: "Weak link to geotechnics",
-               1: "Not really geotechnical",
+# Claude's two steps (scanner.py): is the story truly geotechnical (1, 2: not kept), and then how big it is (3-5)
+REL_MEANING = {5: "Geotechnical, of international importance or a landmark project",
+               4: "Geotechnical, of national or regional importance",
+               3: "Geotechnical, local or small",
+               2: "The ground is mentioned only in passing (not kept)",
+               1: "Not geotechnical (not kept)",
                0: "Shown as –. Not rated by AI: ranked on keyword matches only"}
 # (status, text colour, cell fill, chart colour, meaning)
 STATUSES = [("To review", "4A5563", "ECEFF3", "A3ADB8", "New from the scan, not looked at yet (every story starts here)"),
@@ -449,7 +450,7 @@ class Ctx:
 # ------------------------------------------------------------------ entry point
 def write_workbook(path, title, subtitle, stories, themes, theme_color, timeline, timeline_label,
                    digest_count=None, windows=None, papers=None, events=None, deadlines=None, events_asof=None,
-                   checklist=None, checklist_title="Before you use a story"):
+                   checklist=None, checklist_title="Before you use a story", earlier_ratings=None):
     """stories carry _digest/_window/_region (and _country, _storyline) like the site's; timeline is [(label, count)].
 
     digest_count: number of daily digests in the period (counts digests that found no stories);
@@ -460,6 +461,8 @@ def write_workbook(path, title, subtitle, stories, themes, theme_color, timeline
     events_asof (events.upcoming() and events.deadlines(); each event may carry _where), in an Events sheet.
     checklist: the steps to follow before using a story (site_builder.use_steps_text()), listed under
     checklist_title on the Start here sheet.
+    earlier_ratings: what the ratings of the digests before the two-step rule measured
+    (site_builder.EARLIER_RATINGS), the "Earlier" row of the Start here sheet's rating scale.
     """
     ctx = Ctx(title, subtitle, list(stories or []), themes, theme_color, timeline, timeline_label,
               digest_count, windows)
@@ -470,6 +473,7 @@ def write_workbook(path, title, subtitle, stories, themes, theme_color, timeline
     ctx.events_asof = events_asof or dt.date.today()
     ctx.checklist = [clean(x, 600) for x in checklist or [] if x]
     ctx.checklist_title = clean(checklist_title or "Before you use a story", 120)
+    ctx.earlier_ratings = clean(earlier_ratings or "", 300)
     wb = Workbook()
     start = wb.active
     start.title = "Start here"
@@ -1134,7 +1138,7 @@ def _dashboard(ws, ctx):
     panels = [
         ("Suggested editorial use", "Use",
          [(u, lambda cell: "=" + ctx.sp(ctx.rng("use") + "=" + cell), USE_COLORS.get(u, MUTED)) for u in ctx.uses]),
-        ("Geotechnical relevance", "Relevance",
+        ("Rating (AI triage)", "Relevance",
          [(REL_LABELS[lvl], lambda cell, lvl=lvl: "=" + ctx.cf(("rel", lvl)), REL_COLORS[lvl]) for lvl in ctx.levels]),
         ("Planning status", "Status",
          [(name, lambda cell, name=name: "=" + ctx.cf(("status", q(name))), chart_color)
@@ -1336,7 +1340,8 @@ def _start_sheet(ws, ctx, anchors):
     block("Relevance scale (AI triage)", [
         (REL_LABELS[lvl] if lvl else "–", REL_MEANING[lvl],
          {"font": font(10, True, WHITE if lvl >= 3 else INK), "fill": REL_COLORS[lvl], "h": "center"})
-        for lvl in (5, 4, 3, 2, 1, 0)])
+        for lvl in (5, 4, 3, 2, 1, 0)] + (
+        [("Earlier", ctx.earlier_ratings, {"font": font(10, True, MUTED), "h": "center"})] if ctx.earlier_ratings else []))
     theme_rows = []
     for theme in ctx.present:
         items = [s for s in ctx.rows if s["theme"] == theme]

@@ -9,11 +9,12 @@ Every morning (05:00 Cairo time) GitHub automatically:
    Korean, Russian, Polish and Persian — and new papers from 25 geotechnical journals;
 2. scores each story for geotechnical relevance in any of those languages, merges repeated reports of the same event
    and balances the digest across the magazine's eight themes;
-3. asks Claude to rate each story 1–5, place it under a theme, suggest a use (news brief, feature lead,
-   Academia-to-Industry topic, regional insight, watch only), write the geotechnical angle in its own words, translate
-   non-English headlines, read **where the story happened** (country and town, region or site) and name the
-   **primary source to check** the facts with, and links any story that **follows up an earlier one** (the inquiry
-   into last month's landslide) to that event;
+3. asks Claude to rate each story 1–5 ([in two steps](#how-stories-are-rated): is it truly geotechnical, and how big
+   is it?), place it under a theme, suggest a use (news brief, feature lead, Academia-to-Industry topic, regional
+   insight, watch only), write the geotechnical angle in its own words, translate non-English headlines, read
+   **where the story happened** (country and town, region or site) and name the **primary source to check** the
+   facts with, and links any story that **follows up an earlier one** (the inquiry into last month's landslide) to
+   that event;
 4. saves the digest permanently, rebuilds the website, Excel workbooks and Word report, refreshes the **events
    calendar** once a week, drafts the **issue brief** when one is due, and e-mails an **alert** for new 5/5 stories
    and, on Mondays, the **weekly summary** to the editorial team.
@@ -24,7 +25,7 @@ Website: **https://monabadr12.github.io/geotech-news/**
 
 | Page | What it is for |
 |---|---|
-| **Latest** | Today's digest, grouped by theme (strongest theme first), with filters for rating, use and keywords. Beside the news: this week and its summary, upcoming events and call-for-papers deadlines, and the developing stories with new reports. |
+| **Latest** | Today's digest: the stories rated 4 and 5, grouped by theme (strongest theme first), with filters for rating, use and keywords; the stories rated 3 follow in a closed section at the end, **Smaller local stories (rated 3)**. Each day's digest page in the Archive is laid out the same way. Beside the news: this week and its summary, upcoming events and call-for-papers deadlines, and the developing stories with new reports. |
 | **Archive** | Every digest ever produced, grouped into **three-month issue windows** that match the magazine's quarterly cycle, and the latest **weekly summaries** (each week's page lists that week's top stories, developing stories, regional coverage, events and research). |
 | **Issue collection** (one per quarter, e.g. *Q4 2026*) | All stories and research papers from the quarter in one place: the **issue brief**, the **suggested table of contents** (which sections the scanner feeds), theme overview, regional coverage (with a link to the gaps on the world map), "strongest leads" shortlist, the quarter's developing stories, upcoming events and deadlines (current quarter), all stories by theme, new research, list of daily digests, **Excel workbook**, the **shared planning sheet** (once it is set up), CSV, and print / save as PDF. This is the page to plan an issue from. |
 | **Search** | Search all archived stories and research papers by keyword (place names included), issue window, theme, use and rating; results show where each story happened and the developing story it belongs to; export the results. |
@@ -153,11 +154,13 @@ deadlines (calls for abstracts and papers, registration), from two sources:
   calendar**. The Latest and issue pages show the next deadlines and events beside the news.
 
 ### Alerts and weekly summary (e-mail)
-After each daily scan, one e-mail lists any new story rated 5 / 5 (at most one alert per scan). Every Monday morning the
-editorial team receives the **weekly summary** of the week before: the top stories of each theme, other 5 / 5 stories,
-developing stories updated that week, regional coverage by ISSMGE region, events and deadlines in the next 60 days, and new
-research. Each week's summary is also a page on the website (Archive → **Weekly summaries**), and **Send summary now** on
-those pages sends last week's summary at any time. `data/notify.json` records what was sent, so nothing goes out twice.
+After each daily scan, one e-mail lists any new story rated 5 / 5 (international importance or a landmark project; at
+most one alert per scan). Every Monday morning the editorial team receives the **weekly summary** of the week before: the
+top stories of each theme and other 5 / 5 stories, from the stories rated 4 and 5 (the summary counts the smaller local
+stories, rated 3, and says they are in the archive), developing stories updated that week, regional coverage by ISSMGE
+region (all the week's stories, the 3s included), events and deadlines in the next 60 days, and new research. Each
+week's summary is also a page on the website (Archive → **Weekly summaries**), and **Send summary now** on those pages
+sends last week's summary at any time. `data/notify.json` records what was sent, so nothing goes out twice.
 Settings (which e-mails, the weekday, the rating that triggers an alert) are under `alerts:` in `config.yaml`. Setting up
 e-mail is described [below](#e-mail-alerts-and-the-weekly-summary-setup-about-10-minutes).
 
@@ -176,6 +179,24 @@ Sites that refuse feed readers or publish no feed (ISSMGE, ICE, GEER, USGS, GeoE
 are read through Google News searches limited to the site (`site:` searches, which can carry the site's `boost`).
 To test a new address before adding it, run the **Check feeds** workflow on GitHub with a JSON input such as
 `{"Railway Gazette": ["https://www.railwaygazette.com/rss"]}`; the log marks each address OK or FAIL.
+
+### How stories are rated
+Claude rates each story 1–5 in two steps, from the scan of 27 October 2026 (`RULE_START` in `site_builder.py`):
+1. **Is it truly geotechnical?** It must have a clear ground-engineering element. If not, it gets **1** (not
+   geotechnical) or **2** (the ground is mentioned only in passing) and is dropped, however big the news.
+2. **How big is it?** Only for a geotechnical story: **3** = local or small, **4** = national or regional importance,
+   **5** = international importance or a landmark project. Importance is judged by the consequences and lessons for
+   ground engineering, not by how much media attention the story gets.
+
+Stories rated 3 or more are kept (`claude: min_relevance: 3` in `config.yaml`). The daily page (Latest and each day's
+digest page) and the weekly summary list the stories rated 4 and 5; the 3s are not deleted: on the day's page they sit
+in a closed section at the end, **Smaller local stories (rated 3)**, and the weekly summary gives their number. They stay
+everywhere else as before: the archive, Search, the world map, the issue pages, the CSV, Excel and JSON downloads,
+developing stories and the issue brief. Stories without a rating (ranked by keywords when Claude is not used) are shown
+as before. Alerts still go out for 5 / 5 stories.
+
+Ratings in the digests up to and including 26 October 2026 measured geotechnical substance alone, without size (a 3
+meant a clear ground-engineering element, worth a brief). On those days' pages the closed section says so.
 
 ### How stories are categorised
 Every headline is matched against English keywords **and** more than 900 terms in 16 other languages

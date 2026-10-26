@@ -732,7 +732,9 @@ def claude_triage(items, cfg, notes):
 
 For each story below return an object with:
 - "id": the number
-- "relevance": 1-5 (5 = rich geotechnical lesson or major ground-related event; 3 = clear ground engineering element worth a brief; 1 = not geotechnical)
+- "relevance": 1-5, decided in two steps.
+  Step 1: is the story truly geotechnical, with a clear ground-engineering element (the behaviour of soil, rock or groundwater is part of the story: foundations, slopes and landslides, tunnels, excavations, earthworks, embankments and dams, ground improvement, site investigation, ground hazards)? If not: 1 = not geotechnical; 2 = the ground is mentioned only in passing. Size never lifts such a story: it gets 1 or 2 however big the news is.
+  Step 2, only for a truly geotechnical story: rate its size and importance. 3 = local or small; 4 = national or regional importance; 5 = international importance or a landmark project. Judge importance by the story's consequences and lessons for ground engineering, not by how much media attention it gets.
 - "theme": the one magazine theme it fits best
 - "use": the best editorial use
 - "angle": one sentence (max 30 words) stating the geotechnical question a magazine piece could explore, entirely in your own words: never copy or closely paraphrase the headline or the summary
