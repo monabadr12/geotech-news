@@ -41,6 +41,7 @@ COUNTRIES = {
     "DE": "Germany", "IT": "Italy", "TR": "Türkiye", "ID": "Indonesia", "CN": "China",
     "JP": "Japan", "VN": "Vietnam", "IR": "Iran", "KR": "South Korea", "RU": "Russia",
     "PL": "Poland", "CO": "Colombia", "CL": "Chile", "PE": "Peru", "AR": "Argentina",
+    "NG": "Nigeria", "KE": "Kenya", "GH": "Ghana", "MA": "Morocco", "NZ": "New Zealand",
 }
 CSV_FIELDS = ["Digest date", "Issue window", "Theme", "Relevance (1-5)", "Suggested use",
               "Headline (English or Claude's translation)", "Original headline", "Magazine angle",

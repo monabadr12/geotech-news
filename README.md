@@ -3,9 +3,10 @@
 Every morning (05:00 Cairo time) GitHub automatically:
 
 1. reads specialist, society, hazard-agency and trade-press websites, worldwide Google News searches in English
-   (UK, US, India, Australia, South Africa, Singapore, UAE editions) and 16 other languages — Arabic, French,
-   Spanish (Spain, Mexico, Colombia, Chile, Peru, Argentina), Portuguese, German, Italian, Turkish, Hindi, Indonesian,
-   Chinese, Japanese, Vietnamese, Korean, Russian, Polish and Persian — and new papers from 25 geotechnical journals;
+   (UK, US, India, Australia, South Africa, Singapore, UAE editions, and searches for Nigeria, East Africa, Ghana and
+   New Zealand) and 16 other languages — Arabic (Egypt, UAE, North Africa), French, Spanish (Spain, Mexico, Colombia,
+   Chile, Peru, Argentina), Portuguese, German, Italian, Turkish, Hindi, Indonesian, Chinese, Japanese, Vietnamese,
+   Korean, Russian, Polish and Persian — and new papers from 25 geotechnical journals;
 2. scores each story for geotechnical relevance in any of those languages, merges repeated reports of the same event
    and balances the digest across the magazine's eight themes;
 3. asks Claude to rate each story 1–5, place it under a theme, suggest a use (news brief, feature lead,
