@@ -183,6 +183,10 @@ Every headline is matched against English keywords **and** more than 900 terms i
 count as "landslide" — and those English concepts decide the theme. For inflected languages a `*` stands for the rest of
 the word (`оползн*`, `osuwisk*`). So a story in any covered language is filed under the correct English theme,
 even when Claude is not available. When Claude triage runs, it confirms or corrects the theme and translates the headline.
+A foreign headline that still has no English translation after the triage is translated at the end of the scan, in one
+small extra request that also covers any left untranslated in the digests of the last 45 days (a headline Claude finds
+to be in English is marked and not sent again). To do this at any time: **Actions** → **Events calendar and weekly
+summary** → **Run workflow** → choose **translate missing headlines** (`python scanner.py --translate-missing`).
 After changing the keyword or theme lists, `python scanner.py --reclassify` re-files the stories already archived.
 
 ### Excel workbooks
@@ -324,7 +328,7 @@ by model, and *Limits* sets a monthly cap):
 
 | Part | Model (`config.yaml`) | How often | Rough cost |
 |---|---|---|---|
-| Triage, locating stories, research papers | Haiku | every scan | a few cents a day |
+| Triage, locating stories, missing headline translations, research papers | Haiku | every scan | a few cents a day |
 | Developing stories (linking follow-ups) | Sonnet (`storylines: model:`); the unsure cases checked by Opus (`check_model:`) | every scan | about US$0.05–0.15 a day (US$1.50–4.50 a month, rising as the archive grows) |
 | Events calendar refresh | Sonnet (`events: model:`) | every 14 days | about US$0.70–1.50 |
 | Issue brief | Opus (`brief: model:`) | a few times a quarter | about US$1–2 each |
@@ -499,7 +503,7 @@ and delete it. If the website moves, set the Script property `SITE_URL` to its n
 | `config.yaml` | All settings. |
 | `assets/` | Website style sheet, scripts, icons and the world map outlines (`world.json`). |
 | `tools/make_world.py` | Rebuilds `assets/world.json` from Natural Earth (only needed to change the map's outlines). |
-| `.github/workflows/` | The daily scan (`scan.yml`), the issue brief (`brief.yml`), the events calendar and weekly summary (`extras.yml`) and Check feeds (`check-feeds.yml`). |
+| `.github/workflows/` | The daily scan (`scan.yml`), the issue brief (`brief.yml`), the events calendar, weekly summary and missing headline translations on demand (`extras.yml`) and Check feeds (`check-feeds.yml`). |
 | `data/digests/` | **The permanent archive**, one file per day. |
 | `data/seen.json` | Links the scanner has already read in the last 45 days, so the same article is not picked up twice. It only prevents repeats: nothing is removed from the archive, and the digests in `data/digests/` are kept permanently. |
 | `docs/` | The generated website (do not edit by hand). |
