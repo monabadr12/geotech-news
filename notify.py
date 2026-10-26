@@ -521,6 +521,11 @@ def week_summary(digests, key, cfg, today=None):
                 seen.add(sid)
                 stories.append(dict(s, _digest=d["date"][:10]))
         papers += [dict(p, _digest=d["date"][:10]) for p in d.get("papers") or []]
+    # the summary lists the stories rated 4 and 5 (and keyword-ranked ones, with no rating); the smaller local
+    # stories (rated 3) are only counted: they stay in the archive. The regional coverage counts them all, as the
+    # world map does, so that a member society with only local stories is not marked as a gap.
+    week_all = stories
+    stories, small = site_builder.split_small(week_all)
     limit = opts["max_stories"]
     top = pick_top(stories, limit)
     shown = {id(s) for s in top}
@@ -551,9 +556,9 @@ def week_summary(digests, key, cfg, today=None):
                                "latest": latest})
         developing.sort(key=lambda g: (g["new"], g["last"]), reverse=True)  # most reports this week first
 
-    regions = optional("geomap", "coverage", stories, cfg) if stories else None
-    located = sum(1 for s in stories if "country" in s)
-    global_ = sum(1 for s in stories if "country" in s and not mapped(s.get("country")))
+    regions = optional("geomap", "coverage", week_all, cfg) if week_all else None
+    located = sum(1 for s in week_all if "country" in s)
+    global_ = sum(1 for s in week_all if "country" in s and not mapped(s.get("country")))
 
     send_on = send_day(key, opts)
     ref = min(send_on, today) if sunday < today else today  # events as they stood when the summary went out
@@ -572,7 +577,8 @@ def week_summary(digests, key, cfg, today=None):
         "in_progress": sunday >= today, "send_on": send_on.isoformat(), "events_from": ref.isoformat(),
         "digests": [{"date": d["date"][:10], "stories": len(d.get("stories") or [])} for d in days],
         "figures": {"stories": len(stories), "rated": sum(1 for s in stories if s.get("relevance")),
-                    "top": len(fives), "papers": len(papers), "digests": len(days), "themes": len(themes)},
+                    "top": len(fives), "papers": len(papers), "digests": len(days), "themes": len(themes),
+                    "small": len(small), "covered": len(week_all)},  # covered: what the regional coverage counts
         "themes": [(t, themes[t]) for t in order if t in themes],
         "top": top, "more5": more5[:limit], "more5_hidden": max(0, len(more5) - limit),
         "developing": None if developing is None else developing[:limit],
@@ -588,7 +594,8 @@ def week_summary(digests, key, cfg, today=None):
 def coverage_note(W):
     """What follows "Stories this week by ISSMGE region …", and whether member-society countries can be
     marked as gaps: only from stories located in a country, as on the world map."""
-    waiting, in_country = W["figures"]["stories"] - W["located"], W["located"] - W["global"]
+    F = W["figures"]
+    waiting, in_country = F.get("covered", F["stories"]) - W["located"], W["located"] - W["global"]
     note = ((f" {plural(W['global'], 'story is', 'stories are')} global or about several countries." if W["global"] else "")
             + (f" {plural(waiting, 'story has', 'stories have')} no location yet." if waiting else ""))
     if not in_country:
@@ -596,6 +603,21 @@ def coverage_note(W):
     elif waiting:
         note += " Member-society countries are marked as gaps only from the stories already located."
     return note, in_country > 0
+
+
+def coverage_intro(W):
+    """The first sentence of the regional coverage, e-mail and page alike."""
+    return ("Stories this week by ISSMGE region" + (", the smaller local ones (rated 3) included," if W["figures"].get("small")
+                                                    else "") + " and the member societies whose countries had none.")
+
+
+def small_text(W, archive="archive"):
+    """'15 smaller local stories (rated 3) are in the archive.' ("" when the week had none); archive: the word,
+    or a link to the archive page."""
+    n = W["figures"].get("small") or 0
+    if not n:
+        return ""
+    return f"{plural(n, 'smaller local story', 'smaller local stories')} (rated 3) {'is' if n == 1 else 'are'} in the {archive}."
 
 
 # ------------------------------------------------------------------ e-mail (inline styles, as render_email)
@@ -731,9 +753,11 @@ def render_alert(stories, cfg, digests=(), opts=None):
     groups = optional("storylines", "groups", list(digests)) if any(s.get("storyline") for s in stories) else None
     by_id = {g.get("id"): g for g in groups or []}
     level = "5 / 5" if opts["min_relevance"] >= 5 else f"{opts['min_relevance']} / 5 or higher"
+    meaning = {5: site_builder.RATING_MEANING[5], 4: site_builder.RATING_MEANING[4] + " or more"}.get(opts["min_relevance"])
     days = sorted({s["_digest"] for s in stories if s.get("_digest")})
-    body = [m_p(f"Claude rated {'this story' if len(stories) == 1 else 'these stories'} {level} for geotechnical "
-                f"relevance in the {' and '.join(esc(site_builder.nice_date(d)) for d in days)} "
+    body = [m_p(f"Claude rated {'this story' if len(stories) == 1 else 'these stories'} {level} "
+                + (f"(a geotechnical story of {meaning})" if meaning else "for geotechnical relevance")
+                + f" in the {' and '.join(esc(site_builder.nice_date(d)) for d in days)} "
                 f"digest{'s' if len(days) > 1 else ''}.", 14, INK, "18px 0 18px")]
     body += [m_story(s, url, follow_up_note(s, url, by_id)) for s in stories]
     if url:
@@ -777,6 +801,8 @@ def render_week_email(W, cfg):
         body.append(m_p("By theme: " + " · ".join(
             f"<span style='color:{site_builder.theme_color(t)};font-weight:600'>{esc(t)}</span> {n}" for t, n in W["themes"]),
             12.5, MUTED, "6px 0 0"))
+    if small_text(W):  # the 3s are not listed in the summary, only counted
+        body.append(m_p(small_text(W, m_link(url + "archive.html", "archive") if url else "archive"), 13, INK, "8px 0 0"))
     if url:  # the website has a page for every week with digests
         body.append(m_p(m_link(f"{url}weekly/{W['key']}.html", "Open this summary on the website", LINK, 600) if F["digests"]
                         else m_link(f"{url}weekly/index.html", "All weekly summaries on the website", LINK, 600), 13, MUTED, "12px 0 0"))
@@ -815,7 +841,7 @@ def render_week_email(W, cfg):
     if W["regions"]:
         body.append(m_h2("Regional coverage"))
         note, known = coverage_note(W)
-        body.append(m_p("Stories this week by ISSMGE region, and the member societies whose countries had none." + note))
+        body.append(m_p(coverage_intro(W) + note))
         rows = []
         for r in W["regions"]:
             gaps = [country_name(c) for c in r.get("gaps") or []]
@@ -1118,6 +1144,9 @@ def week_body(W, cfg, rec, opts, older, newer, last_key):
         out.append("<div class='wk-themes'>" + "".join(
             f"<span style='--tc:{site_builder.theme_color(t)}'>{site_builder.theme_icon(t)}{esc(t)} <b>{n}</b></span>"
             for t, n in W["themes"]) + "</div>")
+    if small_text(W):  # the 3s are not listed in the summary, only counted
+        archive = f"<a href='{root}archive.html'>archive</a>"
+        out.append(f"<p class='wk-small'>{small_text(W, archive)}</p>")
     if W["top"]:
         out.append("<h2 class='section-h'>Top stories of the week</h2><p class='hint'>The best-rated story of each theme in "
                    "turn, with the magazine angle Claude suggests.</p>")
@@ -1158,8 +1187,8 @@ def week_body(W, cfg, rec, opts, older, newer, last_key):
                         f"<td><span class='cellbar wk-bar'><i style='width:{share:.0f}%'></i></span>"
                         f"{r['members_covered'] if known else '–'} of {r['members']}</td>"
                         f"<td class='wk-gaps'>{esc(gap_text) if known else 'Shown once stories are located'}</td></tr>")
-        out.append("<h2 class='section-h'>Regional coverage</h2><p class='hint'>Stories this week by ISSMGE region, and the "
-                   f"member societies whose countries had none.{notes} <a href='{root}map.html'>World map</a></p>"
+        out.append(f"<h2 class='section-h'>Regional coverage</h2><p class='hint'>{coverage_intro(W)}"
+                   f"{notes} <a href='{root}map.html'>World map</a></p>"
                    "<div class='table-wrap'><table class='overview wk-regions'><thead><tr><th scope='col'>Region</th>"
                    "<th scope='col'>Stories</th><th scope='col'>Member societies covered</th><th scope='col'>No stories from</th>"
                    f"</tr></thead><tbody>{''.join(rows)}</tbody></table></div>")
@@ -1215,7 +1244,7 @@ def index_body(summaries, cfg, rec, opts, last_key):
              + site_builder.stat(sum(W["figures"]["digests"] for W in summaries), "daily digests"))
     out = [site_builder.hero(f"<a href='{root}archive.html'>Archive</a> · Weekly summaries", "Weekly summaries",
                              f"Every {opts['weekday']} the news desk e-mails the editorial team a summary of the week before: "
-                             "the top stories of each theme, new 5 / 5 stories, developing stories, regional coverage, "
+                             "the top stories of each theme (rated 4 and 5), new 5 / 5 stories, developing stories, regional coverage, "
                              "events and deadlines coming up, and new research. Each week's page shows the same summary.",
                              stats, f"<div class='actions'><a class='btn primary' href='{summaries[0]['key']}.html'>"
                              f"{site_builder.icon('book')}Latest week</a></div>"),
@@ -1247,7 +1276,7 @@ def index_body(summaries, cfg, rec, opts, last_key):
                 if W["in_progress"] else "")
         out.append(f"<a class='wk-card' href='{W['key']}.html'><span class='wk-card-head'><span><b>Week {W['week']}</b>"
                    f"<span class='wk-span'>{esc(W['span'])}</span></span>{chip}</span>"
-                   f"<span class='wk-figs'>{plural(F['stories'], 'story', 'stories')} · {F['top']} rated 5 / 5 · "
+                   f"<span class='wk-figs'>{site_builder.week_figures(F)} · {F['top']} rated 5 / 5 · "
                    f"{plural(F['digests'], 'digest')}{' · ' + plural(F['papers'], 'paper') if F['papers'] else ''}</span>"
                    + (f"<span class='wk-lead' dir='auto'>{esc(headline(lead))}</span>" if lead else "")
                    + (f"<span class='wk-figs'>{site_builder.TRANSLATED} · Original: <span dir='auto'>{esc(lead.get('title') or '')}</span></span>"

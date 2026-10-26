@@ -138,12 +138,23 @@
     var text = bar.querySelector(".f-text"), rel = bar.querySelector(".f-rel"), use = bar.querySelector(".f-use");
     var count = bar.querySelector(".f-count");
     var cards = Array.prototype.slice.call(scope.querySelectorAll(".theme-section .story"));
+    // a day's smaller local stories (rated 3), closed at the end of its stories: filtered too, counted apart
+    var fold = scope.querySelector(".small-stories");
+    var small = fold ? Array.prototype.slice.call(fold.querySelectorAll(".story")) : [];
     function apply() {
-      var q = text.value.trim().toLowerCase(), min = +rel.value, u = use.value, shown = 0;
+      var q = text.value.trim().toLowerCase(), min = +rel.value, u = use.value, shown = 0, shownSmall = 0;
+      function match(c) {
+        return +c.dataset.rel >= min && (!u || c.dataset.use === u) && (!q || c.dataset.text.indexOf(q) !== -1);
+      }
       cards.forEach(function (c) {
-        var ok = +c.dataset.rel >= min && (!u || c.dataset.use === u) && (!q || c.dataset.text.indexOf(q) !== -1);
+        var ok = match(c);
         c.hidden = !ok;
         if (ok) shown++;
+      });
+      small.forEach(function (c) {
+        var ok = match(c);
+        c.hidden = !ok;
+        if (ok) shownSmall++;
       });
       scope.querySelectorAll(".theme-section").forEach(function (sec) {
         var n = sec.querySelectorAll(".story:not([hidden])").length;
@@ -153,7 +164,14 @@
         var link = scope.querySelector(".theme-toc a[href='#" + sec.id + "'] b");
         if (link) { link.textContent = n; link.parentNode.hidden = n === 0; }
       });
-      count.textContent = shown === cards.length ? cards.length + " stories" : "Showing " + shown + " of " + cards.length;
+      var label = shown === cards.length ? cards.length + " stories" : "Showing " + shown + " of " + cards.length;
+      if (fold) {
+        var all = shownSmall === small.length;
+        fold.hidden = shownSmall === 0;
+        fold.querySelector(".small-n").textContent = "— " + (all ? small.length : shownSmall + " of " + small.length);
+        if (shownSmall) label += ", " + (all ? "" : shownSmall + " of ") + small.length + " smaller local ones below";
+      }
+      count.textContent = label;
     }
     [text, rel, use].forEach(function (el) { el.addEventListener("input", apply); });
     apply();
@@ -451,7 +469,10 @@
         "You help the editor search the archive of news stories collected by the daily scans, spot trends, and recommend stories, themes " +
         "and angles for upcoming issues. The magazine's cross-cutting themes are: " + Object.keys(THEME_COLORS).filter(function (t) { return t !== "General"; }).join("; ") +
         ". Each story may carry a suggested use: News brief, Feature lead, Academia-to-Industry topic, Regional insight or Watch only, " +
-        "and a geotechnical relevance rating from 1 to 5 (0 means it was ranked by keywords only and not reviewed by AI).\n\n" +
+        "and a rating from 1 to 5, given in two steps: is the story truly geotechnical (1 = not geotechnical, 2 = the ground is " +
+        "mentioned only in passing; neither is kept), and, for a geotechnical story, its size and importance (3 = local or small, " +
+        "4 = national or regional importance, 5 = international importance or a landmark project). Ratings given before 26 October " +
+        "2026 measured geotechnical substance alone. 0 means the story was ranked by keywords only and not reviewed by AI.\n\n" +
         "Archive overview by issue window:\n" + (lines.join("\n") || "- (archive empty)") + "\n\n" +
         "With each question you receive the archive stories most relevant to it, retrieved from the full archive. Base what you say about the " +
         "news on those stories. When you mention a story, give its headline as a markdown link to its URL, followed by the source and date. " +
