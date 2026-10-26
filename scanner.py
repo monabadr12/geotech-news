@@ -801,9 +801,27 @@ Stories:
 # translation (title_en) is translated after the stories are chosen, with those
 # of the digests of the last MEMORY_DAYS days, in one small request to the
 # triage model. Claude answers "" for a headline already in English; such a
-# story gets "title_en_checked": true, so that it is not sent again.
+# story gets "title_en_checked": true, so that it is not sent again, unless the
+# headline looks foreign (looks_foreign), when it is asked again next time.
 MEMORY_DAYS = 45         # how long the scan remembers the links it has read (seen.json)
 TRANSLATE_PER_RUN = 200  # headlines per request at most: today's first, then the newest digests'
+
+
+# common short words of Spanish, Portuguese, French, Italian, German, Indonesian and Turkish
+# headlines that English headlines hardly use (no "el", "los", "die", "do", "mit"...: El Niño, Los
+# Angeles, "two die in landslide")
+FOREIGN_WORDS = frozenset(
+    "de y en por tras para con una sobre que em da dos das com na nas ao uma após le les des du et sur "
+    "au aux une dans après il di della delle nel nella dopo der und nach ke dari untuk dengan akibat bir ile için"
+    .split())
+
+
+def looks_foreign(title):
+    """A rough check that a headline is not in English: a letter of another script than Latin,
+    or two of the FOREIGN_WORDS. Used to doubt Claude's "" (already English) for it."""
+    if any(ch.isalpha() and ord(ch) > 0x24F for ch in title):
+        return True
+    return len(set(re.findall(r"[^\W\d_]+", title.lower())) & FOREIGN_WORDS) >= 2
 
 
 def translate_schema():
@@ -847,7 +865,7 @@ def translate_missing(today, now, cfg, notes):
     headlines were translated; without a key, or with nothing missing, nothing is asked. An
     unexpected error becomes a note, never a failed scan."""
     try:
-        return _translate_missing(today, now, cfg)
+        return _translate_missing(today, now, cfg, notes)
     except Exception as ex:  # a fault here must not cost the day's digest
         note = (f"Headlines without an English translation were not translated this time "
                 f"({type(ex).__name__}: {api_message(ex)[:100]}); the next scan tries again.")
@@ -856,7 +874,7 @@ def translate_missing(today, now, cfg, notes):
         return 0
 
 
-def _translate_missing(today, now, cfg):
+def _translate_missing(today, now, cfg, notes):
     key = clean_api_key(os.environ.get("ANTHROPIC_API_KEY", ""))
     if not key:
         return 0
@@ -887,7 +905,7 @@ Headlines:
         raise ValueError(f"the answer stopped early ({response.stop_reason})")
     text = next((b.text for b in response.content if b.type == "text"), "")
     answers = json.loads(text)["headlines"]
-    translated, answered, changed = 0, 0, {}
+    translated, answered, doubted, changed = 0, 0, 0, {}
     for a in answers if isinstance(answers, list) else []:
         try:
             idx = int(a["id"])
@@ -898,6 +916,9 @@ Headlines:
             continue
         en = " ".join(str(a.get("title_en") or "").split())[:200]
         english = not en or site_builder.same_headline(en, refs[0][2]["title"])  # "" or only echoed
+        if english and looks_foreign(refs[0][2]["title"]):
+            doubted += 1  # left as it is: asked again next time
+            continue
         for path, digest, s in refs:
             if english:
                 s["title_en_checked"] = True  # not asked again
@@ -913,6 +934,11 @@ Headlines:
     print(f"Headline translations: {translated} of {len(ids)} headlines without an English translation "
           f"translated, {answered - translated} found to be in English"
           + (f", {len(ids) - answered} left for the next scan." if answered < len(ids) else "."))
+    if doubted:
+        note = (f"{doubted} headline(s) that look foreign came back without an English translation; "
+                "the next scan asks again.")
+        notes.append(note)
+        print(note)
     return translated
 
 
