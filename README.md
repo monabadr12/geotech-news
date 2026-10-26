@@ -3,9 +3,10 @@
 Every morning (05:00 Cairo time) GitHub automatically:
 
 1. reads specialist, society, hazard-agency and trade-press websites, worldwide Google News searches in English
-   (UK, US, India, Australia, South Africa, Singapore, UAE editions) and 16 other languages — Arabic, French,
-   Spanish (Spain, Mexico, Colombia, Chile, Peru, Argentina), Portuguese, German, Italian, Turkish, Hindi, Indonesian,
-   Chinese, Japanese, Vietnamese, Korean, Russian, Polish and Persian — and new papers from 25 geotechnical journals;
+   (UK, US, India, Australia, South Africa, Singapore, UAE editions, and searches for Nigeria, East Africa, Ghana and
+   New Zealand) and 16 other languages — Arabic (Egypt, UAE, North Africa), French, Spanish (Spain, Mexico, Colombia,
+   Chile, Peru, Argentina), Portuguese, German, Italian, Turkish, Hindi, Indonesian, Chinese, Japanese, Vietnamese,
+   Korean, Russian, Polish and Persian — and new papers from 25 geotechnical journals;
 2. scores each story for geotechnical relevance in any of those languages, merges repeated reports of the same event
    and balances the digest across the magazine's eight themes;
 3. asks Claude to rate each story 1–5, place it under a theme, suggest a use (news brief, feature lead,
@@ -183,6 +184,10 @@ Every headline is matched against English keywords **and** more than 900 terms i
 count as "landslide" — and those English concepts decide the theme. For inflected languages a `*` stands for the rest of
 the word (`оползн*`, `osuwisk*`). So a story in any covered language is filed under the correct English theme,
 even when Claude is not available. When Claude triage runs, it confirms or corrects the theme and translates the headline.
+A foreign headline that still has no English translation after the triage is translated at the end of the scan, in one
+small extra request that also covers any left untranslated in the digests of the last 45 days (a headline Claude finds
+to be in English is marked and not sent again). To do this at any time: **Actions** → **Events calendar and weekly
+summary** → **Run workflow** → choose **translate missing headlines** (`python scanner.py --translate-missing`).
 After changing the keyword or theme lists, `python scanner.py --reclassify` re-files the stories already archived.
 
 ### Excel workbooks
@@ -317,14 +322,14 @@ Never paste the key into `config.yaml`, a commit, an issue or an e-mail: the rep
 Without a key the scanner still works, ranking stories by keywords only.
 
 The configured model is Claude Haiku (`claude-haiku-5-5`), the lowest-cost model, which is ample for this
-triage. A daily run sends about 130 short headlines, so the cost is typically a few cents per day.
+triage. A daily run sends about 145 short headlines, so the cost is typically a few cents per day.
 
 **What it costs to run** (rough figures at list prices; the Claude Console's *Usage* page shows the real spend
 by model, and *Limits* sets a monthly cap):
 
 | Part | Model (`config.yaml`) | How often | Rough cost |
 |---|---|---|---|
-| Triage, locating stories, research papers | Haiku | every scan | a few cents a day |
+| Triage, locating stories, missing headline translations, research papers | Haiku | every scan | a few cents a day |
 | Developing stories (linking follow-ups) | Sonnet (`storylines: model:`); the unsure cases checked by Opus (`check_model:`) | every scan | about US$0.05–0.15 a day (US$1.50–4.50 a month, rising as the archive grows) |
 | Events calendar refresh | Sonnet (`events: model:`) | every 14 days | about US$0.70–1.50 |
 | Issue brief | Opus (`brief: model:`) | a few times a quarter | about US$1–2 each |
@@ -499,7 +504,7 @@ and delete it. If the website moves, set the Script property `SITE_URL` to its n
 | `config.yaml` | All settings. |
 | `assets/` | Website style sheet, scripts, icons and the world map outlines (`world.json`). |
 | `tools/make_world.py` | Rebuilds `assets/world.json` from Natural Earth (only needed to change the map's outlines). |
-| `.github/workflows/` | The daily scan (`scan.yml`), the issue brief (`brief.yml`), the events calendar and weekly summary (`extras.yml`) and Check feeds (`check-feeds.yml`). |
+| `.github/workflows/` | The daily scan (`scan.yml`), the issue brief (`brief.yml`), the events calendar, weekly summary and missing headline translations on demand (`extras.yml`) and Check feeds (`check-feeds.yml`). |
 | `data/digests/` | **The permanent archive**, one file per day. |
 | `data/seen.json` | Links the scanner has already read in the last 45 days, so the same article is not picked up twice. It only prevents repeats: nothing is removed from the archive, and the digests in `data/digests/` are kept permanently. |
 | `docs/` | The generated website (do not edit by hand). |

@@ -12,6 +12,7 @@ on:
           - refresh the events calendar
           - send the weekly summary now
           - send a test e-mail
+          - translate missing headlines
 
 permissions:
   contents: write
@@ -35,8 +36,14 @@ jobs:
         run: python events.py --refresh
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      - name: Translate missing English headlines
+        if: inputs.task == 'translate missing headlines'
+        timeout-minutes: 10
+        run: python scanner.py --translate-missing   # the last 45 days' digests, as each scan does
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       - name: Send e-mail
-        if: inputs.task != 'refresh the events calendar'
+        if: inputs.task == 'send the weekly summary now' || inputs.task == 'send a test e-mail'
         timeout-minutes: 10
         run: |
           if [ "$TASK" = "send a test e-mail" ]; then python notify.py --test; else python notify.py --weekly; fi
@@ -54,6 +61,7 @@ jobs:
           git config user.name "news-scanner"
           git config user.email "news-scanner@users.noreply.github.com"
           msg="Events calendar and e-mail ($(date -u +%F))"
+          if [ "$TASK" = "translate missing headlines" ]; then msg="Headline translations ($(date -u +%F))"; fi
           # Put the results on the newest main and rebuild the site from it, exactly as the
           # scan's save step does, so the save never clashes with a scan saved meanwhile.
           for attempt in 1 2 3; do
@@ -66,3 +74,5 @@ jobs:
             git reset -q --soft HEAD~1
           done
           exit 1
+        env:
+          TASK: ${{ inputs.task }}

@@ -174,6 +174,18 @@ google_news:
     - {q: '"osunięcie ziemi" OR "katastrofa budowlana" OR "ściana oporowa" OR "wał przeciwpowodziowy"', language: pl, country: PL, bonus: 6}
     # Persian: Google News has no Persian edition, so Persian news sites are
     # read directly (see feeds above)
+    # --- Africa and Australasia. The English editions above return mostly the
+    #     same worldwide stories, so these searches name the countries. Their
+    #     usual words score low on their own (a building collapse 1 point, gully
+    #     or coastal erosion 2), below the many one-keyword stories from
+    #     elsewhere (4) that fill Claude's list first: "boost" 4 lifts them just
+    #     above those. Nigeria and Ghana leave out "landslide", which there is
+    #     mostly an election word ---
+    - {q: '"building collapse" OR "gully erosion" OR "dam collapse" OR "soil test" Nigeria', country: NG, boost: 4}
+    - {q: 'landslide OR sinkhole OR "building collapse" OR "dam burst" OR "gully erosion" Kenya OR Uganda OR Tanzania OR Rwanda OR Ethiopia', country: KE, boost: 4}
+    - {q: '"pit collapse" OR "building collapse" OR "coastal erosion" OR "Akosombo dam" OR sinkhole Ghana', country: GH, boost: 4}
+    - {q: '"انهيار أرضي" OR "انزلاق أرضي" OR "انهيار سد" OR "انهيار عمارة" OR "انهيار منزل" OR "دراسة جيوتقنية" المغرب OR الجزائر OR تونس OR ليبيا', language: ar, country: MA, bonus: 6, boost: 4}
+    - {q: 'landslide OR landslip OR liquefaction OR geotechnical OR "retaining wall" OR sinkhole OR "tunnel boring machine" "New Zealand" OR NZ', country: NZ, boost: 4}
 
 # ---- New research papers (Academia-to-Industry) --------------------
 # Each run asks Crossref (free, no key needed) for the papers that the
@@ -542,6 +554,9 @@ exclude:
   - elected in a landslide
   - re-elected in a landslide
   - vote in a landslide
+  - predicts landslide
+  - predict landslide
+  - predicted landslide
   # liquefied natural gas, not soil liquefaction
   - liquefied natural gas
   - lng liquefaction
@@ -607,7 +622,7 @@ themes:
 claude:
   model: claude-haiku-5-5   # Claude Haiku: the lowest-cost model, ample for this triage
   effort: low               # low | medium | high — how hard Claude thinks per batch
-  max_candidates: 130     # best-scoring stories sent to Claude per run
+  max_candidates: 145     # best-scoring stories sent to Claude per run
   min_relevance: 3       # keep stories Claude rates 3/5 or higher
 
 # ---- Issue brief (Word document for the editorial meeting) -------

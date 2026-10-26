@@ -736,12 +736,12 @@ For each story below return an object with:
 - "theme": the one magazine theme it fits best
 - "use": the best editorial use
 - "angle": one sentence (max 30 words) stating the geotechnical question a magazine piece could explore, entirely in your own words: never copy or closely paraphrase the headline or the summary
-- "title_en": if the headline is not in English, your English translation of it (max 20 words); otherwise ""
+- "title_en": if the headline is in any language other than English (Spanish, Portuguese and French included), your English translation of it (max 20 words), which the news desk shows labelled as your translation, beside the original headline; "" only for a headline already in English
 - "country": the ISO 3166-1 alpha-2 code (e.g. "CO", "GB", "HK") of the country where the event, project or site is, which may differ from the outlet's country; "" if the story is not about one country (a global market report, a general research result, several countries)
 - "place": the town, city, region or site named in the story, in English (max 6 words, e.g. "Moniquirá, Boyacá" or "HS2 Chiltern Tunnel"); "" if none is named
 - "primary_source": who the editor should check the facts with before publishing, in at most 12 words: the authority, the project owner or client, the company, or the body behind the official report (e.g. "HS2 Ltd", "the state disaster management authority", "the city's water utility", "the national geological survey's landslide report"); "" when unclear. The news outlet that ran the story is not a primary source
 
-The magazine treats every story as a lead: its writers check the facts with the primary source and write their own pieces. The headlines and summaries below are the outlets' text, for you to judge the stories by; they are not to be reused.
+The magazine treats every story as a lead: its writers check the facts with the primary source and write their own pieces. The headlines and summaries below are the outlets' text, for you to judge the stories by and to translate the headline in "title_en"; they are not to be reused otherwise.
 
 Stories:
 {listing}"""
@@ -794,6 +794,152 @@ Stories:
         notes.append(note)
         print(note)
     return rated > 0
+
+
+# ------------------------------------------------------------------ missing translations
+# A headline in another language that reaches a digest without Claude's English
+# translation (title_en) is translated after the stories are chosen, with those
+# of the digests of the last MEMORY_DAYS days, in one small request to the
+# triage model. Claude answers "" for a headline already in English; such a
+# story gets "title_en_checked": true, so that it is not sent again, unless the
+# headline looks foreign (looks_foreign), when it is asked again next time.
+MEMORY_DAYS = 45         # how long the scan remembers the links it has read (seen.json)
+TRANSLATE_PER_RUN = 200  # headlines per request at most: today's first, then the newest digests'
+
+
+# common short words of Spanish, Portuguese, French, Italian, German, Indonesian and Turkish
+# headlines that English headlines hardly use (no "el", "los", "die", "do", "mit"...: El Niño, Los
+# Angeles, "two die in landslide")
+FOREIGN_WORDS = frozenset(
+    "de y en por tras para con una sobre que em da dos das com na nas ao uma após le les des du et sur "
+    "au aux une dans après il di della delle nel nella dopo der und nach ke dari untuk dengan akibat bir ile için"
+    .split())
+
+
+def looks_foreign(title):
+    """A rough check that a headline is not in English: a letter of another script than Latin,
+    or two of the FOREIGN_WORDS. Used to doubt Claude's "" (already English) for it."""
+    if any(ch.isalpha() and ord(ch) > 0x24F for ch in title):
+        return True
+    return len(set(re.findall(r"[^\W\d_]+", title.lower())) & FOREIGN_WORDS) >= 2
+
+
+def translate_schema():
+    item = {"type": "object", "properties": {"id": {"type": "integer"}, "title_en": {"type": "string"}},
+            "required": ["id", "title_en"], "additionalProperties": False}
+    return {"type": "object", "properties": {"headlines": {"type": "array", "items": item}},
+            "required": ["headlines"], "additionalProperties": False}
+
+
+def untranslated(today, now, limit):
+    """Stories with a headline but no title_en, not yet found to be in English, by story id:
+    {id: [(path, digest, story), ...]} (a re-run's story is also in the day's saved digest).
+    Today's stories come first (path and digest None: save_digest() saves them), then those of
+    the digests of the last MEMORY_DAYS days, newest first; at most limit ids."""
+    found = {}
+
+    def add(path, digest, s):
+        if (isinstance(s, dict) and s.get("id") and str(s.get("title") or "").strip() and not s.get("title_en")
+                and not s.get("title_en_checked") and (s["id"] in found or len(found) < limit)):
+            found.setdefault(s["id"], []).append((path, digest, s))
+
+    for s in today:
+        add(None, None, s)
+    oldest = (now - dt.timedelta(days=MEMORY_DAYS)).date().isoformat()
+    for path in sorted(site_builder.DIGESTS.glob("*.json"), reverse=True):
+        if path.stem < oldest:
+            break
+        try:
+            digest = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        for s in digest.get("stories") or []:
+            add(path, digest, s)
+    return found
+
+
+def translate_missing(today, now, cfg, notes):
+    """Give the headlines untranslated() finds Claude's English translation (title_en), or mark
+    them as English (title_en_checked), in one request. Archived digests that change are saved
+    here, in the archive's format; today's stories are saved by save_digest(). Returns how many
+    headlines were translated; without a key, or with nothing missing, nothing is asked. An
+    unexpected error becomes a note, never a failed scan."""
+    try:
+        return _translate_missing(today, now, cfg, notes)
+    except Exception as ex:  # a fault here must not cost the day's digest
+        note = (f"Headlines without an English translation were not translated this time "
+                f"({type(ex).__name__}: {api_message(ex)[:100]}); the next scan tries again.")
+        notes.append(note)
+        print(note)
+        return 0
+
+
+def _translate_missing(today, now, cfg, notes):
+    key = clean_api_key(os.environ.get("ANTHROPIC_API_KEY", ""))
+    if not key:
+        return 0
+    todo = untranslated(today, now, TRANSLATE_PER_RUN)
+    if not todo:
+        print("Headline translations: none missing.")
+        return 0
+    import anthropic  # only needed when a key is configured
+
+    ids = list(todo)
+    listing = "\n".join(f"{i}. {' '.join(todo[k][0][2]['title'].split())}" for i, k in enumerate(ids))
+    prompt = f"""You translate news headlines for the news desk of the ISSMGE magazine (International Society for Soil Mechanics and Geotechnical Engineering). The news desk shows each translation labelled as your translation, beside the original headline and a link to the article.
+
+For each headline below return an object with:
+- "id": the number
+- "title_en": if the headline is in any language other than English, your English translation of it (max 20 words); "" if it is already in English
+
+Headlines:
+{listing}"""
+    ccfg = cfg["claude"]
+    client = anthropic.Anthropic(api_key=key, max_retries=3)
+    response = client.messages.create(
+        model=ccfg["model"], max_tokens=16000,
+        output_config={"effort": ccfg.get("effort", "low"),
+                       "format": {"type": "json_schema", "schema": translate_schema()}},
+        messages=[{"role": "user", "content": prompt}])
+    if response.stop_reason != "end_turn":
+        raise ValueError(f"the answer stopped early ({response.stop_reason})")
+    text = next((b.text for b in response.content if b.type == "text"), "")
+    answers = json.loads(text)["headlines"]
+    translated, answered, doubted, changed = 0, 0, 0, {}
+    for a in answers if isinstance(answers, list) else []:
+        try:
+            idx = int(a["id"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        refs = todo.pop(ids[idx], []) if 0 <= idx < len(ids) else []  # popped: a repeated answer changes nothing
+        if not refs:
+            continue
+        en = " ".join(str(a.get("title_en") or "").split())[:200]
+        english = not en or site_builder.same_headline(en, refs[0][2]["title"])  # "" or only echoed
+        if english and looks_foreign(refs[0][2]["title"]):
+            doubted += 1  # left as it is: asked again next time
+            continue
+        for path, digest, s in refs:
+            if english:
+                s["title_en_checked"] = True  # not asked again
+            else:
+                s["title_en"] = en
+            if path:
+                changed[path] = digest
+        answered += 1
+        translated += not english
+    for path, digest in changed.items():  # as save_digest() writes them
+        clear_publisher_text(digest)
+        path.write_text(json.dumps(digest, ensure_ascii=False, indent=1), encoding="utf-8")
+    print(f"Headline translations: {translated} of {len(ids)} headlines without an English translation "
+          f"translated, {answered - translated} found to be in English"
+          + (f", {len(ids) - answered} left for the next scan." if answered < len(ids) else "."))
+    if doubted:
+        note = (f"{doubted} headline(s) that look foreign came back without an English translation; "
+                "the next scan asks again.")
+        notes.append(note)
+        print(note)
+    return translated
 
 
 # ------------------------------------------------------------------ research papers
@@ -1168,7 +1314,7 @@ def main():
                 summary = ""  # Google's summary just repeats the headline
             text = f"{title} {summary}"
             score, hits = keyword_score(text, cfg, compiled)
-            score += src.get("boost", 0) if hits else 0
+            score += src.get("boost", 0) if hits and score > 0 else 0  # none for an excluded headline
             items.append(dict(id=uid, title=title, link=link, source=source, summary=summary,
                               time=when, region=src.get("region", ""), score=score, hits=hits,
                               bonus=src.get("bonus", 0),
@@ -1210,7 +1356,9 @@ def main():
         # (and reports of one event in two languages): the best one is kept
         kept.sort(key=lambda i: -i["rank"])
         kept = drop_same_events(kept, cfg, copies)
-    # the reports merged before Claude stand in too, with the reading of the story they were merged into
+    # the reports merged before Claude stand in too, with the reading of the story they were merged into,
+    # but not its title_en: that translates another outlet's headline ("" when it is in English), so a
+    # report that stands in keeps its own (none yet), and translate_missing() below gives it one
     final = {i["id"]: i["id"] for i in kept}
     final.update({c["id"]: k for k, cs in copies.items() for c in cs})
     rated = {i["id"]: i for i in kept} | {c["id"]: c for cs in copies.values() for c in cs}
@@ -1220,7 +1368,7 @@ def main():
         h = rated[head]
         for c in reports:
             c.update(relevance=h["relevance"], theme=h["theme"], use=h["use"], angle=h["angle"],
-                     title_en=c["title_en"] or h["title_en"], rank=h["relevance"] * 100 + c["score"],
+                     rank=h["relevance"] * 100 + c["score"],
                      **({"country": h.get("country", ""), "place": h.get("place", ""),
                          "primary_source": h.get("primary_source", "")} if h["relevance"] else {}))
             copies.setdefault(final[head], []).append(c)
@@ -1232,8 +1380,8 @@ def main():
     # new research papers for the Academia-to-Industry pages (remembered by DOI)
     papers = research_papers(cfg, now, seen, compiled, failures, notes)
 
-    # prune memory older than 45 days
-    limit = (now - dt.timedelta(days=45)).date().isoformat()
+    # prune memory older than MEMORY_DAYS days
+    limit = (now - dt.timedelta(days=MEMORY_DAYS)).date().isoformat()
     seen = {k: v for k, v in seen.items() if v >= limit}
     SEEN_FILE.parent.mkdir(parents=True, exist_ok=True)
     SEEN_FILE.write_text(json.dumps(seen, indent=0))
@@ -1252,6 +1400,7 @@ def main():
             "primary_source": i.get("primary_source", "")} if i["relevance"] else {}),
     } for i in selected]
 
+    translate_missing(stories, now, cfg, notes)  # headlines still without an English translation, today's and recent
     import geomap, storylines  # (they import this module, so not at the top)
     storylines.link(stories, now, cfg, notes)  # follow-up reports joined to the earlier event
     geomap.locate_missing(cfg, notes, today=stories)  # today's and archived stories with no country yet
@@ -1328,9 +1477,24 @@ def clear_archive_main():
     return 0
 
 
+def translate_missing_main():
+    """python scanner.py --translate-missing: translate_missing() for the digests of the last
+    MEMORY_DAYS days, as each scan does after choosing its stories (the workflow's save step then
+    rebuilds the website). Exits with 1 when there is no key or the request failed."""
+    cfg = yaml.safe_load(CONFIG.read_text(encoding="utf-8"))
+    if not clean_api_key(os.environ.get("ANTHROPIC_API_KEY", "")):
+        print("No ANTHROPIC_API_KEY, so no headline was translated.")
+        return 1
+    notes = []
+    translate_missing([], dt.datetime.now(dt.timezone.utc), cfg, notes)
+    return 1 if notes else 0
+
+
 if __name__ == "__main__":
     if "--rebalance" in sys.argv:
         sys.exit(rebalance(sys.argv[sys.argv.index("--rebalance") + 1:]))
     if "--clear-publisher-text" in sys.argv:
         sys.exit(clear_archive_main())
+    if "--translate-missing" in sys.argv:
+        sys.exit(translate_missing_main())
     sys.exit(reclassify() if "--reclassify" in sys.argv else main())
