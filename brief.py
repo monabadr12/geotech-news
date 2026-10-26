@@ -411,7 +411,8 @@ def brief_schema(themes, layout=()):
         gaps=many(obj(kind={"type": "string", "enum": GAP_KINDS}, gap=text, suggestion=text)),
         watch_list=many(obj(topic=text, note=text, stories=refs)),
         # the proposed table of contents: one entry per section of the issue layout, by its number
-        toc=many(obj(section={"type": "integer", "enum": list(range(1, len(layout) + 1)) or [1]},
+        # a plain integer (assemble() drops numbers that are not a section of the layout)
+        toc=many(obj(section={"type": "integer"},
                      items=many(obj(ref=text, reason=text)), to_collect=many(text))),
     )
 
