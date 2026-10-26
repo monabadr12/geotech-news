@@ -1,0 +1,116 @@
+{
+ "sections": [
+  {
+   "name": "Cover story",
+   "source": "scanner",
+   "slots": 1,
+   "pages": "4-6",
+   "use": "A developing story or a 5/5 feature lead: the quarter's strongest story, told at length"
+  },
+  {
+   "name": "Welcome from the President",
+   "source": "society",
+   "slots": 0,
+   "pages": "1-2",
+   "use": "The President's message, from ISSMGE"
+  },
+  {
+   "name": "Message from the Editor",
+   "source": "editor",
+   "slots": 0,
+   "pages": "1",
+   "use": "The editor's introduction to the issue"
+  },
+  {
+   "name": "From the Board / Vice-Presidents' reports",
+   "source": "society",
+   "slots": 0,
+   "pages": "4-8",
+   "use": "Reports from the Board and the regional Vice-Presidents"
+  },
+  {
+   "name": "ISSMGE Highlights",
+   "source": "society",
+   "slots": 0,
+   "pages": "3-4",
+   "use": "ISSMGE news and decisions; the dates of the quarter's ISSMGE events come from the events calendar"
+  },
+  {
+   "name": "Geotechnics in the News",
+   "source": "scanner",
+   "slots": 10,
+   "pages": "4-6",
+   "use": "8-12 short news items spread across the eight themes"
+  },
+  {
+   "name": "Lessons from the Field",
+   "source": "scanner",
+   "slots": 1,
+   "pages": "3-4",
+   "use": "A developing story told from the failure to the inquiry and the repair"
+  },
+  {
+   "name": "From Research to Practice",
+   "source": "scanner",
+   "slots": 2,
+   "pages": "2-3",
+   "use": "Research papers with a clear use in practice"
+  },
+  {
+   "name": "Global News from Member Societies + Regional Insight",
+   "source": "mixed",
+   "slots": 6,
+   "pages": "4-6",
+   "use": "Member societies' news, plus one story per ISSMGE region from the news desk; the world map shows the member-society countries with no stories"
+  },
+  {
+   "name": "Technical Committees Activities",
+   "source": "society",
+   "slots": 0,
+   "pages": "3-5",
+   "use": "TC reports and news; the TC symposia of the quarter come from the events calendar"
+  },
+  {
+   "name": "Young Members' Arena",
+   "source": "society",
+   "slots": 0,
+   "pages": "2",
+   "use": "Young members' news, events and profiles"
+  },
+  {
+   "name": "Education & Innovation",
+   "source": "mixed",
+   "slots": 2,
+   "pages": "2-3",
+   "use": "Courses and education news from the society, plus Digital Geotechnics stories from the news desk"
+  },
+  {
+   "name": "Corporate Associates Corner",
+   "source": "society",
+   "slots": 0,
+   "pages": "3-6",
+   "use": "News and project pieces from ISSMGE's corporate associates"
+  },
+  {
+   "name": "Heritage / Time Capsule",
+   "source": "society",
+   "slots": 0,
+   "pages": "1-2",
+   "use": "A look back at the profession's history"
+  },
+  {
+   "name": "In Memory",
+   "source": "society",
+   "slots": 0,
+   "pages": "as needed",
+   "use": "Obituaries"
+  },
+  {
+   "name": "Upcoming Events & Calls for Papers",
+   "source": "scanner",
+   "slots": 8,
+   "pages": "1-2",
+   "use": "Conferences, courses and call-for-papers deadlines from the events calendar"
+  }
+ ]
+}

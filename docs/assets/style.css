@@ -1124,3 +1124,39 @@ a.sl-chip:hover { border-color: var(--sl-dot); text-decoration: underline; }
   .side-col, .cov-line a { display: none !important; }
   .cov-line, .about-features li { box-shadow: none; break-inside: avoid; }
 }
+
+/* ---------- issue pages: suggested table of contents (config.yaml issue_layout) ---------- */
+.toc-panel { margin-top: 8px; }
+.toc-panel .section-row { margin-top: 30px; }
+.toc-total { font-size: 13px; color: var(--muted); padding-bottom: 8px; }
+.toc-panel .hint { max-width: 900px; }
+.toc-panel .hint code { font-size: 12px; }
+.toc-list { list-style: none; margin: 0; padding: 0; columns: 2 380px; column-gap: 10px; }
+.toc-list li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: 2px 10px; break-inside: avoid;
+  margin: 0 0 8px; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--sc);
+  border-radius: 10px; padding: 8px 12px 8px 10px; }
+.toc-n { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; font: 700 12px var(--sans);
+  color: var(--sc); background: color-mix(in srgb, var(--sc) 12%, var(--surface)); }
+.toc-body { min-width: 0; }
+.toc-body b { display: block; font-size: 14px; line-height: 1.35; overflow-wrap: anywhere; }
+.toc-body small { display: block; margin-top: 2px; font-size: 12px; line-height: 1.4; color: var(--muted); }
+.toc-tags { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.toc-src { font: 700 10.5px var(--sans); letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; color: var(--sc);
+  background: color-mix(in srgb, var(--sc) 11%, var(--surface)); border: 1px solid color-mix(in srgb, var(--sc) 30%, transparent);
+  border-radius: 99px; padding: 2px 8px; }
+.toc-pp { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.toc-list li { --sc: #64748b; }
+.toc-list .toc-scanner { --sc: #0a7f8b; } .toc-list .toc-society { --sc: #8a6410; }
+.toc-list .toc-editor { --sc: #5b3fc4; } .toc-list .toc-mixed { --sc: #167a4a; }
+@media (prefers-color-scheme: dark) {
+  .toc-list .toc-scanner { --sc: #3cc2cf; } .toc-list .toc-society { --sc: #e2c25a; }
+  .toc-list .toc-editor { --sc: #a593f0; } .toc-list .toc-mixed { --sc: #52c98e; }
+}
+@media (max-width: 560px) {
+  .toc-list li { grid-template-columns: auto minmax(0, 1fr); }
+  .toc-tags { grid-column: 2; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px; }
+}
+@media print {
+  .toc-list { columns: 2; }
+  .toc-list li { box-shadow: none; }
+}
