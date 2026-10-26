@@ -554,6 +554,9 @@ exclude:
   - elected in a landslide
   - re-elected in a landslide
   - vote in a landslide
+  - predicts landslide
+  - predict landslide
+  - predicted landslide
   # liquefied natural gas, not soil liquefaction
   - liquefied natural gas
   - lng liquefaction
@@ -619,7 +622,7 @@ themes:
 claude:
   model: claude-haiku-5-5   # Claude Haiku: the lowest-cost model, ample for this triage
   effort: low               # low | medium | high — how hard Claude thinks per batch
-  max_candidates: 130     # best-scoring stories sent to Claude per run
+  max_candidates: 145     # best-scoring stories sent to Claude per run
   min_relevance: 3       # keep stories Claude rates 3/5 or higher
 
 # ---- Issue brief (Word document for the editorial meeting) -------

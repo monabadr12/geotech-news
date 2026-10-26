@@ -1314,7 +1314,7 @@ def main():
                 summary = ""  # Google's summary just repeats the headline
             text = f"{title} {summary}"
             score, hits = keyword_score(text, cfg, compiled)
-            score += src.get("boost", 0) if hits else 0
+            score += src.get("boost", 0) if hits and score > 0 else 0  # none for an excluded headline
             items.append(dict(id=uid, title=title, link=link, source=source, summary=summary,
                               time=when, region=src.get("region", ""), score=score, hits=hits,
                               bonus=src.get("bonus", 0),

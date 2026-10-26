@@ -322,7 +322,7 @@ Never paste the key into `config.yaml`, a commit, an issue or an e-mail: the rep
 Without a key the scanner still works, ranking stories by keywords only.
 
 The configured model is Claude Haiku (`claude-haiku-5-5`), the lowest-cost model, which is ample for this
-triage. A daily run sends about 130 short headlines, so the cost is typically a few cents per day.
+triage. A daily run sends about 145 short headlines, so the cost is typically a few cents per day.
 
 **What it costs to run** (rough figures at list prices; the Claude Console's *Usage* page shows the real spend
 by model, and *Limits* sets a monthly cap):
