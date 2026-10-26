@@ -28,7 +28,12 @@
   var RATING_MEANING = { 5: "international importance or a landmark project", 4: "national or regional importance",
     3: "local or small", 2: "the ground is mentioned only in passing", 1: "not geotechnical" };
   var RULE_START = document.body.getAttribute("data-rating-from") || "";
-  function ratingTip(r) {  // "Rating 4 of 5: geotechnical, national or regional importance", as site_builder.rating_tip()
+  function ratingTip(r, day) {  // "Rating 4 of 5: geotechnical, national or regional importance", as site_builder.rating_tip()
+    if (r >= 3 && day && RULE_START && String(day).slice(0, 10) < RULE_START.slice(0, 10)) {
+      var start = new Date(RULE_START.slice(0, 10) + "T00:00:00Z");
+      return "Rating " + r + " of 5, given before " + start.toLocaleDateString("en-GB", { day: "numeric", month: "long",
+        year: "numeric", timeZone: "UTC" }) + " for geotechnical substance alone, without size";
+    }
     var m = RATING_MEANING[r];
     return "Rating " + r + " of 5" + (m ? ": " + (r >= 3 ? "geotechnical, " + m : m) : "");
   }
@@ -229,7 +234,7 @@
   function isPaper(s) { return s.kind === "paper"; }
   function card(s) {
     var paper = isPaper(s), title = s.te || s.t, rel = s.r
-      ? "<span class='rel rel-" + esc(s.r) + "' title='" + esc(paper ? "Use in practice: " + s.r + " of 5" : ratingTip(s.r)) + "'><i></i><i></i><i></i><i></i><i></i><b>" + esc(s.r) + "/5</b></span>"
+      ? "<span class='rel rel-" + esc(s.r) + "' title='" + esc(paper ? "Use in practice: " + s.r + " of 5" : ratingTip(s.r, s.d)) + "'><i></i><i></i><i></i><i></i><i></i><b>" + esc(s.r) + "/5</b></span>"
       : "<span class='rel rel-kw'>" + (paper ? "Not rated" : "Keyword-ranked") + "</span>";
     var meta = ["<span class='src'>" + esc(s.s) + "</span>"], where = placeText(s);
     if (s.p) meta.push("<time>" + esc(fmt(s.p)) + "</time>");

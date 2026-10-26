@@ -781,8 +781,9 @@ def render_alert(stories, cfg, digests=(), opts=None):
 
 def figures_cells(F):
     # one-line labels keep the tiles even on phones: the 3s are "rated 3" here, explained in the line below the tiles
-    cells = ([(F["stories"], "stories")] + ([(F["small"], "rated 3")] if F.get("small") else [])
-             + [(F["rated"], "AI-rated"), (F["top"], "rated 5 / 5"), (F["papers"], "papers"), (F["digests"], "digests")])
+    cells = ([(F["stories"], "rated 4–5"), (F["small"], "rated 3")] if F.get("small") else [(F["stories"], "stories")])
+    cells += [(F["rated"], "AI-rated"), (F["top"], "rated 5 / 5"), (F["papers"], "papers"),
+              (F["digests"], "digest" if F["digests"] == 1 else "digests")]
     return "".join(f"<div style='display:inline-block;vertical-align:top;width:92px;margin:0 6px 6px 0;padding:8px 9px;"
                    f"background:{SOFT};border:1px solid {LINE};border-radius:8px'>"
                    f"<span style='display:block;font:700 21px {SERIF};color:{BRAND}'>{v:,}</span> "
@@ -1142,7 +1143,7 @@ def week_body(W, cfg, rec, opts, older, newer, last_key):
              + (site_builder.stat(f"{F['small']:,}", SMALL_STAT) if F.get("small") else "")
              + site_builder.stat(f"{F['rated']:,}", "AI-rated")
              + site_builder.stat(F["top"], "rated 5 / 5") + site_builder.stat(F["papers"], "research papers")
-             + site_builder.stat(F["digests"], "daily digests"))
+             + site_builder.stat(F["digests"], "daily digest" if F["digests"] == 1 else "daily digests"))
     lede = ("The week's geotechnical news for the editorial team: top stories, developing stories, regional coverage, "
             "what is coming up and new research. " + esc(status_text(W, rec, opts)[2]))
     out = [site_builder.hero(eyebrow, f"Week {W['week']} <span class='h1-sub'>{esc(W['span'])}</span>", lede, stats, strip(W["themes"]))]

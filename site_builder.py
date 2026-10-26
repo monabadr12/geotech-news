@@ -560,11 +560,14 @@ def rating(s):
     rel = s.get("relevance") or 0
     if not rel:
         return f"<span class='rel rel-kw' title='Not AI-rated; ranked by keyword score'>Score {s.get('score', 0)}</span>"
-    return f"<span class='rel rel-{rel}' title='{esc(rating_tip(rel))}'>{'<i></i>' * 5}<b>{rel}/5</b></span>"
+    return f"<span class='rel rel-{rel}' title='{esc(rating_tip(rel, s.get('_digest', '')))}'>{'<i></i>' * 5}<b>{rel}/5</b></span>"
 
 
-def rating_tip(rel):
-    """'Rating 4 of 5: geotechnical, national or regional importance' (as app.js shows in Search)."""
+def rating_tip(rel, day=""):
+    """'Rating 4 of 5: geotechnical, national or regional importance' (as app.js shows in Search); a 3-5 from a
+    digest before RULE_START measured geotechnical substance alone."""
+    if rel >= 3 and day and str(day)[:10] < RULE_START:
+        return f"Rating {rel} of 5, given before {long_date(RULE_START)} for geotechnical substance alone, without size"
     meaning = RATING_MEANING.get(rel)
     if not meaning:
         return f"Rating {rel} of 5"
@@ -797,15 +800,17 @@ def digest_body(d, cfg, root, uses, prev_d=None, next_d=None, latest=False, brie
     """A daily digest page. On the Latest page, side is the column beside the news (this week, upcoming
     events and deadlines, developing stories) and week the {"key", "label"} of the week's summary page."""
     win = issue_window(d["date"], start_month(cfg))
-    stories, papers = d["stories"], d.get("papers", [])
+    # each story knows its digest, for its rating's tooltip (a 3-5 from before RULE_START meant substance alone)
+    stories = [dict(s, _digest=s.get("_digest") or d["date"]) for s in d["stories"]]
+    papers = d.get("papers", [])
     main, small = split_small(stories)  # the 3s are folded at the end; the figures at the top count the main list
     themes = len({s["theme"] for s in main})
     eyebrow = (f"{'Latest digest' if latest else 'Daily digest'} · "
                f"<a href='{root}issues/{win['key']}.html'>{win['label']} issue window</a>"
                + (f" · <a href='{root}weekly/{week['key']}.html'>{esc(week['label'])} summary</a>" if week else ""))
     if small:
-        top = (stat(len(main), "stories rated 4–5" if all((s.get("relevance") or 0) >= 4 for s in main)
-                    else "stories in the main list")
+        top = (stat(len(main), ("story" if len(main) == 1 else "stories")
+                    + (" rated 4–5" if all((s.get("relevance") or 0) >= 4 for s in main) else " in the main list"))
                + stat(len(small), f"smaller local {'one' if len(small) == 1 else 'ones'} (rated 3), below"))
     else:
         top = stat(len(stories), "stories selected")
@@ -1143,7 +1148,7 @@ def issue_body(win, stories, digests, cfg, uses, current, brief=None, brief_opts
                     f"<span>{len(d['stories'])} stories</span></li>" for d in digests)
     eyebrow = (f"<a href='{root}archive.html'>Archive</a> · Issue window"
                + (" · <span class='badge'>In progress</span>" if current else ""))
-    stats = (stat(summ["stories"], "stories") + stat(len(digests), "daily digests")
+    stats = (stat(summ["stories"], "stories") + stat(len(digests), "daily digest" if len(digests) == 1 else "daily digests")
              + stat(summ["top"], "rated 5 / 5") + stat(summ["features"], "feature leads"))
     if papers:
         stats += stat(len(papers), "research papers")
@@ -1197,7 +1202,7 @@ def archive_body(windows, cfg, current_key, briefs=None, weeks=()):
     if not windows:
         return hero("Archive", "All digests") + "<p class='empty'>The archive is empty. It fills automatically after the first scan.</p>"
     total = sum(len(w["stories"]) for w in windows)
-    stats = (stat(len(windows), "issue windows") + stat(sum(len(w["digests"]) for w in windows), "daily digests")
+    stats = (stat(len(windows), "issue window" if len(windows) == 1 else "issue windows") + stat(sum(len(w["digests"]) for w in windows), "daily digests")
              + stat(total, "stories archived"))
     actions = (f"<div class='actions'><a class='btn primary' href='{root}exports/geotech-news-archive.xlsx' download>"
                f"{icon('sheet')}Whole archive (Excel)</a><a class='btn light' href='{root}reports/site-report.docx' download>"
