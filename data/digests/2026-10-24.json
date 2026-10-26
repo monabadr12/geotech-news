@@ -24,7 +24,8 @@
    "score": 7,
    "rank": 507,
    "country": "",
-   "place": ""
+   "place": "",
+   "title_en_checked": true
   },
   {
    "id": "c6d04bab794a0a40",
@@ -45,7 +46,8 @@
    "score": 6,
    "rank": 506,
    "country": "",
-   "place": ""
+   "place": "",
+   "title_en_checked": true
   },
   {
    "id": "bbf26e28138bc4cc",
@@ -149,7 +151,8 @@
    "score": 14,
    "rank": 414,
    "country": "GB",
-   "place": "M4 Wiltshire"
+   "place": "M4 Wiltshire",
+   "title_en_checked": true
   },
   {
    "id": "88f86675941c5f34",
@@ -261,7 +264,7 @@
   {
    "id": "6174bee9ee10a0a2",
    "title": "La frana del Cencione Tra fango e polemiche Le ruspe sono al lavoro",
-   "title_en": "",
+   "title_en": "The Cencione landslide: amid mud and controversy, bulldozers are at work",
    "link": "https://news.google.com/rss/articles/CBMirwFBVV95cUxPRkxsbl9ZdlM1cmloa1JxT3ZENFdkYUI5U3pIZy1UM005NU9SVVFIVjVmZ1ZvTDNybGJkMHAtc3Ewd3RldnRYWHlrSnQ2R1hXN2xpR1BNREFxTlRlb2tFMnFJZ01VSEZqN0ZheUtlbWJEd3h2SURJb3ppVWl6dTU2Y21zZGJGR1hpMWdNUmNfdWluZDJQYzZkeC1QTHhEUFNmcVhTVWtnWWxiUDczMmtr?oc=5",
    "source": "Zazoom Social News",
    "region": "IT",
@@ -388,7 +391,8 @@
    "score": 7,
    "rank": 407,
    "country": "VN",
-   "place": "Quang Tri"
+   "place": "Quang Tri",
+   "title_en_checked": true
   },
   {
    "id": "1abb508283bb7d24",
@@ -651,12 +655,13 @@
    "score": 5,
    "rank": 405,
    "country": "KR",
-   "place": "Gochang-Buan"
+   "place": "Gochang-Buan",
+   "title_en_checked": true
   },
   {
    "id": "bbf522b6d48b357e",
    "title": "Se ha descubierto un socavón del tamaño de casi tres campos de fútbol en Phong Nha Ke Bang.",
-   "title_en": "",
+   "title_en": "A sinkhole nearly three football fields in size has been discovered in Phong Nha-Ke Bang.",
    "link": "https://news.google.com/rss/articles/CBMilgFBVV95cUxPaWJCQW9La1Z3UklqdWVaNWVLV3l0TFplUEg0R3h5ZzBSNlJtZnpNb2FONml5V3FqbnJGTnZvQ2JZSllHZGRoX3NWR0l6Q0oyWE02RXlncnRfREVCa0xBRnVMTDNhcWRxLURrVTNJUEl5UkdlU0RtdU9UcUpVdVFzblQ0UmdOVlR0YTBfTVpDbjZud2p5d1E?oc=5",
    "source": "Vietnam.vn",
    "region": "CO",
@@ -698,7 +703,7 @@
   {
    "id": "22d29077c5c41394",
    "title": "Vista de cerca del gigantesco socavón de 120 metros de profundidad descubierto recientemente en Vietnam.",
-   "title_en": "",
+   "title_en": "Close look at the giant 120-meter-deep sinkhole recently discovered in Vietnam.",
    "link": "https://news.google.com/rss/articles/CBMijgFBVV95cUxORHhvYWNuVVRGRXIybWtsektBWDRYYkhhLWlYd2FwS0pBV2wzWklDdzN3UGxXLWZpa1ZLT0lWM0RZa1RXY0ZDRS1HYUdDV1RJU2dWWFpWalZ3cEhkaGJsYjk2WUZrWXQ3M2hXTWFVSGxSYjFhUzBOVlNnSUYxdVhtMGNBellTcmV4Q295SDJ3?oc=5",
    "source": "Vietnam.vn",
    "region": "CO",
@@ -735,7 +740,8 @@
    "score": 4,
    "rank": 404,
    "country": "VN",
-   "place": "Quang Binh"
+   "place": "Quang Binh",
+   "title_en_checked": true
   },
   {
    "id": "f9e9042d63521738",
@@ -938,7 +944,8 @@
    "score": 10,
    "rank": 310,
    "country": "AU",
-   "place": "Snowy Mountains"
+   "place": "Snowy Mountains",
+   "title_en_checked": true
   },
   {
    "id": "791758896d249952",
@@ -960,7 +967,8 @@
    "score": 7,
    "rank": 307,
    "country": "IT",
-   "place": "A14 Vinci Tunnel"
+   "place": "A14 Vinci Tunnel",
+   "title_en_checked": true
   },
   {
    "id": "28717aa79ce46d7d",
@@ -1001,7 +1009,8 @@
    "score": 5,
    "rank": 305,
    "country": "",
-   "place": ""
+   "place": "",
+   "title_en_checked": true
   },
   {
    "id": "6886e43c8d78cc08",
@@ -1022,7 +1031,8 @@
    "score": 5,
    "rank": 305,
    "country": "AU",
-   "place": "Snowy Mountains"
+   "place": "Snowy Mountains",
+   "title_en_checked": true
   },
   {
    "id": "961d462f6c8f1600",
@@ -1234,7 +1244,7 @@
   {
    "id": "67c28a64e2e067dd",
    "title": "Cerraron un sector de la costanera de una ciudad correntina por hundimiento",
-   "title_en": "",
+   "title_en": "A section of the coastal road in a Corrientes city was closed due to subsidence",
    "link": "https://news.google.com/rss/articles/CBMizAFBVV95cUxOX3FrTEZHRzR0dFNpaDRjdm9hSlZqREtnQ0Nhak51bmpSbTdqOWtyeDNxV0RmekhHR1JNRjlOSXNzb295b0ZjdVJRb29aaUJLbE9JbDJlLUFkMHg4MnZpVkVnVE9pMW1pM3U5YlBjVmZGTVBxVlBtTkJOeHNleHBoQldIRGdNQXo5UExaQ2tqYmZ5Rnd1aEtuakUxalItUnk3ak83Nm5YNDFVZXo4bFBETEZ6czd4N2I1aE1jZnB3OE80Ym1EM2prQkZXMTc?oc=5",
    "source": "El Litoral | Novedades de Corrientes",
    "region": "AR",
@@ -1253,7 +1263,7 @@
   {
    "id": "0fa2dd592e8dd555",
    "title": "Inician rehabilitación tras hundimiento de losa en el Malecón Costero de Coatzacoalcos",
-   "title_en": "",
+   "title_en": "Rehabilitation begins after slab subsidence on the Malecón Costero in Coatzacoalcos",
    "link": "https://news.google.com/rss/articles/CBMixgFBVV95cUxOVi1Wa2xtWXg5NW1rUUJDa2xWblVjTVpQY3QwdFdWVzJnQzBFcVJKSUtIdFdlMXZmdVhTX2FETTJOREZwVVJ0Yk5TdHVPdjhfX2tvV08yMVhBYVROS0hlalBzMWtuSHBmTWRNcTJhNTN4a0w3b1BIdnVxajVyOER5OGo4dmthTS1nM2ZqOG5Ja1ZkRTR1MFVvWXNhQ3ctX3FfZF9wdjJ6cEppVmc5OXRlWEp6NmRaWllSdGRDQmF6N2RWR3VVZnc?oc=5",
    "source": ":: Foro Coatza ::",
    "region": "AR",

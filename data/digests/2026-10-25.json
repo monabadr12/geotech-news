@@ -270,7 +270,8 @@
    "score": 4,
    "rank": 404,
    "country": "",
-   "place": ""
+   "place": "",
+   "title_en_checked": true
   },
   {
    "id": "f9d86c33924b3b60",
@@ -564,7 +565,8 @@
    "place": "Paya Terubong, Penang",
    "storyline": "sl-b7c08b9dc996b84a",
    "stage": "Response & recovery",
-   "storyline_title": "Paya Terubong landslide, Penang, Malaysia (Oct 2026)"
+   "storyline_title": "Paya Terubong landslide, Penang, Malaysia (Oct 2026)",
+   "title_en_checked": true
   },
   {
    "id": "8d9480ce87143191",
@@ -588,7 +590,8 @@
    "place": "Penang hillside",
    "storyline": "sl-b7c08b9dc996b84a",
    "stage": "Legal & policy",
-   "storyline_title": "Paya Terubong landslide, Penang, Malaysia (Oct 2026)"
+   "storyline_title": "Paya Terubong landslide, Penang, Malaysia (Oct 2026)",
+   "title_en_checked": true
   },
   {
    "id": "42800b8f1f31ba9e",
@@ -612,7 +615,8 @@
    "place": "Nilgiris, Tamil Nadu",
    "storyline": "sl-67f790d134880313",
    "stage": "Event",
-   "storyline_title": "Nilgiris rain landslides, Tamil Nadu, India (Oct 2026)"
+   "storyline_title": "Nilgiris rain landslides, Tamil Nadu, India (Oct 2026)",
+   "title_en_checked": true
   },
   {
    "id": "ff33e734c04720e4",
@@ -720,7 +724,8 @@
    "place": "Penang",
    "storyline": "sl-b7c08b9dc996b84a",
    "stage": "Legal & policy",
-   "storyline_title": "Paya Terubong landslide, Penang, Malaysia (Oct 2026)"
+   "storyline_title": "Paya Terubong landslide, Penang, Malaysia (Oct 2026)",
+   "title_en_checked": true
   },
   {
    "id": "ac57dd7a79fb64ed",
@@ -762,7 +767,8 @@
    "score": 4,
    "rank": 304,
    "country": "VN",
-   "place": "Phong Nha-Ke Bang"
+   "place": "Phong Nha-Ke Bang",
+   "title_en_checked": true
   },
   {
    "id": "64c067e9f48db277",
@@ -788,7 +794,7 @@
   {
    "id": "1d7199ad881c44ca",
    "title": "Un socavón en Cerro se llena de agua y amenaza a peatones y conductores tras las lluvias",
-   "title_en": "",
+   "title_en": "A sinkhole in Cerro fills with water and threatens pedestrians and drivers after rains",
    "link": "https://news.google.com/rss/articles/CBMiyAFBVV95cUxQS0RIdEFTRXdlQUh1YkZCTkpIT01XcmNPQ0xlbDl0NjlDYTFqLVItd2J6ZFhqcjBEM2EyOHlodlBuLVU2MkZmcGgxZWN6MzFKN0VPYmc5Z3I1eHJVcS1JbTNtd1h0UGp0YUFHT1dybTdVRVMwQUE4R2htSExDNW9VZmd5SHVZbVFsMHdWNXFrelJ0ZVlLSEgxdlJDN3ZVeTFFcDVqcEVMWkt4czJpUG5jdFJvMTQ3TVcxLUx2Q0cyUlNSWUdKUjVHRtIB4wFBVV95cUxQeGRmeTUwQmI1dzkwNWtLT2p1WDZmSVFXcjJPS3Z5SGVSZVNIaHRxNFJ4RVl4cUJndGRfZDlKaVFkR2lhRHkyQUNMU1hROElpUm1ib241ek1BeWU1OGE2ZWZGUXlhMnQ1UE5uc0ZHTGh3SFNpcUF5dEp4aEVxSkd0MWpid2xQT1JhbkUxZjFIbk5mT0xjQTVRMTd4aTEyUmFiYWhCVlQzVDV6b3Ywb1NyTmtEMGRxUF9TUWhaT1lQWUFMX0pDNVhvbEFpYnBkM1B6OFN2MHg1Vm1kREZFeE9QTFVYWQ?oc=5",
    "source": "Infobae",
    "region": "CO",
@@ -891,7 +897,8 @@
    "score": 4,
    "rank": 304,
    "country": "US",
-   "place": "Route 241, Lebanon County"
+   "place": "Route 241, Lebanon County",
+   "title_en_checked": true
   },
   {
    "id": "8311cc484adaaa79",
@@ -912,7 +919,8 @@
    "score": 3,
    "rank": 303,
    "country": "IN",
-   "place": ""
+   "place": "",
+   "title_en_checked": true
   },
   {
    "id": "6f678767f80188d6",
