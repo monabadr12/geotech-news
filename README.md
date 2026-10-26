@@ -25,7 +25,7 @@ Website: **https://monabadr12.github.io/geotech-news/**
 |---|---|
 | **Latest** | Today's digest, grouped by theme (strongest theme first), with filters for rating, use and keywords. Beside the news: this week and its summary, upcoming events and call-for-papers deadlines, and the developing stories with new reports. |
 | **Archive** | Every digest ever produced, grouped into **three-month issue windows** that match the magazine's quarterly cycle, and the latest **weekly summaries** (each week's page lists that week's top stories, developing stories, regional coverage, events and research). |
-| **Issue collection** (one per quarter, e.g. *Q4 2026*) | All stories and research papers from the quarter in one place: the **issue brief**, theme overview, regional coverage (with a link to the gaps on the world map), "strongest leads" shortlist, the quarter's developing stories, upcoming events and deadlines (current quarter), all stories by theme, new research, list of daily digests, **Excel workbook**, CSV, and print / save as PDF. This is the page to plan an issue from. |
+| **Issue collection** (one per quarter, e.g. *Q4 2026*) | All stories and research papers from the quarter in one place: the **issue brief**, the **suggested table of contents** (which sections the scanner feeds), theme overview, regional coverage (with a link to the gaps on the world map), "strongest leads" shortlist, the quarter's developing stories, upcoming events and deadlines (current quarter), all stories by theme, new research, list of daily digests, **Excel workbook**, the **shared planning sheet** (once it is set up), CSV, and print / save as PDF. This is the page to plan an issue from. |
 | **Search** | Search all archived stories and research papers by keyword (place names included), issue window, theme, use and rating; results show where each story happened and the developing story it belongs to; export the results. |
 | **Developing stories** | Events, projects and sites reported more than once, each with its timeline: the failure, then the response, the inquiry, the repair and the court case. Active and earlier ones, with a filter. |
 | **World map** | Stories by the country they are about, for any issue window, the last 30 days or the whole archive, with the ISSMGE regions and the member-society countries that had no stories (the gaps), a table view and a theme filter. |
@@ -39,7 +39,13 @@ The footer links the **Website report (Word)**.
 
 ### Issue brief (Word)
 For each issue window Claude drafts a brief for the editorial meeting (`docs/briefs/2026-Q4-issue-brief.docx`, linked
-from the issue page and the Archive). It contains an overview of the quarter, a proposed line-up for every theme (with
+from the issue page and the Archive). It opens with a **proposed table of contents** that follows the
+[suggested issue layout](#suggested-issue-layout): for every section the scanner fills, exactly as many stories, papers,
+events or developing stories as the section has slots, each with a one-line reason and whom to check it with; for the
+sections that come from ISSMGE or the editor, a short *to collect* checklist with pointers from the quarter's data (the
+TC symposia and ISSMGE events for *Technical Committees Activities* and *ISSMGE Highlights*, the member-society countries
+with no stories for *Global News from Member Societies*, Digital Geotechnics stories for *Education & Innovation*). Then
+come an overview of the quarter, a proposed line-up for every theme (with
 the angle, format and reason for each pick), about five feature leads with the kinds of experts to approach,
 Academia-to-Industry topics that pair news with research papers, a regional-balance check, gaps worth covering and a
 watch list, then the quarter's **developing stories** and the **events and deadlines** from the start of the quarter to
@@ -51,7 +57,44 @@ with the five steps of *Before you use a story*.
 * **On demand:** press **Generate / update brief** on the issue page. It opens the *Issue brief* workflow on GitHub:
   press **Run workflow** (leave *window* empty for the current quarter, or type e.g. `2026-Q3` and tick *final*). The page
   follows the run and says when the brief is ready.
-* It uses the same `ANTHROPIC_API_KEY` secret as the scan; Claude Opus writes it.
+* It uses the same `ANTHROPIC_API_KEY` secret as the scan; Claude Opus writes it. Should Claude Opus decline (a rare
+  false alarm of its safety filters), the API passes the request to the fallback model Anthropic recommends and the
+  brief says which model wrote it. Briefs written before 26 October 2026 have no table of contents and keep their
+  numbering.
+
+### Suggested issue layout
+The magazine (relaunched in March 2024 as a quarterly e-magazine of about 50–60 pages) has no fixed layout, so the news
+desk suggests one. Most sections come from ISSMGE; the scanner feeds the ones marked *scanner* or *mixed*. It is the
+default `issue_layout:` in `config.yaml`:
+
+| # | Section | Source | Items from the scanner | Pages | What goes there |
+|---|---|---|---|---|---|
+| 1 | Cover story | scanner | 1 | 4–6 | a developing story or a 5/5 feature lead |
+| 2 | Welcome from the President | society | – | 1–2 | the President's message |
+| 3 | Message from the Editor | editor | – | 1 | the editor's introduction |
+| 4 | From the Board / Vice-Presidents' reports | society | – | 4–8 | Board and regional Vice-Presidents' reports |
+| 5 | ISSMGE Highlights | society | – | 3–4 | ISSMGE news; dates of ISSMGE events from the events calendar |
+| 6 | Geotechnics in the News | scanner | 10 | 4–6 | 8–12 short items across the eight themes |
+| 7 | Lessons from the Field | scanner | 1 | 3–4 | a developing story: failure → inquiry → repair |
+| 8 | From Research to Practice | scanner | 2 | 2–3 | research papers |
+| 9 | Global News from Member Societies + Regional Insight | mixed | 6 | 4–6 | member societies' news, plus one story per ISSMGE region (the world map shows the gaps) |
+| 10 | Technical Committees Activities | society | – | 3–5 | TC reports; TC symposia from the events calendar |
+| 11 | Young Members' Arena | society | – | 2 | young members' news |
+| 12 | Education & Innovation | mixed | 2 | 2–3 | education news, plus Digital Geotechnics stories |
+| 13 | Corporate Associates Corner | society | – | 3–6 | corporate associates' news |
+| 14 | Heritage / Time Capsule | society | – | 1–2 | the profession's history |
+| 15 | In Memory | society | – | as needed | obituaries |
+| 16 | Upcoming Events & Calls for Papers | scanner | 8 | 1–2 | conferences and deadlines from the events calendar |
+
+The issue pages show it as **Suggested table of contents**, the issue brief proposes the items for it, and the shared
+planning sheet builds its plan tabs from it. **To change it**, edit `issue_layout:` in `config.yaml` on GitHub (pencil
+icon): rename, reorder, add or remove sections. Each section has a `name`, a `source` (`scanner`, `society`, `editor` or
+`mixed`), `slots` (how many items the scanner proposes: 0 for society and editor sections, at least 1 for scanner
+sections), `pages` (text such as `"4-6"` or `"as needed"`) and `use` (what goes there and which part of the news desk
+feeds it; Claude reads it when it chooses the items). The website shows the change a minute or two after you save, the
+next brief follows it, and the planning sheet adds rows for new sections the next morning. A section that cannot be read
+is repaired or left out with a note in the log, and if none can be read the layout above is used, so a typo never stops
+the scan.
 
 ### World map
 During triage Claude reads the country each story is about (an ISO code such as `CO` or `GB`) and the town, region or
@@ -162,7 +205,8 @@ The CSV files (issue pages and Search) have the same Primary source to check, Co
 columns. The **Start here** sheet repeats the five steps of *Before you use a story*.
 
 Tips: downloaded files open in Protected View, so press **Enable Editing** to see the figures. The workbook is rebuilt
-after every scan, so save your own copy for the planning columns.
+after every scan, so save your own copy for the planning columns, or plan together in the
+[shared planning sheet](#shared-planning-sheet-google-sheets), which keeps the team's columns.
 
 ### How the digest is balanced
 No theme may take more than 30 % of a digest (`max_share_per_theme` in `config.yaml`; 18 of 60 stories). Themes take
@@ -361,10 +405,62 @@ as `SMTP_USER`, and an *App password* (Google Account → Security → 2-Step Ve
 The weekly summary pages have a **Send summary now** button, which starts the same workflow with **send the weekly summary
 now**.
 
+## Shared planning sheet (Google Sheets)
+The Excel workbooks are rebuilt after every scan, so they are no place for the team's own notes. The shared planning
+sheet is: a Google spreadsheet in your Drive that the AI assistant's Google connector keeps up to date every morning,
+while the team's own columns stay exactly as the team left them. Setting it up takes about 5 minutes and uses the
+connector set up under *AI assistant* above (no API key and no e-mail settings are needed for it).
+
+1. Open <https://script.google.com> and your project *Geotechnical News Desk assistant*.
+2. Replace the code with the current [`assistant/bridge.gs`](assistant/bridge.gs) (on GitHub, open the file and press the
+   copy icon) and put your link to the key document back on line 15 (or keep the key in the Script property
+   `ANTHROPIC_API_KEY`). Press **Save**.
+3. Choose **setupPlanningSheet** in the function menu at the top and press **Run**. Google asks for new permissions:
+   press **Review permissions**, choose your account, then **Advanced → Go to project** and **Allow**. The script may
+   now see, edit and create your spreadsheets (the planning sheet), connect to an external service (to read the
+   website's data) and run when you are not present (the daily update).
+4. The log at the bottom shows `Planning sheet: https://docs.google.com/spreadsheets/d/…`. Open that address: the sheet
+   *Geotechnical News Desk — planning* is in your Drive.
+5. Share it with the team: in the sheet, press **Share** (top right), add the team's addresses as **Editors** and press
+   **Send**. Leave *General access* on *Restricted*, so only the people you add can open it.
+6. *Optional:* paste the address into `config.yaml` under `planning:` → `sheet_url:`. The issue pages then show a
+   **Shared planning sheet (Google Sheets)** button (only the people you shared it with can open it).
+
+No new deployment is needed: the daily update runs the saved script, and the assistant and the e-mails work as before.
+
+**How the daily update works.** Every morning at about 07:00 Cairo time (after the 05:00 scan) the connector reads the
+website's data for the two newest issue windows (the current quarter and the one before) and the suggested issue layout.
+* **"Q4 2026 stories"** (one tab per quarter) lists every story and research paper of the quarter: Status (dropdown: To
+  review, Shortlisted, Commissioned, Published, Not used), Assigned to, Editor notes, then the date, theme, rating,
+  suggested use, the headline linked to the article (Claude's English translation marked *(translated)*, with the original
+  headline beside it), the magazine angle, *Check with*, the source, the country and place, the developing story and
+  whether it is a story or a paper. New stories are added **at the bottom, the best rated first** (use the filter buttons
+  in the header row to sort). The news desk's columns are refreshed each morning; **Status, Assigned to and Editor notes,
+  and any column you add, are never overwritten**. A story that is no longer in the digest stays, marked in *Digest note*.
+  Do not delete rows: set the Status to *Not used* (a deleted row comes back the next morning).
+* **"Q4 2026 plan"** follows the suggested issue layout: a row for each slot of the sections the scanner fills, where the
+  proposed story is picked from a dropdown of the quarter's stories marked *Shortlisted* (or *Commissioned* or
+  *Published*), and a row for each society or editor contribution, with the contact, Assigned to, Status (To do,
+  Requested, Draft received, Edited, Ready, Dropped) and Notes. It is made once; later updates only refresh the dropdowns
+  and add rows for sections added to the layout, and never change what the team has typed (a row you delete stays
+  deleted; a renamed section gets new rows, so delete the old ones if you no longer need them).
+* **How to use** (first tab) explains this and shows the time of the last update. The hidden *lists* tab holds the
+  dropdown lists; leave it alone.
+* As everywhere on the news desk, the sheet holds no publisher's text beyond the headlines: the angle and *Check with*
+  are Claude's own words. Treat each story as a lead (*Before you use a story* is repeated on the first tab).
+
+To update the sheet at once, run **syncPlanningSheet** from the editor. If an update cannot read the website, the log
+says what failed and why, the tab of a quarter that could not be read is left as it was, and Google e-mails you a summary
+of failed runs. Running **setupPlanningSheet** again is safe: it reuses the sheet (its ID is kept in the Script property
+`SHEET_ID`) and never installs a second daily update. To stop the daily update, open **Triggers** (clock icon on the left)
+and delete it. If the website moves, set the Script property `SITE_URL` to its new address.
+
 ## Changing things
 * **Sources, searches, keywords, themes, limits:** all in `config.yaml` (edit it on GitHub with the pencil icon).
   Adding a language is one line under `extra_queries`. The world map (`map:`), developing stories (`storylines:`), events
   calendar (`events:`) and e-mail (`alerts:`) have their own sections at the end, each explained in its comments.
+* **Issue layout and planning sheet:** `issue_layout:` and `planning:` in `config.yaml` (see *Suggested issue layout*
+  and *Shared planning sheet*).
 * **Events:** `data/events.yaml` (see *Events calendar*).
 * **Schedule:** `.github/workflows/scan.yml` — daily at 05:00 Cairo time, adjusted automatically for Egypt's summer
   and winter clocks. GitHub sometimes starts scheduled runs late or skips them when it is busy, so two catch-up runs
@@ -390,7 +486,7 @@ now**.
 | `data/events.yaml` | The editors' list of events (edit it on GitHub; the format is explained at the top). |
 | `data/events.json` | Events found by the weekly calendar refresh (written by `events.py`). |
 | `data/notify.json` | The e-mails sent (alerts and weekly summaries), so none goes out twice. |
-| `assistant/bridge.gs` | The AI assistant's connector, run in your Google account; it also sends the e-mails (see *AI assistant*). |
+| `assistant/bridge.gs` | The AI assistant's connector, run in your Google account; it also sends the e-mails and keeps the shared planning sheet (see *AI assistant* and *Shared planning sheet*). |
 | `data/changelog.yaml` | Change log and open items shown in the Word report. |
 | `config.yaml` | All settings. |
 | `assets/` | Website style sheet, scripts, icons and the world map outlines (`world.json`). |
