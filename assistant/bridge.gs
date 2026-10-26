@@ -301,7 +301,9 @@ function testEmail() {
 //
 // Script properties (Project Settings → Script properties), both optional:
 //   SITE_URL  the website, if it moves (default: DEFAULT_SITE_URL below)
-//   SHEET_ID  the spreadsheet's ID: set by setupPlanningSheet; set it yourself to adopt another spreadsheet
+//   SHEET_ID  the spreadsheet's ID (or address): set by setupPlanningSheet; set it yourself to adopt another
+//             spreadsheet. If it cannot be opened, setupPlanningSheet stops with an explanation and never makes a new
+//             sheet in its place; to start a new planning sheet, delete SHEET_ID and run setupPlanningSheet.
 // Permissions Google asks for on the first run: see, edit and create your spreadsheets (the planning sheet); connect
 // to an external service (to read the website's data); and allow the script to run when you are not present (the
 // daily update). No new deployment is needed: the daily update runs the saved script.
@@ -333,27 +335,20 @@ const STORY_COLUMNS = [['Status', 120], ['Assigned to', 120], ['Editor notes', 2
   ['Digest note', 190], ['Story id', 130]];
 const STORY_WRAP = ['Editor notes', 'Magazine angle', 'Check with'];
 const PROPOSED = 'Proposed story / contribution and contact';
-const PLAN_COLUMNS = [['#', 36], ['Section', 230], ['Source', 120], ['Pages', 72], ['What goes here', 300],
+const PLAN_COLUMNS = [['#', 36], ['Section', 230], ['Source', 120], ['Pages', 84], ['What goes here', 300],
   ['Slot', 90], [PROPOSED, 380], ['Assigned to', 130], ['Status', 120], ['Notes', 260]];
 const PLAN_TEAM = [PROPOSED, 'Assigned to', 'Status', 'Notes'];
 const PLAN_NAVY = '#16324F', PLAN_GOLD = '#F3E3B0';  // header colours: the news desk's columns, the team's
 
 function setupPlanningSheet() {
   const props = PropertiesService.getScriptProperties();
-  let ss = null;
-  const id = (props.getProperty('SHEET_ID') || '').trim();
-  if (id) {
-    try {
-      ss = SpreadsheetApp.openById(id);
-    } catch (err) {
-      Logger.log('The spreadsheet in the Script property SHEET_ID could not be opened (' + planMessage_(err) +
-        '), so a new one is made.');
-    }
-  }
-  if (!ss) {
+  let ss;
+  if (planSheetId_()) {
+    ss = planSpreadsheet_();  // a sheet that cannot be opened stops here: the team's sheet is never replaced quietly
+  } else {
     ss = SpreadsheetApp.create(PLAN_TITLE);
-    props.setProperty('SHEET_ID', ss.getId());
   }
+  props.setProperty('SHEET_ID', ss.getId());
   ss.setSpreadsheetTimeZone(TIME_ZONE);
   // exactly one daily update, whatever was there before
   ScriptApp.getProjectTriggers().forEach(function (t) {
@@ -442,14 +437,22 @@ function planMessage_(err) {
   return String((err && err.message) || err);
 }
 
+// The planning sheet's ID from the Script property SHEET_ID, which may hold the ID or the sheet's address.
+function planSheetId_() {
+  const text = (PropertiesService.getScriptProperties().getProperty('SHEET_ID') || '').trim();
+  return (text.match(/\/d\/([-\w]{25,})/) || [])[1] || text;
+}
+
 function planSpreadsheet_() {
-  const id = (PropertiesService.getScriptProperties().getProperty('SHEET_ID') || '').trim();
+  const id = planSheetId_();
   if (!id) throw new Error('There is no planning sheet yet: run setupPlanningSheet once from the script editor.');
   try {
     return SpreadsheetApp.openById(id);
   } catch (err) {
     throw new Error('The planning sheet in the Script property SHEET_ID could not be opened (' + planMessage_(err) +
-      '). Run setupPlanningSheet again to make a new one, or correct SHEET_ID.');
+      '). Try again in a few minutes: Google\'s services sometimes fail for a moment. If it still fails, check that ' +
+      'SHEET_ID holds the planning sheet\'s address or ID and that your account can open the sheet. To start a new ' +
+      'planning sheet instead, delete the Script property SHEET_ID and run setupPlanningSheet.');
   }
 }
 
@@ -507,6 +510,18 @@ function planText_(value) {
   return /^[=+\-@]/.test(text) ? "'" + text : text;
 }
 
+// A section's length as the website shows it ("4–6 pages", "1 page", or the text as written: "as needed"), always
+// kept as text: Sheets would read "4-6" or "1-2" as a date.
+function planPages_(value) {
+  let text = String(value === null || value === undefined ? '' : value).replace(/\s+/g, ' ').trim().slice(0, 40);
+  const m = /^(\d+)\s*(?:[-–]\s*(\d+))?$/.exec(text);
+  if (m) {
+    const lo = Math.min(Number(m[1]), Number(m[2] || m[1])), hi = Math.max(Number(m[1]), Number(m[2] || m[1]));
+    text = lo === hi ? lo + (lo === 1 ? ' page' : ' pages') : lo + '–' + hi + ' pages';
+  }
+  return text ? "'" + text : '';
+}
+
 function planLink_(url, label) {
   const text = String(label || url).replace(/\s+/g, ' ').trim().slice(0, 1000);
   return '=HYPERLINK("' + url.replace(/"/g, '%22') + '","' + text.replace(/"/g, '""') + '")';
@@ -520,6 +535,17 @@ function planColumnLetter_(n) {
   let s = '';
   for (; n > 0; n = Math.floor((n - 1) / 26)) s = String.fromCharCode(65 + (n - 1) % 26) + s;
   return s;
+}
+
+// The numbers (rows or columns) as runs of consecutive ones, [[first, count], ...] in order: one write per run.
+function planRuns_(numbers) {
+  const runs = [];
+  numbers.slice().sort(function (a, b) { return a - b; }).forEach(function (x) {
+    const last = runs[runs.length - 1];
+    if (last && x === last[0] + last[1]) last[1]++;
+    else if (!last || x > last[0] + last[1]) runs.push([x, 1]);
+  });
+  return runs;
 }
 
 // Enough rows (a new tab has 1000) for rows up to last.
@@ -608,32 +634,46 @@ function planStoriesTab_(ss, label, items, countries, index) {
   const info = STORY_COLUMNS.map(function (s) { return s[0]; }).filter(function (h) { return TEAM_COLUMNS.indexOf(h) < 0; });
   const n = Math.max(sh.getLastRow() - 1, 0), width = sh.getLastColumn();
   const values = n ? sh.getRange(2, 1, n, width).getValues() : [];
-  const formulas = n ? sh.getRange(2, 1, n, width).getFormulas() : [];
   const rowOf = {};
   values.forEach(function (row, r) {
     const id = String(row[cols['Story id'] - 1] || '').trim();
     if (id && !(id in rowOf)) rowOf[id] = r;
   });
-  // the news desk's columns as they stand (formulas kept), then the new content for the rows of known stories
-  const data = {};
-  info.forEach(function (h) {
-    const c = cols[h] - 1;
-    data[h] = values.map(function (row, r) { return [formulas[r][c] || row[c]]; });
-  });
+  // Only the cells that change are written: the news desk's columns of the stories still on the website, and the
+  // Digest note of a story newly gone. Other rows are never rewritten (writing back what a cell shows would turn
+  // text such as "=…" or "-…" into a formula and drop links the team added).
+  const refresh = {}, marked = [];
   let updated = 0, gone = 0;
-  const since = today();
   Object.keys(rowOf).forEach(function (id) {
     const r = rowOf[id];
     if (byId[id]) {
-      const v = planInfo_(byId[id], countries);
-      info.forEach(function (h) { data[h][r][0] = v[h]; });
+      refresh[r] = planInfo_(byId[id], countries);
       updated++;
     } else if (order.length) {  // an empty list from the website marks nothing
-      if (String(data['Digest note'][r][0] || '').indexOf(GONE) < 0) data['Digest note'][r][0] = GONE + ' (since ' + since + ')';
+      if (String(values[r][cols['Digest note'] - 1] || '').indexOf(GONE) < 0) marked.push(r);
       gone++;
     }
   });
-  if (n) info.forEach(function (h) { sh.getRange(2, cols[h], n, 1).setValues(data[h]); });
+  const blocks = planRuns_(info.map(function (h) { return cols[h]; }));  // the news desk's columns, side by side
+  const byCol = {};
+  info.forEach(function (h) { byCol[cols[h]] = h; });
+  planRuns_(Object.keys(refresh).map(Number)).forEach(function (run) {
+    blocks.forEach(function (block) {
+      const rows = [];
+      for (let r = run[0]; r < run[0] + run[1]; r++) {
+        const row = [];
+        for (let c = block[0]; c < block[0] + block[1]; c++) row.push(refresh[r][byCol[c]]);
+        rows.push(row);
+      }
+      sh.getRange(2 + run[0], block[0], run[1], block[1]).setValues(rows);
+    });
+  });
+  const note = GONE + ' (since ' + today() + ')';
+  planRuns_(marked).forEach(function (run) {
+    const rows = [];
+    for (let k = 0; k < run[1]; k++) rows.push([note]);
+    sh.getRange(2 + run[0], cols['Digest note'], run[1], 1).setValues(rows);
+  });
   // new stories at the bottom: the best rated first, then the news desk's rank, then the newest
   const added = order.filter(function (id) { return !(id in rowOf); }).map(function (id) { return byId[id]; });
   added.sort(function (a, b) {
@@ -764,7 +804,8 @@ function planLists_(ss, synced) {
 // The "<quarter> plan" tab: made once from the layout (one row per slot of a section the scanner fills, one
 // "Contribution" row per society, editor or mixed section); later only its dropdowns are refreshed and rows added for
 // sections (or slots) new to the layout. Nothing the team has typed is changed, and a row the team deletes stays
-// deleted: the rows a plan has had are recorded in the hidden lists tab.
+// deleted: the rows a plan has had are recorded in the hidden lists tab. A plan tab that is missing (deleted, or
+// renamed) is made again from the whole layout.
 function planIssueTab_(ss, label, layout, listRange, index) {
   const name = label + ' plan';
   let sh = ss.getSheetByName(name);
@@ -787,6 +828,10 @@ function planIssueTab_(ss, label, layout, listRange, index) {
     secs.forEach(function (v, r) { have[key(v[0], String(slots[r][0]).trim())] = true; });
   }
   const known = planKnownRows_(ss, label);
+  if (fresh && known.keys.length) {  // the tab was deleted (or renamed): it is made again from the whole layout
+    known.sheet.getRange(2, known.col, known.sheet.getLastRow() - 1, 1).clearContent();
+    known.keys = [];
+  }
   const seen = {};
   (known.keys.length ? known.keys : Object.keys(have)).forEach(function (k) { seen[k] = true; });
   const add = wanted.filter(function (w) {
@@ -810,7 +855,7 @@ function planIssueTab_(ss, label, layout, listRange, index) {
       put('#', w.n);
       put('Section', planText_(w.sec.name));
       put('Source', SOURCE_NAMES[w.sec.source] || planText_(w.sec.source));
-      put('Pages', planText_(w.sec.pages));
+      put('Pages', planPages_(w.sec.pages));
       put('What goes here', planText_(w.sec.use));
       put('Slot', w.slot);
       put('Status', PLAN_STATUSES[0]);
@@ -823,7 +868,8 @@ function planIssueTab_(ss, label, layout, listRange, index) {
     if (listRange) {  // the proposed story of each slot: the quarter's shortlisted stories, or a text of the team's own
       const rule = SpreadsheetApp.newDataValidation().requireValueInRange(listRange, true).setAllowInvalid(true)
         .setHelpText('Choose one of the quarter\'s shortlisted stories (Status Shortlisted, Commissioned or Published ' +
-          'in the stories tab), or type your own.').build();
+          'in the stories tab), or type your own. The list is refreshed with the morning update, so a story shortlisted ' +
+          'today appears tomorrow; until then, type or paste its headline.').build();
       const slots = sh.getRange(2, cols['Slot'], rows, 1).getValues();
       let from = -1;
       for (let r = 0; r <= rows; r++) {  // one call per run of slot rows
@@ -903,7 +949,14 @@ function planHelpTab_(ss, site) {
       'the sections the news desk fills. Pick the proposed story from the dropdown, which lists the quarter\'s stories ' +
       'marked Shortlisted (or Commissioned or Published), or type your own; give society and editor sections a ' +
       'contribution and a contact.',
-    '• The plan is made once. Later updates only refresh the dropdowns and add rows for sections added to the layout.',
+    '• The dropdown is refreshed with the morning update: a story you shortlist today appears in it tomorrow morning ' +
+      '(or at once if the sheet\'s owner runs syncPlanningSheet in the script editor). Until then, type or paste its headline.',
+    '• The plan is made once. Later updates only refresh the dropdowns and add rows for sections added to the layout. ' +
+      'A plan tab you delete is made again from the layout the next morning.',
+    '',
+    'All tabs',
+    '• Do not rename the tabs: the update finds them by name, so it would make a new tab under the old name and leave ' +
+      'the renamed one as it was. Leave the hidden lists tab alone: it holds the dropdown lists.',
     '',
     'Before you use a story',
     '1. Treat the news item as a lead, not as your source.  2. Check the facts with the primary source (Check with).  ' +
@@ -912,7 +965,9 @@ function planHelpTab_(ss, site) {
   ];
   sh.getRange(1, 1, lines.length, 1).setValues(lines.map(function (t) { return [t]; }));
   sh.getRange(1, 1).setFontWeight('bold').setFontSize(14).setFontColor(PLAN_NAVY);
-  [5, 11, 15].forEach(function (r) { sh.getRange(r, 1).setFontWeight('bold').setFontColor(PLAN_NAVY); });
+  lines.forEach(function (t, i) {  // the headings: the lines that follow an empty one
+    if (i && t && !lines[i - 1]) sh.getRange(i + 1, 1).setFontWeight('bold').setFontColor(PLAN_NAVY);
+  });
   sh.getRange(3, 1).setFontColor('#5B6573');
   sh.setColumnWidth(1, 900);
   sh.getRange(1, 1, lines.length, 1).setWrapStrategy(SpreadsheetApp.WrapStrategy.WRAP);

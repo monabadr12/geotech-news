@@ -41,7 +41,9 @@ The footer links the **Website report (Word)**.
 For each issue window Claude drafts a brief for the editorial meeting (`docs/briefs/2026-Q4-issue-brief.docx`, linked
 from the issue page and the Archive). It opens with a **proposed table of contents** that follows the
 [suggested issue layout](#suggested-issue-layout): for every section the scanner fills, exactly as many stories, papers,
-events or developing stories as the section has slots, each with a one-line reason and whom to check it with; for the
+events or developing stories as the section has slots, each with a one-line reason and whom to check it with (each item
+is used once, a developing story and its reports counting as one, and the events section takes only events still to
+come when the issue appears); for the
 sections that come from ISSMGE or the editor, a short *to collect* checklist with pointers from the quarter's data (the
 TC symposia and ISSMGE events for *Technical Committees Activities* and *ISSMGE Highlights*, the member-society countries
 with no stories for *Global News from Member Societies*, Digital Geotechnics stories for *Education & Innovation*). Then
@@ -441,18 +443,24 @@ website's data for the two newest issue windows (the current quarter and the one
 * **"Q4 2026 plan"** follows the suggested issue layout: a row for each slot of the sections the scanner fills, where the
   proposed story is picked from a dropdown of the quarter's stories marked *Shortlisted* (or *Commissioned* or
   *Published*), and a row for each society or editor contribution, with the contact, Assigned to, Status (To do,
-  Requested, Draft received, Edited, Ready, Dropped) and Notes. It is made once; later updates only refresh the dropdowns
-  and add rows for sections added to the layout, and never change what the team has typed (a row you delete stays
-  deleted; a renamed section gets new rows, so delete the old ones if you no longer need them).
+  Requested, Draft received, Edited, Ready, Dropped) and Notes. The dropdown is refreshed with the morning update, so a
+  story shortlisted today appears in it the next morning (or at once if you run **syncPlanningSheet** from the editor);
+  until then, type or paste its headline. The plan is made once; later updates only refresh the dropdowns and add rows
+  for sections added to the layout, and never change what the team has typed (a row you delete stays deleted; a renamed
+  section gets new rows, so delete the old ones if you no longer need them). A plan tab you delete is made again from
+  the layout the next morning.
 * **How to use** (first tab) explains this and shows the time of the last update. The hidden *lists* tab holds the
-  dropdown lists; leave it alone.
+  dropdown lists; leave it alone. **Do not rename the tabs:** the update finds them by name, so it would make a new tab
+  under the old name and leave the renamed one as it was.
 * As everywhere on the news desk, the sheet holds no publisher's text beyond the headlines: the angle and *Check with*
   are Claude's own words. Treat each story as a lead (*Before you use a story* is repeated on the first tab).
 
 To update the sheet at once, run **syncPlanningSheet** from the editor. If an update cannot read the website, the log
 says what failed and why, the tab of a quarter that could not be read is left as it was, and Google e-mails you a summary
 of failed runs. Running **setupPlanningSheet** again is safe: it reuses the sheet (its ID is kept in the Script property
-`SHEET_ID`) and never installs a second daily update. To stop the daily update, open **Triggers** (clock icon on the left)
+`SHEET_ID`, which may also hold the sheet's address) and never installs a second daily update. If that sheet cannot be
+opened, it stops and says why instead of making a new one; to start a new planning sheet, delete the Script property
+`SHEET_ID` and run **setupPlanningSheet**. To stop the daily update, open **Triggers** (clock icon on the left)
 and delete it. If the website moves, set the Script property `SITE_URL` to its new address.
 
 ## Changing things

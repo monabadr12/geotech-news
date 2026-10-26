@@ -369,7 +369,7 @@ def issue_layout(cfg):
             if isinstance(value, bool):
                 raise ValueError
             slots = None if value is None or value == "" else int(value)
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, OverflowError):  # OverflowError: slots: .inf
             layout_note(f"{name}: slots: {value!r} is not a whole number.")
             slots = None
         if source not in LAYOUT_SOURCES:
