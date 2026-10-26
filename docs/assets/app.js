@@ -23,6 +23,28 @@
     return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
   }
 
+  /* how Claude rates a story (site_builder.RATING_MEANING), and the first scan that rated by size
+     (site_builder.RULE_START, on every page's body) */
+  var RATING_MEANING = { 5: "international importance or a landmark project", 4: "national or regional importance",
+    3: "local or small", 2: "the ground is mentioned only in passing", 1: "not geotechnical" };
+  var RULE_START = document.body.getAttribute("data-rating-from") || "";
+  function ratingTip(r, day) {  // "Rating 4 of 5: geotechnical, national or regional importance", as site_builder.rating_tip()
+    if (r >= 3 && day && RULE_START && String(day).slice(0, 10) < RULE_START.slice(0, 10)) {
+      var start = new Date(RULE_START.slice(0, 10) + "T00:00:00Z");
+      return "Rating " + r + " of 5, given before " + start.toLocaleDateString("en-GB", { day: "numeric", month: "long",
+        year: "numeric", timeZone: "UTC" }) + " for geotechnical substance alone, without size";
+    }
+    var m = RATING_MEANING[r];
+    return "Rating " + r + " of 5" + (m ? ": " + (r >= 3 ? "geotechnical, " + m : m) : "");
+  }
+  function ruleNote() {  // " This rule applies from the scan of 27 October 2026. Ratings in the digests up to and including …"
+    var start = new Date(RULE_START.slice(0, 10) + "T00:00:00Z");
+    if (!/^\d{4}-\d{2}-\d{2}/.test(RULE_START) || isNaN(start)) return "";
+    function longDate(d) { return d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }); }
+    return " This rule applies from the scan of " + longDate(start) + ". Ratings in the digests up to and including " +
+      longDate(new Date(start.getTime() - 864e5)) + " measured geotechnical substance alone, without size.";
+  }
+
   /* ---------- toast ---------- */
   var toastEl = document.getElementById("toast"), toastTimer;
   /* owner: the storage key of the run being followed; closing its message stops following */
@@ -138,12 +160,23 @@
     var text = bar.querySelector(".f-text"), rel = bar.querySelector(".f-rel"), use = bar.querySelector(".f-use");
     var count = bar.querySelector(".f-count");
     var cards = Array.prototype.slice.call(scope.querySelectorAll(".theme-section .story"));
+    // a day's smaller local stories (rated 3), closed at the end of its stories: filtered too, counted apart
+    var fold = scope.querySelector(".small-stories");
+    var small = fold ? Array.prototype.slice.call(fold.querySelectorAll(".story")) : [];
     function apply() {
-      var q = text.value.trim().toLowerCase(), min = +rel.value, u = use.value, shown = 0;
+      var q = text.value.trim().toLowerCase(), min = +rel.value, u = use.value, shown = 0, shownSmall = 0;
+      function match(c) {
+        return +c.dataset.rel >= min && (!u || c.dataset.use === u) && (!q || c.dataset.text.indexOf(q) !== -1);
+      }
       cards.forEach(function (c) {
-        var ok = +c.dataset.rel >= min && (!u || c.dataset.use === u) && (!q || c.dataset.text.indexOf(q) !== -1);
+        var ok = match(c);
         c.hidden = !ok;
         if (ok) shown++;
+      });
+      small.forEach(function (c) {
+        var ok = match(c);
+        c.hidden = !ok;
+        if (ok) shownSmall++;
       });
       scope.querySelectorAll(".theme-section").forEach(function (sec) {
         var n = sec.querySelectorAll(".story:not([hidden])").length;
@@ -153,7 +186,15 @@
         var link = scope.querySelector(".theme-toc a[href='#" + sec.id + "'] b");
         if (link) { link.textContent = n; link.parentNode.hidden = n === 0; }
       });
-      count.textContent = shown === cards.length ? cards.length + " stories" : "Showing " + shown + " of " + cards.length;
+      var label = shown === cards.length ? cards.length + " stories" : "Showing " + shown + " of " + cards.length;
+      if (fold) {
+        var all = shownSmall === small.length;
+        fold.hidden = shownSmall === 0;
+        fold.querySelector(".small-n").textContent = "— " + (all ? small.length : shownSmall + " of " + small.length);
+        if (shownSmall) label += ", " + (all ? "" : shownSmall + " of ") + small.length +
+          (small.length === 1 ? " smaller local one below" : " smaller local ones below");
+      }
+      count.textContent = label;
     }
     [text, rel, use].forEach(function (el) { el.addEventListener("input", apply); });
     apply();
@@ -193,7 +234,7 @@
   function isPaper(s) { return s.kind === "paper"; }
   function card(s) {
     var paper = isPaper(s), title = s.te || s.t, rel = s.r
-      ? "<span class='rel rel-" + s.r + "' title='" + (paper ? "Use in practice: " : "Geotechnical relevance: ") + s.r + " of 5'><i></i><i></i><i></i><i></i><i></i><b>" + s.r + "/5</b></span>"
+      ? "<span class='rel rel-" + esc(s.r) + "' title='" + esc(paper ? "Use in practice: " + s.r + " of 5" : ratingTip(s.r, s.d)) + "'><i></i><i></i><i></i><i></i><i></i><b>" + esc(s.r) + "/5</b></span>"
       : "<span class='rel rel-kw'>" + (paper ? "Not rated" : "Keyword-ranked") + "</span>";
     var meta = ["<span class='src'>" + esc(s.s) + "</span>"], where = placeText(s);
     if (s.p) meta.push("<time>" + esc(fmt(s.p)) + "</time>");
@@ -451,7 +492,10 @@
         "You help the editor search the archive of news stories collected by the daily scans, spot trends, and recommend stories, themes " +
         "and angles for upcoming issues. The magazine's cross-cutting themes are: " + Object.keys(THEME_COLORS).filter(function (t) { return t !== "General"; }).join("; ") +
         ". Each story may carry a suggested use: News brief, Feature lead, Academia-to-Industry topic, Regional insight or Watch only, " +
-        "and a geotechnical relevance rating from 1 to 5 (0 means it was ranked by keywords only and not reviewed by AI).\n\n" +
+        "and a rating from 1 to 5, given in two steps: is the story truly geotechnical (1 = not geotechnical, 2 = the ground is " +
+        "mentioned only in passing; neither is kept), and, for a geotechnical story, its size and importance (3 = " + RATING_MEANING[3] +
+        ", 4 = " + RATING_MEANING[4] + ", 5 = " + RATING_MEANING[5] + ")." + ruleNote() +
+        " 0 means the story was ranked by keywords only and not reviewed by AI.\n\n" +
         "Archive overview by issue window:\n" + (lines.join("\n") || "- (archive empty)") + "\n\n" +
         "With each question you receive the archive stories most relevant to it, retrieved from the full archive. Base what you say about the " +
         "news on those stories. When you mention a story, give its headline as a markdown link to its URL, followed by the source and date. " +
