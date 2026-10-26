@@ -540,7 +540,7 @@ def page(cfg, title, body, root, active, description="", head=""):
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{root}assets/style.css">{head}
-</head><body data-root="{root}" data-repo="{esc(repository(cfg))}" data-assistant="{esc(assistant_endpoint(cfg))}">
+</head><body data-root="{root}" data-repo="{esc(repository(cfg))}" data-assistant="{esc(assistant_endpoint(cfg))}" data-rating-from="{RULE_START}">
 <header class="masthead"><div class="wrap masthead-inner">
 <a class="brand" href="{root}index.html"><span class="brand-mark" aria-hidden="true">{FAVICON}</span>
 <span><span class="brand-name">Geotechnical News Desk</span><span class="brand-sub">{esc(mag)} · editorial monitoring</span></span></a>
@@ -560,13 +560,34 @@ def rating(s):
     rel = s.get("relevance") or 0
     if not rel:
         return f"<span class='rel rel-kw' title='Not AI-rated; ranked by keyword score'>Score {s.get('score', 0)}</span>"
-    return f"<span class='rel rel-{rel}' title='Geotechnical relevance: {rel} of 5'>{'<i></i>' * 5}<b>{rel}/5</b></span>"
+    return f"<span class='rel rel-{rel}' title='{esc(rating_tip(rel))}'>{'<i></i>' * 5}<b>{rel}/5</b></span>"
 
 
-# How Claude rates a story since 26 October 2026 (scanner.py, the triage prompt), in two steps: is it truly
-# geotechnical (1 = not, 2 = the ground only in passing), and, for a geotechnical story, how big it is (3-5).
-# The daily page and the weekly summary list the 4s and 5s; the 3s are folded at the end of the day's page under
-# SMALL_TITLE and counted in the weekly summary, and every other page, list and download keeps them all.
+def rating_tip(rel):
+    """'Rating 4 of 5: geotechnical, national or regional importance' (as app.js shows in Search)."""
+    meaning = RATING_MEANING.get(rel)
+    if not meaning:
+        return f"Rating {rel} of 5"
+    return f"Rating {rel} of 5: " + (f"geotechnical, {meaning}" if rel >= 3 else meaning)
+
+
+def long_date(day):
+    """'27 October 2026' (day: a date or an ISO date)."""
+    day = day if isinstance(day, dt.date) else dt.date.fromisoformat(str(day)[:10])
+    return f"{day.day} {day:%B %Y}"
+
+
+# How Claude rates a story from RULE_START, the first scan with this rule (scanner.py, the triage prompt), in two
+# steps: is it truly geotechnical (1 = not, 2 = the ground only in passing), and, for a geotechnical story, how big
+# it is (3-5). The daily page and the weekly summary list the 4s and 5s; the 3s are folded at the end of the day's
+# page under SMALL_TITLE and counted in the weekly summary, and every other page, list and download keeps them all.
+# The digests before RULE_START were rated by geotechnical substance alone (a 3 was a clear ground-engineering
+# element, worth a brief). RULE_START is given to the Method page, the Excel workbooks (EARLIER_RATINGS) and, on
+# every page's <body data-rating-from>, to the AI assistant (app.js); the README states the same date.
+RULE_START = "2026-10-27"
+RULE_LAST_OLD = dt.date.fromisoformat(RULE_START) - dt.timedelta(days=1)  # the last day rated the old way
+EARLIER_RATINGS = (f"Ratings in the digests up to and including {long_date(RULE_LAST_OLD)} measured geotechnical "
+                   "substance alone, without size.")
 RATING_MEANING = {5: "international importance or a landmark project", 4: "national or regional importance",
                   3: "local or small", 2: "the ground is mentioned only in passing", 1: "not geotechnical"}
 SMALL_TITLE = "Smaller local stories (rated 3)"
@@ -578,16 +599,20 @@ def split_small(stories):
     return ([s for s in stories if s.get("relevance") != 3], [s for s in stories if s.get("relevance") == 3])
 
 
-def small_section(small, order, root=""):
+def small_section(small, order, root="", day=""):
     """The day's smaller local stories, closed at the end of its stories (their full cards, by theme, best first).
-    The filter bar above (app.js) filters them too and keeps the count in the summary line."""
+    The filter bar above (app.js) filters them too and keeps the count in the summary line. day: the digest's
+    date; a digest from before RULE_START says what a 3 meant then."""
     if not small:
         return ""
     place = {t: i for i, t in enumerate(order)}
     items = sorted(small, key=lambda s: (place.get(s["theme"], len(place)), -(s.get("rank") or 0)))
+    what = (f"Rated before the size rule began ({long_date(RULE_START)}), when a 3 meant a clear ground-engineering "
+            "element worth a brief." if day and str(day)[:10] < RULE_START else
+            "Stories that are truly geotechnical but local or small.")
     return (f"<details class='small-stories' id='smaller'><summary><span class='small-t'>{SMALL_TITLE}</span> "
             f"<span class='small-n'>— {len(small)}</span></summary><div class='small-body'>"
-            "<p class='hint'>Stories that are truly geotechnical but local or small. They stay in the "
+            f"<p class='hint'>{what} They stay in the "
             f"<a href='{root}archive.html'>archive</a>, <a href='{root}search.html'>Search</a>, the "
             f"<a href='{root}map.html'>world map</a>, the issue pages and the downloads.</p>"
             + "".join(story_card(s, show_theme=True, root=root) for s in items) + "</div></details>")
@@ -781,7 +806,7 @@ def digest_body(d, cfg, root, uses, prev_d=None, next_d=None, latest=False, brie
     if small:
         top = (stat(len(main), "stories rated 4–5" if all((s.get("relevance") or 0) >= 4 for s in main)
                     else "stories in the main list")
-               + stat(len(small), "smaller local ones (rated 3), below"))
+               + stat(len(small), f"smaller local {'one' if len(small) == 1 else 'ones'} (rated 3), below"))
     else:
         top = stat(len(stories), "stories selected")
     stats = (top + stat(d.get("new_items", 0), "new items scanned")
@@ -801,7 +826,7 @@ def digest_body(d, cfg, root, uses, prev_d=None, next_d=None, latest=False, brie
     listed = (theme_sections(main, root=root) if main else
               "<p class='empty'>No story in this digest was rated 4 or 5: the smaller local stories are below.</p>")
     news = [("<p class='empty'>No new geotechnical stories met the threshold in this period.</p>" if not stories
-             else filtered(uses, listed + small_section(small, theme_order(cfg), root))),
+             else filtered(uses, listed + small_section(small, theme_order(cfg), root, d["date"]))),
             research_section(papers, "Papers that geotechnical journals published in the last few days, for the "
                                      "Academia-to-Industry pages, best rated for use in practice first. Titles open "
                                      "the paper through its DOI.")]
@@ -1411,7 +1436,7 @@ def about_body(cfg, latest, brief_opts):
 <h2 class="section-h">Each run</h2><ol class="steps">
 <li><b>Collect.</b> {len(feeds)} websites and {n_core * editions + n_extra} Google News searches ({n_core} core searches in {editions} English editions, plus {n_extra} further searches including {n_foreign} in other languages). The scan runs every day at 05:00 Cairo time, and on demand: <b>Scan now</b> opens the scan's page on GitHub, where you press <b>Run workflow</b>; the website then follows the scan and tells you when the new digest is ready. Each run looks back {cfg.get('lookback_hours', 60)} hours. So that the same article is not picked up twice, the scanner remembers the links it has already read for 45 days; this only prevents repeats and never removes anything from the archive, where every digest is kept permanently and each issue page gathers the whole quarter.</li>
 <li><b>Score and categorise.</b> Headlines and the feeds' summaries (read during the scan; no longer saved, never shown) are scored against {len(cfg['keywords'])} English keywords and {n_ml} terms in {len(languages)} other languages. Each foreign term counts as its English equivalent (for example <i>glissement de terrain</i>, <i>deslizamiento</i>, <i>longsor</i> and <i>انهيار أرضي</i> all count as “landslide”), so every story is filed under an English theme. Specialist sources earn bonus points, noise terms lose points, near-identical headlines are merged. A story needs {cfg.get('min_keyword_score', 3)} points to go forward.</li>
-<li><b>Triage.</b> Up to {ccfg.get('max_candidates', 80)} candidates go to Claude, which rates each 1–5 in two steps. First: is the story truly geotechnical, with a clear ground-engineering element? If not, it gets 1 (not geotechnical) or 2 (the ground is mentioned only in passing), however big the news. Then, only for a geotechnical story, its size and importance: 3 = {RATING_MEANING[3]}, 4 = {RATING_MEANING[4]}, 5 = {RATING_MEANING[5]}. Importance is judged by the consequences and lessons for ground engineering, not by how much the media covered the story. Stories rated {ccfg.get('min_relevance', 3)} or more are kept. (Ratings given before this rule was introduced on 26 October 2026 measured geotechnical substance alone.) Claude also confirms the theme, suggests a use, writes a one-sentence magazine angle in its own words, translates non-English headlines, reads where each story happened (the country and the town, region or site) and names the primary source to check the facts with. Claude then checks whether any new story follows up an earlier one (see below).</li>
+<li><b>Triage.</b> Up to {ccfg.get('max_candidates', 80)} candidates go to Claude, which rates each 1–5 in two steps. First: is the story truly geotechnical, with a clear ground-engineering element? If not, it gets 1 (not geotechnical) or 2 (the ground is mentioned only in passing), however big the news. Then, only for a geotechnical story, its size and importance: 3 = {RATING_MEANING[3]}, 4 = {RATING_MEANING[4]}, 5 = {RATING_MEANING[5]}. Importance is judged by the consequences and lessons for ground engineering, not by how much the media covered the story. Stories rated {ccfg.get('min_relevance', 3)} or more are kept. This rule applies from the scan of {long_date(RULE_START)}. {EARLIER_RATINGS} Claude also confirms the theme, suggests a use, writes a one-sentence magazine angle in its own words, translates non-English headlines, reads where each story happened (the country and the town, region or site) and names the primary source to check the facts with. Claude then checks whether any new story follows up an earlier one (see below).</li>
 {research_step}
 <li><b>Publish & archive.</b> Up to {cfg.get('max_items', 40)} stories per digest.{site_rule} The day's page lists the stories rated 4 and 5 by theme; those rated 3 are in a closed section at the end, <b>{SMALL_TITLE}</b>, and the weekly summary counts them without listing them. Stories without a rating (ranked by keywords when Claude is not used) are listed as usual. Every story, the 3s included, stays in the archive, Search, the world map, the issue pages and the downloads. Every digest is stored permanently, grouped into three-month issue windows, and exported to Excel.</li>
 <li><b>Issue brief.</b> In the last {brief_opts['days_before_end']} days of each quarter Claude reads the quarter's stories rated {brief_opts['min_relevance']} / 5 or higher (at most {brief_opts['max_per_theme']} per theme) and any research papers, and drafts the brief for the editorial meeting as a Word document: a proposed table of contents that follows the magazine's suggested layout ({count(len(layout), 'section')}; the items for the {fed} sections the scanner feeds, and what to collect for the others), an overview, a proposed line-up per theme, feature leads with the kinds of experts to approach, Academia-to-Industry topics, a regional-balance check, gaps worth covering and a watch list. The draft is refreshed every {count(brief_opts['refresh_days'], 'day')} and the final brief is written the day after the quarter closes. <b>Generate / update brief</b> on an issue page starts one on GitHub at any time.</li></ol>
@@ -2150,7 +2175,8 @@ def render_email(d, cfg):
             f"<div style='font:600 12px Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#9a7b1c'>Geotechnical News Desk</div>"
             f"<h1 style='font:600 24px Georgia,serif;color:#16324f;margin:4px 0 6px'>{esc(nice_date(d['date'], weekday=True))}</h1>"
             f"<div style='font:13px Arial,sans-serif;color:#5b6573'>{len(d['stories'])} stories selected from {d.get('new_items', 0)} new items"
-            + (f"; the {len(small)} smaller local ones (rated 3) are listed at the end" if small else "") + "</div>"
+            + ("; the smaller local one (rated 3) is listed at the end" if len(small) == 1 else
+               f"; the {len(small)} smaller local ones (rated 3) are listed at the end" if small else "") + "</div>"
             f"{link}{''.join(rows)}{link}{use_steps_email()}</div></body></html>")
 
 
@@ -2315,7 +2341,7 @@ def build(cfg):
             f"Issue window {w['win']['span']}", w["stories"], order, theme_color,
             [(nice_date(d["date"]), len(d["stories"])) for d in reversed(w["digests"])], "daily digest",
             digest_count=len(w["digests"]), windows=[key], papers=w["papers"], events=ev_coming, deadlines=ev_calls,
-            events_asof=today, checklist=use_steps_text(), checklist_title=USE_TITLE)
+            events_asof=today, checklist=use_steps_text(), checklist_title=USE_TITLE, earlier_ratings=EARLIER_RATINGS)
         # what Search and the AI assistant read: the headline (and Claude's translation), the source and link,
         # and what Claude wrote (angle, place, primary source to check, "ps"); never the publisher's text
         compact = [{"d": s["_digest"], "w": key, "t": s["title"], "te": s.get("title_en", ""), "l": s["link"],
@@ -2349,7 +2375,7 @@ def build(cfg):
         [(w["win"]["label"], len(w["stories"])) for w in reversed(windows)], "issue window",
         digest_count=len(digests), windows=[w["win"]["key"] for w in windows],
         papers=[p for w in windows for p in w["papers"]], events=ev_coming, deadlines=ev_calls, events_asof=today,
-        checklist=use_steps_text(), checklist_title=USE_TITLE)
+        checklist=use_steps_text(), checklist_title=USE_TITLE, earlier_ratings=EARLIER_RATINGS)
     report.write_report(DOCS / "reports" / "site-report.docx", cfg, digests, windows, theme_color,
                         site_url(cfg), CHANGELOG, groups=groups, checklist=(USE_TITLE, use_steps_text(), USE_DONE),
                         planning=(layout, planning_sheet(cfg)))

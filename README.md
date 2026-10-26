@@ -181,7 +181,7 @@ To test a new address before adding it, run the **Check feeds** workflow on GitH
 `{"Railway Gazette": ["https://www.railwaygazette.com/rss"]}`; the log marks each address OK or FAIL.
 
 ### How stories are rated
-Claude rates each story 1–5 in two steps (since 26 October 2026; earlier ratings measured geotechnical substance alone):
+Claude rates each story 1–5 in two steps, from the scan of 27 October 2026 (`RULE_START` in `site_builder.py`):
 1. **Is it truly geotechnical?** It must have a clear ground-engineering element. If not, it gets **1** (not
    geotechnical) or **2** (the ground is mentioned only in passing) and is dropped, however big the news.
 2. **How big is it?** Only for a geotechnical story: **3** = local or small, **4** = national or regional importance,
@@ -194,6 +194,9 @@ in a closed section at the end, **Smaller local stories (rated 3)**, and the wee
 everywhere else as before: the archive, Search, the world map, the issue pages, the CSV, Excel and JSON downloads,
 developing stories and the issue brief. Stories without a rating (ranked by keywords when Claude is not used) are shown
 as before. Alerts still go out for 5 / 5 stories.
+
+Ratings in the digests up to and including 26 October 2026 measured geotechnical substance alone, without size (a 3
+meant a clear ground-engineering element, worth a brief). On those days' pages the closed section says so.
 
 ### How stories are categorised
 Every headline is matched against English keywords **and** more than 900 terms in 16 other languages

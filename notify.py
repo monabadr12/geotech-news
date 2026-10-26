@@ -576,9 +576,11 @@ def week_summary(digests, key, cfg, today=None):
         "span": span_text(monday, sunday), "monday": lo, "sunday": hi,
         "in_progress": sunday >= today, "send_on": send_on.isoformat(), "events_from": ref.isoformat(),
         "digests": [{"date": d["date"][:10], "stories": len(d.get("stories") or [])} for d in days],
-        "figures": {"stories": len(stories), "rated": sum(1 for s in stories if s.get("relevance")),
+        # stories: the ones listed; small: the 3s, counted apart; rated: every story Claude rated, the 3s included;
+        # covered: what the regional coverage counts
+        "figures": {"stories": len(stories), "rated": sum(1 for s in week_all if s.get("relevance")),
                     "top": len(fives), "papers": len(papers), "digests": len(days), "themes": len(themes),
-                    "small": len(small), "covered": len(week_all)},  # covered: what the regional coverage counts
+                    "small": len(small), "covered": len(week_all)},
         "themes": [(t, themes[t]) for t in order if t in themes],
         "top": top, "more5": more5[:limit], "more5_hidden": max(0, len(more5) - limit),
         "developing": None if developing is None else developing[:limit],
@@ -609,6 +611,9 @@ def coverage_intro(W):
     """The first sentence of the regional coverage, e-mail and page alike."""
     return ("Stories this week by ISSMGE region" + (", the smaller local ones (rated 3) included," if W["figures"].get("small")
                                                     else "") + " and the member societies whose countries had none.")
+
+
+SMALL_STAT = "smaller local (rated 3)"  # the figure for the week's 3s, beside the stories the summary lists
 
 
 def small_text(W, archive="archive"):
@@ -775,8 +780,9 @@ def render_alert(stories, cfg, digests=(), opts=None):
 
 
 def figures_cells(F):
-    cells = [(F["stories"], "stories"), (F["rated"], "AI-rated"), (F["top"], "rated 5 / 5"),
-             (F["papers"], "papers"), (F["digests"], "digests")]  # one-line labels keep the tiles even on phones
+    # one-line labels keep the tiles even on phones: the 3s are "rated 3" here, explained in the line below the tiles
+    cells = ([(F["stories"], "stories")] + ([(F["small"], "rated 3")] if F.get("small") else [])
+             + [(F["rated"], "AI-rated"), (F["top"], "rated 5 / 5"), (F["papers"], "papers"), (F["digests"], "digests")])
     return "".join(f"<div style='display:inline-block;vertical-align:top;width:92px;margin:0 6px 6px 0;padding:8px 9px;"
                    f"background:{SOFT};border:1px solid {LINE};border-radius:8px'>"
                    f"<span style='display:block;font:700 21px {SERIF};color:{BRAND}'>{v:,}</span> "
@@ -1132,7 +1138,9 @@ def week_body(W, cfg, rec, opts, older, newer, last_key):
     eyebrow = ("<a href='index.html'>Weekly summaries</a> · "
                + " · ".join(f"<a href='{root}issues/{w['key']}.html'>{esc(w['label'])} issue window</a>" for w in W["windows"])
                + (" · <span class='badge'>In progress</span>" if W["in_progress"] else ""))
-    stats = (site_builder.stat(f"{F['stories']:,}", "stories") + site_builder.stat(f"{F['rated']:,}", "AI-rated")
+    stats = (site_builder.stat(f"{F['stories']:,}", "stories")
+             + (site_builder.stat(f"{F['small']:,}", SMALL_STAT) if F.get("small") else "")
+             + site_builder.stat(f"{F['rated']:,}", "AI-rated")
              + site_builder.stat(F["top"], "rated 5 / 5") + site_builder.stat(F["papers"], "research papers")
              + site_builder.stat(F["digests"], "daily digests"))
     lede = ("The week's geotechnical news for the editorial team: top stories, developing stories, regional coverage, "
@@ -1239,7 +1247,9 @@ def index_body(summaries, cfg, rec, opts, last_key):
                                   f"Every {opts['weekday']} the news desk e-mails the editorial team a summary of the week before.")
                 + mail_card(None, rec, opts, last_key)
                 + "<p class='empty'>No weekly summaries yet. They appear here after the first scan.</p>")
+    small = sum(W["figures"].get("small") or 0 for W in summaries)
     stats = (site_builder.stat(len(summaries), "weeks") + site_builder.stat(f"{sum(W['figures']['stories'] for W in summaries):,}", "stories")
+             + (site_builder.stat(f"{small:,}", SMALL_STAT) if small else "")
              + site_builder.stat(sum(W["figures"]["top"] for W in summaries), "rated 5 / 5")
              + site_builder.stat(sum(W["figures"]["digests"] for W in summaries), "daily digests"))
     out = [site_builder.hero(f"<a href='{root}archive.html'>Archive</a> · Weekly summaries", "Weekly summaries",
