@@ -139,6 +139,7 @@ ICONS = {
     "chev": "<path d='m6 9 6 6 6-6'/>",
 }
 FAVICON = (ASSETS / "favicon.svg").read_text(encoding="utf-8") if (ASSETS / "favicon.svg").exists() else ""
+MPC_MARK = (ASSETS / "mpc-mark.svg").read_text(encoding="utf-8").strip() if (ASSETS / "mpc-mark.svg").exists() else FAVICON  # the MPC logo beside the site name
 
 
 # ------------------------------------------------------------------ data
@@ -589,7 +590,7 @@ def page(cfg, title, body, root, active, description="", head=""):
 <link rel="stylesheet" href="{root}assets/style.css">{head}
 </head><body{' class="has-ask"' if ask else ''} data-root="{root}" data-repo="{esc(repository(cfg))}" data-assistant="{esc(assistant_endpoint(cfg))}" data-rating-from="{RULE_START}">
 <header class="masthead"><div class="wrap masthead-inner">
-<a class="brand" href="{root}index.html"><span class="brand-mark" aria-hidden="true">{FAVICON}</span>
+<a class="brand" href="{root}index.html"><span class="brand-mark" aria-hidden="true">{MPC_MARK}</span>
 <span><span class="brand-name">Geotechnical News Desk</span><span class="brand-sub">ISSMGE&nbsp;– <span class="brand-sub-x">Magazine Presidential Committee&nbsp;(MPC)</span><span class="brand-sub-s">MPC</span></span></span></a>
 <nav class="nav" aria-label="Main">{nav_html(root, active)}</nav>
 <div class="mast-actions"><a class="method-btn{' active' if about else ''}" href="{root}about.html"{CURRENT if about else ''} aria-label="Method &amp; sources" title="How the digest is made, and the sources it reads">{icon('book')}<span class="nav-l">Method &amp; sources</span><span class="nav-s">Method</span></a>
