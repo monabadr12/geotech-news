@@ -14,6 +14,7 @@ under map: in config.yaml.
 """
 import datetime as dt
 import json
+import math
 import os
 import sys
 
@@ -65,6 +66,30 @@ def canonical(code):
     code = code_of(code)
     code = ALIASES.get(code, code)
     return code if code in world()["countries"] else ""
+
+
+def label_point(code):
+    """Where the map puts a country's circle (Natural Earth's label point, in map units), or None."""
+    known = world()["countries"].get(canonical(code))
+    point = known.get("c") if known else None
+    return (float(point[0]), float(point[1])) if isinstance(point, list) and len(point) == 2 else None
+
+
+# The map's projection, Equal Earth (Šavrič, Patterson and Jenny, 2018), as tools/make_world.py draws assets/world.json:
+# 1000 map units per radian, y down. The Events page places the cities of the events with it.
+_A1, _A2, _A3, _A4 = 1.340264, -0.081106, 0.000893, 0.003796
+_M = math.sqrt(3) / 2
+
+
+def project(lon, lat):
+    """(x, y) on the world map of a longitude and latitude in degrees."""
+    lam, phi = math.radians(lon), math.radians(max(-90.0, min(90.0, lat)))
+    t = math.asin(_M * math.sin(phi))
+    t2 = t * t
+    t6 = t2 * t2 * t2
+    x = lam * math.cos(t) / (_M * (_A1 + 3 * _A2 * t2 + t6 * (7 * _A3 + 9 * _A4 * t2)))
+    y = t * (_A1 + _A2 * t2 + t6 * (_A3 + _A4 * t2))
+    return x * 1000, -y * 1000
 
 
 def country_name(code):
