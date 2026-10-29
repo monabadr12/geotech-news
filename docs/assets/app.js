@@ -45,6 +45,77 @@
       longDate(new Date(start.getTime() - 864e5)) + " measured geotechnical substance alone, without size.";
   }
 
+  /* ---------- the top bar's menus (Latest, World map) ----------
+     Each is a <details> element, so it opens and closes by tap, click, Enter or Space even without this script.
+     Here: one menu open at a time; it closes on a tap or click outside, after a choice, when the focus leaves it,
+     and with Escape (the focus goes back to its button); the arrow keys (and Home, End) move through its items;
+     a menu that would run off the right edge of the screen opens leftwards, and one taller than the screen (a phone
+     held sideways) scrolls on its own. */
+  var menus = Array.prototype.slice.call(document.querySelectorAll(".nav-group"));
+  function closeMenus(except) { menus.forEach(function (d) { if (d !== except && d.open) d.open = false; }); }
+  menus.forEach(function (d) {
+    var button = d.querySelector("summary"), list = d.querySelector(".nav-menu");
+    var items = Array.prototype.slice.call(d.querySelectorAll(".nav-menu a"));
+    function fit() {
+      list.classList.remove("to-left");
+      list.style.maxHeight = "";
+      var box = list.getBoundingClientRect();
+      if (box.right > document.documentElement.clientWidth - 8) list.classList.add("to-left");
+      var room = window.innerHeight - box.top - 8;
+      if (box.height > room) list.style.maxHeight = Math.max(140, room) + "px";
+    }
+    d._fit = fit;
+    d.addEventListener("toggle", function () {
+      if (d.open) { closeMenus(d); fit(); }
+    });
+    d.addEventListener("keydown", function (e) {
+      var at = items.indexOf(document.activeElement), last = items.length - 1, to = -1;
+      if (e.key === "Escape" || e.key === "Esc") {
+        if (!d.open) return;
+        e.preventDefault();
+        d.open = false;
+        button.focus();
+        return;
+      }
+      if (e.key === "ArrowDown") to = at < 0 || at === last ? 0 : at + 1;
+      else if (e.key === "ArrowUp") to = at <= 0 ? last : at - 1;
+      else if ((e.key === "Home" || e.key === "End") && at >= 0) to = e.key === "Home" ? 0 : last;
+      if (to < 0) return;
+      e.preventDefault();
+      if (!d.open) d.open = true;
+      items[to].focus();
+    });
+    d.addEventListener("focusout", function (e) {  // Tab past the last item, or Shift+Tab before the button
+      if (d.open && e.relatedTarget && !d.contains(e.relatedTarget)) d.open = false;
+    });
+    items.forEach(function (a) { a.addEventListener("click", function () { d.open = false; }); });
+  });
+  if (menus.length) {
+    // A press outside closes the menu. With a mouse, at once (pointerdown). With a finger, when it lifts after a tap
+    // (pointerup; iPad Safari sends no click for a tap on plain text): a finger that scrolls the page sends
+    // pointercancel instead, so the menu stays open while the page or the menu itself is scrolled.
+    var outside = function (e) {
+      menus.forEach(function (d) { if (d.open && !d.contains(e.target)) d.open = false; });
+    };
+    var tapStart = null;
+    document.addEventListener("pointerdown", function (e) {
+      if (e.pointerType === "mouse" || e.pointerType === "pen") { outside(e); return; }
+      tapStart = { id: e.pointerId, x: e.clientX, y: e.clientY };
+    });
+    document.addEventListener("pointerup", function (e) {
+      var t = tapStart;
+      tapStart = null;
+      if (!t || t.id !== e.pointerId || Math.abs(e.clientX - t.x) > 12 || Math.abs(e.clientY - t.y) > 12) return;
+      outside(e);
+    });
+    document.addEventListener("pointercancel", function () { tapStart = null; });
+    window.addEventListener("pageshow", function () { closeMenus(null); });  // back to a page left with a menu open
+    document.addEventListener("keydown", function (e) {  // Escape also when the focus is elsewhere on the page
+      if (e.key === "Escape" || e.key === "Esc") closeMenus(null);
+    });
+    window.addEventListener("resize", function () { menus.forEach(function (d) { if (d.open) d._fit(); }); });
+  }
+
   /* ---------- toast ---------- */
   var toastEl = document.getElementById("toast"), toastTimer;
   /* owner: the storage key of the run being followed; closing its message stops following */

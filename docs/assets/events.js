@@ -1,5 +1,6 @@
-/* Geotechnical News Desk — events page: filters (text, kind, region, ISSMGE only), the days left to each
-   deadline counted from the reader's today (the page itself is rebuilt once a day), and the feed address. */
+/* Geotechnical News Desk — events page: filters (text, kind, region, ISSMGE only; the map above the list,
+   eventmap.js, follows them), the days left to each deadline counted from the reader's today (the page itself is
+   rebuilt once a day), and the feed address. */
 (function () {
   "use strict";
 
@@ -46,12 +47,26 @@
       count.textContent = shown === cards.length ? cards.length + (cards.length === 1 ? " event" : " events")
         : "Showing " + shown + " of " + cards.length;
       if (none) none.hidden = shown !== 0;
+      // the map above the list (eventmap.js) shows the same events
+      var ids = cards.filter(function (c) { return !c.hidden; }).map(function (c) { return c.id.replace(/^ev-/, ""); });
+      try { document.dispatchEvent(new CustomEvent("events-filtered", { detail: ids })); } catch (e) { /* an old browser: the map shows them all */ }
     };
     [text, kind, region, issmge].forEach(function (el) {
       if (el) { el.addEventListener("input", apply); el.addEventListener("change", apply); }
     });
     bar.hidden = false;
     apply();
+
+    // A card reached from a link (the map, the deadlines) lands just below the filters, which stick to the top of the
+    // screen on wider screens and take one or two rows: their height is --ev-stick (style.css, .ev-card).
+    var stick = function () {
+      var cs = window.getComputedStyle(bar);
+      var h = cs.position === "sticky" ? bar.getBoundingClientRect().height + (parseFloat(cs.top) || 0) : 0;
+      document.documentElement.style.setProperty("--ev-stick", Math.ceil(h) + "px");
+    };
+    stick();
+    window.addEventListener("resize", stick);
+    if (window.ResizeObserver) new ResizeObserver(stick).observe(bar);
   }
 
   /* ---------- subscription: the feed's address where this page is served, and a copy button ---------- */
