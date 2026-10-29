@@ -136,6 +136,7 @@ ICONS = {
     "pin": "<path d='M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z'/><circle cx='12' cy='10' r='3'/>",
     "globe": "<circle cx='12' cy='12' r='10'/><path d='M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z'/>",
     "check": "<path d='m9 11 3 3L22 4'/><path d='M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11'/>",
+    "chev": "<path d='m6 9 6 6 6-6'/>",
 }
 FAVICON = (ASSETS / "favicon.svg").read_text(encoding="utf-8") if (ASSETS / "favicon.svg").exists() else ""
 
@@ -516,21 +517,67 @@ def place_text(s):
 
 
 # ------------------------------------------------------------------ page parts
+# The top bar: three items, leaving room for more. "Latest" and "World map" open a short menu (a drop-down, the
+# <details> element, so it also works without the script; app.js closes it on a tap outside, after a choice and with
+# Escape), "Search" is a plain tab. Each item: (label, shorter label for phones or "", what it opens). A menu lists
+# (page, label, what the page is, page key); a tab is (page, page key). The page key is page()'s "active".
+# Method & sources is a button beside Scan now, and the AI assistant the round "Ask AI" button at the bottom right.
+NAV = [
+    ("Latest", "", [("index.html", "Latest", "Today's digest", "latest"),
+                    ("trends.html", "Trends", "Charts by month and quarter", "trends"),
+                    ("developing.html", "Developing stories", "Follow-ups on one event or site", "developing"),
+                    ("archive.html", "Archive", "Every digest, by quarter", "archive")]),
+    ("World map", "Map", [("map.html", "World map", "Stories by country", "map"),
+                          ("events.html", "Events", "Conferences and deadlines", "events")]),
+    ("Search", "", ("search.html", "search")),
+]
+
+
+CURRENT = " aria-current='page'"
+HERE_SR = "<span class='sr-only'>, current section</span>"  # read out on the menu holding the current page
+
+
+def nav_html(root, active):
+    """The top bar's items: the menus (Latest, World map) and the Search tab, the current page marked."""
+    out = []
+    for label, short, target in NAV:
+        text = (f"<span class='nav-l'>{esc(label)}</span><span class='nav-s'>{esc(short)}</span>" if short
+                else f"<span>{esc(label)}</span>")
+        if isinstance(target, tuple):  # a plain tab
+            href, key = target
+            here = key == active
+            out.append(f"<a class='nav-tab{' active' if here else ''}' href='{root}{href}'"
+                       f"{CURRENT if here else ''}>{text}</a>")
+            continue
+        here = any(key == active for *_, key in target)
+        menu_id = "menu-" + slug_id(label)
+        items = "".join(f"<li><a href='{root}{href}'{CURRENT if key == active else ''}>"
+                        f"<b>{esc(name)}</b><small>{esc(what)}</small></a></li>" for href, name, what, key in target)
+        # name='topnav': browsers that know it keep one menu open at a time even without the script
+        out.append(f"<details class='nav-group{' active' if here else ''}' name='topnav'><summary class='nav-tab' "
+                   f"aria-controls='{menu_id}'>{text}{HERE_SR if here else ''}"
+                   f"{icon('chev', 'ico nav-chev')}</summary>"
+                   f"<ul class='nav-menu' id='{menu_id}' aria-label='{esc(label)}'>{items}</ul></details>")
+    return "".join(out)
+
+
+def slug_id(text):
+    """'World map' -> 'world-map', for element ids."""
+    return re.sub(r"[^a-z0-9]+", "-", str(text).lower()).strip("-")
+
+
 def page(cfg, title, body, root, active, description="", head=""):
     mag = (cfg.get("magazine") or {}).get("name", "ISSMGE Magazine")
-    # (page, label, shorter label for narrow screens, key); style.css shows one of the two labels
-    nav = [("index.html", "Latest", "", "latest"), ("archive.html", "Archive", "", "archive"),
-           ("search.html", "Search", "", "search"), ("developing.html", "Developing stories", "Developing", "developing"),
-           ("map.html", "World map", "Map", "map"), ("events.html", "Events", "", "events"),
-           ("trends.html", "Trends", "", "trends"), ("assistant.html", "AI assistant", "Assistant", "assistant"),
-           ("about.html", "Method & sources", "Method", "about")]
-    current = " class='active' aria-current='page'"
-    links = "".join(f"<a href='{root}{href}'{current if key == active else ''}>"
-                    + (f"<span class='nav-l'>{esc(label)}</span><span class='nav-s'>{esc(short)}</span>" if short else esc(label))
-                    + "</a>" for href, label, short, key in nav)
+    about = active == "about"
+    # the round Ask AI button, on every page but the assistant's own (body.has-ask leaves room for it at the end);
+    # printed right after the header, so it is the next keyboard stop after Scan now and a landmark of its own
+    ask = ("" if active == "assistant" else
+           f"<nav class='ask-nav' aria-label='AI assistant'><a class='ask-fab' href='{root}assistant.html' "
+           f"title='Ask the AI assistant about the news, events and your documents'>{icon('spark')}<span>Ask AI</span>"
+           f"</a></nav>\n")
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>{esc(title)} · Geotechnical News Desk</title>
 <meta name="description" content="{esc(description or 'Geotechnical news digest for the ' + mag)}">
 <meta name="theme-color" content="#16324f">
@@ -540,14 +587,15 @@ def page(cfg, title, body, root, active, description="", head=""):
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{root}assets/style.css">{head}
-</head><body data-root="{root}" data-repo="{esc(repository(cfg))}" data-assistant="{esc(assistant_endpoint(cfg))}" data-rating-from="{RULE_START}">
+</head><body{' class="has-ask"' if ask else ''} data-root="{root}" data-repo="{esc(repository(cfg))}" data-assistant="{esc(assistant_endpoint(cfg))}" data-rating-from="{RULE_START}">
 <header class="masthead"><div class="wrap masthead-inner">
 <a class="brand" href="{root}index.html"><span class="brand-mark" aria-hidden="true">{FAVICON}</span>
-<span><span class="brand-name">Geotechnical News Desk</span><span class="brand-sub">{esc(mag)} · editorial monitoring</span></span></a>
-<nav class="nav" aria-label="Main">{links}</nav>
-<div class="mast-actions"><button type="button" class="scan-btn" id="scan-btn" title="Start a new scan on GitHub">{icon('scan')}<span>Scan now</span></button></div>
+<span><span class="brand-name">Geotechnical News Desk</span><span class="brand-sub">ISSMGE&nbsp;– <span class="brand-sub-x">Magazine Presidential Committee&nbsp;(MPC)</span><span class="brand-sub-s">MPC</span></span></span></a>
+<nav class="nav" aria-label="Main">{nav_html(root, active)}</nav>
+<div class="mast-actions"><a class="method-btn{' active' if about else ''}" href="{root}about.html"{CURRENT if about else ''} aria-label="Method &amp; sources" title="How the digest is made, and the sources it reads">{icon('book')}<span class="nav-l">Method &amp; sources</span><span class="nav-s">Method</span></a>
+<button type="button" class="scan-btn" id="scan-btn" title="Start a new scan on GitHub">{icon('scan')}<span>Scan now</span></button></div>
 </div></header>
-<main class="wrap">{body}</main>
+{ask}<main class="wrap">{body}</main>
 <footer class="foot"><div class="wrap foot-inner"><span>Headlines link to the original publishers; the site shows none of their text or images beyond the headline. Treat every story as a lead and check the facts with the primary source before publishing: <a href="{root}about.html#copyright">before you use a story</a>.
 Ratings, themes, angles and translations are machine-assisted suggestions for the editorial team.</span>
 <a href="{root}reports/site-report.docx" download>{icon('doc')} Website report (Word)</a></div></footer>

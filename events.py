@@ -747,6 +747,447 @@ def stamp_of(updated, today):
     return when.astimezone(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
 
+# ------------------------------------------------------------------ the map of events (Events page)
+# Where the events' cities are (latitude, longitude), for the map on the Events page: the cities of the calendar and
+# others where geotechnical conferences are often held. Names are matched without accents or case ("Zürich" and
+# "zurich" are the same); a few have their other usual names too. An event in a city not listed here is shown in the
+# middle of its country, and the map says so; add the city here (country code, then "City": (latitude, longitude))
+# to place it exactly. Two names at the same point are one place, shown by the name listed first ("Wien" is Vienna).
+# Overseas territories have their own codes (RE Réunion, GP Guadeloupe ...), at the end: the map draws them with their
+# country, and an event there in a city not listed is shown at the territory's first city.
+CITY_POINTS = {
+    "AE": {"Abu Dhabi": (24.45, 54.38), "Dubai": (25.20, 55.27), "Sharjah": (25.35, 55.42)},
+    "AL": {"Tirana": (41.33, 19.82)},
+    "AM": {"Yerevan": (40.18, 44.51)},
+    "AR": {"Buenos Aires": (-34.60, -58.38), "Córdoba": (-31.42, -64.19), "Mendoza": (-32.89, -68.85),
+           "Rosario": (-32.95, -60.65), "Bariloche": (-41.13, -71.31), "San Carlos de Bariloche": (-41.13, -71.31),
+           "Salta": (-24.78, -65.42), "Neuquén": (-38.95, -68.06), "Mar del Plata": (-38.00, -57.55)},
+    "AT": {"Vienna": (48.21, 16.37), "Wien": (48.21, 16.37), "Graz": (47.07, 15.44), "Innsbruck": (47.27, 11.40),
+           "Salzburg": (47.81, 13.06), "Linz": (48.31, 14.29), "Leoben": (47.38, 15.09)},
+    "AU": {"Sydney": (-33.87, 151.21), "Melbourne": (-37.81, 144.96), "Brisbane": (-27.47, 153.03),
+           "Perth": (-31.95, 115.86), "Adelaide": (-34.93, 138.60), "Canberra": (-35.28, 149.13),
+           "Hobart": (-42.88, 147.33), "Darwin": (-12.46, 130.84), "Gold Coast": (-28.02, 153.40),
+           "Cairns": (-16.92, 145.77), "Townsville": (-19.26, 146.82), "Wollongong": (-34.42, 150.89)},
+    "AZ": {"Baku": (40.41, 49.87)},
+    "BA": {"Sarajevo": (43.86, 18.41)},
+    "BD": {"Dhaka": (23.81, 90.41), "Chittagong": (22.36, 91.78)},
+    "BE": {"Brussels": (50.85, 4.35), "Bruxelles": (50.85, 4.35), "Antwerp": (51.22, 4.40), "Antwerpen": (51.22, 4.40),
+           "Ghent": (51.05, 3.72), "Gent": (51.05, 3.72), "Leuven": (50.88, 4.70), "Liège": (50.63, 5.57),
+           "Bruges": (51.21, 3.22)},
+    "BG": {"Sofia": (42.70, 23.32), "Varna": (43.21, 27.91), "Plovdiv": (42.14, 24.75)},
+    "BO": {"La Paz": (-16.50, -68.15), "Santa Cruz de la Sierra": (-17.78, -63.18), "Santa Cruz": (-17.78, -63.18)},
+    "BR": {"São Paulo": (-23.55, -46.63), "Rio de Janeiro": (-22.91, -43.17), "Brasília": (-15.79, -47.88),
+           "Belo Horizonte": (-19.92, -43.94), "Porto Alegre": (-30.03, -51.22), "Salvador": (-12.97, -38.50),
+           "Recife": (-8.05, -34.88), "Fortaleza": (-3.73, -38.53), "Curitiba": (-25.43, -49.27),
+           "Florianópolis": (-27.60, -48.55), "Foz do Iguaçu": (-25.55, -54.59), "Manaus": (-3.12, -60.02),
+           "Belém": (-1.46, -48.50), "Natal": (-5.79, -35.21), "Campinas": (-22.91, -47.06), "São Carlos": (-22.02, -47.89),
+           "Vitória": (-20.32, -40.34), "Goiânia": (-16.69, -49.26)},
+    "BW": {"Gaborone": (-24.65, 25.91)},
+    "CA": {"Toronto": (43.65, -79.38), "Montreal": (45.50, -73.57), "Montréal": (45.50, -73.57), "Vancouver": (49.28, -123.12),
+           "Ottawa": (45.42, -75.70), "Calgary": (51.05, -114.07), "Edmonton": (53.55, -113.49),
+           "Quebec City": (46.81, -71.21), "Québec": (46.81, -71.21), "Halifax": (44.65, -63.58),
+           "Winnipeg": (49.90, -97.14), "Niagara Falls": (43.09, -79.08), "Saskatoon": (52.13, -106.67),
+           "St. John's": (47.56, -52.71), "Victoria": (48.43, -123.37)},
+    "CH": {"Zurich": (47.38, 8.54), "Geneva": (46.20, 6.14), "Genève": (46.20, 6.14), "Lausanne": (46.52, 6.63),
+           "Bern": (46.95, 7.45), "Basel": (47.56, 7.59), "Lugano": (46.00, 8.95), "Lucerne": (47.05, 8.31)},
+    "CI": {"Abidjan": (5.36, -4.01)},
+    "CL": {"Santiago": (-33.45, -70.67), "Valparaíso": (-33.05, -71.62), "Viña del Mar": (-33.02, -71.55),
+           "Concepción": (-36.83, -73.05), "Antofagasta": (-23.65, -70.40), "La Serena": (-29.90, -71.25),
+           "Puerto Varas": (-41.32, -72.99), "Puerto Montt": (-41.47, -72.94), "Punta Arenas": (-53.16, -70.92),
+           "Temuco": (-38.74, -72.60), "Valdivia": (-39.82, -73.25)},
+    "CM": {"Yaoundé": (3.85, 11.50), "Douala": (4.05, 9.77)},
+    "CN": {"Beijing": (39.90, 116.41), "Shanghai": (31.23, 121.47), "Guangzhou": (23.13, 113.26),
+           "Shenzhen": (22.54, 114.06), "Wuhan": (30.59, 114.31), "Chengdu": (30.57, 104.07), "Xi'an": (34.34, 108.94),
+           "Nanjing": (32.06, 118.80), "Hangzhou": (30.27, 120.16), "Tianjin": (39.34, 117.36),
+           "Chongqing": (29.56, 106.55), "Dalian": (38.91, 121.61), "Qingdao": (36.07, 120.38),
+           "Harbin": (45.80, 126.53), "Kunming": (25.04, 102.71), "Changsha": (28.23, 112.94),
+           "Lanzhou": (36.06, 103.83), "Zhengzhou": (34.75, 113.63), "Xiamen": (24.48, 118.09),
+           "Suzhou": (31.30, 120.59), "Shenyang": (41.81, 123.43), "Hefei": (31.82, 117.23), "Jinan": (36.65, 117.12)},
+    "CO": {"Bogotá": (4.71, -74.07), "Medellín": (6.24, -75.58), "Cartagena": (10.39, -75.48), "Cali": (3.45, -76.53),
+           "Barranquilla": (10.96, -74.80)},
+    "CR": {"San José": (9.93, -84.08)},
+    "CU": {"Havana": (23.11, -82.37)},
+    "CY": {"Nicosia": (35.17, 33.36), "Limassol": (34.71, 33.02)},
+    "CZ": {"Prague": (50.08, 14.44), "Praha": (50.08, 14.44), "Brno": (49.20, 16.61), "Ostrava": (49.82, 18.26)},
+    "DE": {"Berlin": (52.52, 13.40), "Munich": (48.14, 11.58), "München": (48.14, 11.58), "Hamburg": (53.55, 9.99),
+           "Frankfurt": (50.11, 8.68), "Frankfurt am Main": (50.11, 8.68), "Cologne": (50.94, 6.96), "Köln": (50.94, 6.96),
+           "Stuttgart": (48.78, 9.18), "Dresden": (51.05, 13.74), "Aachen": (50.78, 6.08), "Karlsruhe": (49.01, 8.40),
+           "Hanover": (52.37, 9.73), "Hannover": (52.37, 9.73), "Leipzig": (51.34, 12.37), "Bochum": (51.48, 7.22),
+           "Düsseldorf": (51.23, 6.77), "Darmstadt": (49.87, 8.65), "Nuremberg": (49.45, 11.08), "Nürnberg": (49.45, 11.08),
+           "Freiberg": (50.91, 13.34), "Weimar": (50.98, 11.33), "Bremen": (53.08, 8.80), "Essen": (51.46, 7.01),
+           "Kassel": (51.31, 9.48), "Braunschweig": (52.27, 10.53)},
+    "DK": {"Copenhagen": (55.68, 12.57), "Aarhus": (56.16, 10.20), "Aalborg": (57.05, 9.92), "Odense": (55.40, 10.39)},
+    "DO": {"Santo Domingo": (18.49, -69.93), "Punta Cana": (18.58, -68.40)},
+    "DZ": {"Algiers": (36.75, 3.06), "Oran": (35.70, -0.63)},
+    "EC": {"Quito": (-0.18, -78.47), "Guayaquil": (-2.17, -79.92)},
+    "EE": {"Tallinn": (59.44, 24.75), "Tartu": (58.38, 26.72)},
+    "EG": {"Cairo": (30.04, 31.24), "Alexandria": (31.20, 29.92), "Sharm El Sheikh": (27.92, 34.33),
+           "Hurghada": (27.26, 33.81), "Luxor": (25.69, 32.64), "Giza": (30.01, 31.21)},
+    "ES": {"Madrid": (40.42, -3.70), "Barcelona": (41.39, 2.17), "Valencia": (39.47, -0.38), "Seville": (37.39, -5.98),
+           "Sevilla": (37.39, -5.98), "Bilbao": (43.26, -2.93), "Málaga": (36.72, -4.42), "Granada": (37.18, -3.60),
+           "Zaragoza": (41.65, -0.89), "Santander": (43.46, -3.81), "Palma": (39.57, 2.65), "Palma de Mallorca": (39.57, 2.65),
+           "Las Palmas": (28.12, -15.43), "A Coruña": (43.36, -8.41), "Santiago de Compostela": (42.88, -8.54),
+           "San Sebastián": (43.32, -1.98), "Alicante": (38.35, -0.48)},
+    "ET": {"Addis Ababa": (9.03, 38.74)},
+    "FI": {"Helsinki": (60.17, 24.94), "Espoo": (60.21, 24.66), "Tampere": (61.50, 23.76), "Oulu": (65.01, 25.47),
+           "Turku": (60.45, 22.27)},
+    "FR": {"Paris": (48.86, 2.35), "Lyon": (45.76, 4.84), "Marseille": (43.30, 5.37), "Nice": (43.70, 7.27),
+           "Toulouse": (43.60, 1.44), "Grenoble": (45.19, 5.72), "Nantes": (47.22, -1.55), "Bordeaux": (44.84, -0.58),
+           "Lille": (50.63, 3.06), "Strasbourg": (48.57, 7.75), "Montpellier": (43.61, 3.88), "Rennes": (48.11, -1.68),
+           "Champs-sur-Marne": (48.85, 2.60), "Marne-la-Vallée": (48.85, 2.60)},
+    "GB": {"London": (51.51, -0.13), "Leeds": (53.80, -1.55), "Southampton": (50.91, -1.40), "Manchester": (53.48, -2.24),
+           "Birmingham": (52.49, -1.89), "Edinburgh": (55.95, -3.19), "Glasgow": (55.86, -4.25), "Cambridge": (52.21, 0.12),
+           "Oxford": (51.75, -1.26), "Bristol": (51.45, -2.59), "Newcastle": (54.98, -1.61),
+           "Newcastle upon Tyne": (54.98, -1.61), "Liverpool": (53.41, -2.99), "Cardiff": (51.48, -3.18),
+           "Belfast": (54.60, -5.93), "Nottingham": (52.95, -1.15), "Sheffield": (53.38, -1.47), "Dundee": (56.46, -2.97),
+           "Aberdeen": (57.15, -2.09), "Bath": (51.38, -2.36), "Durham": (54.78, -1.57), "Guildford": (51.24, -0.57),
+           "Coventry": (52.41, -1.51), "Brighton": (50.82, -0.14), "Exeter": (50.72, -3.53)},
+    "GE": {"Tbilisi": (41.72, 44.79), "Batumi": (41.64, 41.63)},
+    "GH": {"Accra": (5.60, -0.19), "Kumasi": (6.69, -1.62)},
+    "GR": {"Athens": (37.98, 23.73), "Thessaloniki": (40.64, 22.94), "Patras": (38.25, 21.73), "Heraklion": (35.34, 25.13),
+           "Chania": (35.51, 24.02), "Rhodes": (36.43, 28.22)},
+    "GT": {"Guatemala City": (14.63, -90.51)},
+    "HK": {"Hong Kong": (22.32, 114.17)},
+    "HN": {"Tegucigalpa": (14.07, -87.19)},
+    "HR": {"Zagreb": (45.81, 15.98), "Split": (43.51, 16.44), "Dubrovnik": (42.65, 18.09), "Rijeka": (45.33, 14.44),
+           "Opatija": (45.34, 14.31), "Zadar": (44.12, 15.23)},
+    "HU": {"Budapest": (47.50, 19.04), "Debrecen": (47.53, 21.63), "Szeged": (46.25, 20.15)},
+    "ID": {"Jakarta": (-6.21, 106.85), "Bandung": (-6.92, 107.62), "Yogyakarta": (-7.80, 110.37), "Surabaya": (-7.25, 112.75),
+           "Bali": (-8.65, 115.22), "Denpasar": (-8.65, 115.22), "Nusa Dua": (-8.80, 115.23), "Medan": (3.59, 98.67)},
+    "IE": {"Dublin": (53.35, -6.26), "Cork": (51.90, -8.47), "Galway": (53.27, -9.05), "Limerick": (52.66, -8.63)},
+    "IL": {"Tel Aviv": (32.09, 34.78), "Haifa": (32.79, 34.99)},
+    "IN": {"New Delhi": (28.61, 77.21), "Delhi": (28.70, 77.10), "Mumbai": (19.08, 72.88), "Chennai": (13.08, 80.27),
+           "Bengaluru": (12.97, 77.59), "Bangalore": (12.97, 77.59), "Kolkata": (22.57, 88.36), "Hyderabad": (17.39, 78.49),
+           "Pune": (18.52, 73.86), "Ahmedabad": (23.02, 72.57), "Kochi": (9.93, 76.27), "Guwahati": (26.14, 91.74),
+           "Roorkee": (29.85, 77.89), "Kanpur": (26.45, 80.33), "Surat": (21.17, 72.83), "Jaipur": (26.91, 75.79),
+           "Varanasi": (25.32, 82.97), "Bhubaneswar": (20.30, 85.82), "Chandigarh": (30.73, 76.78),
+           "Visakhapatnam": (17.69, 83.22), "Coimbatore": (11.02, 76.96), "Goa": (15.49, 73.83), "Panaji": (15.49, 73.83),
+           "Tiruchirappalli": (10.79, 78.70), "Mangaluru": (12.91, 74.86), "Mangalore": (12.91, 74.86),
+           "Warangal": (17.97, 79.59), "Dehradun": (30.32, 78.03), "Nagpur": (21.15, 79.09), "Lucknow": (26.85, 80.95)},
+    "IQ": {"Baghdad": (33.32, 44.37), "Erbil": (36.19, 44.01), "Basra": (30.51, 47.81)},
+    "IR": {"Tehran": (35.69, 51.39), "Isfahan": (32.65, 51.67), "Shiraz": (29.59, 52.58), "Tabriz": (38.08, 46.29),
+           "Mashhad": (36.30, 59.61)},
+    "IS": {"Reykjavik": (64.15, -21.94), "Reykjavík": (64.15, -21.94)},
+    "IT": {"Rome": (41.90, 12.50), "Roma": (41.90, 12.50), "Milan": (45.46, 9.19), "Milano": (45.46, 9.19),
+           "Naples": (40.85, 14.27), "Napoli": (40.85, 14.27), "Turin": (45.07, 7.69), "Torino": (45.07, 7.69),
+           "Florence": (43.77, 11.26), "Firenze": (43.77, 11.26), "Bologna": (44.49, 11.34), "Venice": (45.44, 12.32),
+           "Venezia": (45.44, 12.32), "Genoa": (44.41, 8.93), "Genova": (44.41, 8.93), "Palermo": (38.12, 13.36),
+           "Catania": (37.50, 15.09), "Padua": (45.41, 11.88), "Padova": (45.41, 11.88), "Bari": (41.12, 16.87),
+           "Trento": (46.07, 11.12), "Pisa": (43.72, 10.40), "Perugia": (43.11, 12.39), "Cagliari": (39.22, 9.12),
+           "Verona": (45.44, 10.99), "Messina": (38.19, 15.55), "Salerno": (40.68, 14.77), "Taormina": (37.85, 15.29)},
+    "JM": {"Kingston": (17.97, -76.79)},
+    "JO": {"Amman": (31.95, 35.93), "Aqaba": (29.53, 35.01)},
+    "JP": {"Tokyo": (35.68, 139.69), "Kyoto": (35.01, 135.77), "Osaka": (34.69, 135.50), "Fukuoka": (33.59, 130.40),
+           "Sapporo": (43.06, 141.35), "Yokohama": (35.44, 139.64), "Kobe": (34.69, 135.20), "Nagoya": (35.18, 136.91),
+           "Sendai": (38.27, 140.87), "Hiroshima": (34.39, 132.46), "Niigata": (37.92, 139.04), "Okinawa": (26.21, 127.68),
+           "Naha": (26.21, 127.68), "Kumamoto": (32.80, 130.71), "Nagasaki": (32.75, 129.88), "Tsukuba": (36.08, 140.11)},
+    "KE": {"Nairobi": (-1.29, 36.82), "Mombasa": (-4.04, 39.67)},
+    "KH": {"Phnom Penh": (11.56, 104.93), "Siem Reap": (13.36, 103.86)},
+    "KR": {"Seoul": (37.57, 126.98), "Busan": (35.18, 129.08), "Daejeon": (36.35, 127.38), "Incheon": (37.46, 126.71),
+           "Jeju": (33.50, 126.53), "Daegu": (35.87, 128.60), "Gwangju": (35.16, 126.85), "Gyeongju": (35.86, 129.22),
+           "Suwon": (37.26, 127.03)},
+    "KW": {"Kuwait City": (29.38, 47.98)},
+    "KZ": {"Almaty": (43.24, 76.89), "Astana": (51.17, 71.45)},
+    "LA": {"Vientiane": (17.97, 102.63)},
+    "LB": {"Beirut": (33.89, 35.50)},
+    "LK": {"Colombo": (6.93, 79.86), "Kandy": (7.29, 80.64)},
+    "LT": {"Vilnius": (54.69, 25.28), "Kaunas": (54.90, 23.90)},
+    "LU": {"Luxembourg": (49.61, 6.13)},
+    "LV": {"Riga": (56.95, 24.11)},
+    "LY": {"Tripoli": (32.89, 13.19)},
+    "MA": {"Marrakech": (31.63, -7.99), "Marrakesh": (31.63, -7.99), "Rabat": (34.02, -6.84), "Casablanca": (33.57, -7.59),
+           "Fez": (34.03, -5.00), "Tangier": (35.76, -5.83), "Agadir": (30.43, -9.60)},
+    "ME": {"Podgorica": (42.44, 19.26), "Budva": (42.29, 18.84)},
+    "MG": {"Antananarivo": (-18.88, 47.51)},
+    "MK": {"Skopje": (42.00, 21.43), "Ohrid": (41.12, 20.80)},
+    "MM": {"Yangon": (16.84, 96.17)},
+    "MN": {"Ulaanbaatar": (47.89, 106.91)},
+    "MX": {"Mexico City": (19.43, -99.13), "Ciudad de México": (19.43, -99.13), "Guadalajara": (20.67, -103.35),
+           "Monterrey": (25.69, -100.32), "Cancún": (21.16, -86.85), "Puebla": (19.04, -98.21), "Querétaro": (20.59, -100.39),
+           "Mérida": (20.97, -89.62), "Oaxaca": (17.07, -96.73), "Acapulco": (16.85, -99.82), "Puerto Vallarta": (20.65, -105.23),
+           "Tijuana": (32.51, -117.04), "León": (21.12, -101.68)},
+    "MY": {"Kuala Lumpur": (3.14, 101.69), "Penang": (5.41, 100.33), "George Town": (5.41, 100.33),
+           "Kota Kinabalu": (5.98, 116.07), "Kuching": (1.55, 110.36), "Johor Bahru": (1.49, 103.74), "Putrajaya": (2.93, 101.69)},
+    "MZ": {"Maputo": (-25.97, 32.57)},
+    "NA": {"Windhoek": (-22.56, 17.08)},
+    "NG": {"Lagos": (6.52, 3.38), "Abuja": (9.08, 7.40)},
+    "NI": {"Managua": (12.11, -86.24)},
+    "NL": {"Amsterdam": (52.37, 4.90), "Rotterdam": (51.92, 4.48), "Delft": (52.01, 4.36), "The Hague": (52.07, 4.30),
+           "Den Haag": (52.07, 4.30), "Utrecht": (52.09, 5.12), "Eindhoven": (51.44, 5.48), "Papendrecht": (51.83, 4.69),
+           "Groningen": (53.22, 6.57), "Maastricht": (50.85, 5.69), "Enschede": (52.22, 6.89), "Gouda": (52.01, 4.71)},
+    "NO": {"Oslo": (59.91, 10.75), "Trondheim": (63.43, 10.40), "Bergen": (60.39, 5.32), "Stavanger": (58.97, 5.73),
+           "Tromsø": (69.65, 18.96)},
+    "NP": {"Kathmandu": (27.72, 85.32), "Pokhara": (28.21, 83.99), "Lalitpur": (27.67, 85.32)},
+    "NZ": {"Auckland": (-36.85, 174.76), "Wellington": (-41.29, 174.78), "Christchurch": (-43.53, 172.64),
+           "Queenstown": (-45.03, 168.66), "Dunedin": (-45.88, 170.50), "Napier": (-39.49, 176.91), "Rotorua": (-38.14, 176.25),
+           "Hamilton": (-37.79, 175.28)},
+    "OM": {"Muscat": (23.59, 58.41)},
+    "PA": {"Panama City": (8.98, -79.52)},
+    "PE": {"Lima": (-12.05, -77.04), "Cusco": (-13.53, -71.97), "Arequipa": (-16.41, -71.54), "Trujillo": (-8.11, -79.03)},
+    "PH": {"Manila": (14.60, 120.98), "Quezon City": (14.68, 121.04), "Makati": (14.55, 121.02), "Cebu": (10.32, 123.89),
+           "Cebu City": (10.32, 123.89), "Davao": (7.19, 125.46)},
+    "PK": {"Islamabad": (33.68, 73.05), "Lahore": (31.52, 74.36), "Karachi": (24.86, 67.01), "Peshawar": (34.01, 71.58)},
+    "PL": {"Warsaw": (52.23, 21.01), "Warszawa": (52.23, 21.01), "Kraków": (50.06, 19.94), "Cracow": (50.06, 19.94),
+           "Gdańsk": (54.35, 18.65), "Wrocław": (51.11, 17.03), "Poznań": (52.41, 16.93), "Łódź": (51.76, 19.46),
+           "Gliwice": (50.29, 18.67), "Lublin": (51.25, 22.57)},
+    "PR": {"San Juan": (18.47, -66.11)},
+    "PT": {"Lisbon": (38.72, -9.14), "Lisboa": (38.72, -9.14), "Porto": (41.15, -8.61), "Coimbra": (40.21, -8.43),
+           "Funchal": (32.65, -16.91), "Faro": (37.02, -7.93), "Braga": (41.55, -8.42)},
+    "PY": {"Asunción": (-25.26, -57.58)},
+    "QA": {"Doha": (25.29, 51.53)},
+    "RO": {"Bucharest": (44.43, 26.10), "Cluj-Napoca": (46.77, 23.60), "Iași": (47.16, 27.59), "Timișoara": (45.75, 21.23),
+           "Constanța": (44.18, 28.63)},
+    "RS": {"Belgrade": (44.79, 20.45), "Novi Sad": (45.27, 19.83), "Niš": (43.32, 21.90)},
+    "RU": {"Moscow": (55.76, 37.62), "Saint Petersburg": (59.94, 30.31), "St Petersburg": (59.94, 30.31),
+           "Novosibirsk": (55.01, 82.93), "Kazan": (55.79, 49.12), "Yekaterinburg": (56.84, 60.61), "Perm": (58.01, 56.25),
+           "Vladivostok": (43.12, 131.89), "Sochi": (43.60, 39.73), "Tomsk": (56.48, 84.95)},
+    "RW": {"Kigali": (-1.95, 30.06)},
+    "SA": {"Riyadh": (24.71, 46.68), "Jeddah": (21.49, 39.19), "Dammam": (26.39, 50.10), "Dhahran": (26.29, 50.11),
+           "Mecca": (21.39, 39.86), "Medina": (24.47, 39.61)},
+    "SE": {"Stockholm": (59.33, 18.07), "Gothenburg": (57.71, 11.97), "Göteborg": (57.71, 11.97), "Malmö": (55.60, 13.00),
+           "Lund": (55.70, 13.19), "Uppsala": (59.86, 17.64), "Luleå": (65.58, 22.15), "Linköping": (58.41, 15.62)},
+    "SG": {"Singapore": (1.29, 103.85)},
+    "SI": {"Ljubljana": (46.06, 14.51), "Bled": (46.37, 14.11), "Maribor": (46.55, 15.65), "Portorož": (45.51, 13.59)},
+    "SK": {"Bratislava": (48.15, 17.11), "Košice": (48.72, 21.26), "Žilina": (49.22, 18.74)},
+    "SN": {"Dakar": (14.72, -17.47)},
+    "SV": {"San Salvador": (13.69, -89.22)},
+    "TH": {"Bangkok": (13.76, 100.50), "Chiang Mai": (18.79, 98.98), "Pattaya": (12.93, 100.88), "Phuket": (7.88, 98.39),
+           "Khon Kaen": (16.43, 102.84), "Nakhon Ratchasima": (14.97, 102.10), "Hat Yai": (7.01, 100.47)},
+    "TN": {"Tunis": (36.81, 10.18), "Hammamet": (36.40, 10.62), "Sousse": (35.83, 10.64), "Sfax": (34.74, 10.76)},
+    "TR": {"Istanbul": (41.01, 28.98), "Ankara": (39.93, 32.86), "Izmir": (38.42, 27.14), "Antalya": (36.90, 30.70),
+           "Bursa": (40.19, 29.06), "Trabzon": (41.00, 39.72), "Eskişehir": (39.78, 30.52), "Konya": (37.87, 32.48),
+           "Adana": (37.00, 35.32), "Gaziantep": (37.07, 37.38), "Kayseri": (38.73, 35.48)},
+    "TT": {"Port of Spain": (10.66, -61.51)},
+    "TW": {"Taipei": (25.03, 121.57), "Tainan": (23.00, 120.23), "Kaohsiung": (22.63, 120.30), "Taichung": (24.15, 120.67),
+           "Hsinchu": (24.81, 120.97)},
+    "TZ": {"Dar es Salaam": (-6.79, 39.21), "Arusha": (-3.39, 36.68), "Dodoma": (-6.16, 35.75)},
+    "UA": {"Kyiv": (50.45, 30.52), "Kiev": (50.45, 30.52), "Lviv": (49.84, 24.03), "Odesa": (46.48, 30.72), "Kharkiv": (49.99, 36.23)},
+    "UG": {"Kampala": (0.35, 32.58)},
+    "US": {"New York": (40.71, -74.01), "New York City": (40.71, -74.01), "Washington": (38.91, -77.04),
+           "Washington DC": (38.91, -77.04), "Washington D.C.": (38.91, -77.04), "Philadelphia": (39.95, -75.17),
+           "Orlando": (28.54, -81.38), "Chicago": (41.88, -87.63), "Boston": (42.36, -71.06), "San Francisco": (37.77, -122.42),
+           "Los Angeles": (34.05, -118.24), "San Diego": (32.72, -117.16), "Seattle": (47.61, -122.33), "Denver": (39.74, -104.99),
+           "Dallas": (32.78, -96.80), "Fort Worth": (32.76, -97.33), "Houston": (29.76, -95.37), "Austin": (30.27, -97.74),
+           "Atlanta": (33.75, -84.39), "Miami": (25.76, -80.19), "Las Vegas": (36.17, -115.14), "Phoenix": (33.45, -112.07),
+           "Nashville": (36.16, -86.78), "New Orleans": (29.95, -90.07), "Minneapolis": (44.98, -93.27),
+           "Pittsburgh": (40.44, -80.00), "St. Louis": (38.63, -90.20), "Saint Louis": (38.63, -90.20),
+           "Kansas City": (39.10, -94.58), "Charlotte": (35.23, -80.84), "Baltimore": (39.29, -76.61),
+           "Salt Lake City": (40.76, -111.89), "Portland": (45.52, -122.68), "Sacramento": (38.58, -121.49),
+           "Honolulu": (21.31, -157.86), "Anchorage": (61.22, -149.90), "Indianapolis": (39.77, -86.16),
+           "Columbus": (39.96, -83.00), "Detroit": (42.33, -83.05), "Cincinnati": (39.10, -84.51), "Raleigh": (35.78, -78.64),
+           "Tampa": (27.95, -82.46), "San Antonio": (29.42, -98.49), "Albuquerque": (35.08, -106.65), "Reno": (39.53, -119.81),
+           "Oakland": (37.80, -122.27), "Berkeley": (37.87, -122.27), "Long Beach": (33.77, -118.19),
+           "National Harbor": (38.78, -77.02), "Arlington": (38.88, -77.10), "Charleston": (32.78, -79.93),
+           "Savannah": (32.08, -81.09), "Louisville": (38.25, -85.76), "Memphis": (35.15, -90.05), "Boise": (43.62, -116.20),
+           "Spokane": (47.66, -117.43), "Madison": (43.07, -89.40), "Milwaukee": (43.04, -87.91), "Cleveland": (41.50, -81.69),
+           "Buffalo": (42.89, -78.88), "Omaha": (41.26, -95.93), "Oklahoma City": (35.47, -97.52), "Tucson": (32.22, -110.97),
+           "San Jose": (37.34, -121.89), "Hartford": (41.76, -72.69), "Providence": (41.82, -71.41), "Richmond": (37.54, -77.44),
+           "Norfolk": (36.85, -76.29), "Jacksonville": (30.33, -81.66), "Fort Lauderdale": (26.12, -80.14)},
+    "UY": {"Montevideo": (-34.90, -56.16), "Punta del Este": (-34.96, -54.95)},
+    "UZ": {"Tashkent": (41.30, 69.24)},
+    "VE": {"Caracas": (10.48, -66.90)},
+    "VN": {"Hanoi": (21.03, 105.85), "Ha Noi": (21.03, 105.85), "Ho Chi Minh City": (10.82, 106.63),
+           "Saigon": (10.82, 106.63), "Da Nang": (16.05, 108.20), "Hue": (16.46, 107.59), "Hai Phong": (20.84, 106.69)},
+    "ZA": {"Johannesburg": (-26.20, 28.05), "Cape Town": (-33.92, 18.42), "Durban": (-29.86, 31.02), "Pretoria": (-25.75, 28.19),
+           "Stellenbosch": (-33.93, 18.86), "Sun City": (-25.34, 27.09), "Gqeberha": (-33.96, 25.60),
+           "Port Elizabeth": (-33.96, 25.60)},
+    "ZM": {"Lusaka": (-15.39, 28.32)},
+    "ZW": {"Harare": (-17.83, 31.05), "Victoria Falls": (-17.93, 25.84)},
+    # overseas territories (geomap.ALIASES)
+    "BQ": {"Kralendijk": (12.15, -68.27)},
+    "CC": {"West Island": (-12.19, 96.83)},
+    "CX": {"Flying Fish Cove": (-10.42, 105.68)},
+    "GF": {"Cayenne": (4.93, -52.33), "Kourou": (5.16, -52.65)},
+    "GI": {"Gibraltar": (36.14, -5.35)},
+    "GP": {"Pointe-à-Pitre": (16.24, -61.53), "Basse-Terre": (15.99, -61.73)},
+    "MQ": {"Fort-de-France": (14.60, -61.07)},
+    "RE": {"Saint-Denis": (-20.88, 55.45), "Saint-Pierre": (-21.34, 55.48)},
+    "SJ": {"Longyearbyen": (78.22, 15.65)},
+    "TK": {"Fakaofo": (-9.38, -171.22)},
+    "YT": {"Mamoudzou": (-12.78, 45.23)},
+}
+
+
+def place_key(text):
+    """A place name for matching: no accents, case or punctuation ("Zürich" is "zurich", "St. Louis" "st louis")."""
+    text = unicodedata.normalize("NFKD", str(text or "").translate(PLAIN_LETTERS))
+    text = "".join(ch for ch in text if not unicodedata.combining(ch)).lower()
+    return " ".join(re.sub(r"[^a-z0-9]+", " ", text).split())
+
+
+PLAIN_LETTERS = str.maketrans({"ł": "l", "Ł": "L", "ø": "o", "Ø": "O", "đ": "d", "Đ": "D", "ß": "ss", "æ": "ae", "ı": "i"})
+_city_keys = {}
+
+
+def known_cities(code):
+    """CITY_POINTS of a country code, for matching: {place_key(name): (the name listed first at that point, point)}."""
+    if not _city_keys:
+        for cc, cities in CITY_POINTS.items():
+            first = {}
+            for name, point in cities.items():
+                first.setdefault(point, name)
+            _city_keys[cc] = {place_key(name): (first[point], point) for name, point in cities.items()}
+    return _city_keys.get(str(code or "").strip().upper(), {})
+
+
+def city_point(city, code):
+    """(name, (latitude, longitude)) of an event's city from CITY_POINTS, or None; the name is the one listed first
+    at that point, so 'Wien' and 'Vienna' are both 'Vienna'. 'Lyon', 'lyon', 'Lyon, France' and 'Lyon (hybrid)' all
+    find Lyon."""
+    known = known_cities(code)
+    text = str(city or "")
+    for candidate in (text, text.split(",")[0], re.sub(r"\(.*?\)", " ", text), re.sub(r"\(.*?\)", " ", text).split(",")[0]):
+        point = known.get(place_key(candidate))
+        if point:
+            return point
+    return None
+
+
+def map_data(events, cfg):
+    """What the Events page's map shows, for events.js (the filters) and eventmap.js (the map): the places (a city
+    from CITY_POINTS, or the middle of the country for a city not listed or not given) with their position on
+    the world map, and per event its place, label, dates and whether it is an ISSMGE event. Events held only online,
+    or whose place is not given yet, have no place (-1); they are counted beside the map. None when the world map's
+    geometry cannot be read."""
+    try:
+        import geomap
+        if not geomap.world().get("countries"):
+            return None
+    except Exception as ex:  # the map is left out, never the page
+        print(f"Events map left out: the world map could not be loaded ({type(ex).__name__}: {ex}).")
+        return None
+    places, index, rows = [], {}, []
+    for e in events:
+        code = geomap.canonical(e["country"])  # the country the map draws it in (Réunion, RE, with France)
+        own = geomap.code_of(e["country"])     # the event's own code, RE for Réunion
+        pos, exact, city = None, False, ""
+        if code:
+            found = city_point(e["city"], own) if e["city"] else None
+            if found:
+                city, point = found
+                pos, exact = geomap.project(point[1], point[0]), True
+            elif own != code:  # an overseas territory: its first city stands for it; none listed, not on the map
+                first = next(iter(known_cities(own).values()), None)
+                pos = geomap.project(first[1][1], first[1][0]) if first else None
+            else:
+                pos = geomap.label_point(code)
+        p = -1
+        if pos:
+            key = (own, city if exact else "")  # one place per city, whichever of its names the events use
+            if key not in index:
+                index[key] = len(places)
+                name = country_name(own)
+                places.append({"x": round(pos[0], 1), "y": round(pos[1], 1), "cc": code, "e": 1 if exact else 0,
+                               "n": f"{city}, {name}" if exact else name})
+            p = index[key]
+        rows.append({"i": e["id"], "n": label_of(e), "t": full_name(e), "d": date_range(e["start"], e["end"]),
+                     "c": e["city"], "cc": code or e["country"], "k": KIND_CLASS.get(e["kind"], "k-other"),
+                     "s": 1 if e["issmge"] else 0, "o": 1 if e["online"] else 0, "p": p})
+    codes = sorted({pl["cc"] for pl in places} | {r["cc"] for r in rows if r["cc"]})
+    return {"places": places, "events": rows,
+            "names": {c: country_name(c) for c in codes},
+            "regions": {c: geomap.issmge_region(c, cfg) for c in codes}}
+
+
+def map_rows(data, ids=None):
+    """The table view: per country (most events first) its events, then the events not on the map. ids: the events
+    shown (all when None)."""
+    shown = [r for r in data["events"] if ids is None or r["i"] in ids]
+    by_country = {}
+    for r in shown:
+        if r["p"] >= 0:
+            by_country.setdefault(data["places"][r["p"]]["cc"], []).append(r)
+    out = sorted(((data["names"].get(cc, cc), cc, rs) for cc, rs in by_country.items()), key=lambda x: (-len(x[2]), x[0]))
+    online = [r for r in shown if r["p"] < 0 and r["o"]]
+    unknown = [r for r in shown if r["p"] < 0 and not r["o"]]
+    return out, online, unknown
+
+
+def map_event_links(rs):
+    return "".join(f"<li><a href='#ev-{esc(r['i'])}'>{esc(r['n'])}</a><span>{esc(' · '.join(x for x in (r['c'], r['d']) if x))}"
+                   f"{' · ISSMGE' if r['s'] else ''}</span></li>" for r in rs)
+
+
+def map_table(data):
+    countries, online, unknown = map_rows(data)
+    body = []
+    for name, cc, rs in countries:
+        body.append(f"<tr><th scope='row'>{esc(name)}</th><td>{esc(data['regions'].get(cc) or '–')}</td>"
+                    f"<td class='num'>{len(rs)}</td><td class='num'>{sum(r['s'] for r in rs)}</td>"
+                    f"<td><ul class='evm-tl'>{map_event_links(rs)}</ul></td></tr>")
+    if not body:
+        body.append("<tr><td colspan='5' class='viz-empty'>No upcoming event has a place yet.</td></tr>")
+    off = [(label, rs) for label, rs in (("Online only", online), ("Place not given yet", unknown)) if rs]
+    foot = "".join(f"<tr class='evm-off-row'><th scope='row'>{label}</th><td>Not on the map</td><td class='num'>{len(rs)}</td>"
+                   f"<td class='num'>{sum(r['s'] for r in rs)}</td><td><ul class='evm-tl'>{map_event_links(rs)}</ul></td></tr>"
+                   for label, rs in off)
+    return ("<div class='table-wrap'><table class='overview viz-tbl map-tbl evm-tbl'><thead><tr><th scope='col'>Country</th>"
+            "<th scope='col'>ISSMGE region</th><th scope='col' class='num'>Events</th><th scope='col' class='num'>ISSMGE "
+            "events</th><th scope='col'>The events (select one to go to it in the list)</th></tr></thead>"
+            f"<tbody>{''.join(body)}</tbody>" + (f"<tbody class='evm-off-body'>{foot}</tbody>" if foot else "")
+            + "</table></div>")
+
+
+def map_summary(data):
+    """'39 events in 31 places in 22 countries. Not on the map: 1 online only, 5 with no place given yet.'"""
+    countries, online, unknown = map_rows(data)
+    on_map = sum(len(rs) for _, _, rs in countries)
+    places = len({r["p"] for _, _, rs in countries for r in rs})
+    text = (f"{site_builder.count(on_map, 'event')} in {site_builder.count(places, 'place')} in "
+            f"{site_builder.count(len(countries), 'country', 'countries')}.")
+    off = [x for x in (f"{len(online)} online only" if online else "",
+                       f"{len(unknown)} with no place given yet" if unknown else "") if x]
+    return text + (f" Not on the map: {', '.join(off)}." if off else "")
+
+
+def map_section(events, cfg):
+    """The map above the list of upcoming events: where they take place (a circle per city, gold where an ISSMGE
+    event is), what is there on a tap, and a table of the countries with their events. eventmap.js draws it; the
+    filters above it (events.js) apply to the map as to the list. "" when the map cannot be made."""
+    data = map_data(events, cfg)
+    if not data or not events:
+        return ""
+    regions = ["", "Africa", "Asia", "Australasia", "Europe", "North America", "South America"]
+    zoom = "".join(f"<button type='button' aria-pressed='{'true' if not r else 'false'}' data-zoom='{esc(r)}'>{esc(r or 'World')}</button>"
+                   for r in regions)
+    zoom_opts = "".join(f"<option value='{esc(r)}'>{esc(r or 'World')}</option>" for r in regions)
+    legend = ("<ul class='viz-legend evm-key'><li><i class='ek-issmge'></i>With an ISSMGE event</li>"
+              "<li><i class='ek-other'></i>Other events only</li><li><i class='ek-host'></i>Country with events</li>"
+              "<li class='ek-note'>The number is how many events; nearby places share a circle until you zoom in.</li></ul>")
+    return (
+        "<figure class='viz map-fig evm-fig' id='evm-fig'><div class='viz-head'><div><h3>Where the events take place</h3>"
+        f"<p id='evm-sub'>{esc(map_summary(data))}</p></div>"
+        "<div class='viz-toggle' role='group' aria-label='View'><button type='button' aria-pressed='true' data-view='chart'>Map</button>"
+        "<button type='button' aria-pressed='false' data-view='table'>Table</button></div></div>"
+        "<div class='viz-chart evm-chart'>"
+        f"<div class='map-zoom evm-zoom' role='group' aria-label='Zoom to a region'>{zoom}</div>"
+        f"<label class='field map-zoom-sel'><span>Zoom to</span><select id='evm-zoom-sel'>{zoom_opts}</select></label>"
+        "<div class='map-grid'><div class='map-main'>"
+        "<div class='map-canvas evm-canvas' id='evm-canvas' tabindex='0' role='application' aria-roledescription='map' "
+        "aria-label='Map of the upcoming events. Arrow keys move between the places, Enter lists the events there, "
+        "Escape closes. The Table button lists every country and event.'><p class='map-loading'>Loading the map…</p></div>"
+        f"<div class='map-legend'>{legend}</div><p class='map-sr' id='evm-live' aria-live='polite'></p></div>"
+        "<aside class='map-panel evm-panel' id='evm-panel' aria-label='Events by place'></aside></div></div>"
+        f"<div class='viz-table' id='evm-table' hidden>{map_table(data)}</div>"
+        f"<figcaption class='map-credit'>{esc(geomap_credit())} Each circle is the event's city; an event whose city is "
+        "not on the map's list of cities, or not given, is shown in the middle of its country. Events held only online "
+        "and those whose place is not given yet are counted above the map, not drawn on it.</figcaption></figure>"
+        f"<script type='application/json' id='evm-data'>{script_json(data)}</script>")
+
+
+def script_json(data):
+    """JSON safe inside <script>: no "<" survives, so an event's name cannot close the element."""
+    return json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("<", "\\u003c")
+
+
+def geomap_credit():
+    try:
+        import geomap
+        return geomap.CREDIT
+    except Exception:
+        return ""
+
+
 # ------------------------------------------------------------------ the page
 def kind_badge(kind):
     return f"<span class='ev-kind {KIND_CLASS.get(kind, 'k-other')}'>{esc(kind)}</span>"
@@ -914,6 +1355,7 @@ def page_body(cfg, events, found, today, problems, opts):
                 f"<p class='hint'>{state} Grouped by the month they start, with the magazine's issue window.</p>")
     if coming:
         body.append(filters(coming, cfg))
+        body.append(map_section(coming, cfg))  # the map of the same events, above the list; the filters apply to both
         body.append(f"<div class='ev-list'>{month_groups(coming, cfg, today)}</div>"
                     "<p class='empty ev-none' hidden>No events match these filters.</p>")
     else:
@@ -978,7 +1420,10 @@ def build(ctx):
     site_builder.write(docs / "events.html", site_builder.page(
         cfg, "Events calendar", page_body(cfg, events, found, today, problems, opts), "", "events",
         "Geotechnical conferences, ISSMGE events and call-for-papers deadlines",
-        head="<script src='assets/events.js' defer></script>"))
+        head="<script src='assets/events.js' defer></script><script src='assets/eventmap.js' defer></script>"
+             # without JavaScript the map cannot be drawn: its table (the countries and their events) is shown instead
+             "<noscript><style>.evm-chart, .evm-fig .viz-toggle { display: none !important; } "
+             "#evm-table { display: block !important; }</style></noscript>"))
 
     stamp = stamp_of(found["updated"], today)
     feed = []

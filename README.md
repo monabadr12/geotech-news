@@ -23,6 +23,20 @@ Website: **https://monabadr12.github.io/geotech-news/**
 
 ## The website
 
+**Finding your way.** The top bar has three items, leaving room for more later:
+* **Latest ▾** opens a short menu: **Latest** (today's digest), **Trends**, **Developing stories** and **Archive**.
+* **World map ▾** opens a short menu: **World map** and **Events**.
+* **Search** is a plain tab.
+
+Tap or click a menu to open it; tap it again, choose a page or tap anywhere else to close it (only one is open at a
+time). With a keyboard, Tab to it and press Enter or Space; the arrow keys move through it and Escape closes it. The
+menu holding the page you are on is highlighted, and inside it that page is marked. The menus open and close even
+when a browser runs no scripts. At the top right of every page are **Method & sources** (outlined; on a narrow screen
+**Method**, or its book icon alone on a phone) and **Scan now** (gold); at the bottom right a round **Ask AI** button
+opens the AI assistant (on every page but the assistant's own). Every button in the top bar is at least 44 px tall,
+the size of a fingertip on the iPad. To add a page to the bar or to a menu, edit `NAV` near `page()` in
+`site_builder.py`.
+
 | Page | What it is for |
 |---|---|
 | **Latest** | Today's digest: the stories rated 4 and 5, grouped by theme (strongest theme first), with filters for rating, use and keywords; the stories rated 3 follow in a closed section at the end, **Smaller local stories (rated 3)**. Each day's digest page in the Archive is laid out the same way. Beside the news: this week and its summary, upcoming events and call-for-papers deadlines, and the developing stories with new reports. |
@@ -31,12 +45,12 @@ Website: **https://monabadr12.github.io/geotech-news/**
 | **Search** | Search all archived stories and research papers by keyword (place names included), issue window, theme, use and rating; results show where each story happened and the developing story it belongs to; export the results. |
 | **Developing stories** | Events, projects and sites reported more than once, each with its timeline: the failure, then the response, the inquiry, the repair and the court case. Active and earlier ones, with a filter. |
 | **World map** | Stories by the country they are about, for any issue window, the last 30 days or the whole archive, with the ISSMGE regions and the member-society countries that had no stories (the gaps), a table view and a theme filter. |
-| **Events** | Conferences, symposia and courses with their call-for-papers deadlines: ISSMGE events and others, a calendar feed to subscribe to, and the **Refresh calendar** button. |
+| **Events** | Conferences, symposia and courses with their call-for-papers deadlines: ISSMGE events and others, a **map of where they take place** above the list, a calendar feed to subscribe to, and the **Refresh calendar** button. |
 | **Trends** | Charts of stories per month and per quarter by theme, theme shares over time, rising keywords, regions, editorial uses and sources — material for editorials and the year in review. Each chart has hover details and a table view, and the numbers can be downloaded. |
-| **AI assistant** | Chat with Claude about the archive: find stories, compare quarters, follow a developing story ("What is the latest on …?"), look up conferences and deadlines, get a recommended line-up for an issue or a draft in its own words (ending with a *Check before publishing* list), and attach PDF or Word documents (calls for papers, drafts, reports) to discuss them alongside the news. Needs the one-time connector setup below. |
-| **Method & sources** | What is scanned, how stories are scored, located and linked, how events are found and e-mails sent, how to use the stories without breaching copyright, and which sources failed on the latest run. |
+| **AI assistant** (the round **Ask AI** button) | Chat with Claude about the archive: find stories, compare quarters, follow a developing story ("What is the latest on …?"), look up conferences and deadlines, get a recommended line-up for an issue or a draft in its own words (ending with a *Check before publishing* list), and attach PDF or Word documents (calls for papers, drafts, reports) to discuss them alongside the news. Needs the one-time connector setup below. |
+| **Method & sources** (the button at the top right) | What is scanned, how stories are scored, located and linked, how events are found and e-mails sent, how to use the stories without breaching copyright, and which sources failed on the latest run. |
 
-Every page has a **Scan now** button (see below).
+Every page has **Method & sources** and **Scan now** at the top right (see below) and **Ask AI** at the bottom right.
 The footer links the **Website report (Word)**.
 
 ### Issue brief (Word)
@@ -149,6 +163,14 @@ deadlines (calls for abstracts and papers, registration), from two sources:
 * **Refresh calendar** on the Events page starts a refresh at any time: it opens the *Events calendar and weekly summary*
   workflow on GitHub, where you choose **refresh the events calendar** and press **Run workflow**. The run fails, and
   the page says so, when nothing was refreshed (no key, or no event passed the checks).
+* **The map:** above the list of upcoming events, a world map shows where they take place: a circle per city, gold
+  where at least one ISSMGE event is and blue for the others, with the number of events (nearby cities share a circle
+  until you zoom in on a region). Tap a circle, or a country beside the map, to list its events, each linking to its
+  card in the list; the filters above the map apply to it too. Events held only online, and those whose place is not
+  given yet, are counted beside the map; the **Table** button lists every country with its events. Cities are
+  placed from a list in `events.py` (`CITY_POINTS`, about 630 cities, no web lookups; two spellings of one city, such
+  as Wien and Vienna, are one place); an event in a city not on it is shown in the middle of its country until the
+  city is added there.
 * **Subscribe:** the whole calendar is a feed, `https://monabadr12.github.io/geotech-news/events.ics`, that Outlook,
   Google Calendar or Apple Calendar can subscribe to (the Events page explains how); each event also has **Add to
   calendar**. The Latest and issue pages show the next deadlines and events beside the news.
@@ -512,7 +534,7 @@ and delete it. If the website moves, set the Script property `SITE_URL` to its n
 | `brief.py` | Drafts the issue brief with Claude (`python brief.py --window 2026-Q4`, `--final`, `--auto`). |
 | `geomap.py` | The World map page; locates archived stories that have no country yet. |
 | `storylines.py` | Links follow-up reports to the earlier story (each scan) and builds the Developing stories page. |
-| `events.py` | The events calendar: the Events page, the `.ics` feed and the weekly refresh (`python events.py --refresh`). |
+| `events.py` | The events calendar: the Events page and its map (the list of cities is `CITY_POINTS`), the `.ics` feed and the weekly refresh (`python events.py --refresh`). |
 | `notify.py` | Alerts and the weekly summary: sends the e-mails (`--auto`, `--weekly`, `--test`) and builds `docs/weekly/`. |
 | `sync_data.py` | The workflows' save step: puts a run's data on the newest version of the site and rebuilds it. |
 | `check_feeds.py` | Tests candidate feed addresses (run by the *Check feeds* workflow). |
