@@ -1,6 +1,6 @@
 {
  "updated": "2026-10-25T07:08:32+00:00",
- "built": "2026-11-03",
+ "built": "2026-11-04",
  "feed": "https://monabadr12.github.io/geotech-news/events.ics",
  "kinds": [
   "ISSMGE conference",
@@ -70,7 +70,7 @@
    "source": "scan",
    "found": "2026-10-25",
    "notes": "Evening lecture by Dr Benoît Jones at ICE, One Great George Street, 18:30–20:30.",
-   "status": "upcoming"
+   "status": "under way"
   },
   {
    "id": "pbd-v-2026",
@@ -91,7 +91,7 @@
    "source": "scan",
    "found": "2026-10-25",
    "notes": "End date comes from a cut-off GeoEngineer summary, so check it; the conference's own website was not found.",
-   "status": "upcoming"
+   "status": "under way"
   },
   {
    "id": "bga-ecg-advanced-laboratory-testing-dynamic-behavi-2026",
