@@ -905,6 +905,18 @@ events:
     - Institute for Educational Research (IIER)
     - Institute of Research and Journals (IRAJ)
 
+# ---- Geo-News Weekly (docs/geonews/, the weekly page for ISSMGE members) ----
+# Each Monday a draft of the week before is written to data/geonews/<week>.yaml; the MPC
+# editor edits it on GitHub and publishes it with status: approved (see README).
+geonews:
+  name: Geo-News Weekly
+  highlights: 5        # top stories; the first is the story of the week
+  around: 8            # stories around the world (the best of each region in turn)
+  research: 3          # new research papers
+  events_days: 60      # events starting within this many days after the week
+  hashtags: "#Geotechnics #GeotechnicalEngineering #ISSMGE #CivilEngineering"
+  linkedin_page: ""    # the ISSMGE LinkedIn page's address, for a button on the preview page
+
 # ---- Alerts and weekly summary (e-mail) -----------------------------------
 # An e-mail when a 5/5 story appears and a Monday summary for the editorial team.
 # After each daily scan, notify.py sends at most one alert listing the new top-rated

@@ -24,7 +24,8 @@ Website: **https://monabadr12.github.io/geotech-news/**
 ## The website
 
 **Finding your way.** The top bar has three items, leaving room for more later:
-* **Latest ▾** opens a short menu: **Latest** (today's digest), **Trends**, **Developing stories** and **Archive**.
+* **Latest ▾** opens a short menu: **Latest** (today's digest), **Trends**, **Developing stories**, **Geo-News Weekly**
+  (the weekly page for ISSMGE members) and **Archive**.
 * **World map ▾** opens a short menu: **World map** and **Events**.
 * **Search** is a plain tab.
 
@@ -185,6 +186,33 @@ week's summary is also a page on the website (Archive → **Weekly summaries**),
 sends last week's summary at any time. `data/notify.json` records what was sent, so nothing goes out twice.
 Settings (which e-mails, the weekday, the rating that triggers an alert) are under `alerts:` in `config.yaml`. Setting up
 e-mail is described [below](#e-mail-alerts-and-the-weekly-summary-setup-about-10-minutes).
+
+### Geo-News Weekly (the page for ISSMGE members)
+A weekly page of the geotechnical news from around the world for ISSMGE members, at
+`https://monabadr12.github.io/geotech-news/geonews/`, in the colours of the MPC mark: a world map with a numbered pin
+for each story, five **highlights** (the first is the story of the week, with a large picture), eight stories
+**around the world** (the best of each ISSMGE region in turn), three new research papers and the events coming up.
+Every issue stays in the archive (`geonews/archive.html`); each issue page links to the one before and after.
+
+How an issue is made:
+1. **Monday, after the scan:** `geonews.py` writes a draft of the week before (Monday to Sunday) to
+   `data/geonews/<week>.yaml`, for example `data/geonews/2026-W44.yaml`, and e-mails the editorial team.
+2. **Look at it:** the preview page `geonews/preview/<week>.html` shows the issue as members will see it, the
+   LinkedIn post, and every other story of the week with its code. It is not linked from anywhere and search engines
+   are asked to leave it out.
+3. **Change it** on GitHub (the preview's **Edit this issue on GitHub** button, then **Commit changes**): swap a
+   story by pasting another story's code, rewrite a headline or a text, or add a photo (a web link, or a file uploaded
+   with **Upload a photo** to `data/geonews/photos/`). Without a photo a story shows a drawing that matches its
+   subject. Use only photos ISSMGE may use (your own, the society's or free-licensed ones) and name the photographer
+   under `credit`. The instructions are also at the top of each issue file. Each change rebuilds the preview in a few
+   minutes.
+4. **Publish:** change `status: draft` to `status: approved` and commit. The issue becomes the newest one on the page
+   and joins the archive, and the **LinkedIn post** (text, and a picture with the map to download from the preview
+   page) is e-mailed to the editorial team, ready to post on the ISSMGE LinkedIn page.
+
+A draft can also be written by hand: `python geonews.py --draft --week 2026-W44` (`--force` replaces the file).
+`data/geonews/sent.json` records the e-mails sent. Settings (name, number of stories, hashtags) are under `geonews:`
+in `config.yaml`.
 
 ### Research papers (Academia-to-Industry)
 Each scan also asks Crossref (free, no key) for papers newly registered in 25 journals, including *Géotechnique*,
@@ -536,6 +564,8 @@ and delete it. If the website moves, set the Script property `SITE_URL` to its n
 | `storylines.py` | Links follow-up reports to the earlier story (each scan) and builds the Developing stories page. |
 | `events.py` | The events calendar: the Events page and its map (the list of cities is `CITY_POINTS`), the `.ics` feed and the weekly refresh (`python events.py --refresh`). |
 | `notify.py` | Alerts and the weekly summary: sends the e-mails (`--auto`, `--weekly`, `--test`) and builds `docs/weekly/`. |
+| `geonews.py` | Geo-News Weekly: the weekly draft (`--draft`, `--auto`), its e-mails and the pages in `docs/geonews/`. |
+| `data/geonews/` | The Geo-News issues (one file per week; the MPC editor edits and approves them) and their photos. |
 | `sync_data.py` | The workflows' save step: puts a run's data on the newest version of the site and rebuilds it. |
 | `check_feeds.py` | Tests candidate feed addresses (run by the *Check feeds* workflow). |
 | `data/briefs/` | The issue briefs (one file per issue window; the Word files are built from them). |

@@ -527,6 +527,7 @@ NAV = [
     ("Latest", "", [("index.html", "Latest", "Today's digest", "latest"),
                     ("trends.html", "Trends", "Charts by month and quarter", "trends"),
                     ("developing.html", "Developing stories", "Follow-ups on one event or site", "developing"),
+                    ("geonews/index.html", "Geo-News Weekly", "The weekly page for ISSMGE members", "geonews"),
                     ("archive.html", "Archive", "Every digest, by quarter", "archive")]),
     ("World map", "Map", [("map.html", "World map", "Stories by country", "map"),
                           ("events.html", "Events", "Conferences and deadlines", "events")]),
@@ -2446,11 +2447,11 @@ def build(cfg):
     write(DOCS / "about.html", page(cfg, "Method & sources", about_body(cfg, latest, brief_opts), "", "about"))
 
     # pages of their own modules (they import this one, so not at the top): the world map,
-    # developing stories, the events calendar and the weekly summaries. A page that fails is reported and left as
+    # developing stories, the events calendar, the weekly summaries and Geo-News Weekly (the members' page). A page that fails is reported and left as
     # it was, so the rest of the site (and the scan's save step, which rebuilds it) still goes through.
     ctx = {"cfg": cfg, "digests": digests, "windows": windows, "order": order, "today_key": today_key,
            "start_month": sm}
-    for name in ("geomap", "storylines", "events", "notify"):
+    for name in ("geomap", "storylines", "events", "notify", "geonews"):
         try:
             __import__(name).build(ctx)
         except Exception as ex:

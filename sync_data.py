@@ -24,6 +24,7 @@ BRIEFS = ROOT / "data" / "briefs"
 SEEN_FILE = ROOT / "data" / "seen.json"
 EVENTS_FILE = ROOT / "data" / "events.json"   # events found by events.py: {"updated": iso, "events": [...], "failed": why the last refresh failed}
 NOTIFY_FILE = ROOT / "data" / "notify.json"   # e-mails sent by notify.py: {"alerted": {id: date}, "weekly": {week: iso}}
+GEONEWS_SENT = ROOT / "data" / "geonews" / "sent.json"   # e-mails sent by geonews.py: {"draft": {week: iso}, "approved": {week: iso}}
 
 
 def git(*args):
@@ -89,6 +90,19 @@ def merge_notify(theirs, ours, today=None):
     return merged
 
 
+def merge_geonews(theirs, ours):
+    """Every Geo-News e-mail either run sent stays recorded. (A new draft file this run wrote is not
+    tracked yet, so the reset below leaves it; a draft the branch already has, possibly edited, wins.)"""
+    merged = {}
+    for key in ("draft", "approved"):
+        both = dict((theirs or {}).get(key) or {})
+        for k, v in ((ours or {}).get(key) or {}).items():
+            if str(v) > str(both.get(k, "")):
+                both[k] = v
+        merged[key] = both
+    return merged
+
+
 def merge_digest(theirs, ours):
     """Union of the day's stories (this run's version of a story wins); the
     caller re-balances it."""
@@ -112,7 +126,8 @@ def main():
     ours = {name: load(DIGESTS / name) for name in changed("digests")}
     base = {name: committed(name) for name in ours}
     briefs = {name: (BRIEFS / name).read_text(encoding="utf-8") for name in changed("briefs") if (BRIEFS / name).exists()}
-    extras = {path: (merge, changed_file(path)) for path, merge in ((EVENTS_FILE, merge_events), (NOTIFY_FILE, merge_notify))}
+    extras = {path: (merge, changed_file(path)) for path, merge in ((EVENTS_FILE, merge_events), (NOTIFY_FILE, merge_notify),
+                                                                 (GEONEWS_SENT, merge_geonews))}
 
     git("fetch", "--quiet", "origin", branch)
     git("reset", "--quiet", "--hard", f"origin/{branch}")
@@ -126,6 +141,7 @@ def main():
         SEEN_FILE.write_text(json.dumps(seen, indent=0))
     for path, (merge, mine) in extras.items():
         if mine is not None:
+            path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(json.dumps(merge(load(path), mine), ensure_ascii=False, indent=1), encoding="utf-8")
     rebalance = []
     for name, digest in ours.items():
