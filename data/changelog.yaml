@@ -16,12 +16,19 @@ features:
   - "Developing stories: each scan links follow-up reports (the response, the inquiry, the repair, the court case) to the earlier story about the same event, project or site, with the stage reached; each developing story has a timeline, and story cards carry a Developing story chip."
   - "Events calendar: conferences, symposia and courses with their deadlines (calls for papers, registration), from the editors' list (data/events.yaml) and a weekly refresh in which Claude reads the organisers' calendars; a calendar feed to subscribe to, a world map of where the events take place, and the next deadlines beside the news."
   - "Alerts and weekly summary: an e-mail after any scan that finds a new 5/5 story, and every Monday a summary of the week for the editorial team (top stories rated 4 and 5, developing stories, regional coverage, events and research), also kept as web pages."
+  - "Geo-News Weekly: a weekly page for ISSMGE members with a world map of the week's stories, highlights, stories from every region, new research and events, with an archive of past issues. Each Monday a draft is written; the MPC editor swaps stories, edits texts and adds photos, and publishes it by approving it; a LinkedIn post and picture are then e-mailed for the ISSMGE page."
   - "Search and AI assistant: search every archived story with filters, or ask the AI assistant (the round Ask AI button at the bottom right of every page), which knows the developing stories and the events calendar and can also read attached PDF and Word documents."
   - "Excel workbooks: one per issue window and one for the whole archive, with an interactive dashboard, planning columns and a reading view by theme."
   - "Website report: this document, rebuilt after every scan."
   - "Copyright-safe outputs: nothing the news desk publishes or now saves carries a publisher's text beyond the headline (no feed summaries, abstracts or images); each story names the primary source to check the facts with; the AI assistant and the issue brief write in their own words and quote a sentence or two at most, and the assistant ends its drafts with a Check before publishing list; and every page, workbook, e-mail and report carries the five steps of Before you use a story."
 
 changes:
+  - date: 2026-11-05
+    title: Geo-News Weekly, a weekly page for ISSMGE members
+    items:
+      - "Geo-News Weekly - a new page (Latest menu) for ISSMGE members, in the colours of the MPC mark: a world map with a numbered pin for each story, five highlights with the story of the week first, eight stories from around the world, three research papers and the events coming up. Past issues stay in an archive."
+      - "Each Monday a draft of the week before is written and e-mailed to the editorial team. The MPC editor previews it, swaps stories for others from the scan, edits headlines and texts, and adds photos (the stories show matching drawings until then), all in one file on GitHub. Changing status: draft to status: approved publishes it."
+      - "LinkedIn - each published issue comes with a ready post (text and a picture with the map) e-mailed to the editorial team, to post on the ISSMGE LinkedIn page after a check."
   - date: 2026-10-29
     title: A shorter top bar, an Ask AI button and a map of the events
     items:
