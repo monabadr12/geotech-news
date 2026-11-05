@@ -18,7 +18,7 @@ on:
     branches: [main]
     paths: [site_builder.py, exports.py, report.py, brief.py, geomap.py, storylines.py, events.py, notify.py,
             assets/**, config.yaml, data/changelog.yaml, data/briefs/**, data/events.yaml, sync_data.py,
-            geonews.py, data/geonews/**]
+            geonews.py, data/geonews/**, .github/workflows/scan.yml]
 
 permissions:
   contents: write
