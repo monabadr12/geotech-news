@@ -281,3 +281,10 @@ ul.world2 .ed-jump { min-height: 36px; font-size: 13px; }
 .touch { margin-top: 26px; background: var(--tint); border: 1px solid #ecd3d6; border-radius: 12px; padding: 4px 16px 14px; }
 .touch h2 { margin-top: 14px; } .touch p { margin: 0 0 4px; font-size: 15px; }
 .touch .btn { text-decoration: none; }
+.touch .btn { min-height: 36px; padding: 0 14px; font-size: 13.5px; }
+.touch .toolbar { gap: 6px; }
+.touch { margin-top: 20px; padding: 2px 14px 10px; border-radius: 10px; }
+.touch h2 { margin: 10px 0 4px; font-size: 12px; }
+.touch p { font-size: 13.5px; color: var(--muted); margin: 0 0 6px; }
+.touch .toolbar { margin: 4px 0 0; }
+.touch .btn { min-height: 32px; padding: 0 12px; font-size: 13px; }
