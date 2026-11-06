@@ -926,6 +926,10 @@ def public_bundle(dest):
     (dest / ".nojekyll").write_text("", encoding="utf-8")
     (dest / "robots.txt").write_text("User-agent: *\nAllow: /\n", encoding="utf-8")
     shutil.rmtree(built, ignore_errors=True)
+    # the list of issues on the site: it changes whenever an issue is published, so every publication is a new push,
+    # which is what makes GitHub Pages rebuild the site
+    issues = sorted(p.stem for p in dest.glob("*.html") if KEY.match(p.stem))
+    (dest / "issues.txt").write_text("Geo-News Weekly – published issues\n" + "\n".join(issues) + "\n", encoding="utf-8")
     pages = sorted(p.name for p in dest.glob("*.html"))
     print(f"Geo-News: public site in {dest}: {', '.join(pages)}")
     return pages
