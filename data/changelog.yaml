@@ -23,6 +23,13 @@ features:
   - "Copyright-safe outputs: nothing the news desk publishes or now saves carries a publisher's text beyond the headline (no feed summaries, abstracts or images); each story names the primary source to check the facts with; the AI assistant and the issue brief write in their own words and quote a sentence or two at most, and the assistant ends its drafts with a Check before publishing list; and every page, workbook, e-mail and report carries the five steps of Before you use a story."
 
 changes:
+  - date: 2026-11-06
+    title: Geo-News Weekly in the magazine's style
+    items:
+      - "Geo-News Weekly now follows the ISSMGE Magazine Visual Identity Guide: the ISSMGE logo at the top right, the Magazine Presidential Committee (MPC) name above the title, ISSMGE Red with a gold rule, the magazine's fonts and a muted accent colour for each theme."
+      - "The story of the week is a cover card with its key number (the striking figure of its headline) and a satellite view of the site; every other story shows a satellite view or a small map of its country with the place marked, and its key number when it has one. No drawings or photos."
+      - "Language and adverts - a short Reading tips box explains that stories open on the original news sites, in many languages (use the browser's Translate), and each story says when its site is in another language. The tool counts the advertising systems on each news site once a month and marks the sites with many: This site may show many adverts."
+      - "The research section is now called Research highlights, and the LinkedIn picture carries the ISSMGE logo."
   - date: 2026-11-05
     title: Geo-News Weekly, a weekly page for ISSMGE members
     items:

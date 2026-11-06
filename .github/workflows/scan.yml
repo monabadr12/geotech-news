@@ -98,6 +98,7 @@ jobs:
         timeout-minutes: 10
         run: python geonews.py --auto || echo "::warning::Geo-News Weekly - the draft or an e-mail failed; see this step's log."
         env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           NOTIFY_TOKEN: ${{ secrets.NOTIFY_TOKEN }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
