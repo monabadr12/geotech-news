@@ -4,10 +4,11 @@
 #  - See it as members will:   https://monabadr12.github.io/geotech-news/geonews/preview/2026-W44.html
 #    That page also lists every other story of the week, each with its code.
 #  - Swap a story: replace its code (after story: or paper:) with another code from the preview page.
+#    The other lines of that story (number, place, language) then belong to the old story: correct them
+#    or leave them empty ("") and the page uses the new story's country map and no key number.
 #  - Change a headline or a text: write it between the quotes. An empty title keeps the original headline.
-#  - Add a photo: a web link to the photo, or upload it to data/geonews/photos/ and give its file name.
-#    Use only photos ISSMGE may use (your own, the society's, or free-licensed) and name the
-#    photographer under credit. Without a photo the story shows a drawing.
+#  - Key number: the figure shown large (number) and what it counts (number_label); "" for none.
+#  - Place: lat and lon of the site; satellite: yes shows a satellite view of it, no a map of the country.
 #  - Remove a story: delete its lines (from the - to the line before the next -).
 #  - PUBLISH: change  status: draft  to  status: approved  and commit. The page goes public within a few
 #    minutes and the LinkedIn post is e-mailed to the editorial team.
@@ -15,78 +16,152 @@
 status: draft
 intro: "Dear colleagues, here are the geotechnical stories from around the world that caught our eye last week. We gather them from news sources in 20 languages, and the ISSMGE Magazine Presidential Committee (MPC) checks every issue before it is published."
 
-# the big photo at the top of the first highlight (the story of the week)
-main_photo: ""
-main_photo_credit: ""
-
 highlights:   # the first one is the story of the week
   - story: 4f9fa34cf1bba0d9   # Compensations related to the dam collapse of Vale and BHP’s joint venture in Brazil reach US$16.52 billion (Brazil)
-    title: ""
+    title: ""   # empty keeps the headline above
     text: "What geotechnical failure mechanisms and tailings dam design lessons emerge from the Mariana collapse, years after compensation was agreed?"
-    photo: ""
-    credit: ""
+    number: "US$16.5 bn"   # the key number shown large; "" for none
+    number_label: "paid in compensation so far"
+    language: "English"   # the news site's language
+    lat: -20.207
+    lon: -43.464
+    satellite: yes   # yes: satellite view of the place; no: map of the country
+    site: "bnamericas.com"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
   - story: 8a25d5846b348268   # Panama Canal tunnel drive completed (Panama)
-    title: ""
+    title: ""   # empty keeps the headline above
     text: "How was a bored tunnel built beneath the Panama Canal waterway, and what ground-control and settlement measures made it possible?"
-    photo: ""
-    credit: ""
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: 8.955
+    lon: -79.565
+    satellite: yes   # yes: satellite view of the place; no: map of the country
+    site: "tunnelsandtunnelling.com"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
   - story: 864c3bcc6d3443cc   # Ground crumbles and gas escapes: thousands of dangerous sites identified in Yamal (Russia)
-    title: ""
+    title: ""   # empty keeps the headline above
     text: "How is permafrost thaw and gas migration causing ground collapse and craters across Yamal, and what monitoring and foundation strategies can manage thousands of hazardous sites?"
-    photo: ""
-    credit: ""
+    number: "1,000s"   # the key number shown large; "" for none
+    number_label: "of dangerous sites identified"
+    language: "Russian"   # the news site's language
+    lat: 70.3
+    lon: 68.4
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "life.ru"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
   - story: 1317de0942c49470   # Liquefaction Reappeared at 96% of Sites Hit By Strong Tremors; Damage Nonexistent or Minimal at Reinforced Loc (Japan)
-    title: ""
+    title: ""   # empty keeps the headline above
     text: "Why did reinforced ground perform far better than untreated sites in repeated shaking, and which improvement methods should be standard practice?"
-    photo: ""
-    credit: ""
+    number: "96%"   # the key number shown large; "" for none
+    number_label: "of strongly shaken sites liquefied again"
+    language: "English"   # the news site's language
+    lat: 32.8
+    lon: 130.71
+    satellite: yes   # yes: satellite view of the place; no: map of the country
+    site: "japannews.yomiuri.co.jp"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
   - story: beb6cc7ea08b6549   # Using machine learning to build safer cities (South Africa)
-    title: ""
+    title: ""   # empty keeps the headline above
     text: "How reliable are machine-learning landslide susceptibility maps when urbanisation, road building and vegetation loss continuously change slope conditions in a city?"
-    photo: ""
-    credit: ""
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: -29.86
+    lon: 31.02
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "phys.org"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
 
 around_the_world:
   - story: b5600565c7d48970   # Ancient Earthquakes Triggered Massive 10,000-Year-Old Landslides In Kashmir Himalaya, New Study Reveals (India)
-    title: ""
-    text: ""   # optional: one line; empty shows the headline alone
-    photo: ""
-    credit: ""
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: "10,000"   # the key number shown large; "" for none
+    number_label: "years old: landslides triggered by ancient earthquakes"
+    language: "English"   # the news site's language
+    lat: 34.08
+    lon: 74.8
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "kashmirlife.net"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
   - story: 0e0049aff04b9949   # Niscemi landslide: summit with Civil Protection chief on securing measures. (Italy)
-    title: ""
-    text: ""   # optional: one line; empty shows the headline alone
-    photo: ""
-    credit: ""
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "Italian"   # the news site's language
+    lat: 37.147
+    lon: 14.392
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "rainews.it"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
   - story: 989966755db16721   # Three machines now tunnelling on Melbourne’s Suburban Rail Loop (Australia)
-    title: ""
-    text: ""   # optional: one line; empty shows the headline alone
-    photo: ""
-    credit: ""
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: "3"   # the key number shown large; "" for none
+    number_label: "tunnel boring machines now at work"
+    language: "English"   # the news site's language
+    lat: -37.88
+    lon: 145.1
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "geplus.co.uk"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
   - story: 3a71f0891b49a9b6   # First Yonge North Subway Extension TBM arrives (Canada)
-    title: ""
-    text: ""   # optional: one line; empty shows the headline alone
-    photo: ""
-    credit: ""
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: 43.8
+    lon: -79.42
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "tunnelsandtunnelling.com"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
   - story: df6594d732028947   # Orascom achieves first TBM breakthrough on Cairo Metro Line 4 (Egypt)
-    title: ""
-    text: ""   # optional: one line; empty shows the headline alone
-    photo: ""
-    credit: ""
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: 30.01
+    lon: 31.2
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "tunnellingjournal.com"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
   - story: ea9e538898faf8b6   # Slope collapse affects basements and shops of a shopping plaza in Cuajimalpa (Mexico)
-    title: ""
-    text: ""   # optional: one line; empty shows the headline alone
-    photo: ""
-    credit: ""
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "Spanish"   # the news site's language
+    lat: 19.36
+    lon: -99.3
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "eluniversal.com.mx"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
   - story: c234db725f5d4a1e   # Breakthrough made on Lima Metro’s Line 4 (Peru)
-    title: ""
-    text: ""   # optional: one line; empty shows the headline alone
-    photo: ""
-    credit: ""
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: -12.05
+    lon: -77.04
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "tunnelsandtunnelling.com"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
   - story: 49928d95b0a3aa72   # Heavy rains cause floods, landslides and disappearances in Haiti. (Haiti)
-    title: ""
-    text: ""   # optional: one line; empty shows the headline alone
-    photo: ""
-    credit: ""
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "French"   # the news site's language
+    lat: 18.9
+    lon: -72.3
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "haitiantimes.com"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
 
 research:
   - paper: "8dd7a593ee085a8e"   # A state-of-the-art review of backfill grouting: recent developments, ground stability and future trends in shi
