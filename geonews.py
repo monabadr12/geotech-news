@@ -903,11 +903,20 @@ def public_bundle(dest):
     """The newsletter's own website, from the built docs/geonews/: the published issues, the newest issue and the
     archive at the top level, with their style sheet and pictures, and nothing of the News Desk (no previews, no
     links back). The workflow copies it to the newsletter's own repository (README, "Geo-News Weekly")."""
+    global OUT
+    import tempfile
     dest = Path(dest)
     if dest.exists():
         shutil.rmtree(dest)
     (dest / "assets").mkdir(parents=True)
-    for f in OUT.glob("*.html"):
+    cfg = yaml.safe_load(Path(site_builder.ROOT / "config.yaml").read_text(encoding="utf-8"))
+    desk, OUT = OUT, Path(tempfile.mkdtemp())
+    try:
+        build({"cfg": cfg, "digests": site_builder.load_digests()}, public=True)
+        pages = list(OUT.glob("*.html"))
+    finally:
+        built, OUT = OUT, desk
+    for f in pages:
         text = f.read_text(encoding="utf-8").replace("../assets/", "assets/")
         (dest / f.name).write_text(text, encoding="utf-8")
     for name in PUBLIC_ASSETS:
@@ -916,6 +925,7 @@ def public_bundle(dest):
             shutil.copy2(src, dest / "assets" / name)
     (dest / ".nojekyll").write_text("", encoding="utf-8")
     (dest / "robots.txt").write_text("User-agent: *\nAllow: /\n", encoding="utf-8")
+    shutil.rmtree(built, ignore_errors=True)
     pages = sorted(p.name for p in dest.glob("*.html"))
     print(f"Geo-News: public site in {dest}: {', '.join(pages)}")
     return pages
@@ -1086,10 +1096,22 @@ def preview_html(key, issue, error, digests, cfg):
 
 
 # ------------------------------------------------------------------ build
-def build(ctx):
+def forward_page(url):
+    """A page that sends the reader on to the newsletter's own website at once."""
+    u = esc(url)
+    return (f"<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='robots' content='noindex'>"
+            f"<link rel='canonical' href='{u}'><meta http-equiv='refresh' content='0; url={u}'>"
+            f"<title>Geo-News Weekly</title><script>location.replace({json.dumps(url)})</script></head>"
+            f"<body><p>Geo-News Weekly has moved to <a href='{u}'>{u}</a>.</p></body></html>")
+
+
+def build(ctx, public=False):
     """docs/geonews/: index.html (newest published issue), <week>.html for each published issue, archive.html,
-    and preview/<week>.html for every issue file, draft or published."""
+    and preview/<week>.html for every issue file, draft or published. When the newsletter has its own website
+    (geonews: public_url), the pages members read are built only for that site (public=True, see public_bundle);
+    the News Desk then keeps the previews and, at the old addresses, pages that forward to the new site."""
     cfg, digests = ctx["cfg"], ctx["digests"]
+    forward = bool(str(settings(cfg)["public_url"] or "").strip()) and not public
     stories, papers = all_items(digests)
     for p in papers.values():
         p["_paper"] = True
@@ -1115,6 +1137,12 @@ def build(ctx):
             site_builder.write(OUT / "preview" / f"{key}-view.html",
                                shell(cfg, f"For review · {opts['name']} · week {week_no(key)}", review_html(key, issue, cfg),
                                      "../", "Draft for review", js, noindex=True))
+    if forward:
+        for issue in published:
+            site_builder.write(OUT / f"{issue['key']}.html", forward_page(page_url(cfg, issue["key"])))
+        site_builder.write(OUT / "index.html", forward_page(page_url(cfg)))
+        site_builder.write(OUT / "archive.html", forward_page(page_url(cfg) + "archive.html"))
+        return
     for n, issue in enumerate(published):
         body = issue_html(issue, cfg, "", number=count - n) + nav_html(issue["key"], keys, "")
         site_builder.write(OUT / f"{issue['key']}.html",
