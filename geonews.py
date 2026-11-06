@@ -972,6 +972,22 @@ def alternatives_html(key, issue, digests, cfg):
                f"{''.join(prow)}</table></div>" if prow else "") + "</section>")
 
 
+def review_url(cfg, key):
+    return f"{site_builder.site_url(cfg)}geonews/preview/{key}-view.html"
+
+
+def review_html(key, issue, cfg):
+    """The view-only page to send colleagues: the issue as members will see it, with no editing buttons."""
+    if issue["status"] == "approved":
+        bar = (f"<div class='bar ok'><b>This issue is published.</b> "
+               f"<a href='../{key}.html'>Open the published page</a>.</div>")
+    else:
+        bar = ("<div class='bar draft'><b>Draft for review — not public yet.</b> This is how the issue will look to ISSMGE "
+               "members. Headlines open the original news sites. Please send your comments to the editor.</div>")
+    return (f"<div class='editor'><div class='ed-k'>ISSMGE · Magazine Presidential Committee (MPC) · draft of week "
+            f"{week_no(key)}</div>{bar}</div>" + issue_html(issue, cfg, "../"))
+
+
 def preview_html(key, issue, error, digests, cfg):
     repo = site_builder.repository(cfg)
     edit = f"https://github.com/{repo}/edit/main/data/geonews/{key}.yaml"
@@ -989,6 +1005,8 @@ def preview_html(key, issue, error, digests, cfg):
     probs = ("".join(f"<li>{esc(p)}</li>" for p in issue["problems"]) if issue else "")
     problems = f"<div class='bar err'><b>Please check:</b><ul>{probs}</ul></div>" if probs else ""
     tools = ("<div class='toolbar'>" + ("<button type='button' class='btn' id='ed-open'>✏️ Change the stories</button>" if issue else "")
+             + (f"<button type='button' class='btn alt' data-copy='{esc(review_url(cfg, key))}'>🔗 Copy the view-only link</button>"
+                if issue else "")
              + f"<a class='btn alt' href='../archive.html'>All published issues</a>"
              f"<a class='btn alt small' href='{esc(edit)}'>Advanced: edit the file</a></div>")
     saved = ""
@@ -1044,6 +1062,10 @@ def build(ctx):
         site_builder.write(OUT / "preview" / f"{key}.html",
                            shell(cfg, f"Preview · {opts['name']} · week {week_no(key)}", preview_html(key, issue, error, digests, cfg),
                                  "../", "Preview for the MPC editor", js, noindex=True))
+        if issue:
+            site_builder.write(OUT / "preview" / f"{key}-view.html",
+                               shell(cfg, f"For review · {opts['name']} · week {week_no(key)}", review_html(key, issue, cfg),
+                                     "../", "Draft for review", js, noindex=True))
     for n, issue in enumerate(published):
         body = issue_html(issue, cfg, "", number=count - n) + nav_html(issue["key"], keys, "")
         site_builder.write(OUT / f"{issue['key']}.html",
