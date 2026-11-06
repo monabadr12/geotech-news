@@ -275,3 +275,5 @@ p.editor-line { margin: 6px 0 0; font-size: 14px; font-style: italic; color: var
 .cover .ed-jump { background: rgba(255,255,255,.95); }
 ul.world2 .ed-jump { min-height: 36px; font-size: 13px; }
 .ed-row.ed-flash { outline: 4px solid var(--gold); outline-offset: 2px; }
+.bar.ok.big { font-size: 15px; } .bar.ok.big small { display: block; margin-top: 6px; color: var(--muted); }
+.btn.green { background: #1f7a45; color: #fff; }
