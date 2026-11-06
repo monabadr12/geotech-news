@@ -665,10 +665,21 @@ def map_svg(issue, cls="wmap", label=True):
 
 
 # ------------------------------------------------------------------ the page
+def flag_img(code):
+    """A small flag picture (flagcdn.com): flag emoji do not show on Windows computers."""
+    code = str(code or "").upper()
+    code = {"UK": "GB", "EL": "GR"}.get(code, code)
+    if not re.match(r"^[A-Z]{2}$", code) or code in ("XX", "ZZ"):
+        return "🌍"
+    c = code.lower()
+    return (f"<img class='flag' src='https://flagcdn.com/20x15/{c}.png' "
+            f"srcset='https://flagcdn.com/40x30/{c}.png 2x' width='20' height='15' alt=''>")
+
+
 def where_text(s):
     n = notify()
     place = n.country_name(s.get("country"))
-    return f"{flag(s.get('country'))} {esc(place)}" if place else "🌍 Global"
+    return f"{flag_img(s.get('country'))} {esc(place)}" if place else "🌍 Global"
 
 
 def tag(s):
