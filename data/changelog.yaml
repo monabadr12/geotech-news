@@ -24,6 +24,11 @@ features:
 
 changes:
   - date: 2026-11-06
+    title: A story editor for Geo-News Weekly
+    items:
+      - "The preview page of each Geo-News issue has a story editor (Change the stories): replace a story with another of the week from a searchable list, move stories up or down, remove or add one, and edit headlines, texts and key numbers, without touching any file. Save changes or Approve and publish opens GitHub with the changes ready; one press of Commit changes saves them."
+      - "The welcome text ends with Edited by Mona Badr El-Din, Editor-in-Chief, ISSMGE Magazine, and the committee name links to the MPC page on issmge.org."
+  - date: 2026-11-06
     title: Geo-News Weekly in the magazine's style
     items:
       - "Geo-News Weekly now follows the ISSMGE Magazine Visual Identity Guide: the ISSMGE logo at the top right, the Magazine Presidential Committee (MPC) name above the title, ISSMGE Red with a gold rule, the magazine's fonts and a muted accent colour for each theme."
