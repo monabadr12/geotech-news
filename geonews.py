@@ -70,7 +70,9 @@ esc = site_builder.esc
 KEY = re.compile(r"^\d{4}-W\d{2}$")
 DEFAULTS = {"name": "Geo-News Weekly", "highlights": 5, "around": 8, "research": 3, "events_days": 60,
             "events_max": 6, "hashtags": "#Geotechnics #GeotechnicalEngineering #ISSMGE #CivilEngineering",
-            "linkedin_page": "", "editor": ""}
+            "linkedin_page": "", "editor": "",
+            "initiative": "This newsletter is published within the framework of the new ISSMGE President's Initiatives.",
+            "subscribe_form": "", "unsubscribe_form": "", "suggest_form": ""}
 INTRO = ("Dear colleagues, here are the geotechnical stories from around the world that caught our eye last week. "
          "We gather them from news sources in 20 languages, and the ISSMGE Magazine Presidential Committee (MPC) "
          "checks every issue before it is published.")
@@ -735,7 +737,9 @@ def key_number(it, cls="kn"):
 
 def masthead(cfg, root, chips):
     return (f"<header class='mh'><div class='mh-row'><div><div class='mh-k'>ISSMGE · <a href='{MPC_URL}'>Magazine Presidential Committee (MPC)</a></div>"
-            f"<h1>{esc(settings(cfg)['name'])}</h1><div class='mh-t'>Ground engineering in a changing world</div></div>"
+            f"<h1>{esc(settings(cfg)['name'])}</h1><div class='mh-t'>Ground engineering in a changing world</div>"
+            + (f"<div class='mh-i'>{esc(settings(cfg)['initiative'])}</div>" if settings(cfg)["initiative"] else "")
+            + "</div>"
             f"<img class='mh-logo' src='{root}../assets/issmge-logo.png' alt='ISSMGE'></div><div class='mh-rule'></div>"
             + (f"<div class='mh-meta'>{chips}</div>" if chips else "") + "</header>")
 
@@ -804,12 +808,27 @@ def issue_html(issue, cfg, root, number=None):
                        for p in issue["research"])
         out.append(f"<section class='papers'><h2>Research highlights</h2><ol>{rows}</ol></section>")
     out.append(events_html(issue, cfg, opts))
+    out.append(stay_in_touch(opts))
     if issue["magazine_note"]:
         link = (f" <a href='{esc(issue['magazine_link'])}'>Read it</a>" if issue["magazine_link"] else "")
         out.append(f"<div class='mag'><div class='ic'></div><div><b>From the ISSMGE Magazine</b> — "
                    f"{esc(issue['magazine_note'])}{link}</div></div>")
     out.append("</div>")
     return "".join(out)
+
+
+def stay_in_touch(opts):
+    """The box at the end of an issue: subscribe, unsubscribe, suggestions (Google Forms in the editor's Drive);
+    shown once at least one form's address is in config.yaml."""
+    links = [(opts["subscribe_form"], "btn red", "✉️ Subscribe to this newsletter"),
+             (opts["suggest_form"], "btn", "💡 Suggestions for improvement"),
+             (opts["unsubscribe_form"], "btn alt", "Unsubscribe")]
+    links = [(u, c, t) for u, c, t in links if str(u).startswith("https://")]
+    if not links:
+        return ""
+    btns = "".join(f"<a class='{c}' href='{esc(u)}' target='_blank' rel='noopener'>{t}</a>" for u, c, t in links)
+    return (f"<section class='touch'><h2>Stay in touch</h2><p>Receive Geo-News Weekly, tell us how to make it better, "
+            f"or leave the list at any time.</p><div class='toolbar'>{btns}</div></section>")
 
 
 def asset_version(name):
