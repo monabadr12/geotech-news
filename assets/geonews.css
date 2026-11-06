@@ -270,3 +270,4 @@ p.editor-line { margin: 6px 0 0; font-size: 14px; font-style: italic; color: var
 .ed-list li { display: flex; gap: 10px; align-items: center; justify-content: space-between; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
 .ed-list li .btn { flex: none; }
 .ed-done ol { padding-left: 20px; line-height: 1.5; } .ed-done li { margin-bottom: 6px; }
+[hidden] { display: none !important; }
