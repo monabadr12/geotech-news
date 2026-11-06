@@ -271,3 +271,7 @@ p.editor-line { margin: 6px 0 0; font-size: 14px; font-style: italic; color: var
 .ed-list li .btn { flex: none; }
 .ed-done ol { padding-left: 20px; line-height: 1.5; } .ed-done li { margin-bottom: 6px; }
 [hidden] { display: none !important; }
+.ed-jump { display: inline-flex; align-items: center; min-height: 40px; margin-top: 8px; padding: 0 14px; border: 2px solid var(--gold); background: #fff; color: var(--ink); border-radius: 99px; font: 700 14px "Source Sans 3", Arial, sans-serif; cursor: pointer; }
+.cover .ed-jump { background: rgba(255,255,255,.95); }
+ul.world2 .ed-jump { min-height: 36px; font-size: 13px; }
+.ed-row.ed-flash { outline: 4px solid var(--gold); outline-offset: 2px; }
