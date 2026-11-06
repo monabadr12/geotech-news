@@ -856,8 +856,7 @@ def shell(cfg, title, body, root, description, extra_head="", noindex=False):
 <footer class="gn-foot">Stories come from public news sources in many languages; each headline links to the original publisher,
 whose site may be in another language and may show adverts. Please check details with the original source.<br>
 Maps: Natural Earth. Satellite views: Sentinel-2 cloudless by EOX IT Services (contains modified Copernicus Sentinel data).<br>
-<a href="{root}index.html">Latest issue</a> · <a href="{root}archive.html">All issues</a> ·
-<a href="{esc(site)}">Geotechnical News Desk</a><br>Prepared by the ISSMGE <a href="{MPC_URL}">Magazine Presidential Committee (MPC)</a></footer>
+Prepared by the ISSMGE <a href="{MPC_URL}">Magazine Presidential Committee (MPC)</a></footer>
 </div></body></html>"""
 
 
