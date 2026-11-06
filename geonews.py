@@ -498,7 +498,7 @@ def issue_html(issue, cfg, root, number=None):
                        f"<div class='j'>{esc(p['s'].get('journal', ''))}</div>"
                        + (f"<div>{esc(p['text'])}</div>" if p["text"] else "") + "</div></li>"
                        for p in issue["research"])
-        out.append(f"<section class='papers'><h2>Research highlighted</h2><ol>{rows}</ol></section>")
+        out.append(f"<section class='papers'><h2>Research highlights</h2><ol>{rows}</ol></section>")
     out.append(events_html(issue, cfg, opts))
     if issue["magazine_note"]:
         link = (f" <a href='{esc(issue['magazine_link'])}'>Read it</a>" if issue["magazine_link"] else "")
