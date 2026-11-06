@@ -80,8 +80,8 @@
   function render() {
     box.innerHTML = "";
     var head = el("div", { "class": "ed-head" },
-      "<div><b>Story editor</b> · week " + esc(D.week.slice(-2).replace(/^0/, "")) + " · " + esc(D.span) + "</div>");
-    var close = el("button", { type: "button", "class": "ed-x", "aria-label": "Close the editor" }, "✕");
+      "<div><b>✏️ Story editor</b> · week " + esc(D.week.slice(-2).replace(/^0/, "")) + " · " + esc(D.span) + "</div>");
+    var close = el("button", { type: "button", "class": "ed-x", "aria-label": "Hide the editor" }, "✕");
     close.onclick = function () { box.hidden = true; };
     head.appendChild(close);
     box.appendChild(head);
@@ -115,7 +115,7 @@
 
   function row(name, e, i) {
     var s = info(e.story), list = S[name];
-    var r = el("div", { "class": "ed-row" });
+    var r = el("div", { "class": "ed-row", "data-story": e.story });
     var n = name === "highlights" ? i + 1 : S.highlights.length + i + 1;
     r.appendChild(el("div", { "class": "ed-main" },
       "<b class='ed-n'>" + n + "</b><div><div class='ed-t'>" + esc(e.title || s.t) + "</div>" +
@@ -125,13 +125,13 @@
       var x = el("button", { type: "button", title: title, "aria-label": title }, label);
       if (off) x.disabled = true; else x.onclick = fn; b.appendChild(x);
     }
-    btn("↑", "Move up", function () { list.splice(i - 1, 0, list.splice(i, 1)[0]); mark(); render(); }, i === 0);
-    btn("↓", "Move down", function () { list.splice(i + 1, 0, list.splice(i, 1)[0]); mark(); render(); }, i === list.length - 1);
+    btn("↑ Up", "Move up", function () { list.splice(i - 1, 0, list.splice(i, 1)[0]); mark(); render(); }, i === 0);
+    btn("↓ Down", "Move down", function () { list.splice(i + 1, 0, list.splice(i, 1)[0]); mark(); render(); }, i === list.length - 1);
     btn("⇄ Replace", "Replace with another story", function () {
       pick(function (id) { list[i] = { story: id, title: "", text: info(id).a || "", number: "", number_label: "" }; mark(); render(); });
     });
     btn("✎ Edit", "Edit headline, text and key number", function () { form.hidden = !form.hidden; });
-    btn("✕", "Remove", function () { if (confirm("Remove this story from the issue?")) { list.splice(i, 1); mark(); render(); } });
+    btn("✕ Remove", "Remove", function () { if (confirm("Remove this story from the issue?")) { list.splice(i, 1); mark(); render(); } });
     r.appendChild(b);
     var form = el("div", { "class": "ed-form" }); form.hidden = true;
     [["title", "Headline (leave empty to keep the original)", s.t], ["text", "Text under the headline", ""],
@@ -206,4 +206,22 @@
   }
 
   openBtn.onclick = function () { render(); box.hidden = false; box.scrollIntoView({ behavior: "smooth" }); };
+  // the editor is open from the start, and every story of the issue below gets a button that jumps to its row
+  render();
+  var all = S.highlights.concat(S.around_the_world);
+  all.forEach(function (e, i) {
+    var card = document.getElementById("s" + (i + 1));
+    if (!card) return;
+    var go = el("button", { type: "button", "class": "ed-jump" }, "✏️ Change this story");
+    go.onclick = function () {
+      var rows = box.querySelectorAll(".ed-row");
+      var idx = -1;
+      for (var k = 0; k < rows.length; k++) if (rows[k].getAttribute("data-story") === e.story) idx = k;
+      var r = rows[idx] || box;
+      r.scrollIntoView({ behavior: "smooth", block: "center" });
+      r.classList.add("ed-flash"); setTimeout(function () { r.classList.remove("ed-flash"); }, 1800);
+    };
+    var host = card.querySelector(".b2, .cv-text") || card.querySelector("div:last-child") || card;
+    host.appendChild(go);
+  });
 })();
