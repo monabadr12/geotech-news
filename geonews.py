@@ -49,6 +49,7 @@ DATA = ROOT / "data" / "geonews"
 SENT_FILE = DATA / "sent.json"
 OUT = site_builder.DOCS / "geonews"
 ADS_FILE = DATA / "ads.json"
+MPC_URL = "https://www.issmge.org/committees/presidential-committees/magazine-presidential-committee"
 ADS_DAYS = 30        # how long the advert count of a site is kept
 ADS_MANY = 3         # this many different advertising systems on a home page = "many adverts"
 # advertising systems, by a piece of the address or code that appears on a page that uses them
@@ -663,7 +664,7 @@ def key_number(it, cls="kn"):
 
 
 def masthead(cfg, root, chips):
-    return (f"<header class='mh'><div class='mh-row'><div><div class='mh-k'>ISSMGE · Magazine Presidential Committee (MPC)</div>"
+    return (f"<header class='mh'><div class='mh-row'><div><div class='mh-k'>ISSMGE · <a href='{MPC_URL}'>Magazine Presidential Committee (MPC)</a></div>"
             f"<h1>{esc(settings(cfg)['name'])}</h1><div class='mh-t'>Ground engineering in a changing world</div></div>"
             f"<img class='mh-logo' src='{root}../assets/issmge-logo.png' alt='ISSMGE'></div><div class='mh-rule'></div>"
             + (f"<div class='mh-meta'>{chips}</div>" if chips else "") + "</header>")
@@ -759,7 +760,7 @@ def shell(cfg, title, body, root, description, extra_head="", noindex=False):
 whose site may be in another language and may show adverts. Please check details with the original source.<br>
 Maps: Natural Earth. Satellite views: Sentinel-2 cloudless by EOX IT Services (contains modified Copernicus Sentinel data).<br>
 <a href="{root}index.html">Latest issue</a> · <a href="{root}archive.html">All issues</a> ·
-<a href="{esc(site)}">Geotechnical News Desk</a><br>Prepared by the ISSMGE Magazine Presidential Committee (MPC)</footer>
+<a href="{esc(site)}">Geotechnical News Desk</a><br>Prepared by the ISSMGE <a href="{MPC_URL}">Magazine Presidential Committee (MPC)</a></footer>
 </div></body></html>"""
 
 
