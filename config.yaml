@@ -925,7 +925,7 @@ geonews:
   # the newsletter's own website (so readers never see the News Desk): the repository the workflow copies the
   # published issues to, and its address; public_url empty = members use the geonews/ folder of the News Desk
   public_repo: "monabadr12/geo-news-weekly"
-  public_url: ""
+  public_url: "https://monabadr12.github.io/geo-news-weekly/"
 
 # ---- Alerts and weekly summary (e-mail) -----------------------------------
 # An e-mail when a 5/5 story appears and a Monday summary for the editorial team.
