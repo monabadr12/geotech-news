@@ -435,7 +435,7 @@ def load_issue(path, stories, papers):
             entry = {"s": found, "title": text(it.get("title")), "text": text(it.get("text"))}
             if kind == "story":
                 entry.update(number=text(it.get("number")), number_label=text(it.get("number_label")),
-                             language=text(it.get("language")) if "language" in it else guess_language(found),
+                             language=text(it.get("language")) or guess_language(found),
                              lat=num(it.get("lat"), -90, 90), lon=num(it.get("lon"), -180, 180),
                              satellite=it.get("satellite") in (True, "yes", "Yes", "true"),
                              site=text(it.get("site")) or domain_of(found.get("link")),
