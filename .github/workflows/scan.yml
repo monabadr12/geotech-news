@@ -123,3 +123,27 @@ jobs:
             git reset -q --soft HEAD~1
           done
           exit 1
+      - name: Publish Geo-News Weekly to its own website
+        # Copies the published issues (no previews, nothing of the News Desk) to the newsletter's own repository
+        # (config.yaml geonews: public_repo), whose GitHub Pages site is the address members use. Needs the secret
+        # GEONEWS_DEPLOY_TOKEN (a token that may write to that repository only); without it this step does nothing.
+        if: steps.gate.outputs.run == 'true'
+        continue-on-error: true
+        timeout-minutes: 5
+        env:
+          TOKEN: ${{ secrets.GEONEWS_DEPLOY_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then echo "No GEONEWS_DEPLOY_TOKEN secret: the newsletter's own website is not updated."; exit 0; fi
+          target=$(python -c "import yaml; print((yaml.safe_load(open('config.yaml')).get('geonews') or {}).get('public_repo') or '')")
+          if [ -z "$target" ]; then echo "config.yaml geonews: public_repo is empty: nothing to publish to."; exit 0; fi
+          python geonews.py --public-bundle /tmp/geonews-site
+          git clone --quiet "https://x-access-token:${TOKEN}@github.com/${target}.git" /tmp/geonews-repo
+          cd /tmp/geonews-repo
+          git checkout -q -B main
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -a /tmp/geonews-site/. .
+          git add -A
+          if git diff --cached --quiet; then echo "The newsletter's website is up to date."; exit 0; fi
+          git -c user.name="news-scanner" -c user.email="news-scanner@users.noreply.github.com" commit -q -m "Update Geo-News Weekly"
+          git push --quiet origin main
+          echo "Published to https://github.com/${target}"
