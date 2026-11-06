@@ -236,3 +236,5 @@ ul.world2 .nts { margin: 5px 0 0; }
 .papers li { display: list-item; }
 .papers li::marker { color: #E9D9A6; font-weight: bold; }
 .ath { background: #dfe8ec; } .ath .loc { width: 100%; height: 100%; display: block; }
+.mh-k a { color: inherit; text-decoration: none; border-bottom: 1px solid rgba(166,36,46,.35); }
+.mh-k a:hover { border-bottom-color: var(--red); }
