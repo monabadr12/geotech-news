@@ -206,14 +206,17 @@
   }
 
   openBtn.onclick = function () { render(); box.hidden = false; box.scrollIntoView({ behavior: "smooth" }); };
-  // the editor is open from the start, and every story of the issue below gets a button that jumps to its row
+  // a draft opens with the editor showing; a published issue keeps it closed until ✏️ Change the stories is pressed.
+  // Every story of the issue below gets a button that opens the editor at its row.
   render();
+  if (D.status === "approved") box.hidden = true;
   var all = S.highlights.concat(S.around_the_world);
   all.forEach(function (e, i) {
     var card = document.getElementById("s" + (i + 1));
     if (!card) return;
     var go = el("button", { type: "button", "class": "ed-jump" }, "✏️ Change this story");
     go.onclick = function () {
+      box.hidden = false;
       var rows = box.querySelectorAll(".ed-row");
       var idx = -1;
       for (var k = 0; k < rows.length; k++) if (rows[k].getAttribute("data-story") === e.story) idx = k;

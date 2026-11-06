@@ -979,8 +979,10 @@ def preview_html(key, issue, error, digests, cfg):
         state = (f"<div class='bar err'><b>This issue cannot be shown:</b> {esc(error)}. Open the file, correct it and commit; "
                  f"the preview is rebuilt within a few minutes.</div>")
     elif issue["status"] == "approved":
-        state = (f"<div class='bar ok'><b>Published.</b> Members see it at <a href='../{key}.html'>{esc(page_url(cfg, key))}</a>. "
-                 f"Changes you save update the published page too.</div>")
+        state = (f"<div class='bar ok big'><b>✅ Published.</b> This issue is public. Members see it at "
+                 f"<a href='../{key}.html'>{esc(page_url(cfg, key))}</a>.<div class='toolbar'>"
+                 f"<a class='btn green' href='../{key}.html'>Open the published page</a></div>"
+                 f"<small>To correct it, press ✏️ Change the stories below and save again; the published page updates too.</small></div>")
     else:
         state = ("<div class='bar draft'><b>Draft — not public yet.</b> Members cannot find this page. Change the stories "
                  "if you wish, then press <b>Approve and publish</b> in the story editor.</div>")
@@ -989,8 +991,14 @@ def preview_html(key, issue, error, digests, cfg):
     tools = ("<div class='toolbar'>" + ("<button type='button' class='btn' id='ed-open'>✏️ Change the stories</button>" if issue else "")
              + f"<a class='btn alt' href='../archive.html'>All published issues</a>"
              f"<a class='btn alt small' href='{esc(edit)}'>Advanced: edit the file</a></div>")
-    saved = (f"<div class='ed-saved'>Last saved with the story editor: {esc(issue['edited'][:8])} at "
-             f"{esc(issue['edited'][9:11])}:{esc(issue['edited'][11:13])} UTC</div>" if issue and issue.get("edited") else "")
+    saved = ""
+    if issue and issue.get("edited"):
+        try:
+            when = dt.datetime.strptime(issue["edited"][:15], "%Y%m%d-%H%M%S")
+            saved = (f"<div class='ed-saved'>Last saved with the story editor: {when.day} {when:%b %Y}, "
+                     f"{when:%H:%M} UTC</div>")
+        except ValueError:
+            pass
     data = ""
     if issue:
         blob = json.dumps(editor_data(key, issue, digests, cfg), ensure_ascii=False).replace("</", "<\\/")
