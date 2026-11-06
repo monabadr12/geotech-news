@@ -213,11 +213,14 @@ How an issue is made:
 2. **Look at it:** the preview page `geonews/preview/<week>.html` shows the issue as members will see it, the
    LinkedIn post, and every other story of the week with its code. It is not linked from anywhere and search engines
    are asked to leave it out.
-3. **Change it** on GitHub (the preview's **Edit this issue on GitHub** button, then **Commit changes**): swap a
-   story by pasting another story's code, rewrite a headline or a text, or correct the key number, the place, the
-   language or the advert note (`adverts: yes` or `no`). The instructions are also at the top of each issue file.
-   Each change rebuilds the preview in a few minutes.
-4. **Publish:** change `status: draft` to `status: approved` and commit. The issue becomes the newest one on the page
+3. **Change it** with the **story editor** on the preview page (**✏️ Change the stories**): replace a story with
+   another of the week (a searchable list, best first), move stories up or down, remove or add one, and edit a
+   headline, the text under it or the key number. **Save changes** opens GitHub with the changes written in a new file
+   (`data/geonews/edits/<week>--<time>.json`); press **Commit changes** there and the preview is rebuilt within a few
+   minutes. The newest save of a week wins; a story kept from the draft keeps its place, language and advert note, and
+   a new one shows its country map. (The issue file itself can still be edited: **Advanced: edit the file**.)
+4. **Publish:** press **Approve and publish** in the story editor (or change `status: draft` to `status: approved`
+   in the issue file) and commit. The issue becomes the newest one on the page
    and joins the archive, and the **LinkedIn post** (text, and a picture with the map and the ISSMGE logo to download
    from the preview page) is e-mailed to the editorial team, ready to post on the ISSMGE LinkedIn page.
 

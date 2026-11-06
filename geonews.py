@@ -49,6 +49,7 @@ DATA = ROOT / "data" / "geonews"
 SENT_FILE = DATA / "sent.json"
 OUT = site_builder.DOCS / "geonews"
 ADS_FILE = DATA / "ads.json"
+EDITS = DATA / "edits"   # saves from the story editor on the preview page: <week>--<time>.json, the newest wins
 MPC_URL = "https://www.issmge.org/committees/presidential-committees/magazine-presidential-committee"
 ADS_DAYS = 30        # how long the advert count of a site is kept
 ADS_MANY = 3         # this many different advertising systems on a home page = "many adverts"
@@ -411,6 +412,9 @@ def load_issue(path, stories, papers):
     if not isinstance(raw, dict):
         raise ValueError("the file is not laid out as an issue")
     problems = []
+    edit, edited = latest_edit(key)
+    if edit:
+        raw = apply_edit(raw, edit)
 
     def text(v):
         return " ".join(str(v or "").split())
@@ -454,7 +458,73 @@ def load_issue(path, stories, papers):
             "research": items("research", "paper", papers),
             "events": text(raw.get("events")).lower() != "none",
             "magazine_note": text(raw.get("magazine_note")), "magazine_link": site_builder.safe_url(text(raw.get("magazine_link")))
-            if text(raw.get("magazine_link")) else "", "problems": problems}
+            if text(raw.get("magazine_link")) else "", "problems": problems, "edited": edited}
+
+
+def latest_edit(key):
+    """(the newest save of the story editor for a week, its file name's time) or (None, "")."""
+    files = sorted(EDITS.glob(f"{key}--*.json")) if EDITS.is_dir() else []
+    for f in reversed(files):
+        try:
+            d = json.loads(f.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            print(f"Geo-News: {f.name} is not a readable save of the story editor; it is left out.")
+            continue
+        if isinstance(d, dict):
+            return d, f.stem.split("--", 1)[1]
+    return None, ""
+
+
+def apply_edit(raw, edit):
+    """The issue file with a save of the story editor applied: the stories in the editor's order, with its headlines,
+    texts and key numbers; a story kept from the file keeps its place, language and advert note."""
+    raw = dict(raw)
+    base = {str(it.get("story")): it for name in ("highlights", "around_the_world")
+            for it in (raw.get(name) or []) if isinstance(it, dict)}
+    for name in ("highlights", "around_the_world"):
+        if isinstance(edit.get(name), list):
+            out = []
+            for e in edit[name]:
+                if not isinstance(e, dict) or not e.get("story"):
+                    continue
+                it = dict(base.get(str(e["story"]), {}))
+                it["story"] = str(e["story"])
+                for k in ("title", "text", "number", "number_label"):
+                    if k in e:
+                        it[k] = e[k]
+                out.append(it)
+            raw[name] = out
+    for k in ("status", "intro"):
+        if edit.get(k):
+            raw[k] = edit[k]
+    if isinstance(edit.get("research"), list):
+        keep = {str(x) for x in edit["research"]}
+        raw["research"] = [r for r in (raw.get("research") or []) if isinstance(r, dict) and str(r.get("paper")) in keep]
+    return raw
+
+
+def editor_data(key, issue, digests, cfg):
+    """What the story editor on the preview page needs: the issue as it stands and the week's other stories."""
+    n = notify()
+    stories, _ = week_items(digests, key)
+    pool = {s["id"]: s for s in stories if (s.get("relevance") or 0) >= 3}
+    for it in issue["highlights"] + issue["around"]:
+        pool.setdefault(it["s"]["id"], it["s"])
+
+    def story(s):
+        return {"t": title_of(s), "w": n.country_name(s.get("country")) or "Global", "f": flag(s.get("country")),
+                "src": s.get("source", ""), "th": s.get("theme", ""), "r": s.get("relevance") or 0,
+                "a": s.get("angle", ""), "l": s.get("link", "")}
+
+    def entry(it):
+        return {"story": it["s"]["id"], "title": it["title"], "text": it["text"], "number": it.get("number", ""),
+                "number_label": it.get("number_label", "")}
+    order = sorted(pool.values(), key=lambda s: (-(s.get("relevance") or 0), -(s.get("rank") or 0)))
+    return {"week": key, "span": week_span(key), "repo": site_builder.repository(cfg), "status": issue["status"],
+            "intro": issue["intro"], "highlights": [entry(it) for it in issue["highlights"]],
+            "around_the_world": [entry(it) for it in issue["around"]],
+            "research": [it["s"]["id"] for it in issue["research"]],
+            "stories": {s["id"]: story(s) for s in order}, "order": [s["id"] for s in order]}
 
 
 def issue_files():
@@ -903,15 +973,22 @@ def preview_html(key, issue, error, digests, cfg):
                  f"the preview is rebuilt within a few minutes.</div>")
     elif issue["status"] == "approved":
         state = (f"<div class='bar ok'><b>Published.</b> Members see it at <a href='../{key}.html'>{esc(page_url(cfg, key))}</a>. "
-                 f"Changes to the file update the published page too.</div>")
+                 f"Changes you save update the published page too.</div>")
     else:
-        state = ("<div class='bar draft'><b>Draft — not public yet.</b> Members cannot find this page. To publish, change "
-                 "<code>status: draft</code> to <code>status: approved</code> in the issue file and commit.</div>")
+        state = ("<div class='bar draft'><b>Draft — not public yet.</b> Members cannot find this page. Change the stories "
+                 "if you wish, then press <b>Approve and publish</b> in the story editor.</div>")
     probs = ("".join(f"<li>{esc(p)}</li>" for p in issue["problems"]) if issue else "")
     problems = f"<div class='bar err'><b>Please check:</b><ul>{probs}</ul></div>" if probs else ""
-    tools = (f"<div class='toolbar'><a class='btn' href='{esc(edit)}'>✏️ Edit this issue on GitHub</a>"
-             f"<a class='btn alt' href='../archive.html'>All published issues</a></div>")
-    parts = [f"<div class='editor'><div class='ed-k'>MPC editor · preview of week {week_no(key)}</div>{state}{problems}{tools}</div>"]
+    tools = ("<div class='toolbar'>" + ("<button type='button' class='btn' id='ed-open'>✏️ Change the stories</button>" if issue else "")
+             + f"<a class='btn alt' href='../archive.html'>All published issues</a>"
+             f"<a class='btn alt small' href='{esc(edit)}'>Advanced: edit the file</a></div>")
+    saved = (f"<div class='ed-saved'>Last saved with the story editor: {esc(issue['edited'][:8])} at "
+             f"{esc(issue['edited'][9:11])}:{esc(issue['edited'][11:13])} UTC</div>" if issue and issue.get("edited") else "")
+    data = ""
+    if issue:
+        blob = json.dumps(editor_data(key, issue, digests, cfg), ensure_ascii=False).replace("</", "<\\/")
+        data = f"<script type='application/json' id='gn-data'>{blob}</script><div id='gn-editor' hidden></div>"
+    parts = [f"<div class='editor'><div class='ed-k'>MPC editor · preview of week {week_no(key)}</div>{state}{problems}{tools}{saved}</div>{data}"]
     if issue:
         parts.append(issue_html(issue, cfg, "../"))
         text = linkedin_text(issue, cfg)
