@@ -219,6 +219,9 @@ How an issue is made:
    (`data/geonews/edits/<week>--<time>.json`); press **Commit changes** there and the preview is rebuilt within a few
    minutes. The newest save of a week wins; a story kept from the draft keeps its place, language and advert note, and
    a new one shows its country map. (The issue file itself can still be edited: **Advanced: edit the file**.)
+   To ask colleagues for comments, send the **view-only link** (`geonews/preview/<week>-view.html`, the preview's
+   **🔗 Copy the view-only link** button): the issue as members will see it, with its links to the news sites but
+   without the editing buttons. Sharing it gives no access to GitHub.
 4. **Publish:** press **Approve and publish** in the story editor (or change `status: draft` to `status: approved`
    in the issue file) and commit. The issue becomes the newest one on the page
    and joins the archive, and the **LinkedIn post** (text, and a picture with the map and the ISSMGE logo to download
