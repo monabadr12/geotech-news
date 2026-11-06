@@ -37,6 +37,7 @@ import datetime as dt
 import json
 import math
 import re
+import shutil
 import sys
 from pathlib import Path
 
@@ -72,7 +73,7 @@ DEFAULTS = {"name": "Geo-News Weekly", "highlights": 5, "around": 8, "research":
             "events_max": 6, "hashtags": "#Geotechnics #GeotechnicalEngineering #ISSMGE #CivilEngineering",
             "linkedin_page": "", "editor": "",
             "initiative": "This newsletter is published within the framework of the new ISSMGE President's Initiatives.",
-            "subscribe_form": "", "unsubscribe_form": "", "suggest_form": ""}
+            "subscribe_form": "", "unsubscribe_form": "", "suggest_form": "", "public_url": ""}
 INTRO = ("Dear colleagues, here are the geotechnical stories from around the world that caught our eye last week. "
          "We gather them from news sources in different languages, and the ISSMGE Magazine Presidential Committee (MPC) "
          "checks every issue before it is published.")
@@ -887,7 +888,37 @@ def archive_html(issues, cfg, root):
 
 # ------------------------------------------------------------------ LinkedIn
 def page_url(cfg, key=None):
+    """The address members use: the newsletter's own website when it has one (geonews: public_url), else the
+    geonews/ folder of the News Desk."""
+    public = str(settings(cfg)["public_url"] or "").strip()
+    if public:
+        return public.rstrip("/") + "/" + (key + ".html" if key else "")
     return f"{site_builder.site_url(cfg)}geonews/{key + '.html' if key else 'index.html'}"
+
+
+PUBLIC_ASSETS = ("geonews.css", "issmge-logo.png", "favicon.svg")
+
+
+def public_bundle(dest):
+    """The newsletter's own website, from the built docs/geonews/: the published issues, the newest issue and the
+    archive at the top level, with their style sheet and pictures, and nothing of the News Desk (no previews, no
+    links back). The workflow copies it to the newsletter's own repository (README, "Geo-News Weekly")."""
+    dest = Path(dest)
+    if dest.exists():
+        shutil.rmtree(dest)
+    (dest / "assets").mkdir(parents=True)
+    for f in OUT.glob("*.html"):
+        text = f.read_text(encoding="utf-8").replace("../assets/", "assets/")
+        (dest / f.name).write_text(text, encoding="utf-8")
+    for name in PUBLIC_ASSETS:
+        src = site_builder.ASSETS / name
+        if src.exists():
+            shutil.copy2(src, dest / "assets" / name)
+    (dest / ".nojekyll").write_text("", encoding="utf-8")
+    (dest / "robots.txt").write_text("User-agent: *\nAllow: /\n", encoding="utf-8")
+    pages = sorted(p.name for p in dest.glob("*.html"))
+    print(f"Geo-News: public site in {dest}: {', '.join(pages)}")
+    return pages
 
 
 def linkedin_text(issue, cfg):
@@ -998,7 +1029,7 @@ def review_html(key, issue, cfg):
     """The view-only page to send colleagues: the issue as members will see it, with no editing buttons."""
     if issue["status"] == "approved":
         bar = (f"<div class='bar ok'><b>This issue is published.</b> "
-               f"<a href='../{key}.html'>Open the published page</a>.</div>")
+               f"<a href='{esc(page_url(cfg, key))}'>Open the published page</a>.</div>")
     else:
         bar = ("<div class='bar draft'><b>Draft for review — not public yet.</b> This is how the issue will look to ISSMGE "
                "members. Headlines open the original news sites. Please send your comments to the editor.</div>")
@@ -1014,8 +1045,8 @@ def preview_html(key, issue, error, digests, cfg):
                  f"the preview is rebuilt within a few minutes.</div>")
     elif issue["status"] == "approved":
         state = (f"<div class='bar ok big'><b>✅ Published.</b> This issue is public. Members see it at "
-                 f"<a href='../{key}.html'>{esc(page_url(cfg, key))}</a>.<div class='toolbar'>"
-                 f"<a class='btn green' href='../{key}.html'>Open the published page</a></div>"
+                 f"<a href='{esc(page_url(cfg, key))}'>{esc(page_url(cfg, key))}</a>.<div class='toolbar'>"
+                 f"<a class='btn green' href='{esc(page_url(cfg, key))}'>Open the published page</a></div>"
                  f"<small>To correct it, press ✏️ Change the stories below and save again; the published page updates too.</small></div>")
     else:
         state = ("<div class='bar draft'><b>Draft — not public yet.</b> Members cannot find this page. Change the stories "
@@ -1203,6 +1234,7 @@ def main(argv=None):
     ap.add_argument("--draft", action="store_true", help="write a draft now")
     ap.add_argument("--week", help="with --draft: the week, e.g. 2026-W44 (default: last week)")
     ap.add_argument("--force", action="store_true", help="with --draft: replace an existing file")
+    ap.add_argument("--public-bundle", metavar="FOLDER", help="copy the newsletter's own website (published issues only) to FOLDER")
     args = ap.parse_args(argv)
     cfg = yaml.safe_load(Path(site_builder.ROOT / "config.yaml").read_text(encoding="utf-8"))
     if args.draft:
@@ -1211,6 +1243,9 @@ def main(argv=None):
             ap.error("give the week as 2026-W44")
         ok = write_draft(site_builder.load_digests(), key, cfg, force=args.force)
         print(f"Draft of {key} " + ("written." if ok else "not written: it exists (use --force) or the week has no stories."))
+        return 0
+    if args.public_bundle:
+        public_bundle(args.public_bundle)
         return 0
     if args.auto:
         auto(cfg)

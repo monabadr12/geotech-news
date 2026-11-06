@@ -227,6 +227,12 @@ How an issue is made:
    and joins the archive, and the **LinkedIn post** (text, and a picture with the map and the ISSMGE logo to download
    from the preview page) is e-mailed to the editorial team, ready to post on the ISSMGE LinkedIn page.
 
+**The newsletter's own website.** So that readers never reach the News Desk, the published issues are also copied,
+after every run, to a separate repository (`geonews: public_repo` in `config.yaml`, e.g. `monabadr12/geo-news-weekly`)
+whose GitHub Pages site is the address members use (`geonews: public_url`). Only the published issues, the archive,
+the style sheet and the pictures go there: no previews, no drafts, no links to the News Desk. It needs the Actions
+secret `GEONEWS_DEPLOY_TOKEN`: a fine-grained token with *Contents: read and write* on that repository only.
+
 A draft can also be written by hand: `python geonews.py --draft --week 2026-W44` (`--force` replaces the file).
 `data/geonews/sent.json` records the e-mails sent. Settings (name, number of stories, hashtags) are under `geonews:`
 in `config.yaml`.
