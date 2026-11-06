@@ -1,0 +1,87 @@
+{
+ "bnamericas.com": {
+  "checked": "2026-11-06",
+  "many": false,
+  "systems": [
+   "Google Ads"
+  ]
+ },
+ "eluniversal.com.mx": {
+  "checked": "2026-11-06",
+  "many": true,
+  "systems": [
+   "Amazon",
+   "Google Ads",
+   "Taboola"
+  ]
+ },
+ "geplus.co.uk": {
+  "checked": "2026-11-06",
+  "many": false,
+  "systems": [
+   "Google Ads"
+  ]
+ },
+ "haitiantimes.com": {
+  "checked": "2026-11-06",
+  "many": true,
+  "systems": [
+   "AdSense auto ads",
+   "Amazon",
+   "Criteo",
+   "Google Ads",
+   "PubMatic",
+   "Xandr"
+  ]
+ },
+ "japannews.yomiuri.co.jp": {
+  "checked": "2026-11-06",
+  "many": false,
+  "systems": []
+ },
+ "kashmirlife.net": {
+  "checked": "2026-11-06",
+  "many": true,
+  "systems": [
+   "AdSense auto ads",
+   "Google Ads",
+   "Taboola"
+  ]
+ },
+ "life.ru": {
+  "checked": "2026-11-06",
+  "many": true,
+  "systems": [
+   "Criteo",
+   "Google Ads",
+   "Yandex"
+  ]
+ },
+ "phys.org": {
+  "checked": "2026-11-06",
+  "many": false,
+  "systems": []
+ },
+ "rainews.it": {
+  "checked": "2026-11-06",
+  "many": false,
+  "systems": [
+   "Google Ads"
+  ]
+ },
+ "tunnellingjournal.com": {
+  "checked": "2026-11-06",
+  "many": false,
+  "systems": [
+   "AdSense auto ads",
+   "Google Ads"
+  ]
+ },
+ "tunnelsandtunnelling.com": {
+  "checked": "2026-11-06",
+  "many": false,
+  "systems": [
+   "Google Ads"
+  ]
+ }
+}
