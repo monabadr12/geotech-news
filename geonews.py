@@ -74,7 +74,7 @@ DEFAULTS = {"name": "Geo-News Weekly", "highlights": 5, "around": 8, "research":
             "initiative": "This newsletter is published within the framework of the new ISSMGE President's Initiatives.",
             "subscribe_form": "", "unsubscribe_form": "", "suggest_form": ""}
 INTRO = ("Dear colleagues, here are the geotechnical stories from around the world that caught our eye last week. "
-         "We gather them from news sources in 20 languages, and the ISSMGE Magazine Presidential Committee (MPC) "
+         "We gather them from news sources in different languages, and the ISSMGE Magazine Presidential Committee (MPC) "
          "checks every issue before it is published.")
 def notify():
     import notify as n  # the e-mail channel, dates and event helpers of the weekly summary
