@@ -919,9 +919,9 @@ geonews:
   editor: "Dr. Mona Badr El-Din Anwar, Editor-in-Chief, ISSMGE Magazine"   # shown as "Edited by ..." after the welcome text; "" for none
   initiative: "This newsletter is published within the framework of the new ISSMGE President's Initiatives."   # under the title; "" for none
   # the three Google Forms in the editor's Drive (made by the setup script); the "Stay in touch" box shows once they are set
-  subscribe_form: ""
-  unsubscribe_form: ""
-  suggest_form: ""
+  subscribe_form: "https://docs.google.com/forms/d/e/1FAIpQLSfRNcMw6yhpi0n4223WJxcxr3OMKvUYfGMGfUczJoynoSogxg/viewform"
+  unsubscribe_form: "https://docs.google.com/forms/d/e/1FAIpQLSdKgtiizaoS4Huj8_kWj80C1oQH8mPET6GFF9hTWUhzpooGag/viewform"
+  suggest_form: "https://docs.google.com/forms/d/e/1FAIpQLSdYSaPDvn_EGX1NhKSqYmRKc5YmMM2_ZxHennUO9Zo4TEnk2g/viewform"
 
 # ---- Alerts and weekly summary (e-mail) -----------------------------------
 # An e-mail when a 5/5 story appears and a Monday summary for the editorial team.
