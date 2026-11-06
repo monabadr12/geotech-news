@@ -812,6 +812,13 @@ def issue_html(issue, cfg, root, number=None):
     return "".join(out)
 
 
+def asset_version(name):
+    """A short fingerprint of an asset, added to its address so browsers load a changed file at once."""
+    import hashlib
+    f = site_builder.ASSETS / name
+    return hashlib.sha1(f.read_bytes()).hexdigest()[:8] if f.exists() else "1"
+
+
 def shell(cfg, title, body, root, description, extra_head="", noindex=False):
     site = site_builder.site_url(cfg)
     return f"""<!doctype html>
@@ -824,7 +831,7 @@ def shell(cfg, title, body, root, description, extra_head="", noindex=False):
 <link rel="icon" href="{root}../assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{root}../assets/geonews.css">{extra_head}
+<link rel="stylesheet" href="{root}../assets/geonews.css?v={asset_version('geonews.css')}">{extra_head}
 </head><body><div class="gn-wrap">
 {body}
 <footer class="gn-foot">Stories come from public news sources in many languages; each headline links to the original publisher,
@@ -987,7 +994,7 @@ def preview_html(key, issue, error, digests, cfg):
     data = ""
     if issue:
         blob = json.dumps(editor_data(key, issue, digests, cfg), ensure_ascii=False).replace("</", "<\\/")
-        data = f"<script type='application/json' id='gn-data'>{blob}</script><div id='gn-editor' hidden></div>"
+        data = f"<script type='application/json' id='gn-data'>{blob}</script><div id='gn-editor'></div>"
     parts = [f"<div class='editor'><div class='ed-k'>MPC editor · preview of week {week_no(key)}</div>{state}{problems}{tools}{saved}</div>{data}"]
     if issue:
         parts.append(issue_html(issue, cfg, "../"))
@@ -1000,7 +1007,6 @@ def preview_html(key, issue, error, digests, cfg):
                      f"<div class='toolbar'><button type='button' class='btn copy' data-copy-from='li-text'>Copy the text</button>"
                      f"<button type='button' class='btn alt' id='li-save' data-week='{key}'>Download the picture</button></div>"
                      f"<div class='li-wrap'>{card}</div></section>")
-    parts.append(alternatives_html(key, issue, digests, cfg))
     return "".join(parts)
 
 
@@ -1025,7 +1031,7 @@ def build(ctx):
     keys = [i["key"] for i in published]
     count = len(keys)
     opts = settings(cfg)
-    js = "<script src='../../assets/geonews.js' defer></script>"
+    js = f"<script src='../../assets/geonews.js?v={asset_version('geonews.js')}' defer></script>"
     for key, issue, error in loaded:
         site_builder.write(OUT / "preview" / f"{key}.html",
                            shell(cfg, f"Preview · {opts['name']} · week {week_no(key)}", preview_html(key, issue, error, digests, cfg),
