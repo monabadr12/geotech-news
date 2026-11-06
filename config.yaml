@@ -916,6 +916,7 @@ geonews:
   events_days: 60      # events starting within this many days after the week
   hashtags: "#Geotechnics #GeotechnicalEngineering #ISSMGE #CivilEngineering"
   linkedin_page: ""    # the ISSMGE LinkedIn page's address, for a button on the preview page
+  editor: "Mona Badr El-Din, Editor-in-Chief, ISSMGE Magazine"   # shown as "Edited by ..." after the welcome text; "" for none
 
 # ---- Alerts and weekly summary (e-mail) -----------------------------------
 # An e-mail when a 5/5 story appears and a Monday summary for the editorial team.

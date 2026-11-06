@@ -69,7 +69,7 @@ esc = site_builder.esc
 KEY = re.compile(r"^\d{4}-W\d{2}$")
 DEFAULTS = {"name": "Geo-News Weekly", "highlights": 5, "around": 8, "research": 3, "events_days": 60,
             "events_max": 6, "hashtags": "#Geotechnics #GeotechnicalEngineering #ISSMGE #CivilEngineering",
-            "linkedin_page": ""}
+            "linkedin_page": "", "editor": ""}
 INTRO = ("Dear colleagues, here are the geotechnical stories from around the world that caught our eye last week. "
          "We gather them from news sources in 20 languages, and the ISSMGE Magazine Presidential Committee (MPC) "
          "checks every issue before it is published.")
@@ -682,7 +682,8 @@ def issue_html(issue, cfg, root, number=None):
     ads = load_ads()
     chips = (f"<span class='no'>Week {week_no(issue['key'])} · {issue['key'][:4]}</span><span>{esc(week_span(issue['key']))}</span>"
              + (f"<span>Issue {number}</span>" if number else ""))
-    out = [masthead(cfg, root, chips), "<div class='gn-main'>", f"<p class='intro'>{esc(issue['intro'])}</p>", TIPS]
+    out = [masthead(cfg, root, chips), "<div class='gn-main'>", f"<p class='intro'>{esc(issue['intro'])}</p>"
+           + (f"<p class='editor-line'>Edited by {esc(opts['editor'])}</p>" if opts["editor"] else ""), TIPS]
     if hl or ar:
         out.append(f"<section class='mapcard'><h2>This week on the map</h2>{map_svg(issue)}"
                    "<div class='mapkey'><span><i class='k1'></i>Highlights</span><span><i class='k2'></i>Around the world</span>"
