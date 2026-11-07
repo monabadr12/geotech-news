@@ -227,6 +227,13 @@ How an issue is made:
    and joins the archive, and the **LinkedIn post** (text, and a picture with the map and the ISSMGE logo to download
    from the preview page) is e-mailed to the editorial team, ready to post on the ISSMGE LinkedIn page.
 
+**E-mails.** The editor (the secret `MAIL_TO`) receives the Monday "draft ready" e-mail with the link to the preview
+and story editor, and after publishing an e-mail with the newsletter in short and the LinkedIn post. Colleagues listed
+in the secret `GEONEWS_REVIEWERS` (addresses separated by commas) receive only these two Geo-News e-mails, as blind
+copies: the draft with the view-only link and its highlights, and the published newsletter in short with a button to
+the full issue. They receive none of the News Desk's alerts. The reviewers' e-mails need the mail server setup
+(`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`).
+
 **The newsletter's own website.** So that readers never reach the News Desk, the published issues are also copied,
 after every run, to a separate repository (`geonews: public_repo` in `config.yaml`, e.g. `monabadr12/geo-news-weekly`)
 whose GitHub Pages site is the address members use (`geonews: public_url`). Only the published issues, the archive,

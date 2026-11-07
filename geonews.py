@@ -1194,35 +1194,109 @@ def save_sent(rec):
     SENT_FILE.write_text(json.dumps(rec, indent=1, sort_keys=True), encoding="utf-8")
 
 
-def email_draft(key, cfg):
-    n = notify()
-    site, repo = site_builder.site_url(cfg), site_builder.repository(cfg)
-    prev = f"{site}geonews/preview/{key}.html"
-    edit = f"https://github.com/{repo}/edit/main/data/geonews/{key}.yaml"
-    body = (n.m_p(f"The draft of {esc(settings(cfg)['name'])} for {esc(week_span(key))} is ready.", 15, n.INK)
-            + n.m_p("1. " + n.m_link(prev, "Look at the draft", n.LINK, 600) + " (it also lists the week's other stories).", 14, n.INK)
-            + n.m_p("2. " + n.m_link(edit, "Change it on GitHub", n.LINK, 600)
-                    + ": swap stories, edit texts, key numbers and places.", 14, n.INK)
-            + n.m_p("3. To publish, change <b>status: draft</b> to <b>status: approved</b> and commit. "
-                    "The LinkedIn post then comes to you by e-mail.", 14, n.INK))
-    html = n.m_shell(settings(cfg)["name"], f"Draft ready: week {week_no(key)}", esc(week_span(key)), body, cfg,
-                     "You receive this because the weekly Geo-News page needs the MPC's approval.")
-    return f"Geo-News Weekly draft ready for approval · {week_span(key)}", html
+def reviewers():
+    """The colleagues who receive the Geo-News e-mails only (the secret GEONEWS_REVIEWERS, addresses separated by commas)."""
+    import os
+    raw = os.environ.get("GEONEWS_REVIEWERS", "")
+    return [a.strip() for a in raw.replace(";", ",").replace("\n", ",").split(",") if "@" in a]
 
 
-def email_approved(issue, cfg):
+def gn_mail(title, sub, body, why):
+    """A Geo-News e-mail in the magazine's colours, with no link to the News Desk."""
+    return ("<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
+            "<meta name='color-scheme' content='light'></head><body style='margin:0;padding:0;background:#F2F0EC'>"
+            "<div style='max-width:640px;margin:0 auto;background:#ffffff'>"
+            "<div style='padding:22px 24px 14px;border-bottom:3px solid #B9962E'>"
+            "<div style='font:600 11px Arial,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#A6242E'>"
+            "ISSMGE · Magazine Presidential Committee (MPC)</div>"
+            f"<div style='font:700 26px/1.2 Georgia,serif;color:#A6242E;margin:4px 0 2px'>{title}</div>"
+            f"<div style='font:13px Arial,sans-serif;color:#625C60'>{sub}</div></div>"
+            f"<div style='padding:6px 24px 22px;font:15px/1.55 Arial,sans-serif;color:#2A2024'>{body}</div>"
+            f"<div style='padding:14px 24px;background:#2A2024;color:#cbbfc3;font:12px/1.6 Arial,sans-serif'>{why}</div>"
+            "</div></body></html>")
+
+
+def mail_button(url, label, color="#A6242E"):
+    return (f"<p style='margin:18px 0'><a href='{esc(url)}' style='display:inline-block;background:{color};color:#ffffff;"
+            f"font:bold 15px Arial,sans-serif;text-decoration:none;padding:12px 22px;border-radius:24px'>{label}</a></p>")
+
+
+def mail_stories(issue, full=True):
+    """The issue in an e-mail: the highlights (headline, place, one line) and, if full, around the world."""
     n = notify()
+    out = ["<h3 style='font:bold 12px Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#A6242E;"
+           "margin:20px 0 8px'>Highlights</h3>"]
+    for i, it in enumerate(issue["highlights"], 1):
+        s = it["s"]
+        place = n.country_name(s.get("country")) or "Global"
+        num = f" <b style='color:#A6242E'>{esc(it['number'])}</b> {esc(it.get('number_label', ''))} ·" if it.get("number") else ""
+        lead = " <span style='font:bold 11px Arial;color:#B9962E'>STORY OF THE WEEK</span>" if i == 1 else ""
+        out.append(f"<div style='margin:0 0 14px'><div style='font:12px Arial,sans-serif;color:#625C60'>{i}. {esc(place)} · "
+                   f"{esc(s.get('source', ''))}{lead}</div>"
+                   f"<a href='{esc(s['link'])}' style='font:bold 16px/1.35 Georgia,serif;color:#2A2024;text-decoration:none'>"
+                   f"{headline_html(it)}</a>"
+                   + (f"<div style='font:14px/1.5 Arial,sans-serif;color:#2A2024;margin-top:2px'>{num} {esc(it['text'])}</div>"
+                      if it["text"] or num else "") + "</div>")
+    if full and issue["around"]:
+        out.append("<h3 style='font:bold 12px Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#A6242E;"
+                   "margin:20px 0 8px'>Around the world</h3><ul style='padding-left:18px;margin:0'>")
+        for it in issue["around"]:
+            s = it["s"]
+            out.append(f"<li style='margin:0 0 7px'><a href='{esc(s['link'])}' style='color:#2A2024'>{headline_html(it)}</a> "
+                       f"<span style='color:#625C60;font-size:13px'>({esc(n.country_name(s.get('country')) or 'Global')})</span></li>")
+        out.append("</ul>")
+    return "".join(out)
+
+
+def email_draft(issue, cfg, reviewer=False):
+    """(subject, html) of the Monday e-mail: to the editor with the editor's preview, to colleagues with the view-only page."""
     key = issue["key"]
+    name, span = settings(cfg)["name"], week_span(key)
+    if reviewer:
+        body = (f"<p>Dear colleague, the draft of <b>{esc(name)}</b> for <b>{esc(span)}</b> is ready for your review. "
+                "Here are its highlights; the full draft shows them with the world map, the stories from around the world, "
+                "the research highlights and the events.</p>"
+                + mail_button(review_url(cfg, key), "Read the full draft")
+                + mail_stories(issue, full=False)
+                + "<p>Please send your comments to the editor by replying to this e-mail.</p>")
+        return (f"{name} – draft for your review · {span}",
+                gn_mail(esc(name), f"Draft for review · week {week_no(key)} · {esc(span)}", body,
+                        "You receive this as a reviewer of Geo-News Weekly for the ISSMGE Magazine Presidential Committee (MPC). "
+                        "The draft is not public yet."))
     prev = f"{site_builder.site_url(cfg)}geonews/preview/{key}.html"
-    text = esc(linkedin_text(issue, cfg)).replace("\n", "<br>")
-    body = (n.m_p(f"Week {week_no(key)} is published: " + n.m_link(page_url(cfg, key), "open the page", n.LINK, 600) + ".", 15, n.INK)
-            + n.m_p("The LinkedIn post for the ISSMGE page is below. The picture to go with it is on the "
-                    + n.m_link(prev, "preview page", n.LINK, 600) + " (Download the picture).", 14, n.INK)
-            + f"<div style='border:1px solid #e2e7ee;border-radius:8px;padding:12px 14px;font:14px/1.5 Arial,sans-serif;"
-              f"color:#1b2430;background:#f6f8fb'>{text}</div>")
-    html = n.m_shell(settings(cfg)["name"], f"Published: week {week_no(key)}", esc(week_span(key)), body, cfg,
-                     "You receive this because a Geo-News Weekly issue was approved.")
-    return f"Geo-News Weekly published · LinkedIn post ready · {week_span(key)}", html
+    body = (f"<p>The draft of <b>{esc(name)}</b> for <b>{esc(span)}</b> is ready.</p>"
+            + mail_button(prev, "Open the draft and the story editor")
+            + "<p style='font-size:14px'>Change stories with the story editor if needed, then press <b>Approve and publish</b>. "
+              f"Colleagues on the review list received the view-only link: <a href='{esc(review_url(cfg, key))}'>"
+              f"{esc(review_url(cfg, key))}</a></p>"
+            + mail_stories(issue, full=False))
+    return (f"{name} draft ready for approval · {span}",
+            gn_mail(esc(name), f"Draft ready · week {week_no(key)} · {esc(span)}", body,
+                    "You receive this as the editor of Geo-News Weekly."))
+
+
+def email_approved(issue, cfg, reviewer=False):
+    """(subject, html) after publishing: the newsletter in short with a button to the full issue; for the editor also the
+    LinkedIn post."""
+    key = issue["key"]
+    name, span = settings(cfg)["name"], week_span(key)
+    intro = f"<p>{esc(issue['intro'])}</p>" + mail_button(page_url(cfg, key), "Read the full newsletter")
+    body = intro + mail_stories(issue, full=True) + mail_button(page_url(cfg, key), "Read the full newsletter")
+    if reviewer:
+        return (f"{name} · {span}",
+                gn_mail(esc(name), f"Week {week_no(key)} · {esc(span)}", body,
+                        "Published by the ISSMGE Magazine Presidential Committee (MPC). You receive this as a reviewer of Geo-News Weekly."))
+    prev = f"{site_builder.site_url(cfg)}geonews/preview/{key}.html"
+    li = esc(linkedin_text(issue, cfg)).replace("\n", "<br>")
+    body += ("<h3 style='font:bold 12px Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#A6242E;"
+             "margin:26px 0 8px'>LinkedIn post</h3>"
+             f"<p style='font-size:14px'>Copy the text below; download the picture from the "
+             f"<a href='{esc(prev)}'>preview page</a> (Download the picture).</p>"
+             f"<div style='border:1px solid #E6E1DC;border-radius:8px;padding:12px 14px;font:14px/1.5 Arial,sans-serif;"
+             f"background:#F7ECEE'>{li}</div>")
+    return (f"{name} published · LinkedIn post ready · {span}",
+            gn_mail(esc(name), f"Published · week {week_no(key)} · {esc(span)}", body,
+                    "You receive this as the editor of Geo-News Weekly."))
 
 
 def auto(cfg, today=None):
@@ -1251,19 +1325,25 @@ def auto(cfg, today=None):
             continue
         k = issue["key"]
         if issue["status"] == "draft" and k not in rec["draft"] and k not in rec["approved"]:
-            subject, html = email_draft(k, cfg)
-            label = "draft"
+            make, label = email_draft, "draft"
         elif issue["status"] == "approved" and k not in rec["approved"] and (issue["highlights"] or issue["around"]):
-            subject, html = email_approved(issue, cfg)
-            label = "approved"
+            make, label = email_approved, "approved"
         else:
             continue
         try:
+            subject, html = make(issue, cfg)
             sent, status = n.deliver(subject, html, cfg)
         except n.NotifyError as ex:
             print(f"Geo-News: the {label} e-mail for {k} was not sent: {ex}")
             continue
         print(f"Geo-News: {label} e-mail for {k}: {status}")
+        team = reviewers()
+        if sent and team:
+            try:
+                subject, html = make(issue, cfg, reviewer=True)
+                print(f"Geo-News: {label} e-mail for {k} to {len(team)} reviewer(s): {n.deliver(subject, html, cfg, to=team)[1]}")
+            except n.NotifyError as ex:
+                print(f"Geo-News: the {label} e-mail for {k} to the reviewers was not sent: {ex}")
         if sent:
             rec[label][k] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
             changed = True

@@ -229,9 +229,11 @@ def plural(n, one, many=None):
     return site_builder.count(n, one, many)
 
 
-def send_smtp(subject, html_, text):
+def send_smtp(subject, html_, text, to=None):
+    """to: a list of addresses that receive the e-mail as blind copies (each sees only the sender), instead of MAIL_TO."""
     host, user, pwd = env("SMTP_HOST"), env("SMTP_USER"), os.environ.get("SMTP_PASSWORD", "")
-    to = [a.strip() for a in env("MAIL_TO").replace(";", ",").split(",") if a.strip()]
+    blind = bool(to)
+    to = list(to) if to else [a.strip() for a in env("MAIL_TO").replace(";", ",").split(",") if a.strip()]
     if not to and "@" in user:
         to = [user]  # no MAIL_TO: to the mail account itself
     if not to:
@@ -242,7 +244,8 @@ def send_smtp(subject, html_, text):
     except ValueError:
         raise NotifyError(f"SMTP_PORT is {env('SMTP_PORT')!r}, not a port number (usually 587).") from None
     msg = MIMEMultipart("alternative")
-    msg["Subject"], msg["From"], msg["To"] = subject, user if "@" in user else to[0], ", ".join(to)
+    msg["Subject"], msg["From"] = subject, user if "@" in user else to[0]
+    msg["To"] = msg["From"] if blind else ", ".join(to)
     msg["Date"], msg["Message-ID"] = formatdate(localtime=False), make_msgid(domain="geotech-news")
     msg.attach(MIMEText(text, "plain", "utf-8"))
     msg.attach(MIMEText(html_, "html", "utf-8"))
@@ -322,14 +325,19 @@ def setup_help(cfg):
     return "\n".join(lines)
 
 
-def deliver(subject, html_, cfg):
+def deliver(subject, html_, cfg, to=None):
     """Send by the first channel that is set up. (True, status) once sent; (False, status) when
-    e-mail is not set up (the log then shows the e-mail); NotifyError when sending failed."""
+    e-mail is not set up (the log then shows the e-mail); NotifyError when sending failed.
+    to: other recipients than MAIL_TO, as blind copies (the mail server only)."""
     subject = " ".join(str(subject).split())[:200]
     text = html_to_text(html_)
     kind = channel(cfg)
+    if to and kind != "smtp":
+        if not kind:
+            return False, "not sent: e-mail is not set up"
+        raise NotifyError("e-mails to other recipients than MAIL_TO need the mail server setup (SMTP_HOST).")
     if kind == "smtp":
-        return True, send_smtp(subject, html_, text)
+        return True, send_smtp(subject, html_, text, to)
     if kind == "connector":
         return True, send_connector(subject, html_, text, cfg)
     print("E-mail is not set up, so nothing was sent. This e-mail would have gone out:")
