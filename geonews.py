@@ -1351,12 +1351,35 @@ def auto(cfg, today=None):
         save_sent(rec)
 
 
+def sample(cfg, week=None):
+    """Send the editor (MAIL_TO only) the two e-mails colleagues receive for an issue (the newest unless week is given),
+    marked [Sample]. 0 when sent, 1 when not."""
+    n = notify()
+    stories, papers = all_items(site_builder.load_digests())
+    files = [p for p in issue_files() if not week or p.stem == week]
+    if not files:
+        print(f"Geo-News: no issue {week or ''} to make a sample of.")
+        return 1
+    issue = load_issue(files[0], stories, papers)
+    ok = True
+    for make, what in ((email_draft, "draft for review"), (email_approved, "published newsletter")):
+        subject, html = make(issue, cfg, reviewer=True)
+        try:
+            sent, status = n.deliver("[Sample] " + subject, html, cfg)
+        except n.NotifyError as ex:
+            sent, status = False, str(ex)
+        print(f"Geo-News: sample of the colleagues' {what} e-mail ({issue['key']}): {status}")
+        ok = ok and sent
+    return 0 if ok else 1
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Geo-News Weekly: drafts, pages and e-mails.")
     ap.add_argument("--auto", action="store_true", help="write last week's draft if missing; send e-mails not yet sent")
     ap.add_argument("--draft", action="store_true", help="write a draft now")
     ap.add_argument("--week", help="with --draft: the week, e.g. 2026-W44 (default: last week)")
     ap.add_argument("--force", action="store_true", help="with --draft: replace an existing file")
+    ap.add_argument("--sample", action="store_true", help="send the editor (MAIL_TO) a sample of the colleagues' e-mails")
     ap.add_argument("--public-bundle", metavar="FOLDER", help="copy the newsletter's own website (published issues only) to FOLDER")
     args = ap.parse_args(argv)
     cfg = yaml.safe_load(Path(site_builder.ROOT / "config.yaml").read_text(encoding="utf-8"))
@@ -1367,6 +1390,8 @@ def main(argv=None):
         ok = write_draft(site_builder.load_digests(), key, cfg, force=args.force)
         print(f"Draft of {key} " + ("written." if ok else "not written: it exists (use --force) or the week has no stories."))
         return 0
+    if args.sample:
+        return sample(cfg, args.week)
     if args.public_bundle:
         public_bundle(args.public_bundle)
         return 0

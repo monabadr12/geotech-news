@@ -12,6 +12,7 @@ on:
           - refresh the events calendar
           - send the weekly summary now
           - send a test e-mail
+          - send me a sample of the Geo-News e-mails
           - translate missing headlines
 
 permissions:
@@ -55,8 +56,19 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           MAIL_TO: ${{ secrets.MAIL_TO }}
+      - name: Sample of the Geo-News e-mails (to the editor only)
+        if: inputs.task == 'send me a sample of the Geo-News e-mails'
+        timeout-minutes: 10
+        run: python geonews.py --sample
+        env:
+          NOTIFY_TOKEN: ${{ secrets.NOTIFY_TOKEN }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
       - name: Save
-        if: inputs.task != 'send a test e-mail'   # a test changes no data, so there is nothing to save
+        if: inputs.task != 'send a test e-mail' && inputs.task != 'send me a sample of the Geo-News e-mails'   # tests change no data
         run: |
           git config user.name "news-scanner"
           git config user.email "news-scanner@users.noreply.github.com"
