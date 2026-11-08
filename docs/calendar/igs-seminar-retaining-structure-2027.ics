@@ -1,0 +1,32 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:IGS Seminar: Retaining Structure
+NAME:IGS Seminar: Retaining Structure
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:igs-seminar-retaining-structure-2027@geotech-news-desk
+DTSTAMP:20261108T095516Z
+DTSTART;VALUE=DATE:20270127
+DTEND;VALUE=DATE:20270128
+SUMMARY:Online Seminar: Construction of a Geosynthetic-Reinforced Retaining
+  Structure (IGS Seminar: Retaining Structure)
+DESCRIPTION:Online Seminar: Construction of a Geosynthetic-Reinforced Retai
+ ning Structure\nOrganiser: International Geosynthetics Society (IGS)\nKind
+ : Course / webinar\nTime 1:00–2:00 PM\, time zone not stated\; organiser
+  assumed from the calendar.\nEvent website: https://members.geosyntheticss
+ ociety.org/events/view/online-seminar-construction-of-a-geosynthetic-reinf
+ orced-retaining-structure\nFound by the weekly calendar refresh\; check th
+ e dates on the event's website
+LOCATION:Online
+URL:https://members.geosyntheticssociety.org/events/view/online-seminar-con
+ struction-of-a-geosynthetic-reinforced-retaining-structure
+CATEGORIES:Course / webinar
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

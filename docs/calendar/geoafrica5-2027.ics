@@ -1,0 +1,30 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:GeoAfrica5
+NAME:GeoAfrica5
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:geoafrica5-2027@geotech-news-desk
+DTSTAMP:20261108T095516Z
+DTSTART;VALUE=DATE:20270301
+DTEND;VALUE=DATE:20270306
+SUMMARY:GeoAfrica5 – 5th African Conference on Geosynthetics
+DESCRIPTION:GeoAfrica5 – 5th African Conference on Geosynthetics\nKind: O
+ ther conference\nIGS regional conference\; venue Misty Hills Country Hotel
+ \, Gauteng\; IGS listing\, not the conference's own site.\nEvent website: 
+ https://members.geosyntheticssociety.org/events/view/geoafrica5-5th-africa
+ n-conference-on-geosynthetics-gauteng-south-africa\nFound by the weekly ca
+ lendar refresh\; check the dates on the event's website
+LOCATION:Johannesburg\, South Africa
+URL:https://members.geosyntheticssociety.org/events/view/geoafrica5-5th-afr
+ ican-conference-on-geosynthetics-gauteng-south-africa
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

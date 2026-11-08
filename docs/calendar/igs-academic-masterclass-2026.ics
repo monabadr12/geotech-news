@@ -1,0 +1,32 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:IGS Academic Masterclass 2026
+NAME:IGS Academic Masterclass 2026
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:igs-academic-masterclass-2026@geotech-news-desk
+DTSTAMP:20261108T095516Z
+DTSTART;VALUE=DATE:20261124
+DTEND;VALUE=DATE:20261127
+SUMMARY:IGS Educate the Educators series: Academic Masterclass on Geosynthe
+ tics 2026 (IGS Academic Masterclass 2026)
+DESCRIPTION:IGS Educate the Educators series: Academic Masterclass on Geosy
+ nthetics 2026\nOrganiser: International Geosynthetics Society (IGS)\nKind:
+  Course / webinar\nHeld in Burleigh Heads\, Queensland\; organiser name on
+ ly as IGS series title.\nEvent website: https://members.geosyntheticssocie
+ ty.org/events/view/igs-educate-the-educators-series-academic-masterclass-o
+ n-geosynthetics-2026\nFound by the weekly calendar refresh\; check the dat
+ es on the event's website
+LOCATION:Burleigh Heads\, Australia
+URL:https://members.geosyntheticssociety.org/events/view/igs-educate-the-ed
+ ucators-series-academic-masterclass-on-geosynthetics-2026
+CATEGORIES:Course / webinar
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

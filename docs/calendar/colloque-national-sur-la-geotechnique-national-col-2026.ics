@@ -3,10 +3,8 @@ VERSION:2.0
 PRODID:-//Geotechnical News Desk//Events calendar//EN
 CALSCALE:GREGORIAN
 METHOD:PUBLISH
-X-WR-CALNAME:Colloque National sur la Géotechnique (National Colloquium on
-  Geotechnics)
-NAME:Colloque National sur la Géotechnique (National Colloquium on Geotech
- nics)
+X-WR-CALNAME:Colloque National Géotechnique
+NAME:Colloque National Géotechnique
 X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
  the ISSMGE Magazine news desk
 REFRESH-INTERVAL;VALUE=DURATION:P1D
@@ -14,16 +12,17 @@ X-PUBLISHED-TTL:P1D
 BEGIN:VEVENT
 UID:colloque-national-sur-la-geotechnique-national-col-2026@geotech-news-de
  sk
-DTSTAMP:20261025T070832Z
+DTSTAMP:20261108T095516Z
 DTSTART;VALUE=DATE:20261208
-DTEND;VALUE=DATE:20261209
-SUMMARY:Colloque National sur la Géotechnique (National Colloquium on Geot
- echnics)
-DESCRIPTION:Colloque National sur la Géotechnique (National Colloquium on 
- Geotechnics)\nKind: ISSMGE-supported\nLast day not published\; also listed
-  on the ITA and GeoEngineer calendars.\nEvent website: https://www.issmge.
- org/events/colloque-national-sur-la-gotechnique\nFound by the weekly calen
- dar refresh\; check the dates on the event's website
+DTEND;VALUE=DATE:20261211
+SUMMARY:Colloque National sur la Géotechnique (3rd Edition of the National
+  Colloquium on Geotechnics) (Colloque National Géotechnique)
+DESCRIPTION:Colloque National sur la Géotechnique (3rd Edition of the Nati
+ onal Colloquium on Geotechnics)\nKind: ISSMGE-supported\nEnd date from the
+  IGS calendar\; venue Hôtel Kenzi Rose Garden\; organiser not read.\nEven
+ t website: https://www.issmge.org/events/colloque-national-sur-la-gotechni
+ que\nFound by the weekly calendar refresh\; check the dates on the event's
+  website
 LOCATION:Marrakech\, Morocco
 URL:https://www.issmge.org/events/colloque-national-sur-la-gotechnique
 CATEGORIES:ISSMGE-supported

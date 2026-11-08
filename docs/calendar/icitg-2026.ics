@@ -1,0 +1,30 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:ICITG 2026
+NAME:ICITG 2026
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:icitg-2026@geotech-news-desk
+DTSTAMP:20261108T095516Z
+DTSTART;VALUE=DATE:20261202
+DTEND;VALUE=DATE:20261205
+SUMMARY:6th International Conference on Information Technology in Geo-Engin
+ eering (JTC2 Conference) (ICITG 2026)
+DESCRIPTION:6th International Conference on Information Technology in Geo-E
+ ngineering (JTC2 Conference)\nOrganiser: Joint Technical Committee 2 (JTC2
+ )\nKind: ISSMGE-supported\nKind assumed from the JTC2 label\; check whethe
+ r ISSMGE supports it. ISRM Specialized Conference.\nEvent website: https:/
+ /isrm.net/conference/show/6387\nFound by the weekly calendar refresh\; che
+ ck the dates on the event's website
+LOCATION:Budapest\, Hungary
+URL:https://isrm.net/conference/show/6387
+CATEGORIES:ISSMGE-supported
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

@@ -14,7 +14,7 @@ X-PUBLISHED-TTL:P1D
 BEGIN:VEVENT
 UID:bga-touring-lecture-beyond-automation-responsible-2026@geotech-news-des
  k
-DTSTAMP:20261025T070832Z
+DTSTAMP:20261108T095516Z
 DTSTART;VALUE=DATE:20261117
 DTEND;VALUE=DATE:20261120
 SUMMARY:BGA Touring Lecture – Beyond Automation: Responsible AI Workflows

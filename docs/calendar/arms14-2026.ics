@@ -11,17 +11,18 @@ REFRESH-INTERVAL;VALUE=DURATION:P1D
 X-PUBLISHED-TTL:P1D
 BEGIN:VEVENT
 UID:arms14-2026@geotech-news-desk
-DTSTAMP:20261025T070832Z
+DTSTAMP:20261108T095516Z
 DTSTART;VALUE=DATE:20261122
 DTEND;VALUE=DATE:20261127
-SUMMARY:ARMS14 – 14th Asian Rock Mechanics Symposium – Rock Mechanics f
- or the Next Generation – Innovations\, Sustainability\, and Resilience 
- – the 2026 ISRM International Symposium
-DESCRIPTION:ARMS14 – 14th Asian Rock Mechanics Symposium – Rock Mechani
- cs for the Next Generation – Innovations\, Sustainability\, and Resilien
- ce – the 2026 ISRM International Symposium\nOrganiser: ISRM\nKind: Other
-  conference\nEvent website: https://isrm.net/conference/show/6382\nFound b
- y the weekly calendar refresh\; check the dates on the event's website
+SUMMARY:14th Asian Rock Mechanics Symposium – Rock Mechanics for the Next
+  Generation – Innovations\, Sustainability\, and Resilience (2026 ISRM I
+ nternational Symposium) (ARMS14)
+DESCRIPTION:14th Asian Rock Mechanics Symposium – Rock Mechanics for the 
+ Next Generation – Innovations\, Sustainability\, and Resilience (2026 IS
+ RM International Symposium)\nOrganiser: ISRM\nKind: Other conference\nChec
+ k whether any registration deadline is still open.\nEvent website: https:/
+ /isrm.net/conference/show/6382\nFound by the weekly calendar refresh\; che
+ ck the dates on the event's website
 LOCATION:Fukuoka\, Japan
 URL:https://isrm.net/conference/show/6382
 CATEGORIES:Other conference

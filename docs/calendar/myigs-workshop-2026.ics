@@ -1,0 +1,30 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:MyIGS Workshop
+NAME:MyIGS Workshop
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:myigs-workshop-2026@geotech-news-desk
+DTSTAMP:20261108T095516Z
+DTSTART;VALUE=DATE:20261201
+DTEND;VALUE=DATE:20261202
+SUMMARY:MyIGS Workshop: Climate-Resilient Environmental Infrastructure
+DESCRIPTION:MyIGS Workshop: Climate-Resilient Environmental Infrastructure\
+ nOrganiser: MyIGS (IGS Malaysia chapter)\nKind: Course / webinar\nHeld at 
+ Monash University Malaysia\; organiser assumed from the name.\nEvent websi
+ te: https://members.geosyntheticssociety.org/events/view/myigs-workshop-cl
+ imate-resilient-environmental-infrastructure\nFound by the weekly calendar
+  refresh\; check the dates on the event's website
+LOCATION:Bandar Sunway\, Malaysia
+URL:https://members.geosyntheticssociety.org/events/view/myigs-workshop-cli
+ mate-resilient-environmental-infrastructure
+CATEGORIES:Course / webinar
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

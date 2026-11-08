@@ -3,12 +3,8 @@ VERSION:2.0
 PRODID:-//Geotechnical News Desk//Events calendar//EN
 CALSCALE:GREGORIAN
 METHOD:PUBLISH
-X-WR-CALNAME:10th Conference of the Croatian Geotechnical Society: Geotechn
- ical Engineering in Soft Rocks and Heterogeneous Rock Masses – an ISRM S
- pecialized Conference
-NAME:10th Conference of the Croatian Geotechnical Society: Geotechnical Eng
- ineering in Soft Rocks and Heterogeneous Rock Masses – an ISRM Specializ
- ed Conference
+X-WR-CALNAME:Croatian Geotechnical Conf.
+NAME:Croatian Geotechnical Conf.
 X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
  the ISSMGE Magazine news desk
 REFRESH-INTERVAL;VALUE=DURATION:P1D
@@ -16,19 +12,18 @@ X-PUBLISHED-TTL:P1D
 BEGIN:VEVENT
 UID:10th-conference-of-the-croatian-geotechnical-socie-2026@geotech-news-de
  sk
-DTSTAMP:20261025T070832Z
+DTSTAMP:20261108T095516Z
 DTSTART;VALUE=DATE:20261112
 DTEND;VALUE=DATE:20261115
 SUMMARY:10th Conference of the Croatian Geotechnical Society: Geotechnical 
- Engineering in Soft Rocks and Heterogeneous Rock Masses – an ISRM Specia
- lized Conference
+ Engineering in Soft Rocks and Heterogeneous Rock Masses (Croatian Geotechn
+ ical Conf.)
 DESCRIPTION:10th Conference of the Croatian Geotechnical Society: Geotechni
- cal Engineering in Soft Rocks and Heterogeneous Rock Masses – an ISRM Sp
- ecialized Conference\nOrganiser: Croatian Geotechnical Society\nKind: Othe
- r conference\nThe ISSMGE President's Nonveiller Distinguished Lecture in S
- plit in November may be part of this conference\; check.\nEvent website: h
- ttps://isrm.net/conference/show/6404\nFound by the weekly calendar refresh
- \; check the dates on the event's website
+ cal Engineering in Soft Rocks and Heterogeneous Rock Masses\nOrganiser: Cr
+ oatian Geotechnical Society\nKind: Other conference\nISRM Specialized Conf
+ erence\; check whether any registration deadline is still open.\nEvent web
+ site: https://isrm.net/conference/show/6404\nFound by the weekly calendar 
+ refresh\; check the dates on the event's website
 LOCATION:Split\, Croatia
 URL:https://isrm.net/conference/show/6404
 CATEGORIES:Other conference

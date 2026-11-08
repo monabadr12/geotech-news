@@ -1,0 +1,29 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Fachsektionstage Geotechnik 2027
+NAME:Fachsektionstage Geotechnik 2027
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:fachsektionstage-geotechnik-2027@geotech-news-desk
+DTSTAMP:20261108T095516Z
+DTSTART;VALUE=DATE:20270921
+DTEND;VALUE=DATE:20270923
+SUMMARY:Fachsektionstage Geotechnik 2027 – Interdisciplinary Forum
+DESCRIPTION:Fachsektionstage Geotechnik 2027 – Interdisciplinary Forum\nK
+ ind: Other conference\nVenue Kongresshaus Baden-Baden\; organiser not read
+ .\nEvent website: https://members.geosyntheticssociety.org/events/view/fac
+ hsektionstage-geotechnik-2027-interdisciplinary-forum\nFound by the weekly
+  calendar refresh\; check the dates on the event's website
+LOCATION:Baden-Baden\, Germany
+URL:https://members.geosyntheticssociety.org/events/view/fachsektionstage-g
+ eotechnik-2027-interdisciplinary-forum
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

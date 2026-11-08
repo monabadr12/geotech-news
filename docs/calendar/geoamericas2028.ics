@@ -1,0 +1,31 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:GeoAmericas2028
+NAME:GeoAmericas2028
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:geoamericas2028@geotech-news-desk
+DTSTAMP:20261108T095516Z
+DTSTART;VALUE=DATE:20280604
+DTEND;VALUE=DATE:20280609
+SUMMARY:GeoAmericas2028 – 6th Pan-America Regional Conference on Geosynth
+ etics
+DESCRIPTION:GeoAmericas2028 – 6th Pan-America Regional Conference on Geos
+ ynthetics\nKind: Other conference\nIGS regional conference\; venue Las Am
+ éricas Convention Center.\nEvent website: https://members.geosyntheticsso
+ ciety.org/events/view/6th-pan-america-regional-conference-on-geosynthetics
+ -geoamericas2028\nFound by the weekly calendar refresh\; check the dates o
+ n the event's website
+LOCATION:Cartagena\, Colombia
+URL:https://members.geosyntheticssociety.org/events/view/6th-pan-america-re
+ gional-conference-on-geosynthetics-geoamericas2028
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

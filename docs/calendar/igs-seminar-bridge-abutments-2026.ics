@@ -1,0 +1,31 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:IGS Seminar: Bridge Abutments
+NAME:IGS Seminar: Bridge Abutments
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:igs-seminar-bridge-abutments-2026@geotech-news-desk
+DTSTAMP:20261108T095516Z
+DTSTART;VALUE=DATE:20261125
+DTEND;VALUE=DATE:20261126
+SUMMARY:Online Seminar: Geosynthetic-Reinforced Bridge Abutments (IGS Semin
+ ar: Bridge Abutments)
+DESCRIPTION:Online Seminar: Geosynthetic-Reinforced Bridge Abutments\nOrgan
+ iser: International Geosynthetics Society (IGS)\nKind: Course / webinar\nT
+ ime 1:00–2:00 PM\, time zone not stated\; organiser assumed from the cal
+ endar.\nEvent website: https://members.geosyntheticssociety.org/events/vie
+ w/online-seminar-geosynthetic-reinforced-bridge-abutments\nFound by the we
+ ekly calendar refresh\; check the dates on the event's website
+LOCATION:Online
+URL:https://members.geosyntheticssociety.org/events/view/online-seminar-geo
+ synthetic-reinforced-bridge-abutments
+CATEGORIES:Course / webinar
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

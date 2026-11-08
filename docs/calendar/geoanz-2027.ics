@@ -1,0 +1,28 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:GeoANZ 2027
+NAME:GeoANZ 2027
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:geoanz-2027@geotech-news-desk
+DTSTAMP:20261108T095516Z
+DTSTART;VALUE=DATE:20270706
+DTEND;VALUE=DATE:20270709
+SUMMARY:GeoANZ 2027
+DESCRIPTION:GeoANZ 2027\nKind: Other conference\nVenue Pan Pacific Hotel\; 
+ may be linked to the ISSMGE Australasian regional conference\, but the pag
+ e doesn't say so.\nEvent website: https://members.geosyntheticssociety.org
+ /events/view/geoanz-2027\nFound by the weekly calendar refresh\; check the
+  dates on the event's website
+LOCATION:Perth\, Australia
+URL:https://members.geosyntheticssociety.org/events/view/geoanz-2027
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

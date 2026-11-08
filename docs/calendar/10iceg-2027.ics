@@ -11,15 +11,17 @@ REFRESH-INTERVAL;VALUE=DURATION:P1D
 X-PUBLISHED-TTL:P1D
 BEGIN:VEVENT
 UID:10iceg-2027@geotech-news-desk
-DTSTAMP:20261025T070832Z
+DTSTAMP:20261108T095516Z
 DTSTART;VALUE=DATE:20271101
-DTEND;VALUE=DATE:20271102
-SUMMARY:The 10th International Congress on Environmental Geotechnics (10ICE
- G)
-DESCRIPTION:The 10th International Congress on Environmental Geotechnics\nK
- ind: ISSMGE-supported\nLast day not published\; check it and any call for 
- abstracts.\nEvent website: https://www.issmge.org/events/10iceg\nFound by 
- the weekly calendar refresh\; check the dates on the event's website
+DTEND;VALUE=DATE:20271105
+SUMMARY:10th International Congress on Environmental Geotechnics (10ICEG)
+DESCRIPTION:10th International Congress on Environmental Geotechnics\nKind:
+  ISSMGE-supported\nTC306 call for abstracts for the geo-education session 
+ is open\, deadline not read: https://www.issmge.org/news/call-for-abstract
+ s-for-the-geo-education-session-at-10iceg-kyoto-14-november-2027. End date
+  from a news item title.\nEvent website: https://www.issmge.org/events/10i
+ ceg\nFound by the weekly calendar refresh\; check the dates on the event's
+  website
 LOCATION:Kyoto\, Japan
 URL:https://www.issmge.org/events/10iceg
 CATEGORIES:ISSMGE-supported

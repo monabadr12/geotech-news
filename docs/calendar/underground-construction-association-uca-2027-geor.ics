@@ -3,31 +3,29 @@ VERSION:2.0
 PRODID:-//Geotechnical News Desk//Events calendar//EN
 CALSCALE:GREGORIAN
 METHOD:PUBLISH
-X-WR-CALNAME:Underground Construction Association (UCA) 2027 George A. Fox 
- Conference
-NAME:Underground Construction Association (UCA) 2027 George A. Fox Conferen
- ce
+X-WR-CALNAME:UCA 2027
+NAME:UCA 2027
 X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
  the ISSMGE Magazine news desk
 REFRESH-INTERVAL;VALUE=DURATION:P1D
 X-PUBLISHED-TTL:P1D
 BEGIN:VEVENT
 UID:underground-construction-association-uca-2027-geor@geotech-news-desk
-DTSTAMP:20261025T070832Z
+DTSTAMP:20261108T095516Z
 DTSTART;VALUE=DATE:20270119
 DTEND;VALUE=DATE:20270120
 SUMMARY:Underground Construction Association (UCA) 2027 George A. Fox Confe
- rence
+ rence (UCA 2027)
 DESCRIPTION:Underground Construction Association (UCA) 2027 George A. Fox C
- onference\nOrganiser: Underground Construction Association (UCA)\nKind: Ot
- her conference\nITA supported event\; last day not published\, so check it
- .\nEvent website: https://about.ita-aites.org/future-events/2656/undergrou
- nd-construction-association-uca-2027-george-a-fox-conference?tmpl=componen
- t\nFound by the weekly calendar refresh\; check the dates on the event's w
- ebsite
+ onference\nOrganiser: Underground Construction Association (SME)\nKind: Ot
+ her conference\nPlace from listing title\; organiser assumed from the name
+ \; ITA tags it supported event\; end date not read.\nEvent website: https:
+ //about.ita-aites.org/future-events/2656/underground-construction-associat
+ ion-uca-2027-george-a-fox-conference\nFound by the weekly calendar refresh
+ \; check the dates on the event's website
 LOCATION:New York\, United States
 URL:https://about.ita-aites.org/future-events/2656/underground-construction
- -association-uca-2027-george-a-fox-conference?tmpl=component
+ -association-uca-2027-george-a-fox-conference
 CATEGORIES:Other conference
 TRANSP:TRANSPARENT
 END:VEVENT

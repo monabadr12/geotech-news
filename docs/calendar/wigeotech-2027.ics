@@ -1,0 +1,29 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:WiGeotech
+NAME:WiGeotech
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:wigeotech-2027@geotech-news-desk
+DTSTAMP:20261108T095516Z
+DTSTART;VALUE=DATE:20270319
+DTEND;VALUE=DATE:20270320
+SUMMARY:2nd BGA Women in Geotechnics (WiGeotech) Afternoon Tea
+DESCRIPTION:2nd BGA Women in Geotechnics (WiGeotech) Afternoon Tea\nOrganis
+ er: British Geotechnical Association\nKind: Other conference\nNetworking e
+ vent with no technical programme shown\; editors may want to drop it. Venu
+ e ICE\, One Great George Street.\nEvent website: https://www.britishgeotec
+ h.org/event/2nd-bga-wigeotech/\nFound by the weekly calendar refresh\; che
+ ck the dates on the event's website
+LOCATION:London\, United Kingdom
+URL:https://www.britishgeotech.org/event/2nd-bga-wigeotech/
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

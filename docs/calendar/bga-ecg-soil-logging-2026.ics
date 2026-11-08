@@ -1,0 +1,29 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:BGA ECG: Soil Logging
+NAME:BGA ECG: Soil Logging
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:bga-ecg-soil-logging-2026@geotech-news-desk
+DTSTAMP:20261108T095516Z
+DTSTART;VALUE=DATE:20261125
+DTEND;VALUE=DATE:20261126
+SUMMARY:BGA Early Career Group: Soil Logging Course (BGA ECG: Soil Logging)
+DESCRIPTION:BGA Early Career Group: Soil Logging Course\nOrganiser: British
+  Geotechnical Association\, Early Career Group\nKind: Course / webinar\nVe
+ nue Skempton Building\, Imperial College London\; unclear whether registra
+ tion is limited.\nEvent website: https://www.britishgeotech.org/event/bga-
+ ecg-soil-logging-course/\nFound by the weekly calendar refresh\; check the
+  dates on the event's website
+LOCATION:London\, United Kingdom
+URL:https://www.britishgeotech.org/event/bga-ecg-soil-logging-course/
+CATEGORIES:Course / webinar
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

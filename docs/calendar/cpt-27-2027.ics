@@ -11,16 +11,16 @@ REFRESH-INTERVAL;VALUE=DURATION:P1D
 X-PUBLISHED-TTL:P1D
 BEGIN:VEVENT
 UID:cpt-27-2027@geotech-news-desk
-DTSTAMP:20261025T070832Z
+DTSTAMP:20261108T095516Z
 DTSTART;VALUE=DATE:20270512
 DTEND;VALUE=DATE:20270513
 SUMMARY:CPT'27: International Symposium on Cone Penetration Testing
 DESCRIPTION:CPT'27: International Symposium on Cone Penetration Testing\nKi
- nd: Other conference\nLast day not published\; check whether it is a TC sy
- mposium and whether the call for abstracts is open.\nEvent website: https:
- //www.issmge.org/events/cpt27-international-symposium-on-cone-penetration-
- testing\nFound by the weekly calendar refresh\; check the dates on the eve
- nt's website
+ nd: Other conference\nListed on the ISSMGE calendar without the ISSMGE log
+ o\; check level of ISSMGE support. End date not read.\nEvent website: http
+ s://www.issmge.org/events/cpt27-international-symposium-on-cone-penetratio
+ n-testing\nFound by the weekly calendar refresh\; check the dates on the e
+ vent's website
 LOCATION:Vancouver\, Canada
 URL:https://www.issmge.org/events/cpt27-international-symposium-on-cone-pen
  etration-testing
