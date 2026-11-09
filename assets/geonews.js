@@ -142,6 +142,14 @@
       inp.oninput = function () { e[f[0]] = inp.value; mark(); };
       lab.appendChild(inp); form.appendChild(lab);
     });
+    if (e.place) {  // the picture: a satellite view of the place, or the map of the country
+      var lab = el("label", {}, "<span>Picture</span>");
+      var sel = el("select", {});
+      sel.innerHTML = "<option value='1'>Satellite view of the place</option><option value='0'>Map of the country</option>";
+      sel.value = e.satellite ? "1" : "0";
+      sel.onchange = function () { e.satellite = sel.value === "1"; mark(); };
+      lab.appendChild(sel); form.appendChild(lab);
+    }
     r.appendChild(form);
     return r;
   }
@@ -184,6 +192,7 @@
     function clean(list) { return list.map(function (e) {
       var o = { story: e.story };
       ["title", "text", "number", "number_label"].forEach(function (k) { if (e[k]) o[k] = e[k]; });
+      if (e.place) o.satellite = !!e.satellite;
       return o; }); }
     var save = { week: D.week, status: status, intro: S.intro, highlights: clean(S.highlights),
                  around_the_world: clean(S.around_the_world), research: D.research };
