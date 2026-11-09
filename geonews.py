@@ -256,7 +256,7 @@ def enrich(items, cfg):
 - "number_label": at most 8 words saying what the figure counts (e.g. "of strongly shaken sites liquefied again"); "" when number is "".
 - "language": the language the outlet publishes this story in, as an English name (e.g. "English", "Japanese", "Spanish"), judged from the original headline.
 - "lat", "lon": the latitude and longitude of the place the story is about, as exactly as the headline and place allow (the site, else the town, else the region, else the country's centre).
-- "satellite": true only when lat/lon point at a specific site or town small enough for a satellite view at about 10 km across to show it (a dam, a tunnel, a landslide, a town); false for a region, a country or a general story.
+- "satellite": true only when the story is about one specific site on land whose position you know to within about 1 km (a dam, a landslide, a building, a tunnel portal or station site, a small town), so that a satellite view about 10 km across shows something meaningful; false for crossings under seas, straits, bays or rivers, for routes and lines tens of kilometres long, for regions, countries and general stories, and whenever lat/lon are only approximate.
 - "site": the outlet's web address without "https://" or "www." (e.g. "japannews.yomiuri.co.jp"); "" if you do not know it.
 
 Stories:
@@ -495,6 +495,8 @@ def apply_edit(raw, edit):
                 for k in ("title", "text", "number", "number_label"):
                     if k in e:
                         it[k] = e[k]
+                if "satellite" in e:
+                    it["satellite"] = "yes" if e["satellite"] else "no"
                 out.append(it)
             raw[name] = out
     for k in ("status", "intro"):
@@ -521,7 +523,8 @@ def editor_data(key, issue, digests, cfg):
 
     def entry(it):
         return {"story": it["s"]["id"], "title": it["title"], "text": it["text"], "number": it.get("number", ""),
-                "number_label": it.get("number_label", "")}
+                "number_label": it.get("number_label", ""), "satellite": bool(it.get("satellite")),
+                "place": it.get("lat") is not None and it.get("lon") is not None}
     order = sorted(pool.values(), key=lambda s: (-(s.get("relevance") or 0), -(s.get("rank") or 0)))
     return {"week": key, "span": week_span(key), "repo": site_builder.repository(cfg), "status": issue["status"],
             "intro": issue["intro"], "highlights": [entry(it) for it in issue["highlights"]],
