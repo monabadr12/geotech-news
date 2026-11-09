@@ -1,0 +1,179 @@
+# Geo-News Weekly · 2–8 Nov 2026 (2026-W45)
+#
+# HOW TO EDIT THIS ISSUE (on GitHub: press the pencil, change the file, then press "Commit changes")
+#  - See it as members will:   https://monabadr12.github.io/geotech-news/geonews/preview/2026-W45.html
+#    That page also lists every other story of the week, each with its code.
+#  - Swap a story: replace its code (after story: or paper:) with another code from the preview page.
+#    The other lines of that story (number, place, language) then belong to the old story: correct them
+#    or leave them empty ("") and the page uses the new story's country map and no key number.
+#  - Change a headline or a text: write it between the quotes. An empty title keeps the original headline.
+#  - Key number: the figure shown large (number) and what it counts (number_label); "" for none.
+#  - Place: lat and lon of the site; satellite: yes shows a satellite view of it, no a map of the country.
+#  - Remove a story: delete its lines (from the - to the line before the next -).
+#  - PUBLISH: change  status: draft  to  status: approved  and commit. The page goes public within a few
+#    minutes and the LinkedIn post is e-mailed to the editorial team.
+
+status: draft
+intro: "Dear colleagues, here are the geotechnical stories from around the world that caught our eye last week. We gather them from news sources in different languages, and the ISSMGE Magazine Presidential Committee (MPC) checks every issue before it is published."
+
+highlights:   # the first one is the story of the week
+  - story: 5bd45b32811ea2ee   # Why did Vaiont Dam suffer only superficial damage after a massive landslide overtopped it? (Italy)
+    title: ""   # empty keeps the headline above
+    text: "Why did the concrete arch dam survive a rockslide-generated wave overtopping it, and what does this teach about reservoir slope hazards and dam design?"
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: 46.2146
+    lon: 12.2789
+    satellite: yes   # yes: satellite view of the place; no: map of the country
+    site: "britannica.com"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+  - story: ac3250858685696c   # Finest Tunnel Project advances with new planning application in Estonia (Estonia)
+    title: ""   # empty keeps the headline above
+    text: "What ground and geological risks must a privately developed subsea rail tunnel address under the Gulf of Finland?"
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: 59.5
+    lon: 24.8
+    satellite: yes   # yes: satellite view of the place; no: map of the country
+    site: "tunnelsandtunnelling.com"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+  - story: f5d44e4baa257060   # Fugro N : awarded multiyear framework contract for Geotechnical Site Investigations offshore Germany, for offs (Germany)
+    title: ""   # empty keeps the headline above
+    text: "What site investigation methods are needed to characterise seabed soils across large offshore wind zones under a multiyear framework?"
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: 54.5
+    lon: 7.0
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "marketscreener.com"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+  - story: e05e3d7335aec5a4   # Turkish marine survey specialist secures work on country’s first offshore wind site investigation program (Türkiye)
+    title: ""   # empty keeps the headline above
+    text: "What are the challenges of marine geotechnical site investigation for a first offshore wind project, from seabed sampling to geophysical interpretation in unfamiliar ground?"
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: 39.0
+    lon: 35.0
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "offshore-energy.biz"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+  - story: 1d563cfe8ec5b88b   # China completes pioneering ‘two-in-one’ tunnel enlargement (China)
+    title: ""   # empty keeps the headline above
+    text: "How can a tunnel be enlarged in situ while keeping the surrounding rock and lining stable, and what ground risks does this method carry?"
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: 29.1
+    lon: 120.2
+    satellite: yes   # yes: satellite view of the place; no: map of the country
+    site: "tunnellingjournal.com"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+
+around_the_world:
+  - story: c2c0d8eb74ec5949   # India's first undersea rail tunnel: 114 metres below ground in Navi Mumbai; 1,200 workers; two bullet trains (India)
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: "114"   # the key number shown large; "" for none
+    number_label: "metres below ground in Navi Mumbai undersea tunnel"
+    language: "Hindi"   # the news site's language
+    lat: 19.05
+    lon: 72.95
+    satellite: yes   # yes: satellite view of the place; no: map of the country
+    site: "dainikbhaskar.com"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+  - story: 9dd224f8e64b851e   # Mexico City sinks up to 40 cm a year and depends on the Cutzamala system (Mexico)
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: "40 cm"   # the key number shown large; "" for none
+    number_label: "sinks per year in Mexico City"
+    language: "Spanish"   # the news site's language
+    lat: 19.43
+    lon: -99.13
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "lasillarota.com"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+  - story: 0a9866b5579272c3   # First CRCHI TBM arrives in Serbia for Belgrade Metro (Serbia)
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: 44.8
+    lon: 20.46
+    satellite: yes   # yes: satellite view of the place; no: map of the country
+    site: "tunnellingjournal.com"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+  - story: b87f710b88f31be1   # First Yonge North Subway extension tunnel boring machine arrives on site (Canada)
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: 43.99
+    lon: -79.45
+    satellite: yes   # yes: satellite view of the place; no: map of the country
+    site: "geplus.co.uk"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+  - story: 6670a5c0b59f7c36   # Giant TBM reception chambers completed beneath Sydney Harbour (Australia)
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: -33.85
+    lon: 151.18
+    satellite: yes   # yes: satellite view of the place; no: map of the country
+    site: "tunnellingjournal.com"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+  - story: 168e56fadcaa8aa2   # Permafrost Is Thawing From the Inside Out—and It’s Unleashing an Entirely New Kind of Landslide (global)
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: 65.0
+    lon: -150.0
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "popularmechanics.com"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+  - story: 8a86e7c7619fcea3   # 14 people killed in landslide in Ethiopia's Amhara region (Ethiopia)
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: "14"   # the key number shown large; "" for none
+    number_label: "people killed in landslide in Amhara region"
+    language: "Arabic"   # the news site's language
+    lat: 11.5
+    lon: 37.9
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "omannews.gov.om"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+  - story: 098f632511c17bee   # Red alert for landslides in 22 municipalities of Antioquia and 26 of Chocó (Colombia)
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: "22"   # the key number shown large; "" for none
+    number_label: "municipalities in Antioquia under red landslide alert"
+    language: "Spanish"   # the news site's language
+    lat: 6.5
+    lon: -76.5
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: ""   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+
+research:
+  - paper: "07d128d25e5f7616"   # Dynamic load transfer and residual stress evolution during pile driving into weak rock-based intermediate geom
+    text: "Full-scale field data on driving loads and residual stresses in weak rock-like materials directly inform pile driving predictions and installation risk assessment."
+  - paper: "5ab673cb09b2ec01"   # Performance of Vetiver-Reinforced Slopes: Full-Scale Deformation Monitoring and Coupled Hydro-Mechanical Numer
+    text: "Year-long field monitoring with validated coupled simulations shows vetiver as a practical, low-carbon slope reinforcement option under extreme rainfall and drought."
+  - paper: "b3e34a9ab25448d2"   # Performance of Tire Cell–Reinforced Tracks under Multistage Cyclic Loading: Full-Scale Testing and Numerical M
+    text: "Full-scale field evidence that recycled tire cells can replace a capping layer and reduce track deformation, a practical option for railway subgrade upgrades."
+
+# events coming up are added by themselves from the events calendar; write  events: none  to leave them out
+events: auto
+
+# optional: a line about the latest ISSMGE Magazine issue, and its link (empty: no box)
+magazine_note: ""
+magazine_link: ""
