@@ -1,6 +1,6 @@
 {
  "updated": "2026-11-08T09:55:16+00:00",
- "built": "2026-11-10",
+ "built": "2026-11-11",
  "feed": "https://monabadr12.github.io/geotech-news/events.ics",
  "kinds": [
   "ISSMGE conference",
@@ -91,7 +91,7 @@
    "source": "scan",
    "found": "2026-10-25",
    "notes": "18:30–20:00; speaker Danial Shirkavand.",
-   "status": "under way"
+   "status": "past"
   },
   {
    "id": "itacet-lunchtime-lecture-series-60-2026",
@@ -112,7 +112,7 @@
    "source": "scan",
    "found": "2026-10-25",
    "notes": "Page not opened; unknown whether online; organiser inferred from series name.",
-   "status": "under way"
+   "status": "past"
   },
   {
    "id": "woh-hup-distinguished-lecture-by-prof-kenichi-soga-2026",
@@ -133,7 +133,7 @@
    "source": "scan",
    "found": "2026-10-25",
    "notes": "Date from the news title; venue and whether it is online were not read.",
-   "status": "under way"
+   "status": "past"
   },
   {
    "id": "10th-conference-of-the-croatian-geotechnical-socie-2026",
