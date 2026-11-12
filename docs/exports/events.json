@@ -1,6 +1,6 @@
 {
  "updated": "2026-11-08T09:55:16+00:00",
- "built": "2026-11-11",
+ "built": "2026-11-12",
  "feed": "https://monabadr12.github.io/geotech-news/events.ics",
  "kinds": [
   "ISSMGE conference",
@@ -154,7 +154,7 @@
    "source": "scan",
    "found": "2026-10-25",
    "notes": "ISRM Specialized Conference; check whether any registration deadline is still open.",
-   "status": "upcoming"
+   "status": "under way"
   },
   {
    "id": "tunnel-turkey-2026",
@@ -175,7 +175,7 @@
    "source": "scan",
    "found": "2026-10-25",
    "notes": "Only title and start date listed; check it has a technical programme, not only an exhibition.",
-   "status": "upcoming"
+   "status": "under way"
   },
   {
    "id": "bga-touring-lecture-beyond-automation-responsible-2026",
