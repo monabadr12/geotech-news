@@ -1,0 +1,179 @@
+# Geo-News Weekly · 9–15 Nov 2026 (2026-W46)
+#
+# HOW TO EDIT THIS ISSUE (on GitHub: press the pencil, change the file, then press "Commit changes")
+#  - See it as members will:   https://monabadr12.github.io/geotech-news/geonews/preview/2026-W46.html
+#    That page also lists every other story of the week, each with its code.
+#  - Swap a story: replace its code (after story: or paper:) with another code from the preview page.
+#    The other lines of that story (number, place, language) then belong to the old story: correct them
+#    or leave them empty ("") and the page uses the new story's country map and no key number.
+#  - Change a headline or a text: write it between the quotes. An empty title keeps the original headline.
+#  - Key number: the figure shown large (number) and what it counts (number_label); "" for none.
+#  - Place: lat and lon of the site; satellite: yes shows a satellite view of it, no a map of the country.
+#  - Remove a story: delete its lines (from the - to the line before the next -).
+#  - PUBLISH: change  status: draft  to  status: approved  and commit. The page goes public within a few
+#    minutes and the LinkedIn post is e-mailed to the editorial team.
+
+status: draft
+intro: "Dear colleagues, here are the geotechnical stories from around the world that caught our eye last week. We gather them from news sources in different languages, and the ISSMGE Magazine Presidential Committee (MPC) checks every issue before it is published."
+
+highlights:   # the first one is the story of the week
+  - story: 0ce09b2b6f09c278   # First mechanised tunnelling under the Panama Canal completed (Panama)
+    title: ""   # empty keeps the headline above
+    text: "How were ground conditions beneath the waterway characterised and managed to choose and control a TBM for a tunnel passing under a major canal?"
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: 9.08
+    lon: -79.68
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "groundengineering.co.uk"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+  - story: 0f0fcbc3144076e4   # Fugro awarded multi-year contract for German offshore wind site investigation (Germany)
+    title: ""   # empty keeps the headline above
+    text: "How a multi-year framework of seabed site investigation data could shape foundation design and risk assessment for future offshore wind farms."
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: 54.3
+    lon: 7.5
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "groundengineering.co.uk"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+  - story: 334143d15d930502   # Review Links Mine Tailings Dam Failures to Interacting Geotechnical and Governance Flaws (global)
+    title: ""   # empty keeps the headline above
+    text: "How interacting ground-behaviour weaknesses and weak governance combine to cause tailings dam failures, and which design and monitoring practices would break that chain."
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: 0.0
+    lon: 0.0
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "bioengineer.org"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+  - story: 32ff4a83cbae3ae5   # Thawing Permafrost May Have Created a New Type of Landslide, Which Could Become More Common as the World Warms (global)
+    title: ""   # empty keeps the headline above
+    text: "Could warming-driven permafrost thaw produce a distinct landslide mechanism, and how should slope assessment in cold regions change to capture it?"
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: 65.0
+    lon: -150.0
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "smithsonianmag.com"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+  - story: 6a2b9dce48a0d429   # Systematic Review Examines Slope Stability Modeling Across Hydropower Reservoir Systems (global)
+    title: ""   # empty keeps the headline above
+    text: "Which slope stability modelling approaches work best for reservoir banks under drawdown and filling cycles, and where do current methods fail in practice?"
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: 0.0
+    lon: 0.0
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "bioengineer.org"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+
+around_the_world:
+  - story: db4b9eb3ab3fe490   # Lyon–Turin TBM clears difficult fault zone (France)
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: 45.1
+    lon: 6.9
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "tunnellingjournal.com"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+  - story: 81e8a7ed10dc90bc   # Boring survey planned before resuming linear tunnel works in Mizunami after well water drop and ground subside (Japan)
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "Japanese"   # the news site's language
+    lat: 35.4
+    lon: 137.2
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "news.yahoo.co.jp"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+  - story: 7c0377229c689c8f   # Ontario Line Tunnel Boring Machine Breaks Through to Future King West Station (Canada)
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: 43.643
+    lon: -79.4
+    satellite: yes   # yes: satellite view of the place; no: map of the country
+    site: "tunnelsandtunnelling.com"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+  - story: c0c630bcf2652d05   # Fatal landslides in August 2026 (global)
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: 0.0
+    lon: 0.0
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "eos.org"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+  - story: 42242114f8069bf8   # Tunnelling Machine Domenica Launches To Reduce Wet Weather Overflows (New Zealand)
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: -36.85
+    lon: 174.76
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "scoop.co.nz"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+  - story: 4a2533777a2071b8   # Rains caused floods and mudslides in four provinces (Peru)
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: "cuatro"   # the key number shown large; "" for none
+    number_label: "provinces hit by floods and mudslides"
+    language: "Spanish"   # the news site's language
+    lat: -9.19
+    lon: -75.02
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "elcomercio.pe"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+  - story: 456f9d9e825b92cc   # Calle 10 could reopen in coming days, over a year after mega sinkhole in Zona Centro (Mexico)
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: "un año"   # the key number shown large; "" for none
+    number_label: "since mega sinkhole opened in Zona Centro"
+    language: "Spanish"   # the news site's language
+    lat: 32.5149
+    lon: -117.0382
+    satellite: yes   # yes: satellite view of the place; no: map of the country
+    site: "sandiegored.com"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+  - story: 363bfe20e79eb2af   # The threat from rock slope failures to ski resorts (France)
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: 45.3
+    lon: 6.5417
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "eos.org"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+
+research:
+  - paper: "c5f9fc102adc7f4c"   # Load-displacement response of piles for jackets supporting offshore wind turbines from large scale tests and F
+    text: "Combines large-scale pile tests with finite element checks for offshore wind jacket foundations, directly informing stiffness and load-displacement assumptions in design."
+  - paper: "445edb36179dc008"   # Dynamic monitoring and prediction method for remedial grouting of in-service immersed tunnel sand foundation
+    text: "Offers a way to monitor and predict how remedial grouting performs beneath an operating immersed tunnel, helping engineers judge when a sand foundation has been adequately stabilised."
+  - paper: "7e19200a635db8b5"   # Extrapolation-induced reversal of apparent geosynthetic benefit in cyclic plate load testing
+    text: "Warns that extrapolating cyclic plate load test results can overstate geosynthetic benefit, so engineers should check test interpretation before crediting reinforcement in pavement design."
+
+# events coming up are added by themselves from the events calendar; write  events: none  to leave them out
+events: auto
+
+# optional: a line about the latest ISSMGE Magazine issue, and its link (empty: no box)
+magazine_note: ""
+magazine_link: ""
