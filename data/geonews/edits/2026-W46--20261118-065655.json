@@ -1,0 +1,90 @@
+{
+ "week": "2026-W46",
+ "status": "approved",
+ "intro": "Dear colleagues, here are the geotechnical stories from around the world that caught our eye last week. We gather them from news sources in different languages, and the ISSMGE Magazine Presidential Committee (MPC) checks every issue before it is published.",
+ "highlights": [
+  {
+   "story": "db4b9eb3ab3fe490",
+   "text": "How the TBM and its support and monitoring adapted to the fault zone, and what this shows about tunnelling through unexpected faulted ground.",
+   "satellite": false,
+   "update": ""
+  },
+  {
+   "story": "ca24af7e00d84a30",
+   "text": "What does the Niscemi landslide reveal about slow-moving slope failure, and how should demolition and stabilisation decisions be weighed for a large affected area?",
+   "number": "140",
+   "number_label": "buildings to be demolished",
+   "satellite": true,
+   "update": "2026-W44"
+  },
+  {
+   "story": "334143d15d930502",
+   "text": "How interacting ground-behaviour weaknesses and weak governance combine to cause tailings dam failures, and which design and monitoring practices would break that chain.",
+   "satellite": false,
+   "update": ""
+  },
+  {
+   "story": "6a2b9dce48a0d429",
+   "text": "Which slope stability modelling approaches work best for reservoir banks under drawdown and filling cycles, and where do current methods fail in practice?",
+   "satellite": false,
+   "update": ""
+  },
+  {
+   "story": "19db1218706580fb",
+   "text": "How effective is groundwater lowering for liquefaction control in Kahoku, and what field test results support its design.",
+   "satellite": false,
+   "update": ""
+  }
+ ],
+ "around_the_world": [
+  {
+   "story": "81e8a7ed10dc90bc",
+   "satellite": false,
+   "update": ""
+  },
+  {
+   "story": "7c0377229c689c8f",
+   "satellite": true,
+   "update": ""
+  },
+  {
+   "story": "c0c630bcf2652d05",
+   "satellite": false,
+   "update": ""
+  },
+  {
+   "story": "42242114f8069bf8",
+   "satellite": false,
+   "update": ""
+  },
+  {
+   "story": "4a2533777a2071b8",
+   "number": "cuatro",
+   "number_label": "provinces hit by floods and mudslides",
+   "satellite": false,
+   "update": ""
+  },
+  {
+   "story": "456f9d9e825b92cc",
+   "number": "un año",
+   "number_label": "since mega sinkhole opened in Zona Centro",
+   "satellite": true,
+   "update": ""
+  },
+  {
+   "story": "363bfe20e79eb2af",
+   "satellite": false,
+   "update": ""
+  },
+  {
+   "story": "e4142ab940438736",
+   "satellite": false,
+   "update": ""
+  }
+ ],
+ "research": [
+  "c5f9fc102adc7f4c",
+  "445edb36179dc008",
+  "7e19200a635db8b5"
+ ]
+}
