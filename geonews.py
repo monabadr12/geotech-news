@@ -229,6 +229,101 @@ def domain_of(url):
     return "" if host.endswith("news.google.com") else re.sub(r"^www\.", "", host)
 
 
+REPEAT_WEEKS = 6   # a draft leaves out the stories of the issues published in this many weeks before it
+
+
+def published_before(key, stories, papers, weeks=REPEAT_WEEKS):
+    """[{"week", "id", "line", "title"}] of the stories in the issues approved in the weeks before key."""
+    n = notify()
+    out = []
+    for path in issue_files():
+        if not (path.stem < key) or path.stem < (n.week_range(key)[0] - dt.timedelta(weeks=weeks)).strftime("%G-W%V"):
+            continue
+        try:
+            issue = load_issue(path, stories, papers)
+        except ValueError:
+            continue
+        if issue["status"] != "approved":
+            continue
+        for it in issue["highlights"] + issue["around"]:
+            out.append({"week": path.stem, "id": it["s"]["id"], "line": n.line_key(it["s"]),
+                        "title": it["title"] or title_of(it["s"])})
+    return out
+
+
+def check_repeats(stories, past, cfg, limit=60):
+    """{story id: {"kind": "repeat" | "update", "week", "note"}} for the stories that tell news already
+    published (repeat: leave out) or a new development of it (update: keep, marked as an update). The same
+    story or developing story (storyline) counts by itself; Claude judges the rest and whether a story of
+    the same developing story brings real news (the best `limit` stories are judged). Without Claude, the same
+    developing story counts as a repeat."""
+    import os
+    n = notify()
+    by_id = {p["id"]: p for p in past}
+    by_line = {}
+    for p in past:
+        by_line.setdefault(p["line"], p)
+    out = {}
+    for s in stories:
+        if s["id"] in by_id:
+            out[s["id"]] = {"kind": "repeat", "week": by_id[s["id"]]["week"], "note": ""}
+        elif n.line_key(s) in by_line:
+            out[s["id"]] = {"kind": "repeat", "week": by_line[n.line_key(s)]["week"], "note": ""}
+    key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+    rest = [s for s in n.by_rank(stories) if s["id"] not in by_id and (s.get("relevance") or 0) >= 3][:limit]
+    if not key or not past or not rest:
+        return out
+    try:
+        import anthropic
+        weeks = sorted({p["week"] for p in past})
+        published = "\n".join(f'{weeks.index(p["week"])}.{i}. {p["title"]}' for i, p in enumerate(past))
+        listing = "\n".join(f'{i}. {title_of(s)} ({n.country_name(s.get("country")) or "global"}; {s.get("source", "")})'
+                            for i, s in enumerate(rest))
+        schema = {"type": "object", "properties": {"stories": {"type": "array", "items": {
+            "type": "object", "properties": {
+                "id": {"type": "integer"}, "kind": {"type": "string", "enum": ["new", "update", "repeat"]},
+                "published": {"type": "string"}, "note": {"type": "string"}},
+            "required": ["id", "kind", "published", "note"], "additionalProperties": False}}},
+            "required": ["stories"], "additionalProperties": False}
+        prompt = f"""A weekly geotechnical newsletter must not repeat news it has already published, except as a clearly marked update.
+
+Already published (number before the dot = week {", ".join(f"{i} = {w}" for i, w in enumerate(weeks))}):
+{published}
+
+For each candidate story below return:
+- "kind": "repeat" when it reports the same event or news as a published story, even from another website, in other words or with small extra details (the same tunnel breakthrough, the same contract award, the same study); "update" when it is about the same event or project as a published story but reports a real new development (new decisions, numbers, damage, findings, a new stage of the works); "new" otherwise. Another project of the same kind is "new".
+- "published": for repeat or update, the number of the published story it follows (e.g. "1.4"); "" for new.
+- "note": for update, at most 10 words on what is new; "" otherwise.
+
+Candidates:
+{listing}"""
+        client = anthropic.Anthropic(api_key=key, max_retries=3)
+        ccfg = cfg.get("claude") or {}
+        r = client.messages.create(model=ccfg.get("model", "claude-haiku-5-5"), max_tokens=8000,
+                                   output_config={"effort": ccfg.get("effort", "low"),
+                                                  "format": {"type": "json_schema", "schema": schema}},
+                                   messages=[{"role": "user", "content": prompt}])
+        text = next((b.text for b in r.content if b.type == "text"), "")
+        for d in json.loads(text)["stories"]:
+            i = int(d["id"])
+            if not 0 <= i < len(rest):
+                continue
+            s = rest[i]
+            try:
+                follows = past[int(str(d["published"]).split(".", 1)[1])]
+            except (IndexError, ValueError):
+                follows = by_line.get(n.line_key(s))
+            kind = d["kind"]
+            if kind == "new" and n.line_key(s) in by_line:
+                kind = "update"   # the same developing story, judged a new event of it
+            if kind == "new" or not follows:
+                continue
+            out[s["id"]] = {"kind": kind, "week": follows["week"], "note": " ".join(str(d["note"]).split())[:90]}
+    except Exception as ex:  # without Claude, the same developing story stays a repeat
+        print(f"Geo-News: Claude could not check for repeats ({type(ex).__name__}: {str(ex)[:120]})")
+    return out
+
+
 def enrich(items, cfg):
     """{story id: {"number", "number_label", "language", "lat", "lon", "satellite", "site"}} from Claude, for the
     stories of a draft; {} without an Anthropic key or when the call fails (the draft then uses guesses)."""
@@ -341,7 +436,8 @@ def item_lines(s, info, kind):
               f"    lon: {'' if lon is None else round(float(lon), 4)}",
               f"    satellite: {'yes' if info.get('satellite') else 'no'}   # yes: satellite view of the place; no: map of the country",
               f"    site: {q(info.get('site') or domain_of(s.get('link')))}   # the news site, for the advert check",
-              "    adverts: auto   # auto (checked each week), yes or no"]
+              "    adverts: auto   # auto (checked each week), yes or no",
+              f"    update: {q(s.get('_update', ''))}   # the week of the earlier story this one updates (e.g. 2026-W44); \"\" for a new story"]
     return lines
 
 
@@ -395,6 +491,14 @@ def write_draft(digests, key, cfg, force=False):
     stories, papers = week_items(digests, key)
     if not stories:
         return False
+    every, every_p = all_items(digests)
+    past = published_before(key, every, every_p)
+    seen = check_repeats(stories, past, cfg)
+    for sid, r in seen.items():
+        print(f"Geo-News: {sid} " + ("left out, already published" if r["kind"] == "repeat" else "kept as an update of a story")
+              + f" in {r['week']}" + (f" ({r['note']})" if r["note"] else ""))
+    stories = [dict(s, _update=seen[s["id"]]["week"]) if seen.get(s["id"], {}).get("kind") == "update" else s
+               for s in stories if seen.get(s["id"], {}).get("kind") != "repeat"]
     hl, ar, rs = select(stories, papers, settings(cfg))
     info = enrich(hl + ar, cfg)
     DATA.mkdir(parents=True, exist_ok=True)
@@ -447,7 +551,8 @@ def load_issue(path, stories, papers):
                              lat=num(it.get("lat"), -90, 90), lon=num(it.get("lon"), -180, 180),
                              satellite=it.get("satellite") in (True, "yes", "Yes", "true"),
                              site=text(it.get("site")) or domain_of(found.get("link")),
-                             adverts={True: "yes", False: "no"}.get(it.get("adverts"), text(it.get("adverts")).lower() or "auto"))
+                             adverts={True: "yes", False: "no"}.get(it.get("adverts"), text(it.get("adverts")).lower() or "auto"),
+                             update=text(it.get("update")) if KEY.match(text(it.get("update"))) else "")
                 if entry["satellite"] and (entry["lat"] is None or entry["lon"] is None):
                     entry["satellite"] = False
             out.append(entry)
@@ -497,6 +602,8 @@ def apply_edit(raw, edit):
                         it[k] = e[k]
                 if "satellite" in e:
                     it["satellite"] = "yes" if e["satellite"] else "no"
+                if "update" in e:
+                    it["update"] = e["update"]
                 out.append(it)
             raw[name] = out
     for k in ("status", "intro"):
@@ -516,14 +623,22 @@ def editor_data(key, issue, digests, cfg):
     for it in issue["highlights"] + issue["around"]:
         pool.setdefault(it["s"]["id"], it["s"])
 
+    every, every_p = all_items(digests)
+    past = published_before(key, every, every_p)
+    done = {p["id"]: p["week"] for p in past}
+    for p in past:
+        done.setdefault(p["line"], p["week"])
+
     def story(s):
         return {"t": title_of(s), "w": n.country_name(s.get("country")) or "Global", "f": flag(s.get("country")),
                 "src": s.get("source", ""), "th": s.get("theme", ""), "r": s.get("relevance") or 0,
-                "a": s.get("angle", ""), "l": s.get("link", "")}
+                "a": s.get("angle", ""), "l": s.get("link", ""),
+                "p": done.get(s["id"]) or done.get(n.line_key(s)) or ""}
 
     def entry(it):
         return {"story": it["s"]["id"], "title": it["title"], "text": it["text"], "number": it.get("number", ""),
                 "number_label": it.get("number_label", ""), "satellite": bool(it.get("satellite")),
+                "update": it.get("update", ""),
                 "place": it.get("lat") is not None and it.get("lon") is not None}
     order = sorted(pool.values(), key=lambda s: (-(s.get("relevance") or 0), -(s.get("rank") or 0)))
     return {"week": key, "span": week_span(key), "repo": site_builder.repository(cfg), "status": issue["status"],
@@ -744,6 +859,15 @@ def notes_html(it, ads, dark=False):
     return f"<div class='nts{' dk' if dark else ''}'>{''.join(out)}</div>" if out else ""
 
 
+def update_html(it, root, dark=False):
+    """The mark of a story that follows one published before: "Update · first reported in Week 44", linked to that issue."""
+    w = it.get("update")
+    if not w:
+        return ""
+    return (f"<div class='upd{' dk' if dark else ''}'>🔄 <b>Update</b> · first reported in "
+            f"<a href='{root}{esc(w)}.html'>Week {week_no(w)}</a></div>")
+
+
 def key_number(it, cls="kn"):
     if not it.get("number"):
         return ""
@@ -786,7 +910,7 @@ def issue_html(issue, cfg, root, number=None):
         mini = (f"<div class='cv-loc'>{locator(lead, c)}<span>{esc(place_name(lead))}</span></div>" if lead.get("satellite")
                 else f"<span class='plc'>📍 {esc(place_name(lead))}</span>")
         out.append(f"<article class='cover' id='s1' style='--c:{c}'><div class='cv-text'>"
-                   f"<div class='cv-k'><b class='num w'>1</b> Story of the week</div>{key_number(lead)}"
+                   f"<div class='cv-k'><b class='num w'>1</b> Story of the week</div>{update_html(lead, root, True)}{key_number(lead)}"
                    f"<h3><a href='{esc(s['link'])}'>{headline_html(lead)}</a></h3>"
                    f"<div class='cv-meta'>{where_text(s)} · {esc(s.get('source', ''))}</div>"
                    + (f"<p>{esc(lead['text'])}</p>" if lead["text"] else "") + notes_html(lead, ads, True)
@@ -800,7 +924,7 @@ def issue_html(issue, cfg, root, number=None):
             out.append(f"<article class='card2' id='s{i}' style='--c:{c}'><a class='m2' href='{esc(s['link'])}'>{media}{mini}"
                        f"<span class='plc'>📍 {esc(place_name(it))}</span></a><div class='b2'>"
                        f"<div class='meta'><b class='num'>{i}</b> {where_text(s)} · {esc(s.get('source', ''))}</div>"
-                       f"{key_number(it, 'kn sm')}<h3><a href='{esc(s['link'])}'>{headline_html(it)}</a></h3>"
+                       f"{update_html(it, root)}{key_number(it, 'kn sm')}<h3><a href='{esc(s['link'])}'>{headline_html(it)}</a></h3>"
                        + (f"<p>{esc(it['text'])}</p>" if it["text"] else "") + notes_html(it, ads) + f"{tag(s)}</div></article>")
     if ar:
         rows = []
@@ -812,7 +936,7 @@ def issue_html(issue, cfg, root, number=None):
             rows.append(f"<li id='s{i}' style='--c:{c}'><a class='wl' href='{esc(s['link'])}'>{locator(it, c, 'loc', 900, 1)}</a>"
                         f"<div><div class='meta'><b class='num g'>{i}</b> {where_text(s)}"
                         + (f" · {esc(s.get('place'))}" if s.get("place") else "") + "</div>"
-                        f"<a class='hl' href='{esc(s['link'])}'>{headline_html(it)}</a>"
+                        + update_html(it, root) + f"<a class='hl' href='{esc(s['link'])}'>{headline_html(it)}</a>"
                         + (f"<div class='txt'>{esc(it['text'])}</div>" if it["text"] else "")
                         + f"{kn}<div class='src'>{esc(s.get('source', ''))}</div>{notes_html(it, ads)}</div></li>")
         out.append(f"<h2>Around the world</h2><ul class='world2'>{''.join(rows)}</ul>")

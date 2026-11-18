@@ -23,6 +23,12 @@ features:
   - "Copyright-safe outputs: nothing the news desk publishes or now saves carries a publisher's text beyond the headline (no feed summaries, abstracts or images); each story names the primary source to check the facts with; the AI assistant and the issue brief write in their own words and quote a sentence or two at most, and the assistant ends its drafts with a Check before publishing list; and every page, workbook, e-mail and report carries the five steps of Before you use a story."
 
 changes:
+  - date: 2026-11-18
+    title: No repeated news in Geo-News Weekly; updates are marked
+    items:
+      - "The Monday draft leaves out stories already published in the issues of the last six weeks, even when another website reports them in other words. A real new development of a published story is kept and marked \"Update · first reported in Week N\", linked to that issue."
+      - "In the story editor's list, stories already published are marked; choosing one marks it as an update."
+      - "The daily scan now has eight start times, so a run that GitHub delays or drops no longer stops the Monday draft and its e-mails."
   - date: 2026-11-06
     title: A story editor for Geo-News Weekly
     items:
