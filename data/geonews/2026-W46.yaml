@@ -17,28 +17,30 @@ status: draft
 intro: "Dear colleagues, here are the geotechnical stories from around the world that caught our eye last week. We gather them from news sources in different languages, and the ISSMGE Magazine Presidential Committee (MPC) checks every issue before it is published."
 
 highlights:   # the first one is the story of the week
-  - story: 0ce09b2b6f09c278   # First mechanised tunnelling under the Panama Canal completed (Panama)
+  - story: db4b9eb3ab3fe490   # Lyon–Turin TBM clears difficult fault zone (France)
     title: ""   # empty keeps the headline above
-    text: "How were ground conditions beneath the waterway characterised and managed to choose and control a TBM for a tunnel passing under a major canal?"
+    text: "How the TBM and its support and monitoring adapted to the fault zone, and what this shows about tunnelling through unexpected faulted ground."
     number: ""   # the key number shown large; "" for none
     number_label: ""
     language: "English"   # the news site's language
-    lat: 9.08
-    lon: -79.68
+    lat: 45.1
+    lon: 6.9
     satellite: no   # yes: satellite view of the place; no: map of the country
-    site: "groundengineering.co.uk"   # the news site, for the advert check
+    site: "tunnellingjournal.com"   # the news site, for the advert check
     adverts: auto   # auto (checked each week), yes or no
-  - story: 0f0fcbc3144076e4   # Fugro awarded multi-year contract for German offshore wind site investigation (Germany)
+    update: ""   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
+  - story: ca24af7e00d84a30   # Niscemi landslide: 140 buildings to be demolished (Italy)
     title: ""   # empty keeps the headline above
-    text: "How a multi-year framework of seabed site investigation data could shape foundation design and risk assessment for future offshore wind farms."
-    number: ""   # the key number shown large; "" for none
-    number_label: ""
-    language: "English"   # the news site's language
-    lat: 54.3
-    lon: 7.5
-    satellite: no   # yes: satellite view of the place; no: map of the country
-    site: "groundengineering.co.uk"   # the news site, for the advert check
+    text: "What does the Niscemi landslide reveal about slow-moving slope failure, and how should demolition and stabilisation decisions be weighed for a large affected area?"
+    number: "140"   # the key number shown large; "" for none
+    number_label: "buildings to be demolished"
+    language: "Italian"   # the news site's language
+    lat: 37.15
+    lon: 14.39
+    satellite: yes   # yes: satellite view of the place; no: map of the country
+    site: "gds.it"   # the news site, for the advert check
     adverts: auto   # auto (checked each week), yes or no
+    update: "2026-W44"   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
   - story: 334143d15d930502   # Review Links Mine Tailings Dam Failures to Interacting Geotechnical and Governance Flaws (global)
     title: ""   # empty keeps the headline above
     text: "How interacting ground-behaviour weaknesses and weak governance combine to cause tailings dam failures, and which design and monitoring practices would break that chain."
@@ -50,17 +52,7 @@ highlights:   # the first one is the story of the week
     satellite: no   # yes: satellite view of the place; no: map of the country
     site: "bioengineer.org"   # the news site, for the advert check
     adverts: auto   # auto (checked each week), yes or no
-  - story: 32ff4a83cbae3ae5   # Thawing Permafrost May Have Created a New Type of Landslide, Which Could Become More Common as the World Warms (global)
-    title: ""   # empty keeps the headline above
-    text: "Could warming-driven permafrost thaw produce a distinct landslide mechanism, and how should slope assessment in cold regions change to capture it?"
-    number: ""   # the key number shown large; "" for none
-    number_label: ""
-    language: "English"   # the news site's language
-    lat: 65.0
-    lon: -150.0
-    satellite: no   # yes: satellite view of the place; no: map of the country
-    site: "smithsonianmag.com"   # the news site, for the advert check
-    adverts: auto   # auto (checked each week), yes or no
+    update: ""   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
   - story: 6a2b9dce48a0d429   # Systematic Review Examines Slope Stability Modeling Across Hydropower Reservoir Systems (global)
     title: ""   # empty keeps the headline above
     text: "Which slope stability modelling approaches work best for reservoir banks under drawdown and filling cycles, and where do current methods fail in practice?"
@@ -72,19 +64,21 @@ highlights:   # the first one is the story of the week
     satellite: no   # yes: satellite view of the place; no: map of the country
     site: "bioengineer.org"   # the news site, for the advert check
     adverts: auto   # auto (checked each week), yes or no
-
-around_the_world:
-  - story: db4b9eb3ab3fe490   # Lyon–Turin TBM clears difficult fault zone (France)
+    update: ""   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
+  - story: 19db1218706580fb   # Kahoku City liquefaction countermeasure: groundwater lowering method to start works (Japan)
     title: ""   # empty keeps the headline above
-    text: ""   # optional: one line
+    text: "How effective is groundwater lowering for liquefaction control in Kahoku, and what field test results support its design."
     number: ""   # the key number shown large; "" for none
     number_label: ""
-    language: "English"   # the news site's language
-    lat: 45.1
-    lon: 6.9
+    language: "Japanese"   # the news site's language
+    lat: 36.72
+    lon: 136.71
     satellite: no   # yes: satellite view of the place; no: map of the country
-    site: "tunnellingjournal.com"   # the news site, for the advert check
+    site: "news.yahoo.co.jp"   # the news site, for the advert check
     adverts: auto   # auto (checked each week), yes or no
+    update: ""   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
+
+around_the_world:
   - story: 81e8a7ed10dc90bc   # Boring survey planned before resuming linear tunnel works in Mizunami after well water drop and ground subside (Japan)
     title: ""   # empty keeps the headline above
     text: ""   # optional: one line
@@ -96,6 +90,7 @@ around_the_world:
     satellite: no   # yes: satellite view of the place; no: map of the country
     site: "news.yahoo.co.jp"   # the news site, for the advert check
     adverts: auto   # auto (checked each week), yes or no
+    update: ""   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
   - story: 7c0377229c689c8f   # Ontario Line Tunnel Boring Machine Breaks Through to Future King West Station (Canada)
     title: ""   # empty keeps the headline above
     text: ""   # optional: one line
@@ -107,6 +102,7 @@ around_the_world:
     satellite: yes   # yes: satellite view of the place; no: map of the country
     site: "tunnelsandtunnelling.com"   # the news site, for the advert check
     adverts: auto   # auto (checked each week), yes or no
+    update: ""   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
   - story: c0c630bcf2652d05   # Fatal landslides in August 2026 (global)
     title: ""   # empty keeps the headline above
     text: ""   # optional: one line
@@ -118,6 +114,7 @@ around_the_world:
     satellite: no   # yes: satellite view of the place; no: map of the country
     site: "eos.org"   # the news site, for the advert check
     adverts: auto   # auto (checked each week), yes or no
+    update: ""   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
   - story: 42242114f8069bf8   # Tunnelling Machine Domenica Launches To Reduce Wet Weather Overflows (New Zealand)
     title: ""   # empty keeps the headline above
     text: ""   # optional: one line
@@ -129,6 +126,7 @@ around_the_world:
     satellite: no   # yes: satellite view of the place; no: map of the country
     site: "scoop.co.nz"   # the news site, for the advert check
     adverts: auto   # auto (checked each week), yes or no
+    update: ""   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
   - story: 4a2533777a2071b8   # Rains caused floods and mudslides in four provinces (Peru)
     title: ""   # empty keeps the headline above
     text: ""   # optional: one line
@@ -140,6 +138,7 @@ around_the_world:
     satellite: no   # yes: satellite view of the place; no: map of the country
     site: "elcomercio.pe"   # the news site, for the advert check
     adverts: auto   # auto (checked each week), yes or no
+    update: ""   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
   - story: 456f9d9e825b92cc   # Calle 10 could reopen in coming days, over a year after mega sinkhole in Zona Centro (Mexico)
     title: ""   # empty keeps the headline above
     text: ""   # optional: one line
@@ -151,6 +150,7 @@ around_the_world:
     satellite: yes   # yes: satellite view of the place; no: map of the country
     site: "sandiegored.com"   # the news site, for the advert check
     adverts: auto   # auto (checked each week), yes or no
+    update: ""   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
   - story: 363bfe20e79eb2af   # The threat from rock slope failures to ski resorts (France)
     title: ""   # empty keeps the headline above
     text: ""   # optional: one line
@@ -162,6 +162,19 @@ around_the_world:
     satellite: no   # yes: satellite view of the place; no: map of the country
     site: "eos.org"   # the news site, for the advert check
     adverts: auto   # auto (checked each week), yes or no
+    update: ""   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
+  - story: e4142ab940438736   # Brahmaputra tunnel reaches technical bidding milestone (India)
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: 26.6
+    lon: 92.8
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "tunnellingjournal.com"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+    update: ""   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
 
 research:
   - paper: "c5f9fc102adc7f4c"   # Load-displacement response of piles for jackets supporting offshore wind turbines from large scale tests and F
