@@ -1,0 +1,463 @@
+{
+ "date": "2026-11-18",
+ "generated": "2026-11-18T09:45+00:00",
+ "ai_used": true,
+ "new_items": 153,
+ "stories": [
+  {
+   "id": "7b5bd312f4f61d7a",
+   "title": "Westerschelde Tunnel repairs to start in January",
+   "title_en": "",
+   "link": "https://www.tunnelsandtunnelling.com/news/westerschelde-tunnel-repairs-to-start-in-january/",
+   "source": "Tunnels & Tunnelling",
+   "region": "",
+   "summary": "",
+   "published": "2026-11-17T11:08+00:00",
+   "theme": "Infrastructure & the Underground City",
+   "relevance": 4,
+   "use": "News brief",
+   "angle": "How can a tunnel lining ring be replaced in sections while preserving the ground support and watertightness of an estuary crossing?",
+   "keywords": [
+    "tunnelling",
+    "tunnel"
+   ],
+   "score": 5,
+   "rank": 405,
+   "country": "NL",
+   "place": "Westerschelde Tunnel, Zeeland",
+   "primary_source": "Rijkswaterstaat",
+   "title_en_checked": true
+  },
+  {
+   "id": "49c15aac11560377",
+   "title": "Contract awarded for 5.2km Dhaka Metro tunnel",
+   "title_en": "",
+   "link": "https://www.tunnelsandtunnelling.com/news/contract-awarded-for-5-2km-dhaka-metro-tunnel/",
+   "source": "Tunnels & Tunnelling",
+   "region": "",
+   "summary": "",
+   "published": "2026-11-17T11:08+00:00",
+   "theme": "Infrastructure & the Underground City",
+   "relevance": 4,
+   "use": "News brief",
+   "angle": "What geotechnical investigations and ground models will govern TBM tunnelling and station excavations in Dhaka's soft alluvial soils?",
+   "keywords": [
+    "tunnelling",
+    "tunnel"
+   ],
+   "score": 5,
+   "rank": 405,
+   "country": "BD",
+   "place": "Dhaka Metro Line",
+   "primary_source": "Dhaka Mass Transit Company Limited",
+   "title_en_checked": true,
+   "storyline": "sl-44c52a36e22b6b9b",
+   "stage": "Update",
+   "storyline_title": "Dhaka Metro tunnel contract, Bangladesh"
+  },
+  {
+   "id": "335bf3404c3b2c9c",
+   "title": "Brooklyn Collapse Records Reveal Gap Between Plans and Site Work",
+   "title_en": "",
+   "link": "https://www.enr.com/articles/64346-brooklyn-collapse-records-reveal-gap-between-plans-and-site-work",
+   "source": "Engineering News-Record",
+   "region": "",
+   "summary": "",
+   "published": "2026-11-17T21:33+00:00",
+   "theme": "Hazards & Resilience",
+   "relevance": 4,
+   "use": "Feature lead",
+   "angle": "Why did the gap between excavation plans and actual site practice allow a Brooklyn excavation to collapse, and what should engineers check in permitted designs?",
+   "keywords": [
+    "excavation",
+    "collapse"
+   ],
+   "score": 3,
+   "rank": 403,
+   "country": "US",
+   "place": "Brooklyn, New York City",
+   "primary_source": "NYC Department of Buildings",
+   "title_en_checked": true,
+   "storyline": "sl-d0f9d3444d3eff6f",
+   "stage": "Investigation & inquiry",
+   "storyline_title": "While digging the next plot, a 3-storey building collapses; 8 dead in… (Nov 2026)"
+  },
+  {
+   "id": "7890698fc1378d96",
+   "title": "Ground investigations underway for Ontario light rail line extension",
+   "title_en": "",
+   "link": "https://www.geplus.co.uk/news/project-news/ground-investigations-underway-for-ontario-light-rail-line-extension-18-11-2026/",
+   "source": "Ground Engineering",
+   "region": "",
+   "summary": "",
+   "published": "2026-11-18T06:04+00:00",
+   "theme": "Characterisation & Modelling",
+   "relevance": 3,
+   "use": "News brief",
+   "angle": "What ground conditions must site investigations resolve before a light rail extension can be designed safely beneath an existing urban corridor?",
+   "keywords": [
+    "geotechnical"
+   ],
+   "score": 8,
+   "rank": 308,
+   "country": "CA",
+   "place": "Downtown Brampton, Ontario",
+   "primary_source": "Metrolinx",
+   "title_en_checked": true,
+   "storyline": "sl-59d69192b556b1a1",
+   "stage": "Update",
+   "storyline_title": "Brampton LRT extension, Ontario, Canada"
+  },
+  {
+   "id": "5d3f6fbe81fdfac9",
+   "title": "Fatal landslides in September 2026",
+   "title_en": "",
+   "link": "https://eos.org/thelandslideblog/fatal-landslides-in-september-2026",
+   "source": "The Landslide Blog (Eos)",
+   "region": "",
+   "summary": "",
+   "published": "2026-11-18T07:57+00:00",
+   "theme": "Hazards & Resilience",
+   "relevance": 3,
+   "use": "Watch only",
+   "angle": "Do year-to-date fatal landslide counts reveal seasonal or regional patterns that should shape slope risk management priorities?",
+   "keywords": [
+    "landslide"
+   ],
+   "score": 7,
+   "rank": 307,
+   "country": "",
+   "place": "",
+   "primary_source": "",
+   "title_en_checked": true
+  },
+  {
+   "id": "573c3779fc52bb79",
+   "title": "New code strengthens tunnel workers’ protection, says NSW",
+   "title_en": "",
+   "link": "https://www.tunnelsandtunnelling.com/news/new-code-strengthens-tunnel-workers-protection-says-nsw/",
+   "source": "Tunnels & Tunnelling",
+   "region": "",
+   "summary": "",
+   "published": "2026-11-18T08:03+00:00",
+   "theme": "Infrastructure & the Underground City",
+   "relevance": 3,
+   "use": "News brief",
+   "angle": "How do ground-related hazards in tunnel construction shape the practical safety controls that a new state code requires?",
+   "keywords": [
+    "tunnelling",
+    "tunnel"
+   ],
+   "score": 5,
+   "rank": 305,
+   "country": "AU",
+   "place": "New South Wales",
+   "primary_source": "SafeWork NSW",
+   "title_en_checked": true
+  },
+  {
+   "id": "c73c7dbd44170f10",
+   "title": "Chennai Metro marks breakthrough on Phase 2 Corridor 5",
+   "title_en": "",
+   "link": "https://www.tunnelsandtunnelling.com/news/chennai-metro-marks-breakthrough-on-phase-2-corridor-5/",
+   "source": "Tunnels & Tunnelling",
+   "region": "",
+   "summary": "",
+   "published": "2026-11-18T07:59+00:00",
+   "theme": "Infrastructure & the Underground City",
+   "relevance": 3,
+   "use": "News brief",
+   "angle": "What ground conditions did the tunnel boring drive encounter on this Chennai corridor, and how were they managed to reach breakthrough?",
+   "keywords": [
+    "tunnelling",
+    "tunnel"
+   ],
+   "score": 5,
+   "rank": 305,
+   "country": "IN",
+   "place": "Madhavaram to Sholinganallur, Chennai",
+   "primary_source": "Chennai Metro Rail Limited",
+   "title_en_checked": true
+  },
+  {
+   "id": "15fbbc284e8b1870",
+   "title": "Soil Water Content Determined by Elastic Wave Dispersion",
+   "title_en": "",
+   "link": "https://eos.org/editor-highlights/soil-water-content-determined-by-elastic-wave-dispersion",
+   "source": "The Landslide Blog (Eos)",
+   "region": "",
+   "summary": "",
+   "published": "2026-11-17T14:00+00:00",
+   "theme": "Characterisation & Modelling",
+   "relevance": 3,
+   "use": "Academia-to-Industry topic",
+   "angle": "Can elastic wave dispersion measured in a triaxial cell reliably estimate water content in soil samples under controlled loading?",
+   "keywords": [
+    "soil",
+    "flood"
+   ],
+   "score": 4,
+   "rank": 304,
+   "country": "",
+   "place": "",
+   "primary_source": "the paper's authors, Flood-Page et al",
+   "title_en_checked": true
+  }
+ ],
+ "failures": [
+  [
+   "Deep Foundations Institute",
+   "HTTPSConnectionPool(host='www.dfi.org', port=443): Max retries exceeded with url: / (Caused by ConnectTimeoutError(<HTTPSConnection(host='ww"
+  ],
+  [
+   "Tunnelling Journal",
+   "no RSS/Atom feed found at this address"
+  ],
+  [
+   "Euronews Persian",
+   "no RSS/Atom feed found at this address"
+  ]
+ ],
+ "notes": [],
+ "papers": [
+  {
+   "id": "5ee3d919fada14cc",
+   "title": "Effect of Using Depth Weighting Factor to Estimate Liquefaction-Induced Ground Settlement",
+   "link": "https://doi.org/10.1139/cgj-2026-0258",
+   "journal": "Canadian Geotechnical Journal",
+   "authors": "Olaya FR, Bray JD",
+   "published": "2026-11-17",
+   "abstract": "",
+   "theme": "Hazards & Resilience",
+   "relevance": 4,
+   "angle": "Shows whether depth weighting factors genuinely improve liquefaction settlement estimates, helping engineers decide if they should trust or adjust this common procedure.",
+   "keywords": [
+    "liquefaction",
+    "settlement",
+    "soil"
+   ]
+  },
+  {
+   "id": "dacc970a7f187c73",
+   "title": "Integrated high-resolution evaluation of liquefaction potential for seismic microzonation in the 2012 Po plain earthquake area (Italy)",
+   "link": "https://doi.org/10.1016/j.enggeo.2026.109238",
+   "journal": "Engineering Geology",
+   "authors": "Minarelli L, Bruno L et al.",
+   "published": "2026-11-17",
+   "abstract": "",
+   "theme": "Hazards & Resilience",
+   "relevance": 4,
+   "angle": "A high-resolution liquefaction susceptibility workflow from a real earthquake area offers practical guidance for microzonation and site-specific hazard screening.",
+   "keywords": [
+    "liquefaction",
+    "earthquake"
+   ]
+  },
+  {
+   "id": "81749de1b1414cb9",
+   "title": "Numerical study on the behaviour of geocell–geotextile reinforced unbound pavement on expansive subgrade",
+   "link": "https://doi.org/10.1680/jgeen.26.00044",
+   "journal": "Proceedings of the Institution of Civil Engineers - Geotechnical Engineering",
+   "authors": "Mahopatra PK, Chennarapu H, Balunaini U",
+   "published": "2026-11-17",
+   "abstract": "",
+   "theme": "Infrastructure & the Underground City",
+   "relevance": 4,
+   "angle": "Quantifies how geocell-geotextile reinforcement limits swell-driven pavement distress on expansive subgrades, informing practical reinforcement choices for road design.",
+   "keywords": [
+    "geosynthetic"
+   ]
+  },
+  {
+   "id": "0351821dcc937429",
+   "title": "Yielding Characteristics and Stress‐Dilatancy Relationship of Very Soft Clay",
+   "link": "https://doi.org/10.1002/nag.70475",
+   "journal": "International Journal for Numerical and Analytical Methods in Geomechanics",
+   "authors": "Dutta S, Sachan A",
+   "published": "2026-11-17",
+   "abstract": "",
+   "theme": "Characterisation & Modelling",
+   "relevance": 4,
+   "angle": "Explains how stress history governs very soft clay strength and dilatancy, directly relevant to interpreting lab tests and predicting settlement under load.",
+   "keywords": [
+    "clay",
+    "drainage",
+    "soil"
+   ]
+  },
+  {
+   "id": "f969bcdb09d5cf39",
+   "title": "Seismic stability and failure mechanisms of slopes containing single and multiple weak seams using zero-thickness interface elements",
+   "link": "https://doi.org/10.1016/j.soildyn.2026.110822",
+   "journal": "Soil Dynamics and Earthquake Engineering",
+   "authors": "Quang PN, Vinh PN et al.",
+   "published": "2026-11-17",
+   "abstract": "",
+   "theme": "Hazards & Resilience",
+   "relevance": 4,
+   "angle": "Zero-thickness interface modelling of weak seams gives practical insight into seismic slope failure mechanisms and stability assessment for layered slopes.",
+   "keywords": [
+    "slope"
+   ]
+  },
+  {
+   "id": "1b536c7b0f6377b8",
+   "title": "River-valley-controlled shallow stiffness variations revealed by urban dark-fiber sensing",
+   "link": "https://doi.org/10.1016/j.enggeo.2026.109194",
+   "journal": "Engineering Geology",
+   "authors": "Wang Z, Zhu T",
+   "published": "2026-11-17",
+   "abstract": "",
+   "theme": "Digital Geotechnics",
+   "relevance": 4,
+   "angle": "Using urban dark fibre as a sensing network reveals shallow ground stiffness variations, a low-cost monitoring approach practitioners could use for city-scale ground mapping.",
+   "keywords": []
+  },
+  {
+   "id": "0cf6206a7afcc96c",
+   "title": "Nonlinear-expectation-based local-risk screening for multi-epoch InSAR monitoring in underground-space construction",
+   "link": "https://doi.org/10.1016/j.undsp.2026.10.011",
+   "journal": "Underground Space",
+   "authors": "Cheng Z, Shi Y et al.",
+   "published": "2026-11-18",
+   "abstract": "",
+   "theme": "Digital Geotechnics",
+   "relevance": 4,
+   "angle": "A risk-screening method for multi-epoch InSAR data helps engineers prioritise monitoring of ground movement hotspots during underground construction.",
+   "keywords": []
+  },
+  {
+   "id": "ab1cde001e88257b",
+   "title": "Challenges and Insights from Calibrating a Plasticity Model to a Broad Suite of Direct Simple Shear Tests on a Clean Sand",
+   "link": "https://doi.org/10.1139/cgj-2025-1064",
+   "journal": "Canadian Geotechnical Journal",
+   "authors": "Luna LMC, DeJong JT, Ziotopoulou K",
+   "published": "2026-11-17",
+   "abstract": "",
+   "theme": "Characterisation & Modelling",
+   "relevance": 3,
+   "angle": "Reveals how PM4Sand parameters can be chosen to match sand test data, giving practitioners a clearer route to calibrating liquefaction models for dynamic analyses.",
+   "keywords": [
+    "liquefaction",
+    "soil"
+   ]
+  },
+  {
+   "id": "93b5bc86a1b1397f",
+   "title": "Three-dimensional geotechnical-property modeling with geotechnical domain knowledge embedding and multi-source data fusion",
+   "link": "https://doi.org/10.1016/j.enggeo.2026.109237",
+   "journal": "Engineering Geology",
+   "authors": "Yang H, Xue X",
+   "published": "2026-11-18",
+   "abstract": "",
+   "theme": "Digital Geotechnics",
+   "relevance": 3,
+   "angle": "Demonstrates fusing multiple site data sources into 3D ground models, a useful approach for building more reliable subsurface models from routine investigation data.",
+   "keywords": [
+    "geotechnical"
+   ]
+  },
+  {
+   "id": "65bd7b5a4aff9c48",
+   "title": "Influence of Soil Transverse Isotropy on the Thermo‐Mechanical Response of Energy Piles",
+   "link": "https://doi.org/10.1002/nag.70476",
+   "journal": "International Journal for Numerical and Analytical Methods in Geomechanics",
+   "authors": "Mu Z, Ding Z, Song C",
+   "published": "2026-11-17",
+   "abstract": "",
+   "theme": "Sustainability & the Energy Transition",
+   "relevance": 3,
+   "angle": "Shows that ignoring soil anisotropy can misjudge thermally induced energy pile behaviour, a point worth considering when designing geothermal foundations.",
+   "keywords": [
+    "pile",
+    "soil"
+   ]
+  },
+  {
+   "id": "5446555f4734f914",
+   "title": "Experimentally validated local thermal non-equilibrium simulation of convective heat transfer in crushed rock embankment",
+   "link": "https://doi.org/10.1016/j.trgeo.2026.102533",
+   "journal": "Transportation Geotechnics",
+   "authors": "Zhao J, Li S et al.",
+   "published": "2026-11-18",
+   "abstract": "",
+   "theme": "Sustainability & the Energy Transition",
+   "relevance": 3,
+   "angle": "Validated thermal simulation of air-driven convection in crushed rock embankments helps engineers assess cold-climate embankment performance and design measures.",
+   "keywords": [
+    "embankment"
+   ]
+  },
+  {
+   "id": "439a51d27ad014be",
+   "title": "Torsional behaviors of segmental tunnels under compression-bending-torsion load combinations. Part I: model test and FEM-based further insights",
+   "link": "https://doi.org/10.1016/j.tust.2026.108312",
+   "journal": "Tunnelling and Underground Space Technology",
+   "authors": "Liu Y, Liao S et al.",
+   "published": "2026-11-17",
+   "abstract": "",
+   "theme": "Infrastructure & the Underground City",
+   "relevance": 3,
+   "angle": "Model test evidence on segmental tunnel torsion under combined loads supports more realistic lining design where eccentric loading is significant.",
+   "keywords": [
+    "tunnel"
+   ]
+  },
+  {
+   "id": "2959a3aa8214153c",
+   "title": "Dual seismic vibration control of utility tunnel and internal pipeline using a non-conventional tuned mass damper strategy",
+   "link": "https://doi.org/10.1016/j.tust.2026.108307",
+   "journal": "Tunnelling and Underground Space Technology",
+   "authors": "Li J, Hao H et al.",
+   "published": "2026-11-17",
+   "abstract": "",
+   "theme": "Infrastructure & the Underground City",
+   "relevance": 3,
+   "angle": "Shows a tuned mass damper approach to protect utility tunnels and internal pipelines in earthquakes, offering a possible retrofit concept for lifeline protection.",
+   "keywords": [
+    "tunnel"
+   ]
+  },
+  {
+   "id": "7704b342d7bffdac",
+   "title": "Novel shield muck-slag-based EGC tunnel segments: Mechanical behavior and flexural capacity modeling",
+   "link": "https://doi.org/10.1016/j.tust.2026.108277",
+   "journal": "Tunnelling and Underground Space Technology",
+   "authors": "Wang K, Cui Y et al.",
+   "published": "2026-11-17",
+   "abstract": "",
+   "theme": "Sustainability & the Energy Transition",
+   "relevance": 3,
+   "angle": "Recycled slag-based segments with flexural capacity models offer a greener tunnel lining option that designers can assess against conventional segments.",
+   "keywords": [
+    "tunnel"
+   ]
+  },
+  {
+   "id": "ada3a4524e0b9945",
+   "title": "Rapid prediction of boundary expansion and bottom shape evolution of salt caverns during vertical solution mining",
+   "link": "https://doi.org/10.1016/j.tust.2026.108318",
+   "journal": "Tunnelling and Underground Space Technology",
+   "authors": "Wen H, Fang Z et al.",
+   "published": "2026-11-18",
+   "abstract": "",
+   "theme": "Infrastructure & the Underground City",
+   "relevance": 3,
+   "angle": "Fast prediction of salt cavern shape evolution during solution mining helps engineers plan cavern geometry and stability for storage projects.",
+   "keywords": []
+  },
+  {
+   "id": "0860cd7b91a0b720",
+   "title": "Investigation on seismic performance of precast sidewall–base slab joints incorporating partial UHPC shells in subway stations",
+   "link": "https://doi.org/10.1016/j.tust.2026.108286",
+   "journal": "Tunnelling and Underground Space Technology",
+   "authors": "Peng Z, Guan D et al.",
+   "published": "2026-11-17",
+   "abstract": "",
+   "theme": "Infrastructure & the Underground City",
+   "relevance": 3,
+   "angle": "Tests of precast subway joints with UHPC shells show seismic performance gains that could inform detailing of station structures in earthquake regions.",
+   "keywords": []
+  }
+ ]
+}
