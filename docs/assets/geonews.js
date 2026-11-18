@@ -93,7 +93,7 @@
       sec.appendChild(el("h3", {}, esc(LABEL[name]) + (name === "highlights" ? " <small>(the first one is the story of the week)</small>" : "")));
       S[name].forEach(function (e, i) { sec.appendChild(row(name, e, i)); });
       var add = el("button", { type: "button", "class": "ed-add" }, "＋ Add a story");
-      add.onclick = function () { pick(function (id) { S[name].push({ story: id, title: "", text: info(id).a || "", number: "", number_label: "" }); mark(); render(); }); };
+      add.onclick = function () { pick(function (id) { S[name].push({ story: id, title: "", text: info(id).a || "", number: "", number_label: "", update: info(id).p || "" }); mark(); render(); }); };
       sec.appendChild(add);
       box.appendChild(sec);
     });
@@ -119,7 +119,8 @@
     var n = name === "highlights" ? i + 1 : S.highlights.length + i + 1;
     r.appendChild(el("div", { "class": "ed-main" },
       "<b class='ed-n'>" + n + "</b><div><div class='ed-t'>" + esc(e.title || s.t) + "</div>" +
-      "<div class='ed-m'>" + esc(s.f + " " + s.w) + " · " + esc(s.src) + (e.number ? " · <b>" + esc(e.number) + "</b>" : "") + "</div></div>"));
+      "<div class='ed-m'>" + esc(s.f + " " + s.w) + " · " + esc(s.src) + (e.number ? " · <b>" + esc(e.number) + "</b>" : "") +
+      (e.update ? " · <span class='ed-up'>🔄 Update of week " + esc(e.update.slice(-2)) + "</span>" : "") + "</div></div>"));
     var b = el("div", { "class": "ed-btns" });
     function btn(label, title, fn, off) {
       var x = el("button", { type: "button", title: title, "aria-label": title }, label);
@@ -128,7 +129,7 @@
     btn("↑ Up", "Move up", function () { list.splice(i - 1, 0, list.splice(i, 1)[0]); mark(); render(); }, i === 0);
     btn("↓ Down", "Move down", function () { list.splice(i + 1, 0, list.splice(i, 1)[0]); mark(); render(); }, i === list.length - 1);
     btn("⇄ Replace", "Replace with another story", function () {
-      pick(function (id) { list[i] = { story: id, title: "", text: info(id).a || "", number: "", number_label: "" }; mark(); render(); });
+      pick(function (id) { list[i] = { story: id, title: "", text: info(id).a || "", number: "", number_label: "", update: info(id).p || "" }; mark(); render(); });
     });
     btn("✎ Edit", "Edit headline, text and key number", function () { form.hidden = !form.hidden; });
     btn("✕ Remove", "Remove", function () { if (confirm("Remove this story from the issue?")) { list.splice(i, 1); mark(); render(); } });
@@ -171,7 +172,8 @@
         if (inIssue(id)) return;
         if (w && (s.t + " " + s.w + " " + s.src + " " + s.th).toLowerCase().indexOf(w) < 0) return;
         var li = el("li", {}, "<div><div class='ed-t'>" + esc(s.t) + "</div><div class='ed-m'>" + esc(s.f + " " + s.w) +
-          " · " + esc(s.src) + " · " + esc(s.th) + " · " + s.r + "/5</div>" +
+          " · " + esc(s.src) + " · " + esc(s.th) + " · " + s.r + "/5" +
+          (s.p ? " · <span class='ed-up'>🔄 Already published in week " + esc(s.p.slice(-2)) + ": choose it only if it brings new news (it is marked as an update)</span>" : "") + "</div>" +
           (s.a ? "<div class='ed-a'>" + esc(s.a) + "</div>" : "") + "</div>");
         var use = el("button", { type: "button", "class": "btn" }, "Choose");
         use.onclick = function () { ov.remove(); done(id); };
@@ -193,6 +195,7 @@
       var o = { story: e.story };
       ["title", "text", "number", "number_label"].forEach(function (k) { if (e[k]) o[k] = e[k]; });
       if (e.place) o.satellite = !!e.satellite;
+      o.update = e.update || "";
       return o; }); }
     var save = { week: D.week, status: status, intro: S.intro, highlights: clean(S.highlights),
                  around_the_world: clean(S.around_the_world), research: D.research };
