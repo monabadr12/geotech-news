@@ -1,0 +1,27 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:RocDyn-6
+NAME:RocDyn-6
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:rocdyn-6-2027@geotech-news-desk
+DTSTAMP:20261122T092840Z
+DTSTART;VALUE=DATE:20270515
+DTEND;VALUE=DATE:20270517
+SUMMARY:RocDyn-6 – 6th International Conference on Rock Dynamics
+DESCRIPTION:RocDyn-6 – 6th International Conference on Rock Dynamics\nOrg
+ aniser: ISRM\nKind: Other conference\nEvent page not opened\; check the de
+ adlines.\nEvent website: https://isrm.net/conference/show/6412\nFound by t
+ he weekly calendar refresh\; check the dates on the event's website
+LOCATION:Wuhan\, China
+URL:https://isrm.net/conference/show/6412
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

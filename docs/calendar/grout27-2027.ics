@@ -11,17 +11,20 @@ REFRESH-INTERVAL;VALUE=DURATION:P1D
 X-PUBLISHED-TTL:P1D
 BEGIN:VEVENT
 UID:grout27-2027@geotech-news-desk
-DTSTAMP:20261108T095516Z
+DTSTAMP:20261122T092840Z
 DTSTART;VALUE=DATE:20270317
 DTEND;VALUE=DATE:20270320
 SUMMARY:7th International Conference on Grouting and Deep Mixing (Grout 202
  7)
-DESCRIPTION:7th International Conference on Grouting and Deep Mixing\nOrgan
- iser: Deep Foundations Institute (DFI)\nKind: Other conference\nYear taken
-  from the web address\; place not read.\nEvent website: https://dfi-events
- .org/grout27/\nFound by the weekly calendar refresh\; check the dates on t
- he event's website
-URL:https://dfi-events.org/grout27/
+DESCRIPTION:7th International Conference on Grouting and Deep Mixing (Grout
+  2027)\nOrganiser: Deep Foundations Institute (DFI) with the International
+  Conference Organization for Grouting (ICOG)\, supported by the ASCE Geo-I
+ nstitute Grouting Committee\nKind: Other conference\nYear not stated separ
+ ately on the DFI home page\; check the deadlines.\nEvent website: https://
+ dfi-events.org/grout27\nFound by the weekly calendar refresh\; check the d
+ ates on the event's website
+LOCATION:Florence\, Italy
+URL:https://dfi-events.org/grout27
 CATEGORIES:Other conference
 TRANSP:TRANSPARENT
 END:VEVENT

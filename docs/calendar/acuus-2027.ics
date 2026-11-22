@@ -1,0 +1,31 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:ACUUS 2027
+NAME:ACUUS 2027
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:acuus-2027@geotech-news-desk
+DTSTAMP:20261122T092840Z
+DTSTART;VALUE=DATE:20271106
+DTEND;VALUE=DATE:20271107
+SUMMARY:ACUUS 2027: 20th World Conference of the Associated Research Center
+ s for the Urban Underground Space
+DESCRIPTION:ACUUS 2027: 20th World Conference of the Associated Research Ce
+ nters for the Urban Underground Space\nKind: Other conference\nCheck place
+ \, end date and deadlines.\nEvent website: https://about.ita-aites.org/fut
+ ure-events/2682/acuus-2027-20th-world-conference-of-the-associated-researc
+ h-centers-for-the-urban-underground-space\nFound by the weekly calendar re
+ fresh\; check the dates on the event's website
+URL:https://about.ita-aites.org/future-events/2682/acuus-2027-20th-world-co
+ nference-of-the-associated-research-centers-for-the-urban-underground-spac
+ e
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

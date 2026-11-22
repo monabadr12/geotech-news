@@ -1,0 +1,27 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Ground Improvement for Megaprojects
+NAME:Ground Improvement for Megaprojects
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:ground-improvement-for-megaprojects-2027@geotech-news-desk
+DTSTAMP:20261122T092840Z
+DTSTART;VALUE=DATE:20270714
+DTEND;VALUE=DATE:20270715
+SUMMARY:Ground Improvement for Megaprojects (DFI event)
+DESCRIPTION:Ground Improvement for Megaprojects (DFI event)\nOrganiser: Dee
+ p Foundations Institute (DFI)\nKind: Other conference\nYear 2027 inferred 
+ from listing order\, so confirm it\; place and format unchecked.\nEvent we
+ bsite: https://dfi.org/events/upcoming-events/\nFound by the weekly calend
+ ar refresh\; check the dates on the event's website
+URL:https://dfi.org/events/upcoming-events/
+CATEGORIES:Other conference
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

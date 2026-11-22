@@ -11,16 +11,16 @@ REFRESH-INTERVAL;VALUE=DURATION:P1D
 X-PUBLISHED-TTL:P1D
 BEGIN:VEVENT
 UID:tunnelling-asia-2026@geotech-news-desk
-DTSTAMP:20261108T095516Z
+DTSTAMP:20261122T092840Z
 DTSTART;VALUE=DATE:20261203
 DTEND;VALUE=DATE:20261204
-SUMMARY:Tunnelling Asia 2026: International Conference & Exhibition
-DESCRIPTION:Tunnelling Asia 2026: International Conference & Exhibition\nKi
- nd: Other conference\nITA tags it supported event\; has an exhibition part
- \, so check the technical programme. End date and place not read.\nEvent w
- ebsite: https://about.ita-aites.org/future-events/2654/tunnelling-asia-202
- 6-international-conference-exhibition\nFound by the weekly calendar refres
- h\; check the dates on the event's website
+SUMMARY:TUNNELLING ASIA 2026: International Conference & Exhibition
+DESCRIPTION:TUNNELLING ASIA 2026: International Conference & Exhibition\nKi
+ nd: Other conference\nTagged ITA supported event\; includes an exhibition\
+ , so check it has a technical programme\; place and end date unchecked.\nE
+ vent website: https://about.ita-aites.org/future-events/2654/tunnelling-as
+ ia-2026-international-conference-exhibition\nFound by the weekly calendar 
+ refresh\; check the dates on the event's website
 URL:https://about.ita-aites.org/future-events/2654/tunnelling-asia-2026-int
  ernational-conference-exhibition
 CATEGORIES:Other conference

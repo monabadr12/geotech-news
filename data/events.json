@@ -1,150 +1,6 @@
 {
- "updated": "2026-11-08T09:55:16+00:00",
+ "updated": "2026-11-22T09:28:40+00:00",
  "events": [
-  {
-   "id": "dfi51-2026",
-   "name": "DFI's 51st Annual Conference on Deep Foundations",
-   "short": "DFI51",
-   "start": "2026-11-02",
-   "end": "2026-11-05",
-   "city": "Orlando",
-   "country": "US",
-   "online": false,
-   "organiser": "Deep Foundations Institute (DFI)",
-   "kind": "Other conference",
-   "issmge": false,
-   "url": "https://dfi-events.org/dfi51/",
-   "deadlines": [],
-   "source": "scan",
-   "found": "2026-10-25",
-   "notes": "Theme: Sea Level Impacts: Navigating Challenges Together; the DFI home page banner links to the wrong page (ca-golf26)."
-  },
-  {
-   "id": "2026-geotechnical-engineering-proceedings-lecture",
-   "name": "2026 Geotechnical Engineering Proceedings Lecture: Strains in sprayed concrete tunnel linings at Heathrow Terminal 4 and back-calculation of stress",
-   "short": "",
-   "start": "2026-11-04",
-   "end": "2026-11-04",
-   "city": "London",
-   "country": "GB",
-   "online": false,
-   "organiser": "British Geotechnical Association (BGA)",
-   "kind": "Course / webinar",
-   "issmge": false,
-   "url": "https://www.britishgeotech.org/event/the-2026-geotechnical-engineering-proceedings-lecture-strains-in-sprayed-concrete-tunnel-linings-at-heathrow-terminal-4-and-back-calculation-of-stress/",
-   "deadlines": [],
-   "source": "scan",
-   "found": "2026-10-25",
-   "notes": "Evening lecture by Dr Benoît Jones at ICE, One Great George Street, 18:30–20:30."
-  },
-  {
-   "id": "pbd-v-2026",
-   "name": "International Conference on Performance-Based Design in Earthquake Geotechnical Engineering",
-   "short": "PBD-V 2026",
-   "start": "2026-11-04",
-   "end": "2026-11-06",
-   "city": "Puerto Varas",
-   "country": "CL",
-   "online": false,
-   "organiser": "",
-   "kind": "ISSMGE-supported",
-   "issmge": true,
-   "url": "https://www.issmge.org/events/pbd-v-conference-2026",
-   "deadlines": [],
-   "source": "scan",
-   "found": "2026-10-25",
-   "notes": "End date comes from a cut-off GeoEngineer summary, so check it; the conference's own website was not found."
-  },
-  {
-   "id": "bga-ecg-advanced-laboratory-testing-dynamic-behavi-2026",
-   "name": "BGA Early Career Group: Advanced Laboratory Testing & Dynamic Behaviour of Soils",
-   "short": "BGA ECG: Lab Testing",
-   "start": "2026-11-10",
-   "end": "2026-11-10",
-   "city": "",
-   "country": "",
-   "online": true,
-   "organiser": "British Geotechnical Association, Early Career Group",
-   "kind": "Course / webinar",
-   "issmge": false,
-   "url": "https://www.britishgeotech.org/event/bga-ecg-advanced-laboratory-testing-dynamic-behaviour-of-soils/",
-   "deadlines": [],
-   "source": "scan",
-   "found": "2026-10-25",
-   "notes": "18:30–20:00; speaker Danial Shirkavand."
-  },
-  {
-   "id": "itacet-lunchtime-lecture-series-60-2026",
-   "name": "ITACET Lunchtime Lecture Series #60",
-   "short": "ITACET Lecture #60",
-   "start": "2026-11-10",
-   "end": "2026-11-10",
-   "city": "",
-   "country": "",
-   "online": false,
-   "organiser": "ITACET Foundation (ITA)",
-   "kind": "Course / webinar",
-   "issmge": false,
-   "url": "https://about.ita-aites.org/future-events/2671/itacet-lunchtime-lecture-series-60",
-   "deadlines": [],
-   "source": "scan",
-   "found": "2026-10-25",
-   "notes": "Page not opened; unknown whether online; organiser inferred from series name."
-  },
-  {
-   "id": "woh-hup-distinguished-lecture-by-prof-kenichi-soga-2026",
-   "name": "Woh Hup Distinguished Lecture by Prof. Kenichi Soga",
-   "short": "Woh Hup Lecture (Soga)",
-   "start": "2026-11-10",
-   "end": "2026-11-10",
-   "city": "",
-   "country": "",
-   "online": false,
-   "organiser": "National University of Singapore, co-organised by ISSMGE TC207",
-   "kind": "Course / webinar",
-   "issmge": true,
-   "url": "https://www.issmge.org/news/distinguished-lecture-by-prof-kenichi-soga-co-organised-by-issmge-tc207-10-nov-2026",
-   "deadlines": [],
-   "source": "scan",
-   "found": "2026-10-25",
-   "notes": "Date from the news title; venue and whether it is online were not read."
-  },
-  {
-   "id": "10th-conference-of-the-croatian-geotechnical-socie-2026",
-   "name": "10th Conference of the Croatian Geotechnical Society: Geotechnical Engineering in Soft Rocks and Heterogeneous Rock Masses",
-   "short": "Croatian Geotechnical Conf.",
-   "start": "2026-11-12",
-   "end": "2026-11-14",
-   "city": "Split",
-   "country": "HR",
-   "online": false,
-   "organiser": "Croatian Geotechnical Society",
-   "kind": "Other conference",
-   "issmge": false,
-   "url": "https://isrm.net/conference/show/6404",
-   "deadlines": [],
-   "source": "scan",
-   "found": "2026-10-25",
-   "notes": "ISRM Specialized Conference; check whether any registration deadline is still open."
-  },
-  {
-   "id": "tunnel-turkey-2026",
-   "name": "Tunnel Turkey 2026",
-   "short": "Tunnel Turkey 2026",
-   "start": "2026-11-12",
-   "end": "2026-11-12",
-   "city": "",
-   "country": "",
-   "online": false,
-   "organiser": "",
-   "kind": "Other conference",
-   "issmge": false,
-   "url": "https://about.ita-aites.org/future-events/2558/tunnel-turkey-2026",
-   "deadlines": [],
-   "source": "scan",
-   "found": "2026-10-25",
-   "notes": "Only title and start date listed; check it has a technical programme, not only an exhibition."
-  },
   {
    "id": "bga-touring-lecture-beyond-automation-responsible-2026",
    "name": "BGA Touring Lecture – Beyond Automation: Responsible AI Workflows in Geotechnical Modelling and Monitoring",
@@ -165,21 +21,21 @@
   },
   {
    "id": "arms14-2026",
-   "name": "14th Asian Rock Mechanics Symposium – Rock Mechanics for the Next Generation – Innovations, Sustainability, and Resilience (2026 ISRM International Symposium)",
+   "name": "ARMS14 – 14th Asian Rock Mechanics Symposium: Rock Mechanics for the Next Generation – Innovations, Sustainability, and Resilience (the 2026 ISRM International Symposium)",
    "short": "ARMS14",
    "start": "2026-11-22",
    "end": "2026-11-26",
    "city": "Fukuoka",
    "country": "JP",
    "online": false,
-   "organiser": "ISRM",
+   "organiser": "ISRM (International Society for Rock Mechanics and Rock Engineering)",
    "kind": "Other conference",
    "issmge": false,
    "url": "https://isrm.net/conference/show/6382",
    "deadlines": [],
    "source": "scan",
    "found": "2026-10-25",
-   "notes": "Check whether any registration deadline is still open."
+   "notes": "Starts today and may be in progress; the event page was not opened, so deadlines are unchecked."
   },
   {
    "id": "igs-academic-masterclass-2026",
@@ -236,27 +92,9 @@
    "notes": "Time 1:00–2:00 PM, time zone not stated; organiser assumed from the calendar."
   },
   {
-   "id": "geotec-hanoi-2026",
-   "name": "6th International Conference on Geotechnics for Sustainable Infrastructure Development",
-   "short": "GEOTEC Hanoi 2026",
-   "start": "2026-11-26",
-   "end": "2026-11-26",
-   "city": "Hanoi",
-   "country": "VN",
-   "online": false,
-   "organiser": "",
-   "kind": "ISSMGE-supported",
-   "issmge": true,
-   "url": "https://www.issmge.org/events/geotec-hanoi-2026-gh2026",
-   "deadlines": [],
-   "source": "scan",
-   "found": "2026-10-25",
-   "notes": "End date, organiser and deadlines unconfirmed; only the start date was read, so end is set equal to start."
-  },
-  {
    "id": "italian-underground-conference-congress-2026",
    "name": "Italian Underground Conference / Congress",
-   "short": "Italian Underground Conf.",
+   "short": "Italian Underground Conference",
    "start": "2026-11-26",
    "end": "2026-11-26",
    "city": "",
@@ -269,7 +107,25 @@
    "deadlines": [],
    "source": "scan",
    "found": "2026-10-25",
-   "notes": "ITA tags it recognised event; place and end date not read."
+   "notes": "Tagged ITA recognised event; only the start date is known, so check place, end date and deadlines."
+  },
+  {
+   "id": "geotec-hanoi-2026",
+   "name": "The 6th International Conference on Geotechnics for Sustainable Infrastructure Development",
+   "short": "GeoTec Hanoi 2026",
+   "start": "2026-11-26",
+   "end": "2026-11-26",
+   "city": "Hanoi",
+   "country": "VN",
+   "online": false,
+   "organiser": "",
+   "kind": "ISSMGE-supported",
+   "issmge": true,
+   "url": "https://www.issmge.org/events/geotec-hanoi-2026-gh2026",
+   "deadlines": [],
+   "source": "scan",
+   "found": "2026-10-25",
+   "notes": "Only the start date is known, so the end date is set equal to it; check end date, organiser and deadlines."
   },
   {
    "id": "56th-isrm-online-lecture-2026",
@@ -327,25 +183,25 @@
   },
   {
    "id": "icitg-2026",
-   "name": "6th International Conference on Information Technology in Geo-Engineering (JTC2 Conference)",
-   "short": "ICITG 2026",
+   "name": "JTC2 Conference: 6th International Conference on Information Technology in Geo-Engineering – an ISRM Specialized Conference",
+   "short": "JTC2 Conference",
    "start": "2026-12-02",
    "end": "2026-12-04",
    "city": "Budapest",
    "country": "HU",
    "online": false,
-   "organiser": "Joint Technical Committee 2 (JTC2)",
-   "kind": "ISSMGE-supported",
+   "organiser": "JTC2 (joint technical committee of ISSMGE, ISRM and IAEG)",
+   "kind": "Other conference",
    "issmge": true,
    "url": "https://isrm.net/conference/show/6387",
    "deadlines": [],
    "source": "scan",
    "found": "2026-11-08",
-   "notes": "Kind assumed from the JTC2 label; check whether ISSMGE supports it. ISRM Specialized Conference."
+   "notes": "Organiser is inferred from the title, so check it; deadlines unchecked."
   },
   {
    "id": "tunnelling-asia-2026",
-   "name": "Tunnelling Asia 2026: International Conference & Exhibition",
+   "name": "TUNNELLING ASIA 2026: International Conference & Exhibition",
    "short": "Tunnelling Asia 2026",
    "start": "2026-12-03",
    "end": "2026-12-03",
@@ -359,7 +215,7 @@
    "deadlines": [],
    "source": "scan",
    "found": "2026-10-25",
-   "notes": "ITA tags it supported event; has an exhibition part, so check the technical programme. End date and place not read."
+   "notes": "Tagged ITA supported event; includes an exhibition, so check it has a technical programme; place and end date unchecked."
   },
   {
    "id": "world-tunnel-day-2026-itaym",
@@ -381,10 +237,10 @@
   },
   {
    "id": "colloque-national-sur-la-geotechnique-national-col-2026",
-   "name": "Colloque National sur la Géotechnique (3rd Edition of the National Colloquium on Geotechnics)",
+   "name": "Colloque National sur la Géotechnique",
    "short": "Colloque National Géotechnique",
    "start": "2026-12-08",
-   "end": "2026-12-10",
+   "end": "2026-12-08",
    "city": "Marrakech",
    "country": "MA",
    "online": false,
@@ -395,12 +251,12 @@
    "deadlines": [],
    "source": "scan",
    "found": "2026-10-25",
-   "notes": "End date from the IGS calendar; venue Hôtel Kenzi Rose Garden; organiser not read."
+   "notes": "ITA lists it as National Colloquium on Geotechnics (recognised event); end date and organiser unchecked."
   },
   {
    "id": "nepal-tunnelling-conference-2026",
    "name": "Nepal Tunnelling Conference 2026",
-   "short": "Nepal Tunnelling Conf. 2026",
+   "short": "Nepal Tunnelling Conference 2026",
    "start": "2026-12-10",
    "end": "2026-12-10",
    "city": "",
@@ -413,25 +269,25 @@
    "deadlines": [],
    "source": "scan",
    "found": "2026-10-25",
-   "notes": "ITA tags it recognised event; place and end date not read."
+   "notes": "Tagged ITA recognised event; check place, end date and deadlines."
   },
   {
    "id": "underground-construction-association-uca-2027-geor",
    "name": "Underground Construction Association (UCA) 2027 George A. Fox Conference",
-   "short": "UCA 2027",
+   "short": "UCA 2027 George A. Fox Conference",
    "start": "2027-01-19",
    "end": "2027-01-19",
    "city": "New York",
    "country": "US",
    "online": false,
-   "organiser": "Underground Construction Association (SME)",
+   "organiser": "Underground Construction Association (UCA)",
    "kind": "Other conference",
    "issmge": false,
    "url": "https://about.ita-aites.org/future-events/2656/underground-construction-association-uca-2027-george-a-fox-conference",
    "deadlines": [],
    "source": "scan",
    "found": "2026-10-25",
-   "notes": "Place from listing title; organiser assumed from the name; ITA tags it supported event; end date not read."
+   "notes": "ITA tags it as supported event; organiser taken from the title; end date and deadlines unchecked."
   },
   {
    "id": "igs-seminar-retaining-structure-2027",
@@ -453,7 +309,7 @@
   },
   {
    "id": "the-iii-international-research-and-practical-confe-2027",
-   "name": "III International Research and Practical Conference \"Geotechnical Engineering in Cold Regions. The Basis of Infrastructure Safety in Global Changes\"",
+   "name": "The III International Research and Practical Conference on \"Geotechnical Engineering in Cold Regions. The Basis of Infrastructure Safety in Global Changes\"",
    "short": "Geotechnical Engineering in Cold Regions",
    "start": "2027-02-10",
    "end": "2027-02-10",
@@ -467,7 +323,7 @@
    "deadlines": [],
    "source": "scan",
    "found": "2026-10-25",
-   "notes": "End date not read, so set equal to start; event page not opened."
+   "notes": "Also listed by GeoEngineer.org with the same start date; end date, organiser and deadlines unchecked."
   },
   {
    "id": "geosynthetics-conf-2027",
@@ -507,21 +363,21 @@
   },
   {
    "id": "grout27-2027",
-   "name": "7th International Conference on Grouting and Deep Mixing",
+   "name": "7th International Conference on Grouting and Deep Mixing (Grout 2027)",
    "short": "Grout 2027",
    "start": "2027-03-17",
    "end": "2027-03-19",
-   "city": "",
-   "country": "",
+   "city": "Florence",
+   "country": "IT",
    "online": false,
-   "organiser": "Deep Foundations Institute (DFI)",
+   "organiser": "Deep Foundations Institute (DFI) with the International Conference Organization for Grouting (ICOG), supported by the ASCE Geo-Institute Grouting Committee",
    "kind": "Other conference",
    "issmge": false,
-   "url": "https://dfi-events.org/grout27/",
+   "url": "https://dfi-events.org/grout27",
    "deadlines": [],
    "source": "scan",
    "found": "2026-10-25",
-   "notes": "Year taken from the web address; place not read."
+   "notes": "Year not stated separately on the DFI home page; check the deadlines."
   },
   {
    "id": "geomandu-2027",
@@ -539,7 +395,7 @@
    "deadlines": [],
    "source": "scan",
    "found": "2026-10-25",
-   "notes": "End date not read, so set equal to start; event page not opened."
+   "notes": "Check end date and any open call for papers; event page not opened."
   },
   {
    "id": "wigeotech-2027",
@@ -578,6 +434,60 @@
    "notes": "Venue Fairmont, Riyadh; check the organiser, possibly a commercially run series."
   },
   {
+   "id": "65th-rankine-lecture-2027",
+   "name": "65th Rankine Lecture – Eco-Geotechnics for safety and human sustainability (Professor Charles Ng)",
+   "short": "65th Rankine Lecture",
+   "start": "2027-03-24",
+   "end": "2027-03-24",
+   "city": "London",
+   "country": "GB",
+   "online": false,
+   "organiser": "British Geotechnical Association (BGA)",
+   "kind": "Course / webinar",
+   "issmge": false,
+   "url": "https://www.britishgeotech.org/event/the-65th-rankine-lecture-eco-geotechnics-for-safety-and-human-sustainability-from-the-earth-to-the-moons-exploration/",
+   "deadlines": [],
+   "source": "scan",
+   "found": "2026-11-22",
+   "notes": "In-person lecture at the Royal Geographical Society, South Kensington, starting 17:30; title is shortened in the BGA listing."
+  },
+  {
+   "id": "copri-2027",
+   "name": "COPRI 2027 (DFI event)",
+   "short": "COPRI 2027",
+   "start": "2027-04-08",
+   "end": "2027-04-08",
+   "city": "",
+   "country": "",
+   "online": false,
+   "organiser": "Deep Foundations Institute (DFI)",
+   "kind": "Other conference",
+   "issmge": false,
+   "url": "https://dfi-events.org/copri27",
+   "deadlines": [],
+   "source": "scan",
+   "found": "2026-11-22",
+   "notes": "Year inferred from the name; full title, place and deadlines unchecked."
+  },
+  {
+   "id": "is-gi-2027",
+   "name": "IS-GI Lyon 2027 (International Symposium on Ground Improvement)",
+   "short": "IS-GI 2027",
+   "start": "2027-04-12",
+   "end": "2027-04-12",
+   "city": "Lyon",
+   "country": "FR",
+   "online": false,
+   "organiser": "",
+   "kind": "ISSMGE-supported",
+   "issmge": true,
+   "url": "https://www.issmge.org/events/is-gi-lyon-2027-international-symposium-on-ground-improvement",
+   "deadlines": [],
+   "source": "scan",
+   "found": "2026-11-22",
+   "notes": "Already on the editors' list with the same start date and place; no new deadlines."
+  },
+  {
    "id": "young-professionals-think-deep-programme-antwerp-2027",
    "name": "Young Professionals Think Deep Programme – Antwerp",
    "short": "YP Think Deep Antwerp",
@@ -597,7 +507,7 @@
   },
   {
    "id": "ifcee-2027",
-   "name": "IFCEE 2027",
+   "name": "IFCEE 2027 (DFI event)",
    "short": "IFCEE 2027",
    "start": "2027-05-11",
    "end": "2027-05-14",
@@ -611,7 +521,7 @@
    "deadlines": [],
    "source": "scan",
    "found": "2026-10-25",
-   "notes": "Organiser assumed (DFI/ASCE Geo-Institute series); year follows from event name; place not read."
+   "notes": "Year inferred from the name; full title, place and deadlines unchecked."
   },
   {
    "id": "sdc2027",
@@ -625,11 +535,11 @@
    "organiser": "",
    "kind": "Other conference",
    "issmge": false,
-   "url": "https://about.ita-aites.org/future-events/2549/sdc2027-5th-international-conference-on-shaft-design-construction?tmpl=component",
+   "url": "https://about.ita-aites.org/future-events/2549/sdc2027-5th-international-conference-on-shaft-design-construction",
    "deadlines": [],
    "source": "scan",
    "found": "2026-10-25",
-   "notes": "ITA endorsed event; place and last day not published, so check both."
+   "notes": "Tagged ITA endorsed event; check place, end date and deadlines."
   },
   {
    "id": "cpt-27-2027",
@@ -641,17 +551,35 @@
    "country": "CA",
    "online": false,
    "organiser": "",
-   "kind": "Other conference",
-   "issmge": false,
+   "kind": "ISSMGE-supported",
+   "issmge": true,
    "url": "https://www.issmge.org/events/cpt27-international-symposium-on-cone-penetration-testing",
    "deadlines": [],
    "source": "scan",
    "found": "2026-10-25",
-   "notes": "Listed on the ISSMGE calendar without the ISSMGE logo; check level of ISSMGE support. End date not read."
+   "notes": "Check end date, organiser and any open call for papers or abstracts."
+  },
+  {
+   "id": "rocdyn-6-2027",
+   "name": "RocDyn-6 – 6th International Conference on Rock Dynamics",
+   "short": "RocDyn-6",
+   "start": "2027-05-15",
+   "end": "2027-05-16",
+   "city": "Wuhan",
+   "country": "CN",
+   "online": false,
+   "organiser": "ISRM",
+   "kind": "Other conference",
+   "issmge": false,
+   "url": "https://isrm.net/conference/show/6412",
+   "deadlines": [],
+   "source": "scan",
+   "found": "2026-11-22",
+   "notes": "Event page not opened; check the deadlines."
   },
   {
    "id": "icpe2027",
-   "name": "4th International Conference on Press-in Engineering 2027",
+   "name": "The 4th International Conference on Press-in Engineering 2027",
    "short": "ICPE2027",
    "start": "2027-06-02",
    "end": "2027-06-02",
@@ -659,18 +587,18 @@
    "country": "NL",
    "online": false,
    "organiser": "",
-   "kind": "Other conference",
-   "issmge": false,
+   "kind": "ISSMGE-supported",
+   "issmge": true,
    "url": "https://www.issmge.org/events/the-4th-international-conference-on-press-in-engineering-2027-icpe2027",
    "deadlines": [],
    "source": "scan",
    "found": "2026-10-25",
-   "notes": "Listed without the ISSMGE logo; end date not read."
+   "notes": "Check end date, organiser and deadlines."
   },
   {
    "id": "xviii-danube-european-conference-on-geotechnical-e-2027",
    "name": "XVIII Danube-European Conference on Geotechnical Engineering",
-   "short": "XVIII DECGE",
+   "short": "DECGE 2027",
    "start": "2027-06-09",
    "end": "2027-06-09",
    "city": "Budapest",
@@ -683,7 +611,7 @@
    "deadlines": [],
    "source": "scan",
    "found": "2026-10-25",
-   "notes": "ISSMGE lists Danube-European Conferences under Other ISSMGE Conferences; end date not read."
+   "notes": "Listed by ISSMGE under Other ISSMGE Conferences, not as a regional conference; check end date and deadlines."
   },
   {
    "id": "dfhm9-2027",
@@ -695,13 +623,13 @@
    "country": "KR",
    "online": false,
    "organiser": "",
-   "kind": "Other conference",
-   "issmge": false,
+   "kind": "ISSMGE-supported",
+   "issmge": true,
    "url": "https://www.issmge.org/events/9th-international-conference-on-debris-flow-hazard-mitigation-dfhm9",
    "deadlines": [],
    "source": "scan",
    "found": "2026-10-25",
-   "notes": "Listed without the ISSMGE logo; end date not read."
+   "notes": "Check end date, organiser and deadlines."
   },
   {
    "id": "geoanz-2027",
@@ -722,8 +650,26 @@
    "notes": "Venue Pan Pacific Hotel; may be linked to the ISSMGE Australasian regional conference, but the page doesn't say so."
   },
   {
+   "id": "ground-improvement-for-megaprojects-2027",
+   "name": "Ground Improvement for Megaprojects (DFI event)",
+   "short": "Ground Improvement for Megaprojects",
+   "start": "2027-07-14",
+   "end": "2027-07-14",
+   "city": "",
+   "country": "",
+   "online": false,
+   "organiser": "Deep Foundations Institute (DFI)",
+   "kind": "Other conference",
+   "issmge": false,
+   "url": "https://dfi.org/events/upcoming-events/",
+   "deadlines": [],
+   "source": "scan",
+   "found": "2026-11-22",
+   "notes": "Year 2027 inferred from listing order, so confirm it; place and format unchecked."
+  },
+  {
    "id": "s3-2027",
-   "name": "S3 2027",
+   "name": "S3 2027 (DFI event)",
    "short": "S3 2027",
    "start": "2027-08-10",
    "end": "2027-08-12",
@@ -737,7 +683,7 @@
    "deadlines": [],
    "source": "scan",
    "found": "2026-10-25",
-   "notes": "Full name not given; check it. Place not read."
+   "notes": "Year inferred from the name; full title, place and deadlines unchecked."
   },
   {
    "id": "eygec-2027",
@@ -755,25 +701,43 @@
    "deadlines": [],
    "source": "scan",
    "found": "2026-10-25",
-   "notes": "End date not read, so set equal to start; event page not opened."
+   "notes": "Check end date and deadlines."
+  },
+  {
+   "id": "is-ankara-2027",
+   "name": "9th International Symposium on Deformation Characteristics of Geomaterials",
+   "short": "IS-Ankara 2027",
+   "start": "2027-09-14",
+   "end": "2027-09-14",
+   "city": "Ankara",
+   "country": "TR",
+   "online": false,
+   "organiser": "",
+   "kind": "ISSMGE-supported",
+   "issmge": true,
+   "url": "https://www.issmge.org/events/is-ankara27",
+   "deadlines": [],
+   "source": "scan",
+   "found": "2026-11-22",
+   "notes": "Already on the editors' list with the same start date and place; no new deadlines."
   },
   {
    "id": "energy-geotechnics-2027",
-   "name": "Energy Geotechnics",
-   "short": "",
+   "name": "Energy Geotechnics (BGA conference)",
+   "short": "Energy Geotechnics",
    "start": "2027-09-14",
    "end": "2027-09-14",
    "city": "Leeds",
    "country": "GB",
    "online": false,
-   "organiser": "British Geotechnical Association (BGA)",
+   "organiser": "British Geotechnical Association (BGA), at the University of Leeds",
    "kind": "Other conference",
    "issmge": false,
    "url": "https://www.britishgeotech.org/event/energy-geotechnics/",
    "deadlines": [],
    "source": "scan",
    "found": "2026-10-25",
-   "notes": "At the University of Leeds; check the full title, the last day and any call for abstracts."
+   "notes": "Only the start date is listed; check the dates and the title."
   },
   {
    "id": "numge-2027",
@@ -784,7 +748,7 @@
    "city": "Graz",
    "country": "AT",
    "online": false,
-   "organiser": "Graz University of Technology",
+   "organiser": "",
    "kind": "ISSMGE-supported",
    "issmge": true,
    "url": "https://www.issmge.org/events/numge2027",
@@ -812,7 +776,7 @@
    ],
    "source": "scan",
    "found": "2026-10-25",
-   "notes": "TC203 call for abstracts for Special Session SP_03 is open (date not read); see https://www.issmge.org/news/call-for-abstracts-numge-2027-special-session-sp-03-dynamic-soil-structure-interaction-of-critical-infrastructure-systems. End date not read."
+   "notes": "Acronym comes from the page address; check end date, organiser and any open call for papers."
   },
   {
    "id": "fachsektionstage-geotechnik-2027",
@@ -833,26 +797,8 @@
    "notes": "Venue Kongresshaus Baden-Baden; organiser not read."
   },
   {
-   "id": "10iceg-2027",
-   "name": "10th International Congress on Environmental Geotechnics",
-   "short": "10ICEG",
-   "start": "2027-11-01",
-   "end": "2027-11-04",
-   "city": "Kyoto",
-   "country": "JP",
-   "online": false,
-   "organiser": "",
-   "kind": "ISSMGE-supported",
-   "issmge": true,
-   "url": "https://www.issmge.org/events/10iceg",
-   "deadlines": [],
-   "source": "scan",
-   "found": "2026-10-25",
-   "notes": "TC306 call for abstracts for the geo-education session is open, deadline not read: https://www.issmge.org/news/call-for-abstracts-for-the-geo-education-session-at-10iceg-kyoto-14-november-2027. End date from a news item title."
-  },
-  {
    "id": "dfi52-2027",
-   "name": "DFI52 (Annual Conference on Deep Foundations)",
+   "name": "DFI52 (DFI Annual Conference on Deep Foundations)",
    "short": "DFI52",
    "start": "2027-11-01",
    "end": "2027-11-04",
@@ -866,11 +812,65 @@
    "deadlines": [],
    "source": "scan",
    "found": "2026-10-25",
-   "notes": "Year inferred because DFI51 is in 2026; place not read."
+   "notes": "Year inferred from listing order; long name is the researcher's wording, so check it; overlaps in dates with 10ICEG."
+  },
+  {
+   "id": "10iceg-2027",
+   "name": "The 10th International Congress on Environmental Geotechnics",
+   "short": "10ICEG",
+   "start": "2027-11-01",
+   "end": "2027-11-04",
+   "city": "Kyoto",
+   "country": "JP",
+   "online": false,
+   "organiser": "ISSMGE TC215 (Environmental Geotechnics)",
+   "kind": "ISSMGE-supported",
+   "issmge": true,
+   "url": "https://www.issmge.org/events/10iceg",
+   "deadlines": [],
+   "source": "scan",
+   "found": "2026-10-25",
+   "notes": "Open call for abstracts (news 2026-11-11), deadline unconfirmed; TC306 also issued a call (2026-11-02) for a joint session on education in geo-environmental engineering, deadline unconfirmed."
+  },
+  {
+   "id": "acuus-2027",
+   "name": "ACUUS 2027: 20th World Conference of the Associated Research Centers for the Urban Underground Space",
+   "short": "ACUUS 2027",
+   "start": "2027-11-06",
+   "end": "2027-11-06",
+   "city": "",
+   "country": "",
+   "online": false,
+   "organiser": "",
+   "kind": "Other conference",
+   "issmge": false,
+   "url": "https://about.ita-aites.org/future-events/2682/acuus-2027-20th-world-conference-of-the-associated-research-centers-for-the-urban-underground-space",
+   "deadlines": [],
+   "source": "scan",
+   "found": "2026-11-22",
+   "notes": "Check place, end date and deadlines."
+  },
+  {
+   "id": "18arc-2027",
+   "name": "18th Asian Regional Geotechnical Engineering Conference",
+   "short": "18ARC",
+   "start": "2027-11-09",
+   "end": "2027-11-09",
+   "city": "Bangkok",
+   "country": "TH",
+   "online": false,
+   "organiser": "",
+   "kind": "ISSMGE conference",
+   "issmge": true,
+   "url": "https://18arc.org/",
+   "deadlines": [],
+   "source": "scan",
+   "found": "2026-11-22",
+   "notes": "Already on the editors' list with the same start date and place; no deadlines found; conference website not opened."
   },
   {
    "id": "vsoe-2027",
-   "name": "Fourth Vietnam Symposium on Advances in Offshore Engineering",
+   "name": "The Fourth Vietnam Symposium on Advances in Offshore Engineering",
    "short": "VSOE 2027",
    "start": "2027-11-25",
    "end": "2027-11-25",
@@ -878,18 +878,18 @@
    "country": "VN",
    "online": false,
    "organiser": "",
-   "kind": "Other conference",
-   "issmge": false,
+   "kind": "ISSMGE-supported",
+   "issmge": true,
    "url": "https://www.issmge.org/events/the-fourth-vietnam-symposium-on-advances-in-offshore-engineering-vsoe-2027",
    "deadlines": [],
    "source": "scan",
    "found": "2026-10-25",
-   "notes": "Listed without the ISSMGE logo; end date not read."
+   "notes": "Check end date, organiser and deadlines."
   },
   {
    "id": "xiii-chilean-geotechnical-conference-2027",
    "name": "XIII Chilean Geotechnical Conference",
-   "short": "XIII Chilean Geotechnical Conf.",
+   "short": "XIII Chilean Geotechnical Conference",
    "start": "2027-12-01",
    "end": "2027-12-01",
    "city": "Punta Arenas",
@@ -902,7 +902,7 @@
    "deadlines": [],
    "source": "scan",
    "found": "2026-10-25",
-   "notes": "End date not read, so set equal to start; event page not opened."
+   "notes": "Check end date, organiser and deadlines."
   },
   {
    "id": "is-torino-2028",
@@ -913,14 +913,14 @@
    "city": "Torino",
    "country": "IT",
    "online": false,
-   "organiser": "ISSMGE TC204",
+   "organiser": "ISSMGE TC204 (Underground Construction in Soft Ground)",
    "kind": "ISSMGE-supported",
    "issmge": true,
    "url": "https://www.issmge.org/news/is-torino-2028-announcement-1416-february-2028",
    "deadlines": [],
    "source": "scan",
    "found": "2026-11-08",
-   "notes": "Call for abstracts is open but the deadline was not read; open the article. Not on the editors' list."
+   "notes": "Open call for abstracts (news dated 2026-10-28); abstract deadline not confirmed, open the article to get it."
   },
   {
    "id": "geoamericas2028",
@@ -956,7 +956,7 @@
    "deadlines": [],
    "source": "scan",
    "found": "2026-10-25",
-   "notes": "End date not read, so set equal to start; event page not opened."
+   "notes": "Check end date, organiser and deadlines."
   },
   {
    "id": "ecsmge-2028",
@@ -967,17 +967,17 @@
    "city": "Istanbul",
    "country": "TR",
    "online": false,
-   "organiser": "ISSMGE",
+   "organiser": "",
    "kind": "ISSMGE conference",
    "issmge": true,
    "url": "https://www.ecsmge-2028.com/",
    "deadlines": [],
    "source": "scan",
    "found": "2026-10-25",
-   "notes": "Start date from the ISSMGE calendar; end date not read; neither site was opened."
+   "notes": "ISSMGE regional conference; organiser not stated; website not opened, so check end date and deadlines."
   }
  ],
  "notes": [
-  "Claude found 45 events (15 new to the calendar); the calendar now holds 53 events found by refreshes."
+  "Claude found 36 events (5 new to the calendar); the calendar now holds 53 events found by refreshes."
  ]
 }

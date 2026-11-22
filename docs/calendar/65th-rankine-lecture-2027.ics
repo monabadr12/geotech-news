@@ -1,0 +1,34 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Geotechnical News Desk//Events calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:65th Rankine Lecture
+NAME:65th Rankine Lecture
+X-WR-CALDESC:Geotechnical conferences and call-for-papers deadlines\, from 
+ the ISSMGE Magazine news desk
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VEVENT
+UID:65th-rankine-lecture-2027@geotech-news-desk
+DTSTAMP:20261122T092840Z
+DTSTART;VALUE=DATE:20270324
+DTEND;VALUE=DATE:20270325
+SUMMARY:65th Rankine Lecture – Eco-Geotechnics for safety and human susta
+ inability (Professor Charles Ng)
+DESCRIPTION:65th Rankine Lecture – Eco-Geotechnics for safety and human s
+ ustainability (Professor Charles Ng)\nOrganiser: British Geotechnical Asso
+ ciation (BGA)\nKind: Course / webinar\nIn-person lecture at the Royal Geog
+ raphical Society\, South Kensington\, starting 17:30\; title is shortened 
+ in the BGA listing.\nEvent website: https://www.britishgeotech.org/event/t
+ he-65th-rankine-lecture-eco-geotechnics-for-safety-and-human-sustainabilit
+ y-from-the-earth-to-the-moons-exploration/\nFound by the weekly calendar r
+ efresh\; check the dates on the event's website
+LOCATION:London\, United Kingdom
+URL:https://www.britishgeotech.org/event/the-65th-rankine-lecture-eco-geote
+ chnics-for-safety-and-human-sustainability-from-the-earth-to-the-moons-exp
+ loration/
+CATEGORIES:Course / webinar
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR
