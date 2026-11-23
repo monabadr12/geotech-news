@@ -1,0 +1,192 @@
+# Geo-News Weekly · 16–22 Nov 2026 (2026-W47)
+#
+# HOW TO EDIT THIS ISSUE (on GitHub: press the pencil, change the file, then press "Commit changes")
+#  - See it as members will:   https://monabadr12.github.io/geotech-news/geonews/preview/2026-W47.html
+#    That page also lists every other story of the week, each with its code.
+#  - Swap a story: replace its code (after story: or paper:) with another code from the preview page.
+#    The other lines of that story (number, place, language) then belong to the old story: correct them
+#    or leave them empty ("") and the page uses the new story's country map and no key number.
+#  - Change a headline or a text: write it between the quotes. An empty title keeps the original headline.
+#  - Key number: the figure shown large (number) and what it counts (number_label); "" for none.
+#  - Place: lat and lon of the site; satellite: yes shows a satellite view of it, no a map of the country.
+#  - Remove a story: delete its lines (from the - to the line before the next -).
+#  - PUBLISH: change  status: draft  to  status: approved  and commit. The page goes public within a few
+#    minutes and the LinkedIn post is e-mailed to the editorial team.
+
+status: draft
+intro: "Dear colleagues, here are the geotechnical stories from around the world that caught our eye last week. We gather them from news sources in different languages, and the ISSMGE Magazine Presidential Committee (MPC) checks every issue before it is published."
+
+highlights:   # the first one is the story of the week
+  - story: 7369fe07bae5ddeb   # Second TBM launches on $16bn Hudson Tunnel Project (United States)
+    title: ""   # empty keeps the headline above
+    text: "How do tunnel boring machines control ground settlement and groundwater pressure beneath a busy urban river crossing, and what monitoring confirms it?"
+    number: "$16bn"   # the key number shown large; "" for none
+    number_label: "Hudson Tunnel Project total cost"
+    language: "English"   # the news site's language
+    lat: 40.76
+    lon: -74.01
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "constructionbriefing.com"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+    update: ""   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
+  - story: 058e9d7b41e6887d   # Ecuador: huge landslide at Alausí, rocks fall 500 metres and block river (Ecuador)
+    title: ""   # empty keeps the headline above
+    text: "How did a rock slope fail over 500 metres and dam a river, and what does the blockage imply for downstream flooding and remediation?"
+    number: "500 metri"   # the key number shown large; "" for none
+    number_label: "distance rocks fall, blocking river"
+    language: "Italian"   # the news site's language
+    lat: -2.2
+    lon: -78.84
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "ilmessaggero.it"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+    update: ""   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
+  - story: 3a023df22d454d71   # About a year after the Eastern Aomori offshore earthquake, restoration of the damaged Hachinohe port logistics (Japan)
+    title: ""   # empty keeps the headline above
+    text: "How can liquefaction-suppression techniques be made effective on reclaimed port ground, and what did the earthquake reveal about its behaviour?"
+    number: "2割程度"   # the key number shown large; "" for none
+    number_label: "restoration progress at Hachinohe port terminal"
+    language: "Japanese"   # the news site's language
+    lat: 40.52
+    lon: 141.51
+    satellite: yes   # yes: satellite view of the place; no: map of the country
+    site: "news.yahoo.co.jp"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+    update: ""   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
+  - story: e78cd2595be97159   # Acoustic monitoring reveals previously ‘hidden’ underwater landslide processes (global)
+    title: ""   # empty keeps the headline above
+    text: "Can acoustic monitoring of submarine slope failures improve the design of cable routes and offshore foundations on susceptible seabeds?"
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: 0.0
+    lon: 0.0
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "geplus.co.uk"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+    update: ""   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
+  - story: 6d1b22f494647504   # BGS Common Ground Consultation: Help Shape National Geotechnical Data Service. (United Kingdom)
+    title: ""   # empty keeps the headline above
+    text: "What a shared national geotechnical data service should store, and how data standards would affect reuse of site investigation records."
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: 54.0
+    lon: -2.0
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "indexbox.io"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+    update: ""   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
+
+around_the_world:
+  - story: 11d6b3e75e70a476   # Repairs postpone immersion of Fehmarnbelt special element (Denmark)
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: 54.45
+    lon: 11.2
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "tunnelsandtunnelling.com"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+    update: ""   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
+  - story: 1ae09b4ed608c85e   # Death toll from mudslides in Nepal rises to 903 people (Nepal)
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: "903"   # the key number shown large; "" for none
+    number_label: "people killed in Nepal mudslides"
+    language: "Arabic"   # the news site's language
+    lat: 28.4
+    lon: 84.1
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "omannews.gov.om"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+    update: ""   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
+  - story: 5bd4dd80acac54af   # North East Link TBMs leave site following tunnelling completion (Australia)
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: -37.77
+    lon: 145.12
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "geplus.co.uk"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+    update: ""   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
+  - story: 15e57315644f9f9c   # Nemaska Lithium plant construction halted for long period; Sainte-Monique landslide repair awaited (Canada)
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: "7 jours en 7 minutes"   # the key number shown large; "" for none
+    number_label: "news summary of plant halt and landslide"
+    language: "French"   # the news site's language
+    lat: 48.55
+    lon: -72.04
+    satellite: yes   # yes: satellite view of the place; no: map of the country
+    site: ""   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+    update: ""   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
+  - story: 6aa2b760b75e18bc   # TBM drive completed on Cairo Metro Line 4 (Egypt)
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: 30.04
+    lon: 31.24
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "tunnellingjournal.com"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+    update: "2026-W44"   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
+  - story: 766f884f7b168463   # Earthquake in Peru damages homes and triggers landslides on roads (Peru)
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "Spanish"   # the news site's language
+    lat: -11.16
+    lon: -75.99
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "ansalatina.com"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+    update: ""   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
+  - story: f872df19e404a3f4   # Revised Analytical Curves Better Predict Lateral Soil Resistance for Large Offshore Monopiles (global)
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "English"   # the news site's language
+    lat: 0.0
+    lon: 0.0
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "bioengineer.org"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+    update: ""   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
+  - story: f109bc19da3d7e0c   # Self-construction and ground sinking: threats endangering homes in Mexico City (Mexico)
+    title: ""   # empty keeps the headline above
+    text: ""   # optional: one line
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
+    language: "Spanish"   # the news site's language
+    lat: 19.43
+    lon: -99.13
+    satellite: no   # yes: satellite view of the place; no: map of the country
+    site: "elsoldemexico.com.mx"   # the news site, for the advert check
+    adverts: auto   # auto (checked each week), yes or no
+    update: ""   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
+
+research:
+  - paper: "97ae15ce4a6cd8bb"   # Field performance and influencing factors of a long-narrow deep railway excavation in Guangzhou soft clay: a c
+    text: "A monitored deep excavation in soft clay gives observed movements and controlling factors that engineers can benchmark against similar urban excavations."
+  - paper: "906ad45e13323217"   # Real-time identification of adverse geological zones in tunnels based on continuous drilling parameters
+    text: "Using drilling data in real time to flag adverse geology ahead of the face gives tunnel crews an immediate, low-cost warning tool they can apply on site now."
+  - paper: "2ec5db2441485856"   # Mechanism of pipe sticking and jacking force prediction for steel pipe jacking under deeply buried and water-r
+    text: "A real case of pipe sticking and jacking force in water-rich strata gives engineers a direct, calibrated approach to plan steel pipe jacking in similar ground."
+
+# events coming up are added by themselves from the events calendar; write  events: none  to leave them out
+events: auto
+
+# optional: a line about the latest ISSMGE Magazine issue, and its link (empty: no box)
+magazine_note: ""
+magazine_link: ""
