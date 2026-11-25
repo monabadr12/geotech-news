@@ -1,6 +1,6 @@
 {
  "updated": "2026-11-22T09:28:40+00:00",
- "built": "2026-11-24",
+ "built": "2026-11-25",
  "feed": "https://monabadr12.github.io/geotech-news/events.ics",
  "kinds": [
   "ISSMGE conference",
@@ -91,7 +91,7 @@
    "source": "scan",
    "found": "2026-11-08",
    "notes": "Venue Skempton Building, Imperial College London; unclear whether registration is limited.",
-   "status": "upcoming"
+   "status": "under way"
   },
   {
    "id": "igs-seminar-bridge-abutments-2026",
@@ -112,7 +112,7 @@
    "source": "scan",
    "found": "2026-11-08",
    "notes": "Time 1:00–2:00 PM, time zone not stated; organiser assumed from the calendar.",
-   "status": "upcoming"
+   "status": "under way"
   },
   {
    "id": "italian-underground-conference-congress-2026",
