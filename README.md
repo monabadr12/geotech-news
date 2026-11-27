@@ -259,6 +259,8 @@ secret `GEONEWS_DEPLOY_TOKEN`: a fine-grained token with *Contents: read and wri
 7. **Publisher links:** many links of the scan go through Google News (`news.google.com/rss/articles/...`). The
    publisher's own address is found with the `googlenewsdecoder` package for the stories of an issue (when the draft is
    written and when the pages are built) and for the other stories on a draft's preview (when the pages are built).
+   The copy for the newsletter's own website (`--public-bundle`) decodes nothing and downloads no picture: it uses the
+   links and pictures the build before it saved.
    Each link is decoded once and kept in `data/geonews/gnews_links.json`; the tool pauses after each link and, each
    time it runs, decodes at most 80 links and for at most two minutes (the rest the next times). A link that cannot
    be decoded keeps its Google News address, the log says so, and the preview shows "Editor: link still goes through
@@ -267,8 +269,8 @@ secret `GEONEWS_DEPLOY_TOKEN`: a fine-grained token with *Contents: read and wri
 8. **News of the week only:** the draft takes no story published more than a few days before the issue week
    (`SCAN_LAG_DAYS` in `geonews.py`: the news of the weekend before is saved on Monday or Tuesday and belongs to the
    issue) or after its Sunday, and nothing from encyclopedias and similar reference sites (Britannica, Wikipedia and
-   others, `REFERENCE_SITES`), as with the Vajont entry from Britannica in week 45. The preview lists them under **Older or
-   reference items (not used as news)**, and its **Please check** box names any such story still in a draft.
+   others, `REFERENCE_SITES`), as with the Vajont entry from Britannica in week 45. The preview of a draft lists them under
+   **Older or reference items (not used as news)**, and its **Please check** box names any such story still in a draft.
 9. **Case history:** one item per issue, after Around the world and before Research highlights, on the pages and in the
    e-mails (and one line in the LinkedIn post), kept apart from the news. The cases come from a checked list of 50
    well-known case histories from every ISSMGE region, `data/geonews/case_histories.yaml` (a draft list, checked
@@ -277,8 +279,9 @@ secret `GEONEWS_DEPLOY_TOKEN`: a fine-grained token with *Contents: read and wri
    before, the regions in turn; a case is never used twice. It writes the case's id and a text from the list (where
    people died, the victims first; then what happened; then "Lesson for practice: ..."), with its sources as "Read
    more" links. The editor can change the text, or swap the case in the story editor (**Case history**) or in the
-   file (`case_history:`, by its id); the preview suggests three other cases and notes that the text is a draft to
-   check. Weeks 44 to 46 have no case history.
+   file (`case_history:`, by its id); the preview suggests three other cases (none that another issue, earlier or
+   later, has) and notes that the text is a draft to check; a draft whose case another issue also has is named in its
+   **Please check** box. Weeks 44 to 46 have no case history.
 10. **Satellite views kept with the site:** readers' browsers no longer load map tiles from EOX (see above). With the
     fonts, icons, flags and publisher links, a Geo-News page asks no other server for anything; only the links readers
     click lead elsewhere.

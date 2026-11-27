@@ -172,8 +172,9 @@ def icon(name):
 
 
 def story_date(s):
-    """The day the story was published, as the scan stored it ('12 Nov 2026'; "" when unknown)."""
-    return site_builder.nice_date(notify().story_day(s))
+    """The day the story was published, as the scan stored it ('12 Nov 2026'; "" when unknown: never the day the scan
+    saved it, which is not a publication date)."""
+    return site_builder.nice_date(str(s.get("published") or "")[:10])
 
 
 def title_of(s):
@@ -699,11 +700,12 @@ def anniversary_day(c, monday, days):
     return None
 
 
-def cases_used(key):
-    """{case id: week} of the case histories of the issues before key (drafts too, with the story editor's saves)."""
+def cases_used(key, others=False):
+    """{case id: week} of the case histories of the issues before key (drafts too, with the story editor's saves);
+    others=True: of every issue but key, later ones too (a draft written while an earlier issue is still open)."""
     out = {}
     for path in sorted(issue_files()):
-        if path.stem >= key:
+        if path.stem == key or (path.stem > key and not others):
             continue
         try:
             raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
@@ -749,8 +751,9 @@ def choose_case(key, used=None, cases=None):
 
 
 def suggest_cases(key, current, n=3):
-    """n other cases the editor might use instead, chosen by the same rules as the draft's."""
-    used = dict(cases_used(key))
+    """n other cases the editor might use instead, chosen by the same rules as the draft's; never a case another issue
+    has, earlier or later."""
+    used = dict(cases_used(key, others=True))
     if current:
         used[current] = key
     out = []
@@ -1048,6 +1051,11 @@ def load_issue(path, stories, papers):
             head = it["title"] or title_of(it["s"])
             head = head if len(head) <= 60 else head[:57].rsplit(" ", 1)[0] + "…"
             problems.append(f"{part[i - 1]}, story {i} ({head}, code {it['s']['id']}): {it['aside']}. Please replace it.")
+        c = (issue["case"] or {}).get("c") or {}
+        other = cases_used(key, others=True).get(c.get("id")) if c else None
+        if other:   # a case is used only once (another issue may have taken it, by hand, while this one was open)
+            problems.append(f"case_history: {c['id']} ({c.get('name')}) is also the case history of week {week_no(other)} "
+                            f"({other}). A case is used only once: choose another case for one of them.")
         load_cases()
         if _CASES_SKIPPED:
             problems.append(f"Case list (data/geonews/case_histories.yaml): {'; '.join(_CASES_SKIPPED)}. These cases are "
@@ -1277,10 +1285,11 @@ def make_satellite(path, lat, lon, z, get=None):
     return True
 
 
-def pictures(issue, get=None):
+def pictures(issue, get=None, download=True):
     """The satellite picture of each highlight that has one (satellite: yes): it["picture"] = "<week>/<file>", kept in
     data/geonews/img/<week>/ and downloaded once (in GitHub Actions, when the pages are built). A story whose picture
-    cannot be downloaded has none and shows its country map. Pictures of the week no story uses any more are removed."""
+    cannot be downloaded has none and shows its country map. Pictures of the week no story uses any more are removed.
+    download=False (the public bundle): only the pictures already kept are used."""
     global _SAT_MISSES
     folder = IMG / issue["key"]
     keep = set()
@@ -1290,7 +1299,7 @@ def pictures(issue, get=None):
         z = 13 if i == 0 else 12   # the cover shows the site closer
         name = sat_name(it, z)
         path = folder / name
-        if not path.exists() and name not in _SAT_TRIED and _SAT_MISSES < 3:
+        if download and not path.exists() and name not in _SAT_TRIED and _SAT_MISSES < 3:
             try:
                 ok = make_satellite(path, it["lat"], it["lon"], z, get)
             except Exception as ex:  # no network, a tile missing, a picture that cannot be read
@@ -1789,6 +1798,28 @@ def logo_data():
     return "data:image/png;base64," + base64.b64encode(f.read_bytes()).decode() if f.exists() else ""
 
 
+# The advance widths of Newsreader 600, the font of the LinkedIn picture's headlines, in thousandths of the font size
+# (measured from assets/fonts in a browser): printable ASCII from the space on, then a few typographic signs. A letter
+# with an accent is measured as the letter without it; any other sign as a full em (wider than any Latin letter).
+NR600 = (
+          219, 284, 392, 611, 611, 838, 743, 211, 297, 297, 433, 512, 253, 362, 247, 405, 611, 611, 611, 611, 611, 611, 611, 611,
+          611, 611, 269, 278, 512, 512, 512, 483, 896, 756, 689, 716, 785, 671, 621, 770, 835, 371, 476, 773, 637, 1024, 781, 790,
+          651, 789, 700, 586, 700, 784, 729, 1028, 759, 723, 654, 328, 405, 329, 512, 411, 500, 490, 569, 461, 579, 482, 378, 520,
+          588, 304, 277, 580, 292, 868, 600, 542, 584, 567, 430, 412, 381, 572, 551, 782, 533, 553, 460, 323, 246, 323, 512)
+NR600_MORE = {"–": 510, "—": 675, "…": 704, "‘": 250, "’": 250, "“": 455, "”": 455}
+CARD_HEAD_W = 360   # px: the headlines of the LinkedIn picture start at x=92 and must end before the map (x=470)
+
+
+def head_width(line, size=25):
+    """The width in pixels of a line of the LinkedIn picture's headlines (Newsreader 600 at size px)."""
+    import unicodedata
+    w = 0
+    for ch in line:
+        base = ch if ch in NR600_MORE else (unicodedata.normalize("NFKD", ch)[:1] or ch)
+        w += NR600_MORE.get(base) or (NR600[ord(base) - 32] if 32 <= ord(base) < 127 else 1000)
+    return w * size / 1000
+
+
 def linkedin_card(issue, cfg):
     """A 1200 × 627 picture for the LinkedIn post (SVG; the preview page saves it as PNG, with the fonts put into it).
     The fonts are named in style attributes, which the page's style sheet does not override."""
@@ -1796,8 +1827,8 @@ def linkedin_card(issue, cfg):
     heads = []
     for i, it in enumerate(issue["highlights"][:3], 1):
         words, line, out = (it["title"] or title_of(it["s"])).split(), "", []
-        for w in words:
-            if len(line) + len(w) + 1 > 34 and line:
+        for w in words:   # lines wrapped by their measured width, so that none runs under the map
+            if line and head_width(line + " " + w) > CARD_HEAD_W:
                 out.append(line)
                 line = w
             else:
@@ -1805,7 +1836,14 @@ def linkedin_card(issue, cfg):
         out.append(line)
         if len(out) > 2:
             out = out[:2]
-            out[1] = out[1].rstrip(".,;:") + "…"
+            last = out[1].rstrip(".,;:")
+            while " " in last and head_width(last + "…") > CARD_HEAD_W:
+                last = last.rsplit(" ", 1)[0].rstrip(".,;:")
+            out[1] = last + "…"
+        for j, l in enumerate(out):   # a single word too long for a line is cut
+            while head_width(l) > CARD_HEAD_W:
+                l = l.rstrip("…")[:-1] + "…"
+            out[j] = l
         heads.append((i, out))
     y, texts = 300, []
     for i, ls in heads:
@@ -1862,7 +1900,9 @@ def alternatives_html(key, issue, digests, cfg):
 
 def set_aside_html(key, issue, digests):
     """The week's items not used as news (published before the issue week, or encyclopedia entries), for the editor to
-    see; one already in the issue is shaded."""
+    see; one already in the issue is shaded. Only for a draft: a published issue is not changed."""
+    if issue.get("status", "draft") != "draft":
+        return ""
     stories, _ = week_items(digests, key)
     used = {it["s"]["id"] for it in issue["highlights"] + issue["around"]}
     rows = []
@@ -2002,7 +2042,9 @@ def build(ctx, public=False):
     """docs/geonews/: index.html (newest published issue), <week>.html for each published issue, archive.html,
     and preview/<week>.html for every issue file, draft or published. When the newsletter has its own website
     (geonews: public_url), the pages members read are built only for that site (public=True, see public_bundle);
-    the News Desk then keeps the previews and, at the old addresses, pages that forward to the new site."""
+    the News Desk then keeps the previews and, at the old addresses, pages that forward to the new site. The public
+    build reaches no network: it uses the links decoded and the pictures saved by the News Desk build before it, as
+    nothing it fetched would be saved."""
     cfg, digests = ctx["cfg"], ctx["digests"]
     forward = bool(str(settings(cfg)["public_url"] or "").strip()) and not public
     stories, papers = all_items(digests)
@@ -2022,11 +2064,11 @@ def build(ctx, public=False):
         return out
     loaded = load_all()
     # the publisher's own address of the stories' links (read again once some are found: the news sites change)
-    if decode_links(links_wanted(loaded, digests, public)):
+    if not public and decode_links(links_wanted(loaded, digests)):
         loaded = load_all()
     for _, issue, _ in loaded:   # the satellite views, kept with the site
         if issue:
-            pictures(issue)
+            pictures(issue, download=not public)
     copy_pictures(OUT / "img")
     published = [i for _, i, _ in loaded if i and i["status"] == "approved" and (i["highlights"] or i["around"])]
     keys = [i["key"] for i in published]

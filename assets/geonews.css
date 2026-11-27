@@ -195,6 +195,7 @@ button.copy:not(.btn) { font: 12px "Libre Franklin", Arial, sans-serif; border: 
 .m2 .mini { position: absolute; right: 8px; top: 8px; width: 74px; height: 56px; border: 2px solid #fff; border-radius: 7px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
 .m2 .mini .loc { width: 100%; height: 100%; display: block; }
 .plc { position: absolute; left: 8px; bottom: 8px; background: #fff; color: #2a2024; font: bold 11px "Libre Franklin", Arial, sans-serif; padding: 2px 8px; border-radius: 99px; box-shadow: 0 1px 4px rgba(0,0,0,.2); }
+.m2 > .sat ~ .plc { bottom: 22px; }   /* above the satellite credit (.satcr), which it would otherwise cover */
 .b2 { padding: 12px 16px 14px; min-width: 0; }
 .b2 h3 { margin: 4px 0 4px; font-size: 18px; line-height: 1.3; } .b2 h3 a { color: var(--ink); text-decoration: none; } .b2 h3 a:hover { color: var(--c); text-decoration: underline; }
 .b2 p { margin: 4px 0 8px; font-size: 14.5px; }

@@ -6,7 +6,8 @@
 # "09-10" = 9 October; "" when the date has no single day); outcome (failure or success); lives_lost; what_happened;
 # lesson; framing_note (how to introduce the case: where people died, the victims come first); theme (the magazine
 # theme); overview (a general page about the case, to read first) and overview_title (the name of its site,
-# when it is not one of the sources or Wikipedia); sources (title and link).
+# when it is not one of the sources or Wikipedia); sources (title and link, which readers see under "Read more", and
+# sometimes a note: for the editors, which is never shown).
 # Each Geo-News draft takes one case (geonews.py choose_case): a case whose anniversary falls in the issue week or the
 # week after it, otherwise the next case not used before, regions in turn. A case is never used twice.
 
@@ -68,8 +69,9 @@ cases:
     sources:
       - title: "Duffaut, P. and Larouzée, J. (2018). Geology, engineering and humanities: three sciences behind the Malpasset dam failure. Quarterly Journal of Engineering Geology and Hydrogeology (copy hosted by CFBR)"
         url: "https://www.barrages-cfbr.eu/IMG/pdf/2022_06_04_cfbr_malpasset_geology_engineering_humanities_2018-186.full.pdf"
-      - title: "Duffaut, P. (2013). The traps behind the failure of Malpasset arch dam, France, in 1959. Journal of Rock Mechanics and Geotechnical Engineering 5(5) (ASDSO reference listing)"
+      - title: "Duffaut, P. (2013). The traps behind the failure of Malpasset arch dam, France, in 1959. Journal of Rock Mechanics and Geotechnical Engineering 5(5)"
         url: "https://damsafety.org/reference/traps-behind-failure-malpasset-arch-dam-france-1959"
+        note: "ASDSO reference listing."
       - title: "CFBR paper to the 2021 ICOLD Congress (Q.105): Malpasset as an organisational accident"
         url: "https://www.barrages-cfbr.eu/IMG/pdf/2022_06_04_cfbr_malpasset_organisational_accident_cigb21.pdf"
   - id: E4
@@ -108,8 +110,9 @@ cases:
     overview: "https://api.parliament.uk/historic-hansard/written_answers/1994/oct/27/heathrow-tunnel"
     overview_title: "Hansard, UK Parliament"
     sources:
-      - title: "Health and Safety Executive (2000). The collapse of NATM tunnels at Heathrow Airport. HSE Books, ISBN 0-7176-1792-0 (NBS catalogue entry)"
+      - title: "Health and Safety Executive (2000). The collapse of NATM tunnels at Heathrow Airport. HSE Books, ISBN 0-7176-1792-0"
         url: "https://www.thenbs.com/PublicationIndex/documents/details?DocId=251805&Pub=HSE"
+        note: "NBS catalogue entry."
       - title: "Health and Safety Executive (1996). Safety of New Austrian Tunnelling Method (NATM) tunnels: a review of sprayed concrete lined tunnels with particular reference to London Clay"
         url: "https://www.hse.gov.uk/PUBNS/natm.pdf"
       - title: "Muir Wood, A. (2000). Coda: Heathrow tunnel collapse. In Tunnelling: Management by Design. E & FN Spon"
@@ -190,8 +193,9 @@ cases:
     theme: "Infrastructure & the Underground City"
     overview: "https://en.wikipedia.org/wiki/Channel_Tunnel"
     sources:
-      - title: "Harris, C.S., Hart, M.B., Varley, P.M. and Warren, C.D. (eds) (1996). Engineering Geology of the Channel Tunnel. Thomas Telford (chapter listing on Emerald / ICE Publishing)"
+      - title: "Harris, C.S., Hart, M.B., Varley, P.M. and Warren, C.D. (eds) (1996). Engineering Geology of the Channel Tunnel. Thomas Telford"
         url: "https://www.emerald.com/books/book/13084/chapter/83527352/Chapter-25-Tunnelling-difficulties-working-towards"
+        note: "Chapter listing on Emerald / ICE Publishing."
       - title: "Geological Society: GeoSites - Channel Tunnel"
         url: "https://www.geolsoc.org.uk/GeositesChannelTunnel"
       - title: "Institution of Civil Engineers: The Channel Tunnel"
@@ -210,8 +214,9 @@ cases:
     theme: "Infrastructure & the Underground City"
     overview: "https://en.wikipedia.org/wiki/Gotthard_Base_Tunnel"
     sources:
-      - title: "Kovári, K., Amberg, F. and Ehrbar, H. (2000). Mastering of squeezing rock in the Gotthard Base Tunnel. World Tunnelling (ETH Research Collection record)"
+      - title: "Kovári, K., Amberg, F. and Ehrbar, H. (2000). Mastering of squeezing rock in the Gotthard Base Tunnel. World Tunnelling"
         url: "https://www.research-collection.ethz.ch/handle/20.500.11850/119615"
+        note: "ETH Research Collection record."
       - title: "ISSMGE Historical Time Capsule, Swiss Geotechnical Society: Gotthard Base Tunnel"
         url: "https://htc.issmge.org/contributions/member-societies/swiss-geotechnical-society-geotechnik-schweiz/gotthard-base-tunnel"
       - title: "AlpTransit Gotthard portal: Keeping danger in check (workplace safety and the nine deaths)"
@@ -231,10 +236,12 @@ cases:
     overview: "https://www.sg101.gov.sg/resources/connexionsg/nicollhigwaycollapse"
     overview_title: "SG101, Government of Singapore"
     sources:
-      - title: "Committee of Inquiry into the Incident at the MRT Circle Line Worksite that led to the Collapse of the Nicoll Highway, Final Report (May 2005), Chapter 5 Causation (unofficial copy)"
+      - title: "Committee of Inquiry into the Incident at the MRT Circle Line Worksite that led to the Collapse of the Nicoll Highway, Final Report (May 2005), Chapter 5 Causation"
         url: "https://www.scribd.com/document/442474347/Report-Cap5-Causation"
-      - title: "Whittle, A.J. and Davies, R.V. (2006) Nicoll Highway collapse: evaluation of geotechnical factors affecting design of excavation support system. Int. Conf. on Deep Excavations, Singapore (copy)"
+        note: "Unofficial copy."
+      - title: "Whittle, A.J. and Davies, R.V. (2006) Nicoll Highway collapse: evaluation of geotechnical factors affecting design of excavation support system. Int. Conf. on Deep Excavations, Singapore"
         url: "https://www.scribd.com/doc/246524758/AJWhittle-RVDavis-2006"
+        note: "Copy."
       - title: "Revisiting lessons learned from the Nicoll Highway collapse, STRUCTURE magazine"
         url: "https://www.structuremag.org/article/revisiting-lessons-learned-from-the-nicoll-highway-collapse/"
   - id: A2
@@ -267,7 +274,7 @@ cases:
     outcome: failure
     lives_lost: "26 (official Japanese figure); other sources give 28 to 36"
     what_happened: "The earthquake liquefied loose, saturated sands in young Shinano River deposits and filled former river channels in Niigata City. The ground lost bearing capacity, so buildings on shallow foundations settled and tilted (the Kawagishi-cho apartment blocks overturned largely intact), and lateral spreading brought down the Showa Bridge spans."
-    lesson: "Loose saturated sands can liquefy and lose bearing capacity. Niigata, together with the 1964 Alaska earthquake, launched modern liquefaction engineering (Seed and Idriss 1967), and the tilted Kawagishi-cho apartments became its defining image."
+    lesson: "Loose saturated sands can liquefy in an earthquake, so a site with them needs a liquefaction assessment before buildings are founded on it. Niigata, together with the 1964 Alaska earthquake, launched modern liquefaction engineering (Seed and Idriss 1967)."
     framing_note: "In 1964, 26 people died in the Niigata earthquake, and about 2,000 homes were destroyed. Mention them before the famous images of tilted buildings."
     theme: "Hazards & Resilience"
     overview: "https://www.hp1039.jishin.go.jp/eqchreng/6-2-5.htm"
@@ -287,8 +294,8 @@ cases:
     anniversary: "17-01"
     outcome: failure
     lives_lost: "6,434 (whole earthquake; final FDMA count, including disaster-related deaths)"
-    what_happened: "Strong shaking liquefied the loose reclaimed fill of Port Island and Rokko Island and softened the sand beneath the gravity caisson quay walls, which slid seaward by up to about 5 m (about 3 m on average), settled and tilted, and crippled the port. Parts of the islands that had been densified by ground improvement settled much less."
-    lesson: "Liquefaction of loose reclaimed fill, and softening of the sand under them, can move caisson quay walls metres seaward. Where the ground had been improved, damage and settlement were clearly smaller, even under more than 400 gal of shaking."
+    what_happened: "Strong shaking liquefied the loose reclaimed fill of Port Island and Rokko Island and softened the sand beneath the gravity caisson quay walls, which slid seaward by up to about 5 m (about 3 m on average), settled and tilted, and crippled the port."
+    lesson: "Port land reclaimed with loose fill, and the sand under caisson quay walls, should be assessed for liquefaction and densified where needed: at Kobe, the parts of the islands that had been improved settled and were damaged clearly less, even under more than 400 gal of shaking."
     framing_note: "In 1995 the Great Hanshin-Awaji (Kobe) earthquake killed 6,434 people. Acknowledge this before turning to the port, which was a lifeline for relief and recovery."
     theme: "Ground Improvement & Innovation"
     overview: "https://www.mlit.go.jp/kowan/english/pdms/2_6_4.html"
@@ -511,7 +518,7 @@ cases:
     anniversary: "22-03"
     outcome: failure
     lives_lost: "43"
-    what_happened: "After an exceptionally wet late winter, a slope of glacial lake, outwash and till deposits that had slid many times before (most recently in 2006) failed again, and the moving mass liquefied into a fast debris avalanche that crossed the North Fork Stillaguamish valley more than 1 km, burying the Steelhead Haven neighbourhood and State Route 530."
+    what_happened: "After an exceptionally wet late winter, a slope of glacial lake, outwash and till deposits that had slid many times before (most recently in 2006) failed again, and the moving mass liquefied into a fast debris avalanche that crossed the North Fork Stillaguamish valley more than 1 km and also buried State Route 530."
     lesson: "A known landslide can travel much farther than it did before, and runout is very sensitive to the soil's density and water content; hazard maps and land-use rules must cover runout zones, not just the slope."
     framing_note: "Start with the victims: 'On 22 March 2014, 43 people died when the Oso landslide buried the riverside community of Steelhead Haven in Washington State.'"
     theme: "Hazards & Resilience"
@@ -641,8 +648,9 @@ cases:
     theme: "Sustainability & the Energy Transition"
     overview: "https://en.wikipedia.org/wiki/Mariana_dam_disaster"
     sources:
-      - title: "Fundão Tailings Dam Review Panel (Morgenstern, Vick, Viotti, Watts), Report on the Immediate Causes of the Failure of the Fundão Dam, 25 Aug 2016 (ASDSO library record; the panel's own site was fundaoinvestigation.com)"
+      - title: "Fundão Tailings Dam Review Panel (Morgenstern, Vick, Viotti, Watts), Report on the Immediate Causes of the Failure of the Fundão Dam, 25 Aug 2016"
         url: "https://damsafety.org/content/report-immediate-causes-failure-fund%C3%A3o-dam"
+        note: "ASDSO library record; the panel's own site was fundaoinvestigation.com."
       - title: "Inzunza, tailings dam breach analysis covering Fundão and Feijão (ISSMGE online library)"
         url: "https://www.issmge.org/uploads/publications/48/118/7iYGEC_Inzunza.pdf"
       - title: "IUCN fact sheet: Impacts of the Fundão dam failure"
@@ -654,16 +662,17 @@ cases:
     date: "Construction 1975 to 1991. Dam works finished and reservoir filled 13 to 27 Oct 1982; first generating unit started 5 May 1984; 18th unit 1991; units 19 and 20 in 2006 to 2007"
     anniversary: ""
     outcome: success
-    lives_lost: "None from foundation behaviour. Construction accidents killed more than 100 workers (Itaipu's own count is reported as 106)"
+    lives_lost: "more than 100 construction workers, killed in accidents (Itaipu's own count is reported as 106); none from foundation behaviour"
     what_happened: "The main dam, a hollow concrete gravity dam, stands on a pile of basalt lava flows separated by breccia layers and weak sub-horizontal joints. Borings and exploratory tunnels found an extremely fractured, sheared zone near the base of the dense basalt flow under the riverbed. Engineers drove a grid of tunnels along and across the dam axis, filled them with concrete to form shear keys, and grouted them so that the dam has an adequate margin of safety against sliding."
     lesson: "In layered basalt, the sub-horizontal contacts and shear zones between flows, more than the strong rock itself, can control the sliding stability of a large concrete dam; find them early with adits and tunnels, and treat them directly with concrete shear keys, grouting and drainage."
-    framing_note: "Frame it as an engineering success, but do not write that no lives were lost. If construction is mentioned, acknowledge the workers: \"More than 100 workers died in accidents while Itaipu was being built ...\" The reservoir also displaced tens of thousands of people and drowned the Guaíra (Sete Quedas) falls."
+    framing_note: "Frame it as an engineering success, but do not write that no lives were lost. Workers died building it: \"More than 100 workers died in accidents while Itaipu was being built.\" The reservoir also displaced tens of thousands of people and drowned the Guaíra (Sete Quedas) falls."
     theme: "Sustainability & the Energy Transition"
     overview: "https://www.itaipu.gov.br/en/history"
     overview_title: "Itaipu Binacional"
     sources:
-      - title: "Cabrera, J.G. (1988) Foundation investigation and treatment for the main dam, Itaipu Project. 2nd International Conference on Case Histories in Geotechnical Engineering (Scholars' Mine; the record misspells it 'Italpu')"
+      - title: "Cabrera, J.G. (1988) Foundation investigation and treatment for the main dam, Itaipu Project. 2nd International Conference on Case Histories in Geotechnical Engineering (Scholars' Mine)"
         url: "https://scholarsmine.mst.edu/icchge/2icchge/2icchge-session2/15"
+        note: "The record misspells it 'Italpu'."
       - title: "Two practical examples of numerical approaches for solving discontinuity problems in dam design. International Journal for Numerical and Analytical Methods in Geomechanics 6(4), 1982 (covers the Itaipu basalt discontinuities and shear keys)"
         url: "https://doi.org/10.1002/nag.1610060407"
       - title: "Agência Pública (June 2023) Itaipu na ditadura: mais de 100 operários mortos e 43 mil acidentes na construção"
@@ -737,9 +746,13 @@ cases:
     anniversary: "27-02"
     outcome: failure
     lives_lost: "4 (one family)"
-    what_happened: "Shaking from the Maule earthquake liquefied the still-saturated tailings in the Las Palmas impoundment, an abandoned gold-mine deposit about 30 km north-west of Talca whose mine had closed in 1997. The dam failed and the tailings flowed more than 350 m downslope in two directions, covering about 8 ha and burying a house."
+    what_happened: "The deposit, about 30 km north-west of Talca, held the tailings of a gold mine that had closed in 1997, and they were still saturated. Its dam failed and the tailings flowed more than 350 m downslope in two directions, covering about 8 ha."
     lesson: "A closed tailings deposit can stay saturated and liquefiable for many years, so closure needs a seismic stability assessment, drainage or desaturation, buttressing where needed, and continued monitoring and owner responsibility."
-    framing_note: "Acknowledge the victims first: \"In February 2010 four members of one family died when the tailings of the abandoned Las Palmas deposit liquefied in the Maule earthquake and buried their home ...\" Chilean press reported that nearby families had not been warned, although the national mining agency Sernageomin had listed the deposit among the four most at risk of collapse."
+    framing_note: "Acknowledge the victims first: \"In February 2010 four members of one family died when the tailings of the abandoned Las Palmas deposit liquefied in the Maule earthquake and buried their home ...\""
+    # Left out of framing_note until a press source is added to the sources below: "Chilean press reported that nearby
+    # families had not been warned, although the national mining agency Sernageomin had listed the deposit among the
+    # four most at risk of collapse." (Candidates to check: CIPER, 26 Oct 2010, "Minas abandonadas: una amenaza letal
+    # para miles de chilenos"; The Clinic, 18 Apr 2019, "Relaves mineros: la amenaza durmiente".)
     theme: "Sustainability & the Energy Transition"
     overview: "https://peer.berkeley.edu/news/new-peer-report-201901-flow-failure-case-history-las-palmas-chile-tailings-dam"
     overview_title: "Pacific Earthquake Engineering Research Center (PEER)"
@@ -748,8 +761,9 @@ cases:
         url: "https://peer.berkeley.edu/publications/2019-01"
       - title: "GEER reconnaissance of the 2010 Maule, Chile earthquake, Section 11: Dams, levees and tailings dams"
         url: "https://geerassociation.org/components/com_geer_reports/geerfiles/Maule_Chile_2010/Ver2_Section_11_DamsLeveesVer5.pdf"
-      - title: "Verdugo, R. et al. (2012) Seismic performance of earth structures during the February 2010 Maule, Chile, earthquake: dams, levees, tailings dams, and retaining walls. Earthquake Spectra 28(S1), S75-S96 (ASDSO library record)"
+      - title: "Verdugo, R. et al. (2012) Seismic performance of earth structures during the February 2010 Maule, Chile, earthquake: dams, levees, tailings dams, and retaining walls. Earthquake Spectra 28(S1), S75-S96"
         url: "https://damsafety.org/content/seismic-performance-earth-structures-during-february-2010-maule-chile-earthquake-dams-levees"
+        note: "ASDSO library record."
   - id: S8
     name: "Hidroituango diversion tunnel crisis"
     country: "Colombia"
@@ -846,10 +860,12 @@ cases:
     theme: "Offshore, Coasts & Water"
     overview: "https://en.wikipedia.org/wiki/Aswan_High_Dam"
     sources:
-      - title: "Book chapter on grout curtains in overburden (CRC Press/Taylor & Francis, ISBN 9781351035989, ch. 9). It describes the High Aswan Dam sleeve-pipe curtain as up to 193 m deep and needing no repair as of 2009. Chapter title not verified"
+      - title: "Book chapter on grout curtains in overburden, including the High Aswan Dam curtain (CRC Press/Taylor & Francis, ISBN 9781351035989, chapter 9)"
         url: "https://www.taylorfrancis.com/books/9781351035989/chapters/10.1201/9781351035989-9"
-      - title: "Journal of Coastal Research (1995) paper on Nile delta coastal erosion after sediment trapping by the High Aswan Dam (retreat of the Rosetta promontory). Exact title not verified"
+        note: "It describes the High Aswan Dam sleeve-pipe curtain as up to 193 m deep and needing no repair as of 2009. Chapter title not verified."
+      - title: "Fanos, A.M. (1995) The impact of human activities on the erosion and accretion of the Nile delta coast. Journal of Coastal Research 11(3)"
         url: "https://journals.flvc.org/jcr/article/download/79860/77125"
+        note: "On Nile delta erosion after sediment trapping by the High Aswan Dam (retreat of the Rosetta promontory). Title and author as the journal's record (journals.flvc.org/jcr/article/view/79860) gives them in a web search on 27 Nov 2026."
       - title: "ICE: Nile water control (Aswan High Dam)"
         url: "https://ice.org.uk/what-is-civil-engineering/infrastructure-projects/nile-water-control"
   - id: F5
@@ -860,7 +876,7 @@ cases:
     anniversary: "14-08"
     outcome: failure
     lives_lost: "1,141 dead or missing (final official figure); about 500 bodies were recovered and more than 600 people were never found"
-    what_happened: "After three days of intense rain at the peak of the rainy season, part of the slope of Sugar Loaf Mountain above Regent collapsed, sending about 300,000 m3 of debris into the valley below, where it travelled downstream as a debris flow and flood through densely built settlements."
+    what_happened: "The slope that failed, part of Sugar Loaf Mountain, had been soaked by three days of intense rain at the peak of the rainy season. It sent about 300,000 m3 of debris into the valley below, where it travelled downstream as a debris flow and flood through densely built settlements."
     lesson: "Most of the deaths came from homes built in the debris runout path and on the valley floor, so mapping landslide source and runout zones (including evidence of earlier landslides) and enforcing land-use controls on steep slopes and stream corridors matters as much as the stability of the slope itself."
     framing_note: "Lead with the victims: 'In August 2017 more than 1,100 people were killed or never found when a hillside above Regent, in Freetown, collapsed after days of heavy rain.' Avoid blaming residents; many lived there because there was no safer housing."
     theme: "Hazards & Resilience"
@@ -881,7 +897,7 @@ cases:
     anniversary: "01-03"
     outcome: failure
     lives_lost: "about 300 dead or missing (estimates range from about 100 to over 300; fewer than 100 bodies recovered)"
-    what_happened: "After weeks of heavy rain and a long downpour on 1 March, a slope above Nametsi village failed in deeply weathered, clay-rich volcanic soils on Mount Elgon's steep, densely cultivated slopes and turned into a debris flow that buried parts of the village, including its health centre and trading centre."
+    what_happened: "After weeks of heavy rain and a long downpour on 1 March, the slope above the village failed in deeply weathered, clay-rich volcanic soils on the mountain's steep, densely cultivated flanks and turned into a debris flow, which also buried the village's trading centre."
     lesson: "Where people farm steep slopes with clay-rich residual soils, landslide hazard mapping has to be followed by land-use control and timely, planned resettlement; in Bududa resettlement lagged for years and deadly landslides struck the district again in 2012 and 2018."
     framing_note: "Lead with the victims: 'In March 2010 about 300 people were killed or are still missing after a landslide buried much of Nametsi village on Mount Elgon, among them people sheltering in the village health centre.'"
     theme: "Hazards & Resilience"
@@ -943,7 +959,7 @@ cases:
     lives_lost: "185 (22 Feb 2011; mostly in building collapses); no direct deaths on 4 Sep 2010"
     what_happened: "Strong shaking of loose, saturated young river and estuarine sands and silts under a shallow water table caused widespread liquefaction, again and again across the earthquake sequence, with sand ejecta, settlement and lateral spreading along the Avon River that damaged tens of thousands of homes and the eastern suburbs' infrastructure."
     lesson: "The same ground can liquefy again in later earthquakes, and systematic land-damage mapping linked to a large CPT database let authorities zone land (including a residential red zone of more than 7,000 properties bought out by the Crown) and set foundation requirements by ground category."
-    framing_note: "Lead with the victims: 'On 22 February 2011, 185 people died in the Christchurch earthquake, most of them in collapsed buildings in the central city.' Make clear that the deaths were mainly from building collapse and rockfall, not liquefaction, before turning to the ground damage."
+    framing_note: "Lead with the victims: 'On 22 February 2011, 185 people died in the Christchurch earthquake, most of them in the central city.' Make clear that the deaths were mainly from building collapse and rockfall, not liquefaction, before turning to the ground damage."
     theme: "Hazards & Resilience"
     overview: "https://teara.govt.nz/en/historic-earthquakes/13"
     overview_title: "Te Ara, the Encyclopedia of New Zealand"
@@ -1029,8 +1045,9 @@ cases:
     overview: "https://www.bne.com.au/corporate/projects/completed-projects/brisbanes-new-runway"
     overview_title: "Brisbane Airport"
     sources:
-      - title: "ISSMGE conference paper on back-analysis and monitoring of the Brisbane Airport new parallel runway ground improvement (title not verified)"
+      - title: "ISSMGE conference paper on back-analysis and monitoring of the Brisbane Airport new parallel runway ground improvement"
         url: "https://www.issmge.org/uploads/publications/1/141/982.pdf"
+        note: "Title not verified."
       - title: "Brisbane Airport Corporation: Brisbane's New Runway - Dredging and Reclamation Works Fact Sheet"
         url: "https://bne.com.au/sites/default/files/docs/Brisbanes-New-Runway_Dredging-and-Reclamation-Works-Fact-Sheet.pdf"
       - title: "Brisbane Airport Corporation: New Parallel Runway EIS/MDP, Chapter B3 Geology and soils"

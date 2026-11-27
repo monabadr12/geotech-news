@@ -256,7 +256,8 @@
       p(now.getUTCMinutes()) + p(now.getUTCSeconds());
     function clean(list) { return list.map(function (e) {
       var o = { story: e.story };
-      ["title", "text", "number", "number_label"].forEach(function (k) { if (e[k]) o[k] = e[k]; });
+      // every field, even an emptied one: a missing field would keep the issue file's headline, text or number
+      ["title", "text", "number", "number_label"].forEach(function (k) { o[k] = e[k] || ""; });
       if (e.place) o.satellite = !!e.satellite;
       o.update = e.update || "";
       return o; }); }
