@@ -63,6 +63,10 @@ h2::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 .mapkey { display: flex; flex-wrap: wrap; gap: 6px 16px; font: 12px "Libre Franklin", Arial, sans-serif; color: var(--muted); margin-top: 6px; }
 .mapkey i { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
 .mapkey .k1 { background: var(--red); } .mapkey .k2 { background: var(--gold); }
+/* the ISSMGE regions on the map (geonews: map_regions): the key of the lines between them, the legend of their tints */
+.mapkey .kl { width: 16px; height: 0; border-radius: 0; border-top: 2px solid rgba(42, 32, 36, .75); vertical-align: 3px; }
+.mapkey.rkey { margin-top: 4px; }
+.mapkey.rkey i { border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(42, 32, 36, .16); }
 /* stories */
 .pic { display: block; width: 100%; height: 100%; object-fit: cover; }
 .credit { position: absolute; right: 0; bottom: 0; background: rgba(42, 32, 36, .65); color: #fff; font: 10px "Libre Franklin", Arial, sans-serif; padding: 1px 6px;
@@ -123,6 +127,9 @@ a.arc:hover { border-color: var(--gold); }
 .empty { color: var(--muted); }
 .gn-foot { background: var(--ink); color: #cbbfc3; font: 12px/1.7 "Libre Franklin", Arial, sans-serif; padding: 18px 20px; text-align: center; }
 .gn-foot a { color: var(--gold-t); }
+/* the editor's disclaimer, above the credits: smaller and quieter, set apart by a thin line */
+.gn-disc { max-width: 600px; margin: 0 auto 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, .14);
+  font-size: 11.5px; line-height: 1.6; color: #a99ca1; overflow-wrap: break-word; }
 /* the editor's preview */
 .editor { background: #2a2024; color: #fff; padding: 14px 20px; font: 14px/1.5 "Libre Franklin", Arial, sans-serif; }
 .ed-k { font-weight: bold; letter-spacing: .1em; text-transform: uppercase; font-size: 11px; color: var(--gold-t); margin-bottom: 8px; }

@@ -51,6 +51,18 @@ Fonts, icons and flags are kept with the site, so a page asks no other server fo
 flagcdn.com): the fonts of issmge.org (Newsreader for headings, Libre Franklin for text) in assets/fonts/, Lucide
 line icons in assets/icons/ (put into the page as SVG) and the flag-icons flags in assets/flags/, each with its
 licence. The e-mails use no web fonts and no icons (Gmail and Outlook show neither).
+Disclaimer: every Geo-News page (issues, index, archive, preview, view-only page) and every e-mail ends with the
+disclaimer agreed with the editor (DEFAULTS["disclaimer"], geonews: disclaimer in config.yaml; empty or no for none). It is
+part of the page, not of the issue file, so all issues show it; the LinkedIn post does not carry it.
+Maps (config.yaml geonews: map_colours and map_regions, options for the ISSMGE Board's suggestions of November 2026;
+"current" and "none", the first look, until the editor chooses):
+map_colours "current" or "stronger": a clearer palette for the world map and the story cards' country maps
+(land a little darker against the background, clearer borders, fuller red and gold story tints; MAP_COLOURS).
+map_regions "none", "outline" or "shade": the six ISSMGE regions on the world map (geomap.region_table, from
+config.yaml map: regions), with their names; "outline" draws the lines between the regions (assets/regions.json, made
+by tools/make_regions.py), "shade" gives each region's land a very light tint of its own (REGION_TINTS) and adds a
+legend under the map. Both also apply to the map of the LinkedIn picture; neither changes an issue file, so the
+published issues show them too.
 
 data/geonews/sent.json records the e-mails sent: {"draft": {week: time}, "approved": {week: time}}.
 """
@@ -113,7 +125,15 @@ DEFAULTS = {"name": "Geo-News Weekly", "highlights": 5, "around": 8, "research":
             "events_max": 6, "hashtags": "#Geotechnics #GeotechnicalEngineering #ISSMGE #CivilEngineering",
             "linkedin_page": "", "editor": "",
             "initiative": "A new weekly service for ISSMGE members.",
-            "subscribe_form": "", "unsubscribe_form": "", "suggest_form": "", "public_url": ""}
+            "subscribe_form": "", "unsubscribe_form": "", "suggest_form": "", "public_url": "",
+            # the maps (MAP_COLOURS, REGION_TINTS): "current" or "stronger"; the ISSMGE regions on the world map: "none",
+            # "outline" or "shade"
+            "map_colours": "current", "map_regions": "none",
+            # agreed with the editor: at the bottom of every issue page and Geo-News e-mail (not the LinkedIn post)
+            "disclaimer": ("Geo-News Weekly is a curated service for ISSMGE members that highlights developments of "
+                           "potential interest to the geotechnical community. Content is derived from external sources, "
+                           "which are responsible for their own publications. The inclusion of a news item, organisation, "
+                           "product, service, or opinion should not be interpreted as an endorsement by ISSMGE.")}
 INTRO = ("Dear members, every week our profession is at work around the world, in foundations and tunnels, slopes and dams, "
          "coastlines and cities. Here is a selection of that work, gathered from news sources in many languages and brought "
          "to you by the ISSMGE Magazine Presidential Committee.")
@@ -138,9 +158,17 @@ def geomap():
 def settings(cfg):
     out = dict(DEFAULTS)
     for k, v in ((cfg or {}).get("geonews") or {}).items():
-        if k in out and v not in (None, ""):
+        if k == "disclaimer":   # set empty, no or false in config.yaml: no disclaimer
+            out[k] = v if isinstance(v, str) else ""
+        elif k in out and v not in (None, ""):
             out[k] = type(out[k])(v) if isinstance(out[k], int) and str(v).isdigit() else v
     return out
+
+
+def disclaimer(cfg):
+    """The disclaimer at the bottom of every issue page and Geo-News e-mail (geonews: disclaimer), on one line;
+    "" when config.yaml sets it empty (or no, or false)."""
+    return " ".join(str(settings(cfg)["disclaimer"]).split())
 
 
 def theme_color(theme):
@@ -1189,9 +1217,12 @@ def boxes():
     return _BOXES
 
 
-def locator(it, color, cls="loc", w_max=1000, aspect=4 / 3):
-    """A small map of the story's country (and its neighbours) with the place marked."""
+def locator(it, color, cls="loc", w_max=1000, aspect=4 / 3, cfg=None):
+    """A small map of the story's country (and its neighbours) with the place marked, in the colours of geonews:
+    map_colours (MAP_COLOURS)."""
     g = geomap()
+    look = map_look(cfg)
+    sea, land = look["sea"], look["loc_land"]
     s = it["s"]
     code = g.canonical(s.get("country"))
     if it.get("lat") is not None and it.get("lon") is not None:
@@ -1200,9 +1231,9 @@ def locator(it, color, cls="loc", w_max=1000, aspect=4 / 3):
         pt = g.label_point(code)
         if not pt:  # a global story: the whole world
             return (f"<svg class='{cls}' viewBox='-2600 -1250 5250 2050' preserveAspectRatio='xMidYMid slice' aria-hidden='true'>"
-                    f"<rect x='-2600' y='-1250' width='5250' height='2050' fill='#dfe8ec'/>"
-                    f"<path d='{g.world()['land']}' fill='#e9e5df'/>"
-                    + "".join(f"<path d='{v['d']}' fill='#e9e5df'/>" for v in g.world()["countries"].values() if v.get("d"))
+                    f"<rect x='-2600' y='-1250' width='5250' height='2050' fill='{sea}'/>"
+                    f"<path d='{g.world()['land']}' fill='{land}'/>"
+                    + "".join(f"<path d='{v['d']}' fill='{land}'/>" for v in g.world()["countries"].values() if v.get("d"))
                     + "</svg>")
         px, py = pt
     b = boxes().get(code)
@@ -1221,12 +1252,12 @@ def locator(it, color, cls="loc", w_max=1000, aspect=4 / 3):
         bb = boxes().get(k)
         if not bb or bb[2] < vx or bb[0] > vx + w or bb[3] < vy or bb[1] > vy + h:
             continue
-        paths.append(f"<path d='{v['d']}' fill='{color if k == code else '#e9e5df'}'"
-                     + (" fill-opacity='.55'" if k == code else "") + "/>")
+        paths.append(f"<path d='{v['d']}' fill='{color if k == code else land}'"
+                     + (f" fill-opacity='{look['loc_tint']}'" if k == code else "") + "/>")
     r = w / 28
     return (f"<svg class='{cls}' viewBox='{vx:.0f} {vy:.0f} {w:.0f} {h:.0f}' preserveAspectRatio='xMidYMid slice' aria-hidden='true'>"
-            f"<rect x='{vx:.0f}' y='{vy:.0f}' width='{w:.0f}' height='{h:.0f}' fill='#dfe8ec'/>"
-            f"<g stroke='#fff' stroke-width='{w / 250:.1f}'>{''.join(paths)}</g>"
+            f"<rect x='{vx:.0f}' y='{vy:.0f}' width='{w:.0f}' height='{h:.0f}' fill='{sea}'/>"
+            f"<g stroke='{look['loc_border']}' stroke-width='{w / look['loc_bw']:.1f}'>{''.join(paths)}</g>"
             f"<circle cx='{px:.0f}' cy='{py:.0f}' r='{r * 1.9:.0f}' fill='{color}' fill-opacity='.25'/>"
             f"<circle cx='{px:.0f}' cy='{py:.0f}' r='{r:.0f}' fill='{color}' stroke='#fff' stroke-width='{r / 3:.0f}'/></svg>")
 
@@ -1352,20 +1383,132 @@ def place_name(it):
 
 # ------------------------------------------------------------------ the world map
 MAP_VIEW = (-2600, -1250, 5250, 2050)  # Equal Earth, without Antarctica
+# the colours of the maps (geonews: map_colours). "current": the look of the issues so far; "stronger" (suggested by
+# the ISSMGE Board, November 2026): land a little darker and warmer against the background, clearer borders, fuller
+# red and gold story tints, within the ISSMGE palette (crimson #A6242E, gold #B9962E, ink #2A2024, paper #FBF6F6).
+# World map: background, land, borders and their width, tints of the highlights' and the other stories' countries;
+# country maps of the story cards: sea, land, borders, 1 / width of the borders, how strongly the country is tinted.
+MAP_COLOURS = {
+    "current": {"bg": "#f6f1ea", "land": "#e9e2dc", "border": "#fff", "bw": 3, "hl": "#f2c9c3", "ar": "#f3e2b0",
+                "sea": "#dfe8ec", "loc_land": "#e9e5df", "loc_border": "#fff", "loc_bw": 250, "loc_tint": ".55"},
+    "stronger": {"bg": "#fbf6f6", "land": "#dcd0c7", "border": "#fbf6f6", "bw": 4, "hl": "#e4a9a6", "ar": "#e8ce90",
+                 "sea": "#d5e2e9", "loc_land": "#ddd2c8", "loc_border": "#fff", "loc_bw": 200, "loc_tint": ".64"},
+}
+# the six ISSMGE regions on the world map (geonews: map_regions): the very light tint of each region's land ("shade";
+# one set for each map_colours, all of about one lightness, in hues apart from the red and gold story tints: Africa a
+# grey sage, not a yellow, so that a gold story country there stands out about as much as on plain land), and where
+# each name goes ("outline" and "shade"): longitude and latitude of the middle of the name, the first place where it
+# is clear of the story pins (moved a little up or down when needed)
+REGION_TINTS = {
+    "current": {"Africa": "#e0e3d7", "Asia": "#f0e3f2", "Australasia": "#d8ede8", "Europe": "#d8ecf4",
+                "North America": "#e4e7f8", "South America": "#e0ecdd"},
+    "stronger": {"Africa": "#dde0d4", "Asia": "#e8d7eb", "Australasia": "#c8e5df", "Europe": "#c9e3ee",
+                 "North America": "#d9dcf4", "South America": "#d3e4d0"},
+}
+REGION_LABELS = {"Africa": [(19, 4), (13, 20), (25, -17)], "Asia": [(90, 33), (101, 45), (80, 48)],
+                 "Australasia": [(133, -37), (134, -18), (165, -36)],
+                 "Europe": [(33, 63), (48, 57), (66, 63), (-24, 47)],
+                 "North America": [(-100, 50), (-112, 63), (-142, 33)],
+                 "South America": [(-60, -25), (-61, -12), (-98, -20)]}
+REGION_FONT = 70         # the region names: their size and letter spacing in map units
+REGION_SPACING = 18
+REGIONS_FILE = site_builder.ASSETS / "regions.json"   # the lines between the regions (tools/make_regions.py)
 
 
-def map_svg(issue, cls="wmap", label=True):
-    """The world: the issue's countries tinted, a numbered pin for each story (red: highlights, gold: around the world)."""
+def map_look(cfg):
+    """The colours of the maps and the regions of the world map, from geonews: map_colours and map_regions (a value
+    it does not know: the defaults, today's look)."""
+    opts = settings(cfg)
+    colours = str(opts["map_colours"]).strip().lower()
+    colours = colours if colours in MAP_COLOURS else "current"
+    regions = str(opts["map_regions"]).strip().lower()
+    return dict(MAP_COLOURS[colours], colours=colours,
+                regions=regions if regions in ("outline", "shade") else "none", tints=REGION_TINTS[colours])
+
+
+_REGION_LINES = {}
+
+
+def region_lines(cfg):
+    """The SVG path of the lines between the ISSMGE regions (assets/regions.json), or "" when the file is missing or
+    was made for other regions than config.yaml's (said once: run python tools/make_regions.py)."""
+    g = geomap()
+    table = g.region_table(cfg or {})
+    now = {k: table.get(k, "") for k, v in sorted(g.world()["countries"].items()) if v.get("d")}
+    key = json.dumps(now, sort_keys=True)
+    if key not in _REGION_LINES:
+        try:
+            data = json.loads(REGIONS_FILE.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            data = {}
+        if data.get("regions") == now:
+            _REGION_LINES[key] = str(data.get("borders") or "")
+        else:
+            _REGION_LINES[key] = ""
+            print(f"Geo-News: {REGIONS_FILE.name} is missing or was made for other regions than config.yaml's, so the "
+                  "map draws no lines between the regions; run python tools/make_regions.py")
+    return _REGION_LINES[key]
+
+
+def region_names(look, spots):
+    """The six region names in small capitals, each at the first of its places (REGION_LABELS) clear of the story pins
+    (spots: x, y and radius of each pin) and inside the map, else where it touches fewest pins; drawn under the pins,
+    with a halo of the background so that the lines and borders do not cross the letters."""
+    g = geomap()
+    x0, y0, x1, y1 = MAP_VIEW[0] + 20, MAP_VIEW[1] + 20, MAP_VIEW[0] + MAP_VIEW[2] - 20, MAP_VIEW[1] + MAP_VIEW[3] - 20
+    out = []
+    for name, places in REGION_LABELS.items():
+        text = name.upper()
+        half = (len(text) * REGION_FONT * .74 + (len(text) - 1) * REGION_SPACING) / 2   # about half the name's width
+        best = None
+        for dy in (0, -60, 60, -120, 120):   # each place as it is first, then moved a little
+            for lon, lat in places:
+                x, y = g.project(lon, lat)
+                y += dy
+                if x - half < x0 or x + half > x1 or y - REGION_FONT / 2 < y0 or y + REGION_FONT / 2 > y1:
+                    continue
+                clash = sum(1 for px, py, r in spots   # pins closer to the name's box than their radius and a margin
+                            if max(abs(px - x) - half, 0) ** 2 + max(abs(py - y) - REGION_FONT / 2, 0) ** 2 < (r + 30) ** 2)
+                if best is None or clash < best[0]:
+                    best = (clash, x, y)
+                if not clash:
+                    break
+            if best and not best[0]:
+                break
+        if best:
+            out.append(f"<text x='{best[1]:.0f}' y='{best[2] + REGION_FONT * .36:.0f}'>{esc(text)}</text>")
+    return (f"<g class='rgn' text-anchor='middle' font-size='{REGION_FONT}' letter-spacing='{REGION_SPACING}' "
+            f"font-weight='bold' font-family='{SANS}' fill='#6b6066' stroke='{look['bg']}' stroke-width='18' "
+            f"stroke-opacity='.85' stroke-linejoin='round' paint-order='stroke' pointer-events='none' aria-hidden='true'>"
+            + "".join(out) + "</g>")
+
+
+def map_svg(issue, cls="wmap", label=True, cfg=None):
+    """The world: the issue's countries tinted, a numbered pin for each story (red: highlights, gold: around the world).
+    Its colours and the ISSMGE regions follow geonews: map_colours and map_regions (map_look)."""
     g = geomap()
     w = g.world()
+    look = map_look(cfg)
     numbered = list(enumerate(issue["highlights"] + issue["around"], 1))
     tint = {}
     for i, it in numbered:
         c = g.canonical(it["s"].get("country"))
         if c and c not in tint:
-            tint[c] = "#f2c9c3" if i <= len(issue["highlights"]) else "#f3e2b0"
-    paths = [f"<path d='{v['d']}' fill='{tint.get(k, '#e9e2dc')}'/>" for k, v in w["countries"].items() if v.get("d")]
-    pins, seen = [], {}
+            tint[c] = look["hl"] if i <= len(issue["highlights"]) else look["ar"]
+    shade = {}
+    if look["regions"] == "shade":   # each region's land in its own light tint (the story countries keep theirs)
+        table = g.region_table(cfg or {})
+        shade = {k: look["tints"].get(table.get(k, ""), look["land"]) for k in w["countries"]}
+    paths = []
+    for k, v in w["countries"].items():
+        if not v.get("d"):
+            continue
+        if k in tint or not shade:
+            paths.append(f"<path d='{v['d']}' fill='{tint.get(k, look['land'])}'/>")
+        else:   # a country's parts overseas take the tint of the region they lie in (geomap.OVERSEAS)
+            paths += [f"<path d='{part}' fill='{look['tints'].get(r, look['land'])}'/>"
+                      for part, r in g.country_parts(k, v["d"], table.get(k, ""))]
+    pins, seen, spots = [], {}, []
     for i, it in numbered:
         pt = g.label_point(it["s"].get("country"))
         if not pt:
@@ -1377,16 +1520,47 @@ def map_svg(issue, cls="wmap", label=True):
         hl = i <= len(issue["highlights"])
         fill = "#a6242e" if hl else "#b9962e"
         r = 72 if hl else 60
+        spots.append((x, y, r))
         t = esc(it["title"] or title_of(it["s"]))   # the editor's headline, as on the story card
         pins.append(f"<a href='#s{i}' aria-label='Story {i}: {t}'><title>{i}. {t}</title>"
                     f"<circle cx='{x:.0f}' cy='{y:.0f}' r='{r}' fill='{fill}' stroke='#fff' stroke-width='12'/>"
                     + (f"<text x='{x:.0f}' y='{y + 26:.0f}' text-anchor='middle' font-size='{76 if hl else 64}' "
                        f"font-weight='bold' fill='#fff' font-family='{SANS}'>{i}</text>" if label else "")
                     + "</a>")
+    regions = ""   # the ISSMGE regions: above the countries, under the pins
+    if look["regions"] == "outline":
+        lines = region_lines(cfg)
+        if lines:   # a halo of the background, then the line
+            regions = (f"<g fill='none' stroke-linejoin='round' stroke-linecap='round' aria-hidden='true'>"
+                       f"<path d='{lines}' stroke='{look['bg']}' stroke-width='16' stroke-opacity='.8'/>"
+                       f"<path d='{lines}' stroke='#2a2024' stroke-width='8' stroke-opacity='.75'/></g>")
+    if look["regions"] != "none":
+        regions += region_names(look, spots)
     vb = " ".join(map(str, MAP_VIEW))
+    land = f"<g stroke='{look['border']}' stroke-width='{look['bw']}'>{''.join(paths)}</g>{regions}"
+    if look["colours"] != "current" or look["regions"] != "none":
+        # the new looks keep the land inside the map's frame: the LinkedIn picture gives the map a taller box, where
+        # the Arctic and Tierra del Fuego would show above and below it (the pins are not cut)
+        land = (f"<svg x='{MAP_VIEW[0]}' y='{MAP_VIEW[1]}' width='{MAP_VIEW[2]}' height='{MAP_VIEW[3]}' viewBox='{vb}'>"
+                f"{land}</svg>")
     return (f"<svg class='{cls}' viewBox='{vb}' role='img' aria-label='World map of this week’s stories'>"
-            f"<rect x='{MAP_VIEW[0]}' y='{MAP_VIEW[1]}' width='{MAP_VIEW[2]}' height='{MAP_VIEW[3]}' fill='#f6f1ea'/>"
-            f"<g stroke='#fff' stroke-width='3'>{''.join(paths)}</g>{''.join(pins)}</svg>")
+            f"<rect x='{MAP_VIEW[0]}' y='{MAP_VIEW[1]}' width='{MAP_VIEW[2]}' height='{MAP_VIEW[3]}' fill='{look['bg']}'/>"
+            f"{land}{''.join(pins)}</svg>")
+
+
+def map_key(cfg):
+    """The key under the world map: the pins and, when the map shows the ISSMGE regions, what their lines or tints
+    mean."""
+    look = map_look(cfg)
+    key = ("<div class='mapkey'><span><i class='k1'></i>Highlights</span><span><i class='k2'></i>Around the world</span>"
+           + ("<span><i class='kl'></i>Border between ISSMGE regions</span>"
+              if look["regions"] == "outline" and region_lines(cfg) else "")   # not when the lines are missing
+           + "<span>Tap a number to read the story</span></div>")
+    if look["regions"] == "shade":
+        key += ("<div class='mapkey rkey'><span>ISSMGE regions:</span>"
+                + "".join(f"<span><i style='background:{c}'></i>{esc(r)}</span>" for r, c in look["tints"].items())
+                + "</div>")
+    return key
 
 
 # ------------------------------------------------------------------ the page
@@ -1573,9 +1747,7 @@ def issue_html(issue, cfg, root, number=None, preview=False):
     out = [masthead(cfg, root, chips), "<div class='gn-main'>", f"<p class='intro'>{esc(issue['intro'])}</p>"
            + (f"<p class='editor-line'>Edited by {esc(opts['editor'])}</p>" if opts["editor"] else ""), tips()]
     if hl or ar:
-        out.append(f"<section class='mapcard'><h2>This week on the map</h2>{map_svg(issue)}"
-                   "<div class='mapkey'><span><i class='k1'></i>Highlights</span><span><i class='k2'></i>Around the world</span>"
-                   "<span>Tap a number to read the story</span></div></section>")
+        out.append(f"<section class='mapcard'><h2>This week on the map</h2>{map_svg(issue, cfg=cfg)}{map_key(cfg)}</section>")
     if hl:
         out.append("<h2>Highlights</h2>")
         lead = hl[0]
@@ -1583,8 +1755,8 @@ def issue_html(issue, cfg, root, number=None, preview=False):
         link = esc(story_link(s))
         c = theme_color(s.get("theme"))
         sat = lead.get("satellite") and lead.get("picture")   # no picture (not downloaded): the country map
-        media = satellite(lead, root, lazy=False) if sat else locator(lead, c, "loc full")
-        mini = (f"<div class='cv-loc'>{locator(lead, c)}<span>{esc(place_name(lead))}</span></div>" if sat
+        media = satellite(lead, root, lazy=False) if sat else locator(lead, c, "loc full", cfg=cfg)
+        mini = (f"<div class='cv-loc'>{locator(lead, c, cfg=cfg)}<span>{esc(place_name(lead))}</span></div>" if sat
                 else f"<span class='plc'>{icon('map-pin')} {esc(place_name(lead))}</span>")
         out.append(f"<article class='cover' id='s1' style='--c:{c}'><div class='cv-text'>"
                    f"<div class='cv-k'><b class='num w'>1</b> Story of the week</div>{update_html(lead, root, True)}{key_number(lead)}"
@@ -1598,8 +1770,8 @@ def issue_html(issue, cfg, root, number=None, preview=False):
             link = esc(story_link(s))
             c = theme_color(s.get("theme"))
             sat = it.get("satellite") and it.get("picture")
-            media = satellite(it, root) if sat else locator(it, c)
-            mini = f"<div class='mini'>{locator(it, c)}</div>" if sat else ""
+            media = satellite(it, root) if sat else locator(it, c, cfg=cfg)
+            mini = f"<div class='mini'>{locator(it, c, cfg=cfg)}</div>" if sat else ""
             out.append(f"<article class='card2' id='s{i}' style='--c:{c}'><a class='m2' href='{link}'>{media}{mini}"
                        f"<span class='plc'>{icon('map-pin')} {esc(place_name(it))}</span></a><div class='b2'>"
                        f"<div class='meta'><b class='num'>{i}</b> {where_text(s, root)} · {source_line(s)}</div>"
@@ -1614,7 +1786,7 @@ def issue_html(issue, cfg, root, number=None, preview=False):
             c = theme_color(s.get("theme"))
             kn = (f"<span class='kchip'><b>{esc(it['number'])}</b> {esc(it.get('number_label', ''))}</span>"
                   if it.get("number") else "")
-            rows.append(f"<li id='s{i}' style='--c:{c}'><a class='wl' href='{link}'>{locator(it, c, 'loc', 900, 1)}</a>"
+            rows.append(f"<li id='s{i}' style='--c:{c}'><a class='wl' href='{link}'>{locator(it, c, 'loc', 900, 1, cfg=cfg)}</a>"
                         f"<div><div class='meta'><b class='num g'>{i}</b> {where_text(s, root)}"
                         + (f" · {esc(s.get('place'))}" if s.get("place") else "") + "</div>"
                         + update_html(it, root) + f"<a class='hl' href='{link}'>{headline_html(it)}</a>"
@@ -1661,6 +1833,8 @@ def asset_version(name):
 
 def shell(cfg, title, body, root, description, extra_head="", noindex=False):
     site = site_builder.site_url(cfg)
+    note = disclaimer(cfg)   # the editor's disclaimer, above the credits of every Geo-News page
+    note = f"<p class='gn-disc'>{esc(note)}</p>\n" if note else ""
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -1674,7 +1848,7 @@ def shell(cfg, title, body, root, description, extra_head="", noindex=False):
 <link rel="stylesheet" href="{root}../assets/geonews.css?v={asset_version('geonews.css')}">{extra_head}
 </head><body><div class="gn-wrap">
 {body}
-<footer class="gn-foot">Stories come from public news sources in many languages; each headline links to the original publisher,
+<footer class="gn-foot">{note}Stories come from public news sources in many languages; each headline links to the original publisher,
 whose site may be in another language and may show adverts. Please check details with the original source.<br>
 Maps: Natural Earth. Satellite views: <a href="https://s2maps.eu">Sentinel-2 cloudless – s2maps.eu</a> by EOX IT Services GmbH
 (contains modified Copernicus Sentinel data 2020), <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>.<br>
@@ -1700,7 +1874,7 @@ def archive_html(issues, cfg, root):
     rows = []
     for issue in issues:
         first = issue["highlights"][0] if issue["highlights"] else None
-        pic = locator(first, theme_color(first["s"].get("theme")), "loc", 900, 110 / 76) if first else ""
+        pic = locator(first, theme_color(first["s"].get("theme")), "loc", 900, 110 / 76, cfg=cfg) if first else ""
         heads = "".join(f"<li>{headline_html(it)}</li>" for it in issue["highlights"][:3])
         rows.append(f"<li><a class='arc' href='{root}{issue['key']}.html'><span class='ath'>{pic}</span>"
                     f"<span class='abody'><b>Week {week_no(issue['key'])} · {esc(week_span(issue['key']))}</b>"
@@ -1852,7 +2026,7 @@ def linkedin_card(issue, cfg):
         for j, l in enumerate(ls):
             texts.append(f"<text x='92' y='{y + j * 30}' font-size='25' font-weight='600' fill='#2a2024' style='font-family:{SERIF}'>{esc(l)}</text>")
         y += 30 * len(ls) + 26
-    inner = map_svg(issue, "", label=True).replace("<svg class=''", "<svg x='470' y='150' width='710' height='400'", 1)
+    inner = map_svg(issue, "", label=True, cfg=cfg).replace("<svg class=''", "<svg x='470' y='150' width='710' height='400'", 1)
     return (f"<svg xmlns='http://www.w3.org/2000/svg' class='li-card' viewBox='0 0 1200 627' width='1200' height='627'>"
             f"<rect width='1200' height='627' fill='#fffdf8'/>"
             f"<rect width='1200' height='120' fill='#a6242e'/><rect y='120' width='1200' height='8' fill='#b9962e'/>"
@@ -2132,9 +2306,13 @@ def reviewers():
     return [a.strip() for a in raw.replace(";", ",").replace("\n", ",").split(",") if "@" in a]
 
 
-def gn_mail(title, sub, body, why):
+def gn_mail(title, sub, body, why, cfg=None):
     """A Geo-News e-mail in the magazine's colours, with no link to the News Desk. The fonts of the site are named
-    first (SERIF, SANS); e-mail programs that do not have them use Georgia and Arial."""
+    first (SERIF, SANS); e-mail programs that do not have them use Georgia and Arial. It ends with the editor's
+    disclaimer in small plain text (geonews: disclaimer)."""
+    note = disclaimer(cfg)
+    note = (f"<div style='padding:12px 24px 18px;background:#F2F0EC;color:#625C60;font:11px/1.5 {SANS}'>{esc(note)}</div>"
+            if note else "")
     return ("<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
             "<meta name='color-scheme' content='light'></head><body style='margin:0;padding:0;background:#F2F0EC'>"
             "<div style='max-width:640px;margin:0 auto;background:#ffffff'>"
@@ -2145,7 +2323,7 @@ def gn_mail(title, sub, body, why):
             f"<div style='font:13px {SANS};color:#625C60'>{sub}</div></div>"
             f"<div style='padding:6px 24px 22px;font:15px/1.6 {SANS};color:#2A2024'>{body}</div>"
             f"<div style='padding:14px 24px;background:#2A2024;color:#cbbfc3;font:12px/1.6 {SANS}'>{why}</div>"
-            "</div></body></html>")
+            f"{note}</div></body></html>")
 
 
 def mail_button(url, label, color="#A6242E"):
@@ -2223,7 +2401,7 @@ def email_draft(issue, cfg, reviewer=False):
         return (f"{name} – draft for your review · {span}",
                 gn_mail(esc(name), f"Draft for review · week {week_no(key)} · {esc(span)}", body,
                         "You receive this as a reviewer of Geo-News Weekly for the ISSMGE Magazine Presidential Committee (MPC). "
-                        "The draft is not public yet."))
+                        "The draft is not public yet.", cfg))
     prev = f"{site_builder.site_url(cfg)}geonews/preview/{key}.html"
     body = (f"<p>The draft of <b>{esc(name)}</b> for <b>{esc(span)}</b> is ready.</p>"
             + mail_button(prev, "Open the draft and the story editor")
@@ -2233,7 +2411,7 @@ def email_draft(issue, cfg, reviewer=False):
             + mail_stories(issue, full=False))
     return (f"{name} draft ready for approval · {span}",
             gn_mail(esc(name), f"Draft ready · week {week_no(key)} · {esc(span)}", body,
-                    "You receive this as the editor of Geo-News Weekly."))
+                    "You receive this as the editor of Geo-News Weekly.", cfg))
 
 
 def email_approved(issue, cfg, reviewer=False):
@@ -2246,7 +2424,8 @@ def email_approved(issue, cfg, reviewer=False):
     if reviewer:
         return (f"{name} · {span}",
                 gn_mail(esc(name), f"Week {week_no(key)} · {esc(span)}", body,
-                        "Published by the ISSMGE Magazine Presidential Committee (MPC). You receive this as a reviewer of Geo-News Weekly."))
+                        "Published by the ISSMGE Magazine Presidential Committee (MPC). You receive this as a reviewer of Geo-News Weekly.",
+                        cfg))
     prev = f"{site_builder.site_url(cfg)}geonews/preview/{key}.html"
     li = esc(linkedin_text(issue, cfg)).replace("\n", "<br>")
     body += (mail_heading("LinkedIn post", 30)
@@ -2256,7 +2435,7 @@ def email_approved(issue, cfg, reviewer=False):
              f"background:#F7ECEE'>{li}</div>")
     return (f"{name} published · LinkedIn post ready · {span}",
             gn_mail(esc(name), f"Published · week {week_no(key)} · {esc(span)}", body,
-                    "You receive this as the editor of Geo-News Weekly."))
+                    "You receive this as the editor of Geo-News Weekly.", cfg))
 
 
 def auto(cfg, today=None):

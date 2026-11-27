@@ -926,6 +926,19 @@ geonews:
   # published issues to, and its address; public_url empty = members use the geonews/ folder of the News Desk
   public_repo: "monabadr12/geo-news-weekly"
   public_url: "https://monabadr12.github.io/geo-news-weekly/"
+  # the maps (options for the ISSMGE Board's suggestions of November 2026, off until the editor chooses; they also
+  # change the LinkedIn picture): map_colours: current (the first look) or stronger (clearer land, borders and red/gold
+  # story colours on the world map and the story cards' country maps); map_regions: none, shade (each of the six ISSMGE
+  # regions' land in a light tint of its own, with the names and a legend) or outline (the lines between the regions,
+  # with their names). After moving a country to another region under map: (above), run python tools/make_regions.py.
+  map_colours: current
+  map_regions: none
+  # agreed with the editor: at the bottom of every issue page and Geo-News e-mail (not the LinkedIn post); "" or no for none
+  disclaimer: >-
+    Geo-News Weekly is a curated service for ISSMGE members that highlights developments of potential interest
+    to the geotechnical community. Content is derived from external sources, which are responsible for their own
+    publications. The inclusion of a news item, organisation, product, service, or opinion should not be
+    interpreted as an endorsement by ISSMGE.
 
 # ---- Alerts and weekly summary (e-mail) -----------------------------------
 # An e-mail when a 5/5 story appears and a Monday summary for the editorial team.
