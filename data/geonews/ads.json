@@ -1,10 +1,25 @@
 {
+ "amp.alerta.com.co": {
+  "checked": "2026-11-27",
+  "many": false,
+  "systems": [
+   "Google Ads"
+  ]
+ },
  "ansalatina.com": {
   "checked": "2026-11-27",
   "many": false,
   "systems": [
    "Google Ads",
    "MGID"
+  ]
+ },
+ "baoxaydung.vn": {
+  "checked": "2026-11-27",
+  "many": false,
+  "systems": [
+   "AdSense auto ads",
+   "Google Ads"
   ]
  },
  "bioengineer.org": {
@@ -224,6 +239,14 @@
   "checked": "2026-11-06",
   "many": false,
   "systems": [
+   "Google Ads"
+  ]
+ },
+ "via905.fm": {
+  "checked": "2026-11-27",
+  "many": false,
+  "systems": [
+   "AdSense auto ads",
    "Google Ads"
   ]
  }
