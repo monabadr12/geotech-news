@@ -10,11 +10,12 @@
 #  - Key number: the figure shown large (number) and what it counts (number_label); "" for none.
 #  - Place: lat and lon of the site; satellite: yes shows a satellite view of it, no a map of the country.
 #  - Remove a story: delete its lines (from the - to the line before the next -).
+#  - Case history: see the note above case_history: below.
 #  - PUBLISH: change  status: draft  to  status: approved  and commit. The page goes public within a few
 #    minutes and the LinkedIn post is e-mailed to the editorial team.
 
 status: draft
-intro: "Dear colleagues, here are the geotechnical stories from around the world that caught our eye last week. We gather them from news sources in different languages, and the ISSMGE Magazine Presidential Committee (MPC) checks every issue before it is published."
+intro: "Dear members, every week our profession is at work around the world, in foundations and tunnels, slopes and dams, coastlines and cities. Here is a selection of that work, gathered from news sources in many languages and brought to you by the ISSMGE Magazine Presidential Committee."
 
 highlights:   # the first one is the story of the week
   - story: 7369fe07bae5ddeb   # Second TBM launches on $16bn Hudson Tunnel Project (United States)
@@ -32,7 +33,7 @@ highlights:   # the first one is the story of the week
   - story: 058e9d7b41e6887d   # Ecuador: huge landslide at Alausí, rocks fall 500 metres and block river (Ecuador)
     title: ""   # empty keeps the headline above
     text: "How did a rock slope fail over 500 metres and dam a river, and what does the blockage imply for downstream flooding and remediation?"
-    number: "500 metri"   # the key number shown large; "" for none
+    number: "500 m"   # the key number shown large; "" for none
     number_label: "distance rocks fall, blocking river"
     language: "Italian"   # the news site's language
     lat: -2.2
@@ -42,9 +43,9 @@ highlights:   # the first one is the story of the week
     adverts: auto   # auto (checked each week), yes or no
     update: ""   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
   - story: 3a023df22d454d71   # About a year after the Eastern Aomori offshore earthquake, restoration of the damaged Hachinohe port logistics (Japan)
-    title: ""   # empty keeps the headline above
+    title: "Hachinohe port terminal about 20% restored nearly a year after the Aomori offshore earthquake; liquefaction works start in December"   # empty keeps the headline above
     text: "How can liquefaction-suppression techniques be made effective on reclaimed port ground, and what did the earthquake reveal about its behaviour?"
-    number: "2割程度"   # the key number shown large; "" for none
+    number: "about 20%"   # the key number shown large; "" for none
     number_label: "restoration progress at Hachinohe port terminal"
     language: "Japanese"   # the news site's language
     lat: 40.52
@@ -66,7 +67,7 @@ highlights:   # the first one is the story of the week
     adverts: auto   # auto (checked each week), yes or no
     update: ""   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
   - story: 6d1b22f494647504   # BGS Common Ground Consultation: Help Shape National Geotechnical Data Service. (United Kingdom)
-    title: ""   # empty keeps the headline above
+    title: "BGS Common Ground Consultation: Help Shape National Geotechnical Data Service"   # empty keeps the headline above
     text: "What a shared national geotechnical data service should store, and how data standards would affect reuse of site investigation records."
     number: ""   # the key number shown large; "" for none
     number_label: ""
@@ -118,8 +119,8 @@ around_the_world:
   - story: 15e57315644f9f9c   # Nemaska Lithium plant construction halted for long period; Sainte-Monique landslide repair awaited (Canada)
     title: ""   # empty keeps the headline above
     text: ""   # optional: one line
-    number: "7 jours en 7 minutes"   # the key number shown large; "" for none
-    number_label: "news summary of plant halt and landslide"
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
     language: "French"   # the news site's language
     lat: 48.55
     lon: -72.04
@@ -175,6 +176,13 @@ around_the_world:
     site: "elsoldemexico.com.mx"   # the news site, for the advert check
     adverts: auto   # auto (checked each week), yes or no
     update: ""   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
+
+# CASE HISTORY: a well-known case from data/geonews/case_histories.yaml, kept apart from the news. To use
+# another case, write its id after case: (the preview page suggests three) and empty the text (""): the
+# page then writes the text from the list. Change the text as you wish; delete these lines for no case history.
+case_history:
+  case: E1   # Vajont landslide and dam (Italy, 9 Oct 1963)
+  text: "On 9 October 1963 about 1,900 to 2,000 people, most of them in Longarone, died when a landslide fell into the Vajont reservoir and sent a wave over the dam. About 400 of them were never found. The slide was an ancient landslide on the north flank of Monte Toc, whose sliding surface followed thin clay layers in the limestone. Filling and drawdown of the new reservoir raised water pressures at its toe, and its creep sped up until about 270 million m³ of rock slid into the reservoir. The dam itself stood. Lesson for practice: Recognise old landslides on reservoir slopes, and assess how filling and drawdown change their stability before and during impounding; slope monitoring is useful only if people act on what it shows."
 
 research:
   - paper: "97ae15ce4a6cd8bb"   # Field performance and influencing factors of a long-narrow deep railway excavation in Guangzhou soft clay: a c

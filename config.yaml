@@ -917,7 +917,7 @@ geonews:
   hashtags: "#Geotechnics #GeotechnicalEngineering #ISSMGE #CivilEngineering"
   linkedin_page: ""    # the ISSMGE LinkedIn page's address, for a button on the preview page
   editor: "Dr. Mona Badr El-Din Anwar, Editor-in-Chief, ISSMGE Magazine"   # shown as "Edited by ..." after the welcome text; "" for none
-  initiative: "This newsletter is published within the framework of the new ISSMGE President's Initiatives."   # under the title; "" for none
+  initiative: "A new weekly service for ISSMGE members."   # under the title; "" for none
   # the three Google Forms in the editor's Drive (made by the setup script); the "Stay in touch" box shows once they are set
   subscribe_form: "https://docs.google.com/forms/d/e/1FAIpQLSfRNcMw6yhpi0n4223WJxcxr3OMKvUYfGMGfUczJoynoSogxg/viewform"
   unsubscribe_form: "https://docs.google.com/forms/d/e/1FAIpQLSdKgtiizaoS4Huj8_kWj80C1oQH8mPET6GFF9hTWUhzpooGag/viewform"

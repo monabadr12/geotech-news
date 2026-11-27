@@ -3,9 +3,10 @@
 Save step of the scan workflow.
 
 Carries this run's new data (the day's digest and any archived digest it updated,
-the seen-stories memory, the events calendar, the record of e-mails sent and any
-issue brief, unless the branch already holds a newer brief for that window) onto
-the newest version of the branch, then rebuilds the website from it. Generated
+the seen-stories memory, the events calendar, the record of e-mails sent, the Geo-News
+link cache and its record of links that could not be decoded, and any issue brief, unless
+the branch already holds a newer brief for that window) onto the newest version of the
+branch, then rebuilds the website from it. Generated
 files in docs/ are never merged line by line, they are rebuilt, so a scan cannot
 clash with a site update or another run that finished in the meantime (or with
 a re-run that started from an older commit).
@@ -25,6 +26,8 @@ SEEN_FILE = ROOT / "data" / "seen.json"
 EVENTS_FILE = ROOT / "data" / "events.json"   # events found by events.py: {"updated": iso, "events": [...], "failed": why the last refresh failed}
 NOTIFY_FILE = ROOT / "data" / "notify.json"   # e-mails sent by notify.py: {"alerted": {id: date}, "weekly": {week: iso}}
 GEONEWS_SENT = ROOT / "data" / "geonews" / "sent.json"   # e-mails sent by geonews.py: {"draft": {week: iso}, "approved": {week: iso}}
+GEONEWS_LINKS = ROOT / "data" / "geonews" / "gnews_links.json"   # Google News links decoded by geonews.py: {google link: publisher link}
+GEONEWS_FAILED = ROOT / "data" / "geonews" / "gnews_failed.json"   # links geonews.py could not decode: {google link: [days, last day]}
 
 
 def git(*args):
@@ -103,6 +106,20 @@ def merge_geonews(theirs, ours):
     return merged
 
 
+def merge_links(theirs, ours):
+    """Every Google News link either run decoded stays decoded (this run's address wins)."""
+    return dict(theirs or {}, **(ours or {}))
+
+
+def merge_failed(theirs, ours):
+    """The links that could not be decoded: for each, the record with more failed days (then the later day) wins."""
+    merged = dict(theirs or {})
+    for k, v in (ours or {}).items():
+        if not isinstance(merged.get(k), list) or list(v) > list(merged[k]):
+            merged[k] = v
+    return merged
+
+
 def merge_digest(theirs, ours):
     """Union of the day's stories (this run's version of a story wins); the
     caller re-balances it."""
@@ -127,7 +144,8 @@ def main():
     base = {name: committed(name) for name in ours}
     briefs = {name: (BRIEFS / name).read_text(encoding="utf-8") for name in changed("briefs") if (BRIEFS / name).exists()}
     extras = {path: (merge, changed_file(path)) for path, merge in ((EVENTS_FILE, merge_events), (NOTIFY_FILE, merge_notify),
-                                                                 (GEONEWS_SENT, merge_geonews))}
+                                                                 (GEONEWS_SENT, merge_geonews), (GEONEWS_LINKS, merge_links),
+                                                                 (GEONEWS_FAILED, merge_failed))}
 
     git("fetch", "--quiet", "origin", branch)
     git("reset", "--quiet", "--hard", f"origin/{branch}")
