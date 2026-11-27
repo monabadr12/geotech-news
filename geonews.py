@@ -6,7 +6,7 @@ issues, and the LinkedIn post that goes with each issue.
 How an issue is made
   1. After the Monday scan, a draft of the week before (Monday to Sunday) is written to
      data/geonews/<YYYY-Www>.yaml: the week's best stories (highlights), stories from the other
-     regions (around the world), new research papers, and the events coming up (added by themselves).
+     regions (around the world), a case history, new research papers, and the events coming up (added by themselves).
      The editorial team is e-mailed a link to the draft's preview.
   2. The MPC editor opens the preview (geonews/preview/<week>.html, not linked from anywhere and
      hidden from search engines). It shows the issue as members will see it, every other story of
@@ -22,13 +22,35 @@ How an issue is made
     python geonews.py --draft [--week 2026-W44] [--force]
                                              write a draft now (--force replaces an existing draft file)
 
-Pictures: no photos. Each story shows where it happened: a satellite view of the site (Sentinel-2 cloudless
-by EOX, free with credit) when the place is known exactly, otherwise a small map of the country (Natural Earth).
+News of the week only: a week's stories are those the scan saved Monday to Sunday (the news of the weekend before is saved
+on Monday or Tuesday, so it belongs to this issue). A draft takes no story published more than a few days before the
+issue week (SCAN_LAG_DAYS; the scan sometimes finds older items) and nothing from encyclopedias and similar reference
+sites (REFERENCE_SITES); the preview lists them apart, under "Older or reference items (not used as news)".
+Links: the scan keeps many links as Google News redirects (news.google.com/rss/articles/...). The publisher's own
+address is found with googlenewsdecoder for the stories of an issue (when the draft is written and when the pages are
+built) and for the other stories shown on a draft's preview (when the pages are built), each link once
+(data/geonews/gnews_links.json, {google link: publisher link}), gently (a pause between calls, at most GNEWS_MAX links
+and GNEWS_SECONDS seconds each time the program runs). A link that cannot be decoded keeps going through Google News
+(the preview says so); it is tried again on another day, on GNEWS_TRIES days at most (data/geonews/gnews_failed.json).
+Case history: one well-known case per issue, after "Around the world", from the checked list in
+data/geonews/case_histories.yaml (choose_case: an anniversary in the issue week or the week after it, else the next
+case not used before, regions in turn; never a case used before). The draft holds its id and a text written from the
+list (case_text), which the editor may change or swap for another case.
+Pictures: no photos. Each story shows where it happened: a satellite view of the site (Sentinel-2 cloudless 2020
+by EOX, CC BY-NC-SA 4.0, credited in the footer; data/geonews/img/LICENSE.txt) when the place is known exactly,
+otherwise a small map of the country (Natural Earth).
+The satellite views are made when the pages are built: the map tiles around the place are downloaded once, put
+together and cut to one picture per story (data/geonews/img/<week>/), which is published with the pages; a story whose
+picture cannot be downloaded shows its country map. Readers' browsers ask no other server for anything.
 Claude adds to each story of the draft the key number of its headline, where it happened (latitude and
 longitude) and the language and web site of the outlet; the editor can change all of them.
 Adverts: each week the home page of every outlet in the issues is read once (the result is kept for 30 days
 in data/geonews/ads.json) and the advertising systems on it are counted; an outlet with many is marked
 "This site may show many adverts". The editor can set adverts: yes or no for any story.
+Fonts, icons and flags are kept with the site, so a page asks no other server for them (no Google Fonts, no
+flagcdn.com): the fonts of issmge.org (Newsreader for headings, Libre Franklin for text) in assets/fonts/, Lucide
+line icons in assets/icons/ (put into the page as SVG) and the flag-icons flags in assets/flags/, each with its
+licence. The e-mails use no web fonts and no icons (Gmail and Outlook show neither).
 
 data/geonews/sent.json records the e-mails sent: {"draft": {week: time}, "approved": {week: time}}.
 """
@@ -39,6 +61,7 @@ import math
 import re
 import shutil
 import sys
+import time
 from pathlib import Path
 
 import yaml
@@ -51,6 +74,23 @@ SENT_FILE = DATA / "sent.json"
 OUT = site_builder.DOCS / "geonews"
 ADS_FILE = DATA / "ads.json"
 EDITS = DATA / "edits"   # saves from the story editor on the preview page: <week>--<time>.json, the newest wins
+CASES_FILE = DATA / "case_histories.yaml"   # the case histories of the Case history section (a checked list)
+GNEWS_FILE = DATA / "gnews_links.json"      # Google News links turned into the publisher's own: {google link: publisher link}
+GNEWS_FAILED = DATA / "gnews_failed.json"   # Google News links that could not be decoded: {google link: [days, last day]}
+IMG = DATA / "img"                          # the satellite pictures of the stories: img/<week>/<story>-<place>.jpg
+GNEWS_PAUSE = 1      # seconds to wait after each link decoded through Google News
+GNEWS_MAX = 80       # at most this many links decoded each time the program runs; the rest the next times
+GNEWS_SECONDS = 120  # and for at most this many seconds (each link takes about 3 seconds)
+GNEWS_TRIES = 3      # a link that could not be decoded on this many different days is not tried again
+SAT_TILES = "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/g/{z}/{y}/{x}.jpg"
+SAT_PX = 640         # a satellite picture: 640 x 640 pixels, the place in the middle, one map pixel per screen pixel
+SCAN_LAG_DAYS = 3    # the scan saves a story up to this many days after it was published: older items are not news
+# encyclopedias and similar reference sites: their entries turn up in news searches, but they are background, not news
+REFERENCE_SITES = ("britannica.com", "wikipedia.org", "wikiwand.com", "wikimedia.org", "encyclopedia.com",
+                   "newworldencyclopedia.org", "worldhistory.org", "scholarpedia.org", "encyclopedia.pub", "treccani.it",
+                   "larousse.fr", "universalis.fr", "kotobank.jp", "baike.baidu.com", "baike.com", "namu.wiki", "snl.no")
+REFERENCE_NAMES = re.compile(r"britannica|wikipedia|wikiwand|enc[iy]clop|treccani|larousse|kotobank|baike|namu ?wiki|"
+                             r"scholarpedia|world history", re.I)   # the same, by the outlet's name
 MPC_URL = "https://www.issmge.org/committees/presidential-committees/magazine-presidential-committee"
 ADS_DAYS = 30        # how long the advert count of a site is kept
 ADS_MANY = 3         # this many different advertising systems on a home page = "many adverts"
@@ -72,11 +112,19 @@ KEY = re.compile(r"^\d{4}-W\d{2}$")
 DEFAULTS = {"name": "Geo-News Weekly", "highlights": 5, "around": 8, "research": 3, "events_days": 60,
             "events_max": 6, "hashtags": "#Geotechnics #GeotechnicalEngineering #ISSMGE #CivilEngineering",
             "linkedin_page": "", "editor": "",
-            "initiative": "This newsletter is published within the framework of the new ISSMGE President's Initiatives.",
+            "initiative": "A new weekly service for ISSMGE members.",
             "subscribe_form": "", "unsubscribe_form": "", "suggest_form": "", "public_url": ""}
-INTRO = ("Dear colleagues, here are the geotechnical stories from around the world that caught our eye last week. "
-         "We gather them from news sources in different languages, and the ISSMGE Magazine Presidential Committee (MPC) "
-         "checks every issue before it is published.")
+INTRO = ("Dear members, every week our profession is at work around the world, in foundations and tunnels, slopes and dams, "
+         "coastlines and cities. Here is a selection of that work, gathered from news sources in many languages and brought "
+         "to you by the ISSMGE Magazine Presidential Committee.")
+ICONS = site_builder.ASSETS / "icons"   # Lucide line icons (npm lucide-static 1.82.0, ISC licence in assets/icons/LICENSE)
+FLAGS = site_builder.ASSETS / "flags"   # flags, 4 x 3 (npm flag-icons 7.6.0, MIT licence in assets/flags/LICENSE)
+# the fonts named in the e-mails and the pictures (map, LinkedIn card): e-mail programs load no web fonts, so each
+# name is followed by one every computer has
+SERIF = "Newsreader,Georgia,serif"
+SANS = '"Libre Franklin",Arial,sans-serif'
+
+
 def notify():
     import notify as n  # the e-mail channel, dates and event helpers of the weekly summary
     return n
@@ -100,8 +148,33 @@ def theme_color(theme):
 
 
 def flag(code):
+    """The flag emoji of a country, for the LinkedIn post only (plain text); the pages use flag_img."""
     code = str(code or "").upper()
     return "".join(chr(0x1F1E6 + ord(c) - 65) for c in code) if re.match(r"^[A-Z]{2}$", code) else "🌍"
+
+
+_ICONS = {}
+
+
+def icon(name):
+    """A Lucide line icon (assets/icons/<name>.svg) put into the page as SVG: the height of the text, in ISSMGE red
+    (the colour of .icon in geonews.css), hidden from screen readers (the words beside it say what it means)."""
+    if name not in _ICONS:
+        try:
+            svg = (ICONS / f"{name}.svg").read_text(encoding="utf-8")
+        except OSError:
+            svg = ""
+        inner = re.search(r"<svg[^>]*>(.*)</svg>", svg, re.S)
+        _ICONS[name] = ("<svg class='icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' "
+                        "stroke-linecap='round' stroke-linejoin='round' aria-hidden='true' focusable='false'>"
+                        + " ".join(inner.group(1).split()).replace('"', "'") + "</svg>") if inner else ""
+    return _ICONS[name]
+
+
+def story_date(s):
+    """The day the story was published, as the scan stored it ('12 Nov 2026'; "" when unknown: never the day the scan
+    saved it, which is not a publication date)."""
+    return site_builder.nice_date(str(s.get("published") or "")[:10])
 
 
 def title_of(s):
@@ -229,6 +302,153 @@ def domain_of(url):
     return "" if host.endswith("news.google.com") else re.sub(r"^www\.", "", host)
 
 
+# ------------------------------------------------------------------ links: the publisher's own address
+_LINKS = None     # data/geonews/gnews_links.json, once read
+_FAILED = None    # data/geonews/gnews_failed.json, once read
+_TRIED = set()    # Google News links tried in this run (not tried again in it)
+_DECODED = 0      # links decoded through Google News in this run
+_SPENT = 0.0      # seconds spent decoding links in this run
+_GOOGLE = None    # whether Google News can be reached (and the decoder is installed), checked once in a run
+
+
+def google_link(url):
+    return "news.google.com/" in str(url or "")
+
+
+def load_links():
+    global _LINKS
+    if _LINKS is None:
+        try:
+            d = json.loads(GNEWS_FILE.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            d = {}
+        _LINKS = {k: v for k, v in d.items() if str(v).startswith("http")} if isinstance(d, dict) else {}
+    return _LINKS
+
+
+def load_failed():
+    """{google link: [days it could not be decoded, the last of them]} (data/geonews/gnews_failed.json), once read."""
+    global _FAILED
+    if _FAILED is None:
+        try:
+            d = json.loads(GNEWS_FAILED.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            d = {}
+        _FAILED = {k: [int(v[0]), str(v[1])] for k, v in d.items()
+                   if isinstance(v, list) and len(v) == 2 and str(v[0]).isdigit()} if isinstance(d, dict) else {}
+    return _FAILED
+
+
+def story_link(s):
+    """The link of a story: the publisher's own address when its Google News link has been decoded, else as the scan
+    stored it."""
+    url = str(s.get("link") or "")
+    return load_links().get(url, url) if google_link(url) else url
+
+
+def google_reachable():
+    """False when Google News cannot be reached at all (no internet, or a network that blocks it): no link is tried."""
+    import requests
+    try:
+        return requests.get("https://news.google.com/", timeout=15).status_code < 400
+    except Exception:
+        return False
+
+
+def decode_links(urls):
+    """Find the publisher's own address of Google News links with googlenewsdecoder, each link once (kept in
+    data/geonews/gnews_links.json), in the order given, with a pause after each, and at most GNEWS_MAX links and
+    GNEWS_SECONDS seconds each time the program runs. A link that cannot be decoded keeps its Google News address (noted
+    in the log); it is tried again on another day, at most on GNEWS_TRIES days (data/geonews/gnews_failed.json). Never
+    fails. The number of links decoded."""
+    global _DECODED, _SPENT, _GOOGLE
+    links, failed = load_links(), load_failed()
+    today = dt.date.today().isoformat()
+
+    def worth_trying(u):   # not failed today, nor on GNEWS_TRIES days already
+        days, last = failed.get(u) or [0, ""]
+        return days < GNEWS_TRIES and last != today
+    todo = [u for u in dict.fromkeys(str(u or "") for u in urls)
+            if google_link(u) and u not in links and u not in _TRIED and worth_trying(u)]
+    todo = todo[:max(0, GNEWS_MAX - _DECODED)]
+    if not todo or _GOOGLE is False or _SPENT >= GNEWS_SECONDS:
+        return 0
+    try:
+        from googlenewsdecoder import gnewsdecoder
+    except ImportError:
+        print("Geo-News: googlenewsdecoder is not installed; story links stay as Google News links")
+        _GOOGLE = False
+        return 0
+    if _GOOGLE is None:
+        _GOOGLE = google_reachable()
+        if not _GOOGLE:
+            print("Geo-News: Google News cannot be reached; the story links stay as Google News links for now")
+            return 0
+    start = time.monotonic()
+    done, misses, missed = 0, 0, []
+    for url in todo:
+        if _SPENT + time.monotonic() - start >= GNEWS_SECONDS:
+            print(f"Geo-News: {GNEWS_SECONDS} seconds spent on links; the others are tried in the next run")
+            break
+        _DECODED += 1
+        _TRIED.add(url)
+        try:
+            r = gnewsdecoder(url, interval=GNEWS_PAUSE)
+        except Exception as ex:  # the decoder itself failed: the link stays
+            r = {"message": f"{type(ex).__name__}: {ex}"}
+        new = str(r.get("decoded_url") or "") if isinstance(r, dict) and (r.get("success") or r.get("status")) else ""
+        if new.startswith("http") and not google_link(new):
+            links[url] = new
+            done, misses = done + 1, 0
+            continue
+        missed.append(url)
+        misses += 1
+        why = str(r.get("message", "") if isinstance(r, dict) else r)[:100]
+        print(f"Geo-News: link not decoded, it stays a Google News link ({why}): {url[:90]}")
+        if misses >= 10:  # ten in a row: Google is refusing for now, which is not the links' fault
+            print("Geo-News: Google News refused ten links in a row; the others are tried in the next run")
+            _GOOGLE = False
+            del missed[-misses:]
+            break
+    _SPENT += time.monotonic() - start
+    if done or missed:
+        DATA.mkdir(parents=True, exist_ok=True)
+    if done:
+        GNEWS_FILE.write_text(json.dumps(links, indent=1, sort_keys=True, ensure_ascii=False), encoding="utf-8")
+        print(f"Geo-News: {done} Google News link(s) turned into the publisher's own")
+    if missed:
+        for url in missed:
+            failed[url] = [(failed.get(url) or [0, ""])[0] + 1, today]
+        GNEWS_FAILED.write_text(json.dumps(failed, indent=1, sort_keys=True, ensure_ascii=False), encoding="utf-8")
+    return done
+
+
+def reference_item(s):
+    """True for an entry of an encyclopedia or a similar reference site (by its link or its outlet's name):
+    background, not news."""
+    host = domain_of(story_link(s))
+    return (any(host == d or host.endswith("." + d) for d in REFERENCE_SITES)
+            or bool(REFERENCE_NAMES.search(str(s.get("source") or ""))))
+
+
+def not_news(s, key):
+    """Why an item of the week is not used as news ("" when it is news): an encyclopedia entry, or published more than
+    SCAN_LAG_DAYS days before Monday of the issue week, or after its Sunday. (A week's items are those the scan saved
+    Monday to Sunday; the news of the weekend before is saved on Monday or Tuesday and belongs to this issue.)"""
+    if reference_item(s):
+        return f"Reference site ({s.get('source') or domain_of(story_link(s)) or 'encyclopedia'}), not news"
+    monday, sunday = notify().week_range(key)
+    try:
+        day = dt.date.fromisoformat(notify().story_day(s)[:10])
+    except ValueError:  # no date: the day it was saved, in the week
+        return ""
+    if day < monday - dt.timedelta(days=SCAN_LAG_DAYS):
+        return f"Published {site_builder.nice_date(day.isoformat())}, before the issue week"
+    if day > sunday:
+        return f"Published {site_builder.nice_date(day.isoformat())}, after the issue week"
+    return ""
+
+
 REPEAT_WEEKS = 6   # a draft leaves out the stories of the issues published in this many weeks before it
 
 
@@ -337,7 +557,7 @@ def enrich(items, cfg):
         return {}
     listing = "\n".join(
         f'{i}. headline: {s.get("title")} | English: {title_of(s)} | outlet: {s.get("source")} | country: {s.get("country")} '
-        f'| place: {s.get("place")} | link: {s.get("link") if "news.google" not in str(s.get("link")) else "(via Google News)"}'
+        f'| place: {s.get("place")} | link: {story_link(s) if not google_link(story_link(s)) else "(via Google News)"}'
         for i, s in enumerate(items))
     schema = {"type": "object", "properties": {"stories": {"type": "array", "items": {
         "type": "object", "properties": {
@@ -347,7 +567,7 @@ def enrich(items, cfg):
         "required": ["id", "number", "number_label", "language", "lat", "lon", "satellite", "site"],
         "additionalProperties": False}}}, "required": ["stories"], "additionalProperties": False}
     prompt = f"""For each news story below, return:
-- "number": the most striking figure stated in the headline itself (e.g. "96%", "4.5 km", "US$16.5 bn", "3"), copied from the headline; "" when the headline states no figure. Never compute, estimate or take a figure from elsewhere.
+- "number": the most striking figure stated in the headline itself (e.g. "96%", "4.5 km", "US$16.5 bn", "3"), copied from the headline and written in English with digits and SI units (e.g. "500 metri" becomes "500 m", "2割程度" becomes "about 20%"); "" when the headline states no figure or the figure is part of a name (a programme, a law, a street). Never compute, estimate or take a figure from elsewhere.
 - "number_label": at most 8 words saying what the figure counts (e.g. "of strongly shaken sites liquefied again"); "" when number is "".
 - "language": the language the outlet publishes this story in, as an English name (e.g. "English", "Japanese", "Spanish"), judged from the original headline.
 - "lat", "lon": the latitude and longitude of the place the story is about, as exactly as the headline and place allow (the site, else the town, else the region, else the country's centre).
@@ -411,6 +631,215 @@ def check_ads(sites, today=None):
     return changed
 
 
+# ------------------------------------------------------------------ case histories
+_CASES = None
+_CASES_SKIPPED = []   # entries of the case list left out (no id or name, or an id used twice), for the preview
+CASE_TEXTS = ("name", "country", "region", "date", "anniversary", "outcome", "lives_lost", "what_happened", "lesson",
+              "framing_note", "theme", "overview", "overview_title")   # the fields of a case, each read as plain text
+CASE_DAYS = 14        # a case whose anniversary falls in the issue week or the week after it goes first
+CASE_KEEP_DAYS = 42   # otherwise a case whose anniversary comes within this many days after that is kept for it
+DIED = re.compile(r"\b(died|dead|deaths?|killed|lives|victims?|missing|never found)\b", re.I)
+ADVICE = re.compile(r"\b(avoid|do not|don't|mention|acknowledge|the item|consider|make clear|lead with|start with|"
+                    r"frame it|name the|say clearly|use a sourced)\b", re.I)   # the framing notes' advice to the writer
+LESSON = "Lesson for practice:"
+
+
+def load_cases():
+    """The case list (data/geonews/case_histories.yaml) as {id: case}, in its order, every field as plain text; {} when
+    it is missing. The list is edited by hand, so a mistake in it never stops the pages: an entry without an id or a
+    name (or with an id used before) is left out and named in _CASES_SKIPPED, which the draft's preview shows."""
+    global _CASES
+    if _CASES is None:
+        try:
+            raw = yaml.safe_load(CASES_FILE.read_text(encoding="utf-8")) or {}
+        except (OSError, yaml.YAMLError) as ex:
+            print(f"Geo-News: the case list cannot be read ({type(ex).__name__}); no case history")
+            raw = {}
+        if not isinstance(raw, dict):
+            print("Geo-News: the case list does not start with the line cases: ; no case history")
+            raw = {}
+        entries = raw.get("cases") if isinstance(raw.get("cases"), list) else []
+        _CASES = {}
+        _CASES_SKIPPED.clear()
+        for i, c in enumerate(entries, 1):
+            c = c if isinstance(c, dict) else {}
+            cid = " ".join(str(c.get("id") or "").split())
+            why = ("no id" if not cid else "no name" if not str(c.get("name") or "").strip()
+                   else f"the id {cid} is used twice" if cid in _CASES else "")
+            if why:
+                _CASES_SKIPPED.append(f"entry {i}" + (f" ({cid})" if cid and "twice" not in why else "") + f": {why}")
+                continue
+            case = dict(c, id=cid, **{k: " ".join(str(c.get(k) or "").split()) for k in CASE_TEXTS})
+            case["sources"] = [{"title": " ".join(str(s.get("title") or "").split()), "url": str(s.get("url") or "").strip()}
+                               for s in (c.get("sources") if isinstance(c.get("sources"), list) else []) if isinstance(s, dict)]
+            _CASES[cid] = case
+        if _CASES_SKIPPED:
+            print(f"Geo-News: left out of the case list: {'; '.join(_CASES_SKIPPED)}")
+    return _CASES
+
+
+def case_when(c):
+    """The date of a case, short, for its heading: '9 Oct 1963', 'Construction 1975 to 1991', '1993–1998'."""
+    d = " ".join(str(c.get("date") or "").split())
+    short = re.split(r" \(|;|\. ", d, maxsplit=1)[0].strip().rstrip(".")
+    if len(short) > 32:
+        years = re.findall(r"\b(?:1[89]|20)\d\ds?\b", re.split(r"\. ", d, maxsplit=1)[0])
+        short = f"{years[0]}–{years[-1]}" if len(years) > 1 and years[0] != years[-1] else (years[0] if years else short)
+    return short[:1].upper() + short[1:]
+
+
+def anniversary_day(c, monday, days):
+    """The day of the case's anniversary (day and month, DD-MM) within the days from monday on; None when not."""
+    m = re.match(r"^(\d{2})-(\d{2})$", str(c.get("anniversary") or ""))
+    if not m:
+        return None
+    for i in range(days):
+        d = monday + dt.timedelta(days=i)
+        if (d.day, d.month) == (int(m.group(1)), int(m.group(2))):
+            return d
+    return None
+
+
+def cases_used(key, others=False):
+    """{case id: week} of the case histories of the issues before key (drafts too, with the story editor's saves);
+    others=True: of every issue but key, later ones too (a draft written while an earlier issue is still open)."""
+    out = {}
+    for path in sorted(issue_files()):
+        if path.stem == key or (path.stem > key and not others):
+            continue
+        try:
+            raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        except (OSError, yaml.YAMLError):
+            continue
+        edit, _ = latest_edit(path.stem)
+        if edit and isinstance(raw, dict):
+            raw = apply_edit(raw, edit)
+        ch = raw.get("case_history") if isinstance(raw, dict) else None
+        if isinstance(ch, dict) and ch.get("case"):
+            out[str(ch["case"]).strip()] = path.stem
+    return out
+
+
+def choose_case(key, used=None, cases=None):
+    """The case history for the draft of a week: a case whose anniversary falls in the issue week or the week after it
+    (the nearest first); otherwise the next case of the list, from the region used least so far (after the region of
+    the last case used), keeping a case whose anniversary is coming soon for its week. Never a case used before
+    (used: {id: week}). None when every case has been used."""
+    cases = load_cases() if cases is None else cases
+    used = cases_used(key) if used is None else used
+    free = [c for cid, c in cases.items() if cid not in used]
+    if not free:
+        return None
+    monday = notify().week_range(key)[0]
+    dated = [(anniversary_day(c, monday, CASE_DAYS), i, c) for i, c in enumerate(free)]
+    dated = [x for x in dated if x[0]]
+    if dated:
+        return min(dated, key=lambda x: (x[0], x[1]))[2]
+    later = monday + dt.timedelta(days=CASE_DAYS)
+    soon = [c for c in free if not anniversary_day(c, later, CASE_KEEP_DAYS)] or free
+    regions = list(dict.fromkeys(str(c.get("region") or "") for c in cases.values()))
+    count = {r: 0 for r in regions}
+    for cid in used:
+        if cid in cases:
+            count[str(cases[cid].get("region") or "")] += 1
+    last = cases.get(max(used, key=lambda cid: used[cid])) if used else None
+    start = regions.index(str(last.get("region") or "")) + 1 if last and str(last.get("region") or "") in regions else 0
+    order = regions[start:] + regions[:start]
+    region = min((r for r in order if any(str(c.get("region") or "") == r for c in soon)),
+                 key=lambda r: (count[r], order.index(r)))
+    return next(c for c in soon if str(c.get("region") or "") == region)
+
+
+def suggest_cases(key, current, n=3):
+    """n other cases the editor might use instead, chosen by the same rules as the draft's; never a case another issue
+    has, earlier or later."""
+    used = dict(cases_used(key, others=True))
+    if current:
+        used[current] = key
+    out = []
+    for _ in range(n):
+        c = choose_case(key, used)
+        if not c:
+            break
+        out.append(c)
+        used[str(c["id"])] = key
+    return out
+
+
+def people_died(c):
+    """True when the case cost lives (its lives_lost starts with a number above 0)."""
+    t = str(c.get("lives_lost") or "").strip().lower()
+    m = re.search(r"\d[\d,]*", t)
+    return not t.startswith(("none", "no ")) and bool(m) and m.start() < 25 and int(m.group().replace(",", "")) > 0
+
+
+def victims_text(c):
+    """The opening of a case where people died, from its framing note: the sentence the note suggests (in quotes) and
+    its other facts, without its advice to the writer ("Start with the victims", "Avoid ..."); "" when none."""
+    note = " ".join(str(c.get("framing_note") or "").split())
+    m = re.search(r"""(?:^|:\s*)(["'])(.+?[.!?…])\1(?=\s|$)""", note)
+    if m and re.search(r"(?:^|[.!?]\s)If [^.!?]*$", note[:m.start()]) and not people_died(c):
+        return ""  # a sentence for an item that speaks of something this text leaves out
+    out, rest = ([m.group(2)], note[m.end():]) if m else ([], note)
+    for s in re.split(r"(?<=[.!?])\s+(?=[A-Z])", rest.strip()):
+        s = s.strip()
+        a = re.match(r"(?:Acknowledge (?:briefly )?that|Make clear that|Note that) (.+?)(?:,? before turning to .*)?\.$", s)
+        b = re.match(r"(.+?),? so (?:do not|don't|avoid) .*$", s)
+        if a and (s.startswith("Note") or DIED.search(a.group(1))):  # "Acknowledge that context ..." is advice
+            s = a.group(1)[:1].upper() + a.group(1)[1:] + "."
+        elif b and not ADVICE.search(b.group(1)):
+            s = b.group(1) + "."
+        elif ADVICE.search(s) or s.startswith("If ") or len(s.split()) < 5:
+            continue
+        out.append(s)
+    text = " ".join(re.sub(r"\s*(?:\.\.\.|…)$", ".", s) for s in out)
+    return text if text and (people_died(c) or DIED.search(text)) else ""
+
+
+def case_text(c):
+    """The text of a case history, written from the case list: where people died the victims first (from the framing
+    note), then what happened, then "Lesson for practice: ..."; about 120 to 150 words."""
+    first = victims_text(c)
+    lesson = " ".join(str(c.get("lesson") or "").split())
+    if len((first + " " + str(c.get("what_happened")) + " " + lesson).split()) > 155 and "; " in lesson:
+        lesson = lesson.split("; ")[0] + "."   # a long case: the lesson's first part only
+    parts = [first, " ".join(str(c.get("what_happened") or "").split()).rstrip(".") + ".", f"{LESSON} {lesson}"]
+    text = " ".join(p for p in parts if p.strip(" ."))
+    return re.sub(r"\b(k?m)([23])\b", lambda m: m.group(1) + ("²" if m.group(2) == "2" else "³"), text)   # m3, km2
+
+
+_NAMES = {}
+
+
+def case_flags(c, root=""):
+    """The flags of a case's country or countries ("United Kingdom and France"); the globe icon when none is known."""
+    if not _NAMES:   # the English name of every country with a flag
+        for f in FLAGS.glob("*.svg"):
+            name = notify().country_name(f.stem.upper())
+            if name and name.upper() != f.stem.upper():
+                _NAMES[name.lower()] = f.stem.upper()
+        _NAMES.update({v.lower(): k for k, v in site_builder.COUNTRIES.items()})
+    names = _NAMES
+    out = []
+    for part in re.split(r"\s+and\s+|,|\(", str(c.get("country") or "")):
+        code = names.get(part.strip(" )").lower())
+        if code and code not in out:
+            out.append(code)
+    return " ".join(flag_img(code, root) for code in out) or icon("earth")
+
+
+def case_anniversary(issue):
+    """'60th anniversary · 21 October' when the case's anniversary falls in the issue week or the week after it."""
+    c = (issue.get("case") or {}).get("c") or {}
+    day = anniversary_day(c, notify().week_range(issue["key"])[0], CASE_DAYS)
+    years = re.search(r"\b(1[89]\d\d|20\d\d)\b", str(c.get("date") or ""))
+    if not day or not years:
+        return ""
+    n = day.year - int(years.group(1))
+    th = "th" if 10 <= n % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+    return f"{n}{th} anniversary · {day.day} {day:%B}" if n > 0 else ""
+
+
 # ------------------------------------------------------------------ the issue file
 def q(text):
     """A YAML text in double quotes (JSON's quoting is valid YAML)."""
@@ -435,13 +864,26 @@ def item_lines(s, info, kind):
               f"    lat: {'' if lat is None else round(float(lat), 4)}",
               f"    lon: {'' if lon is None else round(float(lon), 4)}",
               f"    satellite: {'yes' if info.get('satellite') else 'no'}   # yes: satellite view of the place; no: map of the country",
-              f"    site: {q(info.get('site') or domain_of(s.get('link')))}   # the news site, for the advert check",
+              f"    site: {q(domain_of(story_link(s)) or info.get('site'))}   # the news site, for the advert check",
               "    adverts: auto   # auto (checked each week), yes or no",
               f"    update: {q(s.get('_update', ''))}   # the week of the earlier story this one updates (e.g. 2026-W44); \"\" for a new story"]
     return lines
 
 
-def draft_text(key, highlights, around, research, cfg, info=None):
+def case_lines(c):
+    """The case history of an issue file: the case's id and its text, which the editor may change."""
+    if not c:
+        return []
+    return ["# CASE HISTORY: a well-known case from data/geonews/case_histories.yaml, kept apart from the news. To use",
+            "# another case, write its id after case: (the preview page suggests three) and empty the text (\"\"): the",
+            "# page then writes the text from the list. Change the text as you wish; delete these lines for no case history.",
+            "case_history:",
+            f"  case: {c['id']}   # {note(c.get('name'))} ({note(c.get('country'))}, {note(case_when(c))})",
+            f"  text: {q(case_text(c))}",
+            ""]
+
+
+def draft_text(key, highlights, around, research, cfg, info=None, case=None):
     info = info or {}
     site = site_builder.site_url(cfg)
     lines = [f"# {settings(cfg)['name']} · {week_span(key)} ({key})",
@@ -456,6 +898,7 @@ def draft_text(key, highlights, around, research, cfg, info=None):
              "#  - Key number: the figure shown large (number) and what it counts (number_label); \"\" for none.",
              "#  - Place: lat and lon of the site; satellite: yes shows a satellite view of it, no a map of the country.",
              "#  - Remove a story: delete its lines (from the - to the line before the next -).",
+             "#  - Case history: see the note above case_history: below.",
              "#  - PUBLISH: change  status: draft  to  status: approved  and commit. The page goes public within a few",
              "#    minutes and the LinkedIn post is e-mailed to the editorial team.",
              "",
@@ -468,7 +911,7 @@ def draft_text(key, highlights, around, research, cfg, info=None):
     lines += ["", "around_the_world:"]
     for s in around:
         lines += item_lines(s, info.get(s["id"], {}), "around")
-    lines += ["", "research:"]
+    lines += [""] + case_lines(case) + ["research:"]
     for p in research:
         lines += [f"  - paper: {q(p['id'])}   # {note(p.get('title'))}",
                   f"    text: {q(p.get('angle'))}"]
@@ -491,6 +934,12 @@ def write_draft(digests, key, cfg, force=False):
     stories, papers = week_items(digests, key)
     if not stories:
         return False
+    # news of the week only: older items and encyclopedia entries are left out (the preview lists them apart)
+    aside = {s["id"]: not_news(s, key) for s in stories}
+    for s in stories:
+        if aside[s["id"]] and (s.get("relevance") or 0) >= 3:
+            print(f"Geo-News: {s['id']} not used as news: {aside[s['id']]}")
+    stories = [s for s in stories if not aside[s["id"]]]
     every, every_p = all_items(digests)
     past = published_before(key, every, every_p)
     seen = check_repeats(stories, past, cfg)
@@ -499,10 +948,22 @@ def write_draft(digests, key, cfg, force=False):
               + f" in {r['week']}" + (f" ({r['note']})" if r["note"] else ""))
     stories = [dict(s, _update=seen[s["id"]]["week"]) if seen.get(s["id"], {}).get("kind") == "update" else s
                for s in stories if seen.get(s["id"], {}).get("kind") != "repeat"]
-    hl, ar, rs = select(stories, papers, settings(cfg))
+    for _ in range(3):  # the chosen stories' own addresses; one that turns out to be an encyclopedia entry is replaced
+        hl, ar, rs = select(stories, papers, settings(cfg))
+        decode_links([s["link"] for s in hl + ar])
+        ref = {s["id"] for s in hl + ar if reference_item(s)}
+        if not ref:
+            break
+        print(f"Geo-News: {', '.join(sorted(ref))} not used as news: reference site")
+        stories = [s for s in stories if s["id"] not in ref]
+    hl, ar = [s for s in hl if not reference_item(s)], [s for s in ar if not reference_item(s)]
+    # (the other stories of the week, shown on the preview, are decoded when the pages are built)
     info = enrich(hl + ar, cfg)
+    case = choose_case(key)
+    if case:
+        print(f"Geo-News: case history of {key}: {case['id']} {case.get('name')}")
     DATA.mkdir(parents=True, exist_ok=True)
-    path.write_text(draft_text(key, hl, ar, rs, cfg, info), encoding="utf-8")
+    path.write_text(draft_text(key, hl, ar, rs, cfg, info, case), encoding="utf-8")
     return True
 
 
@@ -550,7 +1011,7 @@ def load_issue(path, stories, papers):
                              language=text(it.get("language")) or guess_language(found),
                              lat=num(it.get("lat"), -90, 90), lon=num(it.get("lon"), -180, 180),
                              satellite=it.get("satellite") in (True, "yes", "Yes", "true"),
-                             site=text(it.get("site")) or domain_of(found.get("link")),
+                             site=text(it.get("site")) or domain_of(story_link(found)),
                              adverts={True: "yes", False: "no"}.get(it.get("adverts"), text(it.get("adverts")).lower() or "auto"),
                              update=text(it.get("update")) if KEY.match(text(it.get("update"))) else "")
                 if entry["satellite"] and (entry["lat"] is None or entry["lon"] is None):
@@ -558,15 +1019,48 @@ def load_issue(path, stories, papers):
             out.append(entry)
         return out
 
+    def case_history():
+        ch = raw.get("case_history")
+        if ch in (None, "", "none") or (isinstance(ch, dict) and not text(ch.get("case"))):
+            return None
+        if not isinstance(ch, dict):
+            problems.append("case_history: not laid out as a case (case: and text:)")
+            return None
+        found = load_cases().get(text(ch.get("case")))
+        if not found:
+            problems.append(f"case_history: no case has the id {text(ch.get('case'))} (see data/geonews/case_histories.yaml)")
+            return None
+        return {"c": found, "text": text(ch.get("text")) or case_text(found)}
+
     status = text(raw.get("status")).lower() or "draft"
     if status not in ("draft", "approved"):
         problems.append(f"status is \"{status}\": write draft or approved")
-    return {"key": key, "status": status, "intro": text(raw.get("intro")) or INTRO,
-            "highlights": items("highlights", "story", stories), "around": items("around_the_world", "story", stories),
-            "research": items("research", "paper", papers),
-            "events": text(raw.get("events")).lower() != "none",
-            "magazine_note": text(raw.get("magazine_note")), "magazine_link": site_builder.safe_url(text(raw.get("magazine_link")))
-            if text(raw.get("magazine_link")) else "", "problems": problems, "edited": edited}
+    issue = {"key": key, "status": status, "intro": text(raw.get("intro")) or INTRO,
+             "highlights": items("highlights", "story", stories), "around": items("around_the_world", "story", stories),
+             "research": items("research", "paper", papers), "case": case_history(),
+             "events": text(raw.get("events")).lower() != "none",
+             "magazine_note": text(raw.get("magazine_note")), "magazine_link": site_builder.safe_url(text(raw.get("magazine_link")))
+             if text(raw.get("magazine_link")) else "", "problems": problems, "edited": edited}
+    if status == "draft":  # a story that is not news of this week (chosen by hand, or before the date check)
+        part = ["Highlights"] * len(issue["highlights"]) + ["Around the world"] * len(issue["around"])
+        for i, it in enumerate(issue["highlights"] + issue["around"], 1):   # numbered as on the page
+            why = not_news(it["s"], key)
+            if not why:
+                continue
+            it["aside"] = why[:1].lower() + why[1:] + (f" ({week_span(key)})" if why.endswith("issue week") else "")
+            head = it["title"] or title_of(it["s"])
+            head = head if len(head) <= 60 else head[:57].rsplit(" ", 1)[0] + "…"
+            problems.append(f"{part[i - 1]}, story {i} ({head}, code {it['s']['id']}): {it['aside']}. Please replace it.")
+        c = (issue["case"] or {}).get("c") or {}
+        other = cases_used(key, others=True).get(c.get("id")) if c else None
+        if other:   # a case is used only once (another issue may have taken it, by hand, while this one was open)
+            problems.append(f"case_history: {c['id']} ({c.get('name')}) is also the case history of week {week_no(other)} "
+                            f"({other}). A case is used only once: choose another case for one of them.")
+        load_cases()
+        if _CASES_SKIPPED:
+            problems.append(f"Case list (data/geonews/case_histories.yaml): {'; '.join(_CASES_SKIPPED)}. These cases are "
+                            "left out until the list is corrected.")
+    return issue
 
 
 def latest_edit(key):
@@ -609,6 +1103,12 @@ def apply_edit(raw, edit):
     for k in ("status", "intro"):
         if edit.get(k):
             raw[k] = edit[k]
+    if "case_history" in edit:  # saves made before the case history existed have none: the file's case stays
+        ch = edit["case_history"]
+        if isinstance(ch, dict) and ch.get("case"):
+            raw["case_history"] = {"case": str(ch["case"]), "text": str(ch.get("text") or "")}
+        else:
+            raw.pop("case_history", None)
     if isinstance(edit.get("research"), list):
         keep = {str(x) for x in edit["research"]}
         raw["research"] = [r for r in (raw.get("research") or []) if isinstance(r, dict) and str(r.get("paper")) in keep]
@@ -630,10 +1130,16 @@ def editor_data(key, issue, digests, cfg):
         done.setdefault(p["line"], p["week"])
 
     def story(s):
-        return {"t": title_of(s), "w": n.country_name(s.get("country")) or "Global", "f": flag(s.get("country")),
+        return {"t": title_of(s), "w": n.country_name(s.get("country")) or "Global", "f": flag_img(s.get("country"), "../"),
                 "src": s.get("source", ""), "th": s.get("theme", ""), "r": s.get("relevance") or 0,
-                "a": s.get("angle", ""), "l": s.get("link", ""),
-                "p": done.get(s["id"]) or done.get(n.line_key(s)) or ""}
+                "a": s.get("angle", ""), "l": story_link(s),
+                "p": done.get(s["id"]) or done.get(n.line_key(s)) or "", "o": not_news(s, key)}
+
+    def case(c):
+        return {"n": c.get("name", ""), "w": c.get("country", ""), "y": case_when(c), "t": case_text(c)}
+    current = issue.get("case")   # a published issue without a case history keeps none (no choice offered)
+    cases = (([current["c"]] if current else []) + suggest_cases(key, current["c"]["id"] if current else None)
+             if current or issue["status"] == "draft" else [])
 
     def entry(it):
         return {"story": it["s"]["id"], "title": it["title"], "text": it["text"], "number": it.get("number", ""),
@@ -645,7 +1151,10 @@ def editor_data(key, issue, digests, cfg):
             "intro": issue["intro"], "highlights": [entry(it) for it in issue["highlights"]],
             "around_the_world": [entry(it) for it in issue["around"]],
             "research": [it["s"]["id"] for it in issue["research"]],
-            "stories": {s["id"]: story(s) for s in order}, "order": [s["id"] for s in order]}
+            "case_history": {"case": current["c"]["id"], "text": current["text"]} if current else None,
+            "cases": {str(c["id"]): case(c) for c in cases},
+            "stories": {s["id"]: story(s) for s in order}, "order": [s["id"] for s in order],
+            "icons": {k: icon(k) for k in ("pencil", "save", "check", "x", "plus", "refresh-cw", "history")}}
 
 
 def issue_files():
@@ -722,20 +1231,118 @@ def locator(it, color, cls="loc", w_max=1000, aspect=4 / 3):
             f"<circle cx='{px:.0f}' cy='{py:.0f}' r='{r:.0f}' fill='{color}' stroke='#fff' stroke-width='{r / 3:.0f}'/></svg>")
 
 
-def satellite(lat, lon, z=13):
-    """A satellite view (Sentinel-2 cloudless by EOX) of about 3 x 3 map tiles centred on the place."""
+_SAT_TRIED = set()   # satellite pictures that could not be downloaded in this run (tried again in the next run)
+_SAT_MISSES = 0      # pictures that failed in a row: after three, none is tried in this run
+
+
+def sat_name(it, z):
+    """The file of a story's satellite picture: the story's code and a fingerprint of the place and zoom, so a story
+    moved to another place (or from the cover to a card) gets a new picture."""
+    import hashlib
+    place = "%.4f,%.4f,%d" % (it["lat"], it["lon"], z)
+    return f"{it['s']['id']}-{hashlib.sha1(place.encode()).hexdigest()[:8]}.jpg"
+
+
+def get_tile(z, x, y):
+    import requests
+    r = requests.get(SAT_TILES.format(z=z, x=x, y=y), timeout=20, headers={"User-Agent": "GeoNewsWeekly/1.0 (ISSMGE MPC)"})
+    r.raise_for_status()
+    return r.content
+
+
+def make_satellite(path, lat, lon, z, get=None):
+    """Download the Sentinel-2 cloudless map tiles (EOX) around a place, put them together and cut out a picture of
+    SAT_PX x SAT_PX pixels with the place in the middle, at the map's own scale (as the page showed the tiles before);
+    saved as JPEG at path. True when saved; False, with nothing saved, when the place is off the map. A tile that cannot
+    be downloaded raises."""
+    from io import BytesIO
+    from PIL import Image
+    get = get or get_tile
     n = 2 ** z
-    fx = (lon + 180) / 360 * n
     lr = math.radians(lat)
-    fy = (1 - math.log(math.tan(lr) + 1 / math.cos(lr)) / math.pi) / 2 * n
-    tx, ty = int(fx), int(fy)
-    imgs = "".join(
-        f"<img src='https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/g/{z}/{ty + dy}/{(tx + dx) % n}.jpg' alt='' "
-        f"loading='lazy' onerror=\"this.style.visibility='hidden'\" style='left:{(dx + 1) * 256}px;top:{(dy + 1) * 256}px'>"
-        for dy in (-1, 0, 1) for dx in (-1, 0, 1))
-    ox, oy = (fx - tx + 1) * 256, (fy - ty + 1) * 256
-    return (f"<div class='sat'><div class='tiles' style='left:calc(50% - {ox:.0f}px);top:calc(50% - {oy:.0f}px)'>{imgs}</div>"
-            f"<span class='satpin'></span><span class='satlbl'>🛰 Satellite view</span><span class='satcr'>Sentinel-2 · EOX</span></div>")
+    px = (lon + 180) / 360 * n * 256
+    py = (1 - math.log(math.tan(lr) + 1 / math.cos(lr)) / math.pi) / 2 * n * 256
+    x0, y0 = int(round(px - SAT_PX / 2)), int(round(py - SAT_PX / 2))
+    tx0, ty0, tx1, ty1 = x0 // 256, y0 // 256, (x0 + SAT_PX - 1) // 256, (y0 + SAT_PX - 1) // 256
+    if ty0 < 0 or ty1 >= n:  # too near a pole
+        return False
+    sheet = Image.new("RGB", ((tx1 - tx0 + 1) * 256, (ty1 - ty0 + 1) * 256))
+    for ty in range(ty0, ty1 + 1):
+        for tx in range(tx0, tx1 + 1):
+            if tx > tx0 or ty > ty0:
+                time.sleep(0.1)  # gently
+            tile = Image.open(BytesIO(get(z, tx % n, ty))).convert("RGB")
+            sheet.paste(tile if tile.size == (256, 256) else tile.resize((256, 256)), ((tx - tx0) * 256, (ty - ty0) * 256))
+    left, top = x0 - tx0 * 256, y0 - ty0 * 256
+    path.parent.mkdir(parents=True, exist_ok=True)
+    part = path.with_name(path.name + ".part")
+    try:
+        sheet.crop((left, top, left + SAT_PX, top + SAT_PX)).save(part, "JPEG", quality=82, optimize=True, progressive=True)
+        part.replace(path)
+    finally:
+        if part.exists():  # a picture that could not be written leaves nothing behind
+            part.unlink()
+    return True
+
+
+def pictures(issue, get=None, download=True):
+    """The satellite picture of each highlight that has one (satellite: yes): it["picture"] = "<week>/<file>", kept in
+    data/geonews/img/<week>/ and downloaded once (in GitHub Actions, when the pages are built). A story whose picture
+    cannot be downloaded has none and shows its country map. Pictures of the week no story uses any more are removed.
+    download=False (the public bundle): only the pictures already kept are used."""
+    global _SAT_MISSES
+    folder = IMG / issue["key"]
+    keep = set()
+    for i, it in enumerate(issue["highlights"]):
+        if not it.get("satellite") or it.get("lat") is None or it.get("lon") is None:
+            continue
+        z = 13 if i == 0 else 12   # the cover shows the site closer
+        name = sat_name(it, z)
+        path = folder / name
+        if download and not path.exists() and name not in _SAT_TRIED and _SAT_MISSES < 3:
+            try:
+                ok = make_satellite(path, it["lat"], it["lon"], z, get)
+            except Exception as ex:  # no network, a tile missing, a picture that cannot be read
+                ok = False
+                print(f"Geo-News: no satellite picture for {it['s']['id']} ({type(ex).__name__}: {str(ex)[:80]}); "
+                      "its country map is shown")
+            if ok:
+                _SAT_MISSES = 0
+                print(f"Geo-News: satellite picture of {it['s']['id']} saved as {path.relative_to(ROOT)}")
+            else:
+                _SAT_TRIED.add(name)
+                _SAT_MISSES += 1
+                if _SAT_MISSES == 3:
+                    print("Geo-News: the satellite pictures cannot be downloaded now; the others are tried in the next run")
+        if path.exists():
+            it["picture"] = f"{issue['key']}/{name}"
+            keep.add(name)
+    for f in folder.glob("*.jpg") if folder.is_dir() else []:
+        if f.name not in keep:
+            f.unlink()
+    if folder.is_dir() and not any(folder.iterdir()):
+        folder.rmdir()
+
+
+def copy_pictures(dest, weeks=None):
+    """The satellite pictures next to the pages (geonews/img/<week>/), with their licence (img/LICENSE.txt); weeks: only
+    those weeks (the public site)."""
+    if dest.exists():
+        shutil.rmtree(dest)
+    for folder in sorted(IMG.iterdir()) if IMG.is_dir() else []:
+        if folder.is_dir() and KEY.match(folder.name) and (weeks is None or folder.name in weeks) and any(folder.glob("*.jpg")):
+            shutil.copytree(folder, dest / folder.name, ignore=shutil.ignore_patterns("*.part"))
+    if dest.is_dir() and (IMG / "LICENSE.txt").exists():
+        shutil.copy2(IMG / "LICENSE.txt", dest / "LICENSE.txt")
+
+
+def satellite(it, root, lazy=True):
+    """A satellite view of the place (Sentinel-2 cloudless 2020 by EOX, CC BY-NC-SA 4.0, credited in the page footer):
+    the story's picture, kept with the site, with the place marked in the middle."""
+    lazy = " loading='lazy'" if lazy else ""
+    return (f"<div class='sat'><img class='satimg' src='{root}img/{esc(it['picture'])}' width='{SAT_PX}' height='{SAT_PX}' "
+            f"alt=''{lazy}><span class='satpin'></span>"
+            f"<span class='satlbl'>{icon('satellite')} Satellite view</span><span class='satcr'>Sentinel-2 cloudless 2020 · EOX</span></div>")
 
 
 def place_name(it):
@@ -774,7 +1381,7 @@ def map_svg(issue, cls="wmap", label=True):
         pins.append(f"<a href='#s{i}' aria-label='Story {i}: {t}'><title>{i}. {t}</title>"
                     f"<circle cx='{x:.0f}' cy='{y:.0f}' r='{r}' fill='{fill}' stroke='#fff' stroke-width='12'/>"
                     + (f"<text x='{x:.0f}' y='{y + 26:.0f}' text-anchor='middle' font-size='{76 if hl else 64}' "
-                       f"font-weight='bold' fill='#fff' font-family='Arial,sans-serif'>{i}</text>" if label else "")
+                       f"font-weight='bold' fill='#fff' font-family='{SANS}'>{i}</text>" if label else "")
                     + "</a>")
     vb = " ".join(map(str, MAP_VIEW))
     return (f"<svg class='{cls}' viewBox='{vb}' role='img' aria-label='World map of this week’s stories'>"
@@ -783,21 +1390,28 @@ def map_svg(issue, cls="wmap", label=True):
 
 
 # ------------------------------------------------------------------ the page
-def flag_img(code):
-    """A small flag picture (flagcdn.com): flag emoji do not show on Windows computers."""
+def flag_img(code, root=""):
+    """A small flag picture, kept with the site (assets/flags/): flag emoji do not show on Windows computers.
+    root: the way from the page to geonews/ ("" or "../"); the globe icon when the country has no flag."""
     code = str(code or "").upper()
     code = {"UK": "GB", "EL": "GR"}.get(code, code)
-    if not re.match(r"^[A-Z]{2}$", code) or code in ("XX", "ZZ"):
-        return "🌍"
-    c = code.lower()
-    return (f"<img class='flag' src='https://flagcdn.com/20x15/{c}.png' "
-            f"srcset='https://flagcdn.com/40x30/{c}.png 2x' width='20' height='15' alt=''>")
+    if not re.match(r"^[A-Z]{2}$", code) or code in ("XX", "ZZ") or not (FLAGS / f"{code.lower()}.svg").exists():
+        return icon("earth")
+    return f"<img class='flag' src='{root}../assets/flags/{code.lower()}.svg' width='20' height='15' alt=''>"
 
 
-def where_text(s):
+def where_text(s, root=""):
     n = notify()
     place = n.country_name(s.get("country"))
-    return f"{flag_img(s.get('country'))} {esc(place)}" if place else "🌍 Global"
+    return f"{flag_img(s.get('country'), root)} {esc(place)}" if place else f"{icon('earth')} Global"
+
+
+def source_line(s):
+    """The outlet (or journal) and the day it published the story: 'Tunnels & Tunnelling · 12 Nov 2026', on the pages
+    and in the e-mails. The name keeps its own writing direction (dir=auto), so an Arabic name does not move the date."""
+    name, day = s.get("source") or s.get("journal") or "", story_date(s)
+    parts = [f"<span dir='auto'>{esc(name)}</span>" if name else "", f"<span class='dt'>{day}</span>" if day else ""]
+    return " · ".join(x for x in parts if x)
 
 
 def tag(s):
@@ -845,17 +1459,25 @@ def events_html(issue, cfg, opts):
     return f"<h2>Coming up</h2><ul class='ev'>{''.join(rows)}</ul>"
 
 
-def notes_html(it, ads, dark=False):
-    """The small notes under a story: its language when not English, and many adverts on its site."""
+def notes_html(it, ads, dark=False, preview=False, highlight=False):
+    """The small notes under a story: its language when not English, and many adverts on its site; on the editor's
+    preview also a link that still goes through Google News, a story that is not news of the week (a draft's) and
+    (highlights) a satellite view not downloaded yet."""
     out = []
     lang = it.get("language", "English")
     if lang and lang.lower() != "english":
-        out.append(f"<span class='nt'>🌐 In {esc(lang)} · use your browser's Translate</span>")
+        out.append(f"<span class='nt'>{icon('globe')} In {esc(lang)} · use your browser's Translate</span>")
     elif not lang:
-        out.append("<span class='nt'>🌐 Not in English · use your browser's Translate</span>")
+        out.append(f"<span class='nt'>{icon('globe')} Not in English · use your browser's Translate</span>")
     many = {"yes": True, "no": False}.get(it.get("adverts"), (ads.get(it.get("site")) or {}).get("many"))
     if many:
-        out.append("<span class='nt ad'>📢 This site may show many adverts</span>")
+        out.append(f"<span class='nt ad'>{icon('megaphone')} This site may show many adverts</span>")
+    if preview and google_link(story_link(it["s"])):
+        out.append(f"<span class='nt pv'>{icon('link')} Editor: link still goes through Google News</span>")
+    if preview and it.get("aside"):
+        out.append(f"<span class='nt pv'>{icon('pencil')} Editor: {esc(it['aside'])}; please replace it</span>")
+    if preview and highlight and it.get("satellite") and not it.get("picture"):
+        out.append(f"<span class='nt pv'>{icon('satellite')} Editor: satellite picture not downloaded yet; the country map is shown</span>")
     return f"<div class='nts{' dk' if dark else ''}'>{''.join(out)}</div>" if out else ""
 
 
@@ -864,7 +1486,7 @@ def update_html(it, root, dark=False):
     w = it.get("update")
     if not w:
         return ""
-    return (f"<div class='upd{' dk' if dark else ''}'>🔄 <b>Update</b> · first reported in "
+    return (f"<div class='upd{' dk' if dark else ''}'>{icon('refresh-cw')} <b>Update</b> · first reported in "
             f"<a href='{root}{esc(w)}.html'>Week {week_no(w)}</a></div>")
 
 
@@ -883,20 +1505,73 @@ def masthead(cfg, root, chips):
             + (f"<div class='mh-meta'>{chips}</div>" if chips else "") + "</header>")
 
 
-TIPS = ("<aside class='before'><b>💡 Reading tips</b><ul>"
-        "<li>🌐 Story in another language? Use your browser's <b>Translate</b>.</li>"
-        "<li>📰 Headlines open the original news site; sites with many adverts are marked.</li></ul></aside>")
+def tips():
+    return (f"<aside class='before'><b>{icon('lightbulb')} Reading tips</b><ul>"
+            f"<li>{icon('globe')} Story in another language? Use your browser's <b>Translate</b>.</li>"
+            f"<li>{icon('newspaper')} Headlines open the original news site; sites with many adverts are marked.</li></ul></aside>")
 
 
-def issue_html(issue, cfg, root, number=None):
-    """The issue itself: masthead, map, highlights, around the world, research, events, magazine box."""
+def case_parts(text):
+    """(the case, its lesson): a case history's text split at "Lesson for practice:"."""
+    m = re.search(r"\s*Lesson for practice:\s*", text, re.I)
+    return (text[:m.start()].strip(), text[m.end():].strip()) if m else (text.strip(), "")
+
+
+def case_sources(c):
+    """[(title, link)] to read more about a case: its overview page first, then its sources, each address once. The
+    overview is named by the source with the same address, else by overview_title, else by its site."""
+    out, seen = [], set()
+    ov = str(c.get("overview") or "")
+    if ov.startswith("http"):
+        same = next((str(s.get("title") or "") for s in c.get("sources") or [] if isinstance(s, dict) and s.get("url") == ov), "")
+        host = domain_of(ov)
+        name = (f"Overview: {same.replace(': ', ' – ', 1)}" if same
+                else f"Overview: {c['overview_title']}" if c.get("overview_title")
+                else "Overview (Wikipedia)" if host.endswith("wikipedia.org") else f"Overview: {host or 'web page'}")
+        out.append((name, ov))
+        seen.add(ov)
+    for s in c.get("sources") or []:
+        url = str((s or {}).get("url") or "") if isinstance(s, dict) else ""
+        if url.startswith("http") and url not in seen:
+            out.append((str(s.get("title") or domain_of(url)), url))
+            seen.add(url)
+    return out
+
+
+def case_html(issue, root, preview=False):
+    """The case history: a well-known case, kept apart from the news, with its lesson and where to read more; on the
+    preview, a note that its text is a draft to check."""
+    ch = issue.get("case")
+    if not ch:
+        return ""
+    c = ch["c"]
+    color = theme_color(c.get("theme"))
+    story, lesson = case_parts(ch["text"])
+    ann = case_anniversary(issue)
+    links = "".join(f"<li><a href='{esc(site_builder.safe_url(u))}'>{esc(t)}</a></li>" for t, u in case_sources(c))
+    check = (f"<div class='cs-pv'>{icon('pencil')} <b>Editor:</b> this text is a draft written from the case list (case "
+             f"<code>{esc(c['id'])}</code>; the list is to be confirmed by ISSMGE TC302). Please check it before publishing; "
+             f"other cases are suggested at the end of this page.</div>" if preview else "")
+    return (f"<h2>Case history</h2><article class='case' id='case' style='--c:{color}'>"
+            f"<div class='cs-k'>{icon('history')} {'Success' if c.get('outcome') == 'success' else 'Failure'} · "
+            f"{case_flags(c, root)} {esc(c.get('country', ''))} · {esc(case_when(c))}</div>"
+            + (f"<div class='cs-ann'>{esc(ann)}</div>" if ann else "")
+            + f"<h3>{esc(c.get('name', ''))}</h3>{check}<p>{esc(story)}</p>"
+            + (f"<p class='cs-l'><b>{LESSON}</b> {esc(lesson)}</p>" if lesson else "")
+            + (f"<div class='cs-src'><b>{icon('book-open')} Read more</b><ul>{links}</ul></div>" if links else "")
+            + f"{tag(c)}</article>")
+
+
+def issue_html(issue, cfg, root, number=None, preview=False):
+    """The issue itself: masthead, map, highlights, around the world, case history, research, events, magazine box.
+    preview: the editor's preview, with notes for the editor (Google News links, missing pictures, the case text)."""
     opts = settings(cfg)
     hl, ar = issue["highlights"], issue["around"]
     ads = load_ads()
     chips = (f"<span class='no'>Week {week_no(issue['key'])} · {issue['key'][:4]}</span><span>{esc(week_span(issue['key']))}</span>"
              + (f"<span>Issue {number}</span>" if number else ""))
     out = [masthead(cfg, root, chips), "<div class='gn-main'>", f"<p class='intro'>{esc(issue['intro'])}</p>"
-           + (f"<p class='editor-line'>Edited by {esc(opts['editor'])}</p>" if opts["editor"] else ""), TIPS]
+           + (f"<p class='editor-line'>Edited by {esc(opts['editor'])}</p>" if opts["editor"] else ""), tips()]
     if hl or ar:
         out.append(f"<section class='mapcard'><h2>This week on the map</h2>{map_svg(issue)}"
                    "<div class='mapkey'><span><i class='k1'></i>Highlights</span><span><i class='k2'></i>Around the world</span>"
@@ -905,44 +1580,51 @@ def issue_html(issue, cfg, root, number=None):
         out.append("<h2>Highlights</h2>")
         lead = hl[0]
         s = lead["s"]
+        link = esc(story_link(s))
         c = theme_color(s.get("theme"))
-        media = (satellite(lead["lat"], lead["lon"], 13) if lead.get("satellite") else locator(lead, c, "loc full"))
-        mini = (f"<div class='cv-loc'>{locator(lead, c)}<span>{esc(place_name(lead))}</span></div>" if lead.get("satellite")
-                else f"<span class='plc'>📍 {esc(place_name(lead))}</span>")
+        sat = lead.get("satellite") and lead.get("picture")   # no picture (not downloaded): the country map
+        media = satellite(lead, root, lazy=False) if sat else locator(lead, c, "loc full")
+        mini = (f"<div class='cv-loc'>{locator(lead, c)}<span>{esc(place_name(lead))}</span></div>" if sat
+                else f"<span class='plc'>{icon('map-pin')} {esc(place_name(lead))}</span>")
         out.append(f"<article class='cover' id='s1' style='--c:{c}'><div class='cv-text'>"
                    f"<div class='cv-k'><b class='num w'>1</b> Story of the week</div>{update_html(lead, root, True)}{key_number(lead)}"
-                   f"<h3><a href='{esc(s['link'])}'>{headline_html(lead)}</a></h3>"
-                   f"<div class='cv-meta'>{where_text(s)} · {esc(s.get('source', ''))}</div>"
-                   + (f"<p>{esc(lead['text'])}</p>" if lead["text"] else "") + notes_html(lead, ads, True)
+                   f"<h3><a href='{link}'>{headline_html(lead)}</a></h3>"
+                   f"<div class='cv-meta'>{where_text(s, root)} · {source_line(s)}</div>"
+                   + (f"<p>{esc(lead['text'])}</p>" if lead["text"] else "") + notes_html(lead, ads, True, preview, True)
                    + f"<span class='cv-tag'>{esc(s.get('theme') or '')}</span></div>"
-                   f"<a class='cv-media' href='{esc(s['link'])}'>{media}{mini}</a></article>")
+                   f"<a class='cv-media' href='{link}'>{media}{mini}</a></article>")
         for i, it in enumerate(hl[1:], 2):
             s = it["s"]
+            link = esc(story_link(s))
             c = theme_color(s.get("theme"))
-            media = satellite(it["lat"], it["lon"], 12) if it.get("satellite") else locator(it, c)
-            mini = f"<div class='mini'>{locator(it, c)}</div>" if it.get("satellite") else ""
-            out.append(f"<article class='card2' id='s{i}' style='--c:{c}'><a class='m2' href='{esc(s['link'])}'>{media}{mini}"
-                       f"<span class='plc'>📍 {esc(place_name(it))}</span></a><div class='b2'>"
-                       f"<div class='meta'><b class='num'>{i}</b> {where_text(s)} · {esc(s.get('source', ''))}</div>"
-                       f"{update_html(it, root)}{key_number(it, 'kn sm')}<h3><a href='{esc(s['link'])}'>{headline_html(it)}</a></h3>"
-                       + (f"<p>{esc(it['text'])}</p>" if it["text"] else "") + notes_html(it, ads) + f"{tag(s)}</div></article>")
+            sat = it.get("satellite") and it.get("picture")
+            media = satellite(it, root) if sat else locator(it, c)
+            mini = f"<div class='mini'>{locator(it, c)}</div>" if sat else ""
+            out.append(f"<article class='card2' id='s{i}' style='--c:{c}'><a class='m2' href='{link}'>{media}{mini}"
+                       f"<span class='plc'>{icon('map-pin')} {esc(place_name(it))}</span></a><div class='b2'>"
+                       f"<div class='meta'><b class='num'>{i}</b> {where_text(s, root)} · {source_line(s)}</div>"
+                       f"{update_html(it, root)}{key_number(it, 'kn sm')}<h3><a href='{link}'>{headline_html(it)}</a></h3>"
+                       + (f"<p>{esc(it['text'])}</p>" if it["text"] else "") + notes_html(it, ads, False, preview, True)
+                       + f"{tag(s)}</div></article>")
     if ar:
         rows = []
         for i, it in enumerate(ar, len(hl) + 1):
             s = it["s"]
+            link = esc(story_link(s))
             c = theme_color(s.get("theme"))
             kn = (f"<span class='kchip'><b>{esc(it['number'])}</b> {esc(it.get('number_label', ''))}</span>"
                   if it.get("number") else "")
-            rows.append(f"<li id='s{i}' style='--c:{c}'><a class='wl' href='{esc(s['link'])}'>{locator(it, c, 'loc', 900, 1)}</a>"
-                        f"<div><div class='meta'><b class='num g'>{i}</b> {where_text(s)}"
+            rows.append(f"<li id='s{i}' style='--c:{c}'><a class='wl' href='{link}'>{locator(it, c, 'loc', 900, 1)}</a>"
+                        f"<div><div class='meta'><b class='num g'>{i}</b> {where_text(s, root)}"
                         + (f" · {esc(s.get('place'))}" if s.get("place") else "") + "</div>"
-                        + update_html(it, root) + f"<a class='hl' href='{esc(s['link'])}'>{headline_html(it)}</a>"
+                        + update_html(it, root) + f"<a class='hl' href='{link}'>{headline_html(it)}</a>"
                         + (f"<div class='txt'>{esc(it['text'])}</div>" if it["text"] else "")
-                        + f"{kn}<div class='src'>{esc(s.get('source', ''))}</div>{notes_html(it, ads)}</div></li>")
+                        + f"{kn}<div class='src'>{source_line(s)}</div>{notes_html(it, ads, False, preview)}</div></li>")
         out.append(f"<h2>Around the world</h2><ul class='world2'>{''.join(rows)}</ul>")
+    out.append(case_html(issue, root, preview))
     if issue["research"]:
         rows = "".join(f"<li><a href='{esc(p['s']['link'])}'>{esc(p['title'] or p['s'].get('title', ''))}</a>"
-                       f"<div class='j'>{esc(p['s'].get('journal', ''))}</div>"
+                       f"<div class='j'>{source_line(p['s'])}</div>"
                        + (f"<div>{esc(p['text'])}</div>" if p["text"] else "") + "</li>"
                        for p in issue["research"])
         out.append(f"<section class='papers'><h2>Research highlights</h2><ol>{rows}</ol></section>")
@@ -959,8 +1641,8 @@ def issue_html(issue, cfg, root, number=None):
 def stay_in_touch(opts):
     """The box at the end of an issue: subscribe, unsubscribe, suggestions (Google Forms in the editor's Drive);
     shown once at least one form's address is in config.yaml."""
-    links = [(opts["subscribe_form"], "btn red", "✉️ Subscribe to this newsletter"),
-             (opts["suggest_form"], "btn", "💡 Suggestions for improvement"),
+    links = [(opts["subscribe_form"], "btn red", f"{icon('mail')} Subscribe to this newsletter"),
+             (opts["suggest_form"], "btn", f"{icon('lightbulb')} Suggestions for improvement"),
              (opts["unsubscribe_form"], "btn alt", "Unsubscribe")]
     links = [(u, c, t) for u, c, t in links if str(u).startswith("https://")]
     if not links:
@@ -987,14 +1669,16 @@ def shell(cfg, title, body, root, description, extra_head="", noindex=False):
 {'<meta name="robots" content="noindex,nofollow">' if noindex else ''}
 <meta name="theme-color" content="#a6242e">
 <link rel="icon" href="{root}../assets/favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="preload" href="{root}../assets/fonts/libre-franklin-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="{root}../assets/fonts/newsreader-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{root}../assets/geonews.css?v={asset_version('geonews.css')}">{extra_head}
 </head><body><div class="gn-wrap">
 {body}
 <footer class="gn-foot">Stories come from public news sources in many languages; each headline links to the original publisher,
 whose site may be in another language and may show adverts. Please check details with the original source.<br>
-Maps: Natural Earth. Satellite views: Sentinel-2 cloudless by EOX IT Services (contains modified Copernicus Sentinel data).<br>
+Maps: Natural Earth. Satellite views: <a href="https://s2maps.eu">Sentinel-2 cloudless – s2maps.eu</a> by EOX IT Services GmbH
+(contains modified Copernicus Sentinel data 2020), <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>.<br>
+Fonts: Newsreader and Libre Franklin (SIL Open Font License). Icons: Lucide. Flags: flag-icons.<br>
 Prepared by the ISSMGE <a href="{MPC_URL}">Magazine Presidential Committee (MPC)</a></footer>
 </div></body></html>"""
 
@@ -1035,6 +1719,7 @@ def page_url(cfg, key=None):
 
 
 PUBLIC_ASSETS = ("geonews.css", "issmge-logo.png", "favicon.svg")
+PUBLIC_FOLDERS = ("fonts", "flags", "icons")   # kept with the site, each with its licence (icons: for the licence only)
 
 
 def public_bundle(dest):
@@ -1061,6 +1746,12 @@ def public_bundle(dest):
         src = site_builder.ASSETS / name
         if src.exists():
             shutil.copy2(src, dest / "assets" / name)
+    for name in PUBLIC_FOLDERS:
+        src = site_builder.ASSETS / name
+        if src.is_dir():
+            shutil.copytree(src, dest / "assets" / name)
+    # the satellite views of the published issues only
+    copy_pictures(dest / "img", {p.stem for p in dest.glob("*.html") if KEY.match(p.stem)})
     (dest / ".nojekyll").write_text("", encoding="utf-8")
     (dest / "robots.txt").write_text("User-agent: *\nAllow: /\n", encoding="utf-8")
     shutil.rmtree(built, ignore_errors=True)
@@ -1089,6 +1780,10 @@ def linkedin_text(issue, cfg):
                 places.append(p)
         if places:
             lines += ["", "Also this week: news from " + ", ".join(places[:-1]) + (" and " if len(places) > 1 else "") + places[-1] + "."]
+    if issue.get("case"):
+        c = issue["case"]["c"]
+        year = re.search(r"\b(1[89]\d\d|20\d\d)\b", str(c.get("date") or ""))
+        lines.append(f"Case history: {c.get('name')} ({c.get('country')}" + (f", {year.group(1)}" if year else "") + ").")
     if issue["research"]:
         lines.append(f"Plus {len(issue['research'])} new research papers and the events coming up.")
     lines += ["", f"Read the full round-up, with the world map: {page_url(cfg, issue['key'])}", "",
@@ -1103,14 +1798,37 @@ def logo_data():
     return "data:image/png;base64," + base64.b64encode(f.read_bytes()).decode() if f.exists() else ""
 
 
+# The advance widths of Newsreader 600, the font of the LinkedIn picture's headlines, in thousandths of the font size
+# (measured from assets/fonts in a browser): printable ASCII from the space on, then a few typographic signs. A letter
+# with an accent is measured as the letter without it; any other sign as a full em (wider than any Latin letter).
+NR600 = (
+          219, 284, 392, 611, 611, 838, 743, 211, 297, 297, 433, 512, 253, 362, 247, 405, 611, 611, 611, 611, 611, 611, 611, 611,
+          611, 611, 269, 278, 512, 512, 512, 483, 896, 756, 689, 716, 785, 671, 621, 770, 835, 371, 476, 773, 637, 1024, 781, 790,
+          651, 789, 700, 586, 700, 784, 729, 1028, 759, 723, 654, 328, 405, 329, 512, 411, 500, 490, 569, 461, 579, 482, 378, 520,
+          588, 304, 277, 580, 292, 868, 600, 542, 584, 567, 430, 412, 381, 572, 551, 782, 533, 553, 460, 323, 246, 323, 512)
+NR600_MORE = {"–": 510, "—": 675, "…": 704, "‘": 250, "’": 250, "“": 455, "”": 455}
+CARD_HEAD_W = 360   # px: the headlines of the LinkedIn picture start at x=92 and must end before the map (x=470)
+
+
+def head_width(line, size=25):
+    """The width in pixels of a line of the LinkedIn picture's headlines (Newsreader 600 at size px)."""
+    import unicodedata
+    w = 0
+    for ch in line:
+        base = ch if ch in NR600_MORE else (unicodedata.normalize("NFKD", ch)[:1] or ch)
+        w += NR600_MORE.get(base) or (NR600[ord(base) - 32] if 32 <= ord(base) < 127 else 1000)
+    return w * size / 1000
+
+
 def linkedin_card(issue, cfg):
-    """A 1200 × 627 picture for the LinkedIn post (SVG; the preview page saves it as PNG)."""
+    """A 1200 × 627 picture for the LinkedIn post (SVG; the preview page saves it as PNG, with the fonts put into it).
+    The fonts are named in style attributes, which the page's style sheet does not override."""
     opts = settings(cfg)
     heads = []
     for i, it in enumerate(issue["highlights"][:3], 1):
         words, line, out = (it["title"] or title_of(it["s"])).split(), "", []
-        for w in words:
-            if len(line) + len(w) + 1 > 34 and line:
+        for w in words:   # lines wrapped by their measured width, so that none runs under the map
+            if line and head_width(line + " " + w) > CARD_HEAD_W:
                 out.append(line)
                 line = w
             else:
@@ -1118,29 +1836,36 @@ def linkedin_card(issue, cfg):
         out.append(line)
         if len(out) > 2:
             out = out[:2]
-            out[1] = out[1].rstrip(".,;:") + "…"
+            last = out[1].rstrip(".,;:")
+            while " " in last and head_width(last + "…") > CARD_HEAD_W:
+                last = last.rsplit(" ", 1)[0].rstrip(".,;:")
+            out[1] = last + "…"
+        for j, l in enumerate(out):   # a single word too long for a line is cut
+            while head_width(l) > CARD_HEAD_W:
+                l = l.rstrip("…")[:-1] + "…"
+            out[j] = l
         heads.append((i, out))
     y, texts = 300, []
     for i, ls in heads:
         texts.append(f"<circle cx='62' cy='{y - 9}' r='17' fill='#a6242e'/><text x='62' y='{y - 2}' text-anchor='middle' "
-                     f"font-size='20' font-weight='bold' fill='#fff' font-family='Arial,sans-serif'>{i}</text>")
+                     f"font-size='20' font-weight='bold' fill='#fff' style='font-family:{SANS}'>{i}</text>")
         for j, l in enumerate(ls):
-            texts.append(f"<text x='92' y='{y + j * 30}' font-size='25' fill='#2a2024' font-family='Georgia,serif'>{esc(l)}</text>")
+            texts.append(f"<text x='92' y='{y + j * 30}' font-size='25' font-weight='600' fill='#2a2024' style='font-family:{SERIF}'>{esc(l)}</text>")
         y += 30 * len(ls) + 26
     inner = map_svg(issue, "", label=True).replace("<svg class=''", "<svg x='470' y='150' width='710' height='400'", 1)
     return (f"<svg xmlns='http://www.w3.org/2000/svg' class='li-card' viewBox='0 0 1200 627' width='1200' height='627'>"
             f"<rect width='1200' height='627' fill='#fffdf8'/>"
             f"<rect width='1200' height='120' fill='#a6242e'/><rect y='120' width='1200' height='8' fill='#b9962e'/>"
-            f"<text x='40' y='52' font-size='20' letter-spacing='3' fill='#f3d98b' font-family='Arial,sans-serif' font-weight='bold'>"
+            f"<text x='40' y='52' font-size='20' letter-spacing='3' fill='#f3d98b' style='font-family:{SANS}' font-weight='bold'>"
             f"ISSMGE · MAGAZINE PRESIDENTIAL COMMITTEE (MPC)</text>"
-            f"<text x='40' y='98' font-size='42' fill='#fff' font-family='Georgia,serif' font-weight='bold'>{esc(opts['name'])}</text>"
-            f"<text x='1010' y='98' text-anchor='end' font-size='26' fill='#fff' font-family='Arial,sans-serif'>{esc(week_span(issue['key']))}</text>"
+            f"<text x='40' y='98' font-size='42' fill='#fff' style='font-family:{SERIF}' font-weight='bold'>{esc(opts['name'])}</text>"
+            f"<text x='1010' y='98' text-anchor='end' font-size='26' fill='#fff' style='font-family:{SANS}'>{esc(week_span(issue['key']))}</text>"
             f"<rect x='1036' y='14' width='146' height='94' rx='10' fill='#fff'/>"
             f"<image x='1046' y='20' width='126' height='82' href='{logo_data()}'/>"
-            f"<text x='40' y='200' font-size='22' letter-spacing='2' fill='#a6242e' font-family='Arial,sans-serif' font-weight='bold'>THIS WEEK'S HIGHLIGHTS</text>"
+            f"<text x='40' y='200' font-size='22' letter-spacing='2' fill='#a6242e' style='font-family:{SANS}' font-weight='bold'>THIS WEEK'S HIGHLIGHTS</text>"
             f"<rect x='40' y='216' width='60' height='5' fill='#b9962e'/>"
             f"{''.join(texts)}{inner}"
-            f"<text x='40' y='600' font-size='18' fill='#6b6066' font-family='Arial,sans-serif'>Full round-up: {esc(page_url(cfg, issue['key']))}</text>"
+            f"<text x='40' y='600' font-size='18' fill='#6b6066' style='font-family:{SANS}'>Full round-up: {esc(page_url(cfg, issue['key']))}</text>"
             f"</svg>")
 
 
@@ -1156,7 +1881,7 @@ def alternatives_html(key, issue, digests, cfg):
             continue
         mark = " class='in'" if s["id"] in used else ""
         (rows if (s.get("relevance") or 0) >= 4 or s["id"] in used else small).append(f"<tr{mark}><td><code>{esc(s['id'])}</code> <button type='button' class='copy' data-copy='{esc(s['id'])}'>Copy</button></td>"
-                    f"<td><a href='{esc(s['link'])}'>{esc(title_of(s))}</a><div class='meta'>{where_text(s)} · {esc(s.get('source', ''))} · "
+                    f"<td><a href='{esc(story_link(s))}'>{esc(title_of(s))}</a><div class='meta'>{where_text(s, '../')} · {source_line(s)} · "
                     f"{esc(s.get('theme', ''))}</div></td><td class='r'>{s.get('relevance') or ''}/5</td></tr>")
     prow = []
     for p in sorted(papers, key=lambda p: -(p.get("relevance") or 0)):
@@ -1171,6 +1896,56 @@ def alternatives_html(key, issue, digests, cfg):
                f"{''.join(small)}</table></div></details>" if small else "")
             + (f"<h2>Research papers of this week</h2><div class='tw'><table class='alt'><tr><th>Code</th><th>Paper</th><th>Rating</th></tr>"
                f"{''.join(prow)}</table></div>" if prow else "") + "</section>")
+
+
+def set_aside_html(key, issue, digests):
+    """The week's items not used as news (published before the issue week, or encyclopedia entries), for the editor to
+    see; one already in the issue is shaded. Only for a draft: a published issue is not changed."""
+    if issue.get("status", "draft") != "draft":
+        return ""
+    stories, _ = week_items(digests, key)
+    used = {it["s"]["id"] for it in issue["highlights"] + issue["around"]}
+    rows = []
+    for s in notify().by_rank(stories):
+        why = not_news(s, key) if (s.get("relevance") or 0) >= 3 or s["id"] in used else ""
+        if why:
+            mark = " class='in'" if s["id"] in used else ""
+            rows.append(f"<tr{mark}><td><code>{esc(s['id'])}</code> "
+                        f"<button type='button' class='copy' data-copy='{esc(s['id'])}'>Copy</button></td>"
+                        f"<td><a href='{esc(story_link(s))}'>{esc(title_of(s))}</a><div class='meta'>{where_text(s, '../')} · "
+                        f"{source_line(s)}</div></td><td>{esc(why)}</td></tr>")
+    if not rows:
+        return ""
+    one = len(rows) == 1
+    return (f"<section class='tools'><h2>Older or reference items (not used as news)</h2><p>The scan also found "
+            f"{len(rows)} {'item that was' if one else 'items that were'} published before the issue week or "
+            f"{'comes' if one else 'come'} from an encyclopedia, so the draft does not use {'it' if one else 'them'} as "
+            f"news. A shaded item is still in the issue: please replace it. If an item is about a case on the case list "
+            f"(such as Vajont), choose that case under Case history.</p><div class='tw'><table class='alt'><tr><th>Code</th>"
+            f"<th>Item</th><th>Why</th></tr>{''.join(rows)}</table></div></section>")
+
+
+def case_tools_html(key, issue):
+    """The case history of the issue and three other cases the editor might use instead, with their ids."""
+    current = issue.get("case")
+    if not current and issue["status"] != "draft":
+        return ""
+    monday = notify().week_range(key)[0]
+    rows = []
+    for c in suggest_cases(key, current["c"]["id"] if current else None):
+        day = anniversary_day(c, monday, CASE_DAYS)
+        rows.append(f"<tr><td><code>{esc(c['id'])}</code> <button type='button' class='copy' data-copy='{esc(c['id'])}'>Copy</button></td>"
+                    f"<td><b>{esc(c.get('name', ''))}</b><div class='meta'>{case_flags(c, '../')} {esc(c.get('country', ''))} · "
+                    f"{esc(c.get('region', ''))} · {esc(case_when(c))} · {'success' if c.get('outcome') == 'success' else 'failure'}"
+                    + (f" · anniversary on {day.day} {day:%b}" if day else "") + "</div></td></tr>")
+    now = (f"The case history of this issue is <b>{esc(current['c'].get('name', ''))}</b> (<code>{esc(current['c']['id'])}</code>). "
+           if current else "This issue has no case history. ")
+    return (f"<section class='tools'><h2>Case history: other suggestions</h2><p>{now}To use another case, press "
+            f"<b>Change the stories</b> and choose it under Case history, or write its id after <code>case:</code> in the "
+            f"issue file and empty the text. A case is used only once; the whole list is in "
+            f"<code>data/geonews/case_histories.yaml</code>.</p>"
+            + (f"<div class='tw'><table class='alt'><tr><th>Id</th><th>Case</th></tr>{''.join(rows)}</table></div>" if rows
+               else "<p>Every case of the list has been used.</p>") + "</section>")
 
 
 def review_url(cfg, key):
@@ -1196,17 +1971,17 @@ def preview_html(key, issue, error, digests, cfg):
         state = (f"<div class='bar err'><b>This issue cannot be shown:</b> {esc(error)}. Open the file, correct it and commit; "
                  f"the preview is rebuilt within a few minutes.</div>")
     elif issue["status"] == "approved":
-        state = (f"<div class='bar ok big'><b>✅ Published.</b> This issue is public. Members see it at "
+        state = (f"<div class='bar ok big'><b>{icon('circle-check')} Published.</b> This issue is public. Members see it at "
                  f"<a href='{esc(page_url(cfg, key))}'>{esc(page_url(cfg, key))}</a>.<div class='toolbar'>"
                  f"<a class='btn green' href='{esc(page_url(cfg, key))}'>Open the published page</a></div>"
-                 f"<small>To correct it, press ✏️ Change the stories below and save again; the published page updates too.</small></div>")
+                 f"<small>To correct it, press {icon('pencil')} Change the stories below and save again; the published page updates too.</small></div>")
     else:
         state = ("<div class='bar draft'><b>Draft — not public yet.</b> Members cannot find this page. Change the stories "
                  "if you wish, then press <b>Approve and publish</b> in the story editor.</div>")
     probs = ("".join(f"<li>{esc(p)}</li>" for p in issue["problems"]) if issue else "")
     problems = f"<div class='bar err'><b>Please check:</b><ul>{probs}</ul></div>" if probs else ""
-    tools = ("<div class='toolbar'>" + ("<button type='button' class='btn' id='ed-open'>✏️ Change the stories</button>" if issue else "")
-             + (f"<button type='button' class='btn alt' data-copy='{esc(review_url(cfg, key))}'>🔗 Copy the view-only link</button>"
+    tools = ("<div class='toolbar'>" + (f"<button type='button' class='btn' id='ed-open'>{icon('pencil')} Change the stories</button>" if issue else "")
+             + (f"<button type='button' class='btn alt' data-copy='{esc(review_url(cfg, key))}'>{icon('link')} Copy the view-only link</button>"
                 if issue else "")
              + f"<a class='btn alt' href='../archive.html'>All published issues</a>"
              f"<a class='btn alt small' href='{esc(edit)}'>Advanced: edit the file</a></div>")
@@ -1224,7 +1999,9 @@ def preview_html(key, issue, error, digests, cfg):
         data = f"<script type='application/json' id='gn-data'>{blob}</script><div id='gn-editor'></div>"
     parts = [f"<div class='editor'><div class='ed-k'>MPC editor · preview of week {week_no(key)}</div>{state}{problems}{tools}{saved}</div>{data}"]
     if issue:
-        parts.append(issue_html(issue, cfg, "../"))
+        parts.append(issue_html(issue, cfg, "../", preview=True))
+        parts.append(case_tools_html(key, issue))
+        parts.append(set_aside_html(key, issue, digests))
         text = linkedin_text(issue, cfg)
         card = linkedin_card(issue, cfg)
         li = settings(cfg)["linkedin_page"]
@@ -1247,11 +2024,27 @@ def forward_page(url):
             f"<body><p>Geo-News Weekly has moved to <a href='{u}'>{u}</a>.</p></body></html>")
 
 
+def links_wanted(loaded, digests, public=False):
+    """The links of the stories in the issues, then (for the editor's preview of a draft) of the other stories of the
+    draft's week, best first: the order in which their publisher's own address is looked for."""
+    issues = [i for _, i, _ in loaded if i]
+    out = [it["s"].get("link") for i in issues for it in i["highlights"] + i["around"]]
+    if not public:
+        for i in issues:
+            if i["status"] != "draft":
+                continue
+            stories, _ = week_items(digests, i["key"])
+            out += [s.get("link") for s in notify().by_rank(stories) if (s.get("relevance") or 0) >= 3]
+    return out
+
+
 def build(ctx, public=False):
     """docs/geonews/: index.html (newest published issue), <week>.html for each published issue, archive.html,
     and preview/<week>.html for every issue file, draft or published. When the newsletter has its own website
     (geonews: public_url), the pages members read are built only for that site (public=True, see public_bundle);
-    the News Desk then keeps the previews and, at the old addresses, pages that forward to the new site."""
+    the News Desk then keeps the previews and, at the old addresses, pages that forward to the new site. The public
+    build reaches no network: it uses the links decoded and the pictures saved by the News Desk build before it, as
+    nothing it fetched would be saved."""
     cfg, digests = ctx["cfg"], ctx["digests"]
     forward = bool(str(settings(cfg)["public_url"] or "").strip()) and not public
     stories, papers = all_items(digests)
@@ -1259,13 +2052,24 @@ def build(ctx, public=False):
         p["_paper"] = True
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / "preview").mkdir(exist_ok=True)
-    loaded = []
-    for path in issue_files():
-        try:
-            issue, error = load_issue(path, stories, papers), ""
-        except ValueError as ex:
-            issue, error = None, str(ex)
-        loaded.append((path.stem, issue, error))
+
+    def load_all():
+        out = []
+        for path in issue_files():
+            try:
+                issue, error = load_issue(path, stories, papers), ""
+            except ValueError as ex:
+                issue, error = None, str(ex)
+            out.append((path.stem, issue, error))
+        return out
+    loaded = load_all()
+    # the publisher's own address of the stories' links (read again once some are found: the news sites change)
+    if not public and decode_links(links_wanted(loaded, digests)):
+        loaded = load_all()
+    for _, issue, _ in loaded:   # the satellite views, kept with the site
+        if issue:
+            pictures(issue, download=not public)
+    copy_pictures(OUT / "img")
     published = [i for _, i, _ in loaded if i and i["status"] == "approved" and (i["highlights"] or i["around"])]
     keys = [i["key"] for i in published]
     count = len(keys)
@@ -1329,50 +2133,79 @@ def reviewers():
 
 
 def gn_mail(title, sub, body, why):
-    """A Geo-News e-mail in the magazine's colours, with no link to the News Desk."""
+    """A Geo-News e-mail in the magazine's colours, with no link to the News Desk. The fonts of the site are named
+    first (SERIF, SANS); e-mail programs that do not have them use Georgia and Arial."""
     return ("<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
             "<meta name='color-scheme' content='light'></head><body style='margin:0;padding:0;background:#F2F0EC'>"
             "<div style='max-width:640px;margin:0 auto;background:#ffffff'>"
             "<div style='padding:22px 24px 14px;border-bottom:3px solid #B9962E'>"
-            "<div style='font:600 11px Arial,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#A6242E'>"
+            f"<div style='font:600 11px {SANS};letter-spacing:.14em;text-transform:uppercase;color:#A6242E'>"
             "ISSMGE · Magazine Presidential Committee (MPC)</div>"
-            f"<div style='font:700 26px/1.2 Georgia,serif;color:#A6242E;margin:4px 0 2px'>{title}</div>"
-            f"<div style='font:13px Arial,sans-serif;color:#625C60'>{sub}</div></div>"
-            f"<div style='padding:6px 24px 22px;font:15px/1.55 Arial,sans-serif;color:#2A2024'>{body}</div>"
-            f"<div style='padding:14px 24px;background:#2A2024;color:#cbbfc3;font:12px/1.6 Arial,sans-serif'>{why}</div>"
+            f"<div style='font:700 26px/1.2 {SERIF};color:#A6242E;margin:4px 0 2px'>{title}</div>"
+            f"<div style='font:13px {SANS};color:#625C60'>{sub}</div></div>"
+            f"<div style='padding:6px 24px 22px;font:15px/1.6 {SANS};color:#2A2024'>{body}</div>"
+            f"<div style='padding:14px 24px;background:#2A2024;color:#cbbfc3;font:12px/1.6 {SANS}'>{why}</div>"
             "</div></body></html>")
 
 
 def mail_button(url, label, color="#A6242E"):
     return (f"<p style='margin:18px 0'><a href='{esc(url)}' style='display:inline-block;background:{color};color:#ffffff;"
-            f"font:bold 15px Arial,sans-serif;text-decoration:none;padding:12px 22px;border-radius:24px'>{label}</a></p>")
+            f"font:bold 15px {SANS};text-decoration:none;padding:12px 22px;border-radius:24px'>{label}</a></p>")
+
+
+def mail_heading(text, top=26):
+    """A section heading of an e-mail (Highlights, Around the world, LinkedIn post)."""
+    return (f"<h3 style='font:bold 12px {SANS};letter-spacing:.12em;text-transform:uppercase;color:#A6242E;"
+            f"margin:{top}px 0 12px'>{text}</h3>")
 
 
 def mail_stories(issue, full=True):
-    """The issue in an e-mail: the highlights (headline, place, one line) and, if full, around the world."""
+    """The issue in an e-mail: the highlights (headline, place, source and date, one line), if full around the world,
+    then the case history. Headlines are underlined so readers see they are links; a thin line and space separate the
+    stories."""
     n = notify()
-    out = ["<h3 style='font:bold 12px Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#A6242E;"
-           "margin:20px 0 8px'>Highlights</h3>"]
+    out = [mail_heading("Highlights")]
+    last = len(issue["highlights"])
     for i, it in enumerate(issue["highlights"], 1):
         s = it["s"]
         place = n.country_name(s.get("country")) or "Global"
+        meta = " · ".join(x for x in (esc(place), source_line(s)) if x)
         num = f" <b style='color:#A6242E'>{esc(it['number'])}</b> {esc(it.get('number_label', ''))} ·" if it.get("number") else ""
-        lead = " <span style='font:bold 11px Arial;color:#B9962E'>STORY OF THE WEEK</span>" if i == 1 else ""
-        out.append(f"<div style='margin:0 0 14px'><div style='font:12px Arial,sans-serif;color:#625C60'>{i}. {esc(place)} · "
-                   f"{esc(s.get('source', ''))}{lead}</div>"
-                   f"<a href='{esc(s['link'])}' style='font:bold 16px/1.35 Georgia,serif;color:#2A2024;text-decoration:none'>"
+        lead = f" <span style='font:bold 11px {SANS};color:#B9962E'>STORY OF THE WEEK</span>" if i == 1 else ""
+        sep = "" if i == last else "padding:0 0 20px;border-bottom:1px solid #E6E1DC;"
+        out.append(f"<div style='margin:0 0 20px;{sep}'><div style='font:12px/1.5 {SANS};color:#625C60;margin:0 0 4px'>{i}. {meta}{lead}</div>"
+                   f"<a href='{esc(story_link(s))}' style='font:bold 17px/1.35 {SERIF};color:#2A2024;text-decoration:underline'>"
                    f"{headline_html(it)}</a>"
-                   + (f"<div style='font:14px/1.5 Arial,sans-serif;color:#2A2024;margin-top:2px'>{num} {esc(it['text'])}</div>"
+                   + (f"<div style='font:14px/1.55 {SANS};color:#2A2024;margin-top:6px'>{num} {esc(it['text'])}</div>"
                       if it["text"] or num else "") + "</div>")
     if full and issue["around"]:
-        out.append("<h3 style='font:bold 12px Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#A6242E;"
-                   "margin:20px 0 8px'>Around the world</h3><ul style='padding-left:18px;margin:0'>")
+        out.append(mail_heading("Around the world", 30) + "<ul style='padding-left:18px;margin:0'>")
         for it in issue["around"]:
             s = it["s"]
-            out.append(f"<li style='margin:0 0 7px'><a href='{esc(s['link'])}' style='color:#2A2024'>{headline_html(it)}</a> "
-                       f"<span style='color:#625C60;font-size:13px'>({esc(n.country_name(s.get('country')) or 'Global')})</span></li>")
+            meta = " · ".join(x for x in (esc(n.country_name(s.get("country")) or "Global"), source_line(s)) if x)
+            out.append(f"<li style='margin:0 0 14px'><a href='{esc(story_link(s))}' style='font:bold 15px/1.4 {SERIF};color:#2A2024;"
+                       f"text-decoration:underline'>{headline_html(it)}</a><br>"
+                       f"<span style='font:13px/1.5 {SANS};color:#625C60'>{meta}</span></li>")
         out.append("</ul>")
-    return "".join(out)
+    return "".join(out) + mail_case(issue)
+
+
+def mail_case(issue):
+    """The case history in an e-mail: the case, its country and date, its text and lesson, and where to read more."""
+    ch = issue.get("case")
+    if not ch:
+        return ""
+    c = ch["c"]
+    story, lesson = case_parts(ch["text"])
+    meta = " · ".join(x for x in ("Success" if c.get("outcome") == "success" else "Failure", esc(c.get("country", "")),
+                                  esc(case_when(c)), esc(case_anniversary(issue))) if x)
+    links = "<br>".join(f"<a href='{esc(site_builder.safe_url(u))}' style='color:#A6242E'>{esc(t)}</a>" for t, u in case_sources(c))
+    return (mail_heading("Case history", 30)
+            + f"<div style='font:12px/1.5 {SANS};color:#625C60;margin:0 0 4px'>{meta}</div>"
+            f"<div style='font:bold 17px/1.35 {SERIF};color:#2A2024'>{esc(c.get('name', ''))}</div>"
+            f"<div style='font:14px/1.55 {SANS};color:#2A2024;margin-top:6px'>{esc(story)}</div>"
+            + (f"<div style='font:14px/1.55 {SANS};color:#2A2024;margin-top:8px'><b>{LESSON}</b> {esc(lesson)}</div>" if lesson else "")
+            + (f"<div style='font:12px/1.6 {SANS};color:#625C60;margin-top:10px'><b>Read more:</b><br>{links}</div>" if links else ""))
 
 
 def email_draft(issue, cfg, reviewer=False):
@@ -1381,7 +2214,8 @@ def email_draft(issue, cfg, reviewer=False):
     name, span = settings(cfg)["name"], week_span(key)
     if reviewer:
         body = (f"<p>Dear colleague, the draft of <b>{esc(name)}</b> for <b>{esc(span)}</b> is ready for your review. "
-                "Here are its highlights; the full draft shows them with the world map, the stories from around the world, "
+                + ("Here are its highlights and its case history; " if issue.get("case") else "Here are its highlights; ")
+                + "the full draft shows them with the world map, the stories from around the world, "
                 "the research highlights and the events.</p>"
                 + mail_button(review_url(cfg, key), "Read the full draft")
                 + mail_stories(issue, full=False)
@@ -1415,11 +2249,10 @@ def email_approved(issue, cfg, reviewer=False):
                         "Published by the ISSMGE Magazine Presidential Committee (MPC). You receive this as a reviewer of Geo-News Weekly."))
     prev = f"{site_builder.site_url(cfg)}geonews/preview/{key}.html"
     li = esc(linkedin_text(issue, cfg)).replace("\n", "<br>")
-    body += ("<h3 style='font:bold 12px Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#A6242E;"
-             "margin:26px 0 8px'>LinkedIn post</h3>"
-             f"<p style='font-size:14px'>Copy the text below; download the picture from the "
+    body += (mail_heading("LinkedIn post", 30)
+             + f"<p style='font-size:14px'>Copy the text below; download the picture from the "
              f"<a href='{esc(prev)}'>preview page</a> (Download the picture).</p>"
-             f"<div style='border:1px solid #E6E1DC;border-radius:8px;padding:12px 14px;font:14px/1.5 Arial,sans-serif;"
+             f"<div style='border:1px solid #E6E1DC;border-radius:8px;padding:12px 14px;font:14px/1.5 {SANS};"
              f"background:#F7ECEE'>{li}</div>")
     return (f"{name} published · LinkedIn post ready · {span}",
             gn_mail(esc(name), f"Published · week {week_no(key)} · {esc(span)}", body,

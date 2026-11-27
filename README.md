@@ -190,15 +190,22 @@ e-mail is described [below](#e-mail-alerts-and-the-weekly-summary-setup-about-10
 ### Geo-News Weekly (the page for ISSMGE members)
 A weekly page of the geotechnical news from around the world for ISSMGE members, at
 `https://monabadr12.github.io/geotech-news/geonews/`, in the style of the ISSMGE Magazine Visual Identity Guide (ISSMGE
-Red, gold rule, Source Serif 4 and Source Sans 3, a muted accent for each theme), with the ISSMGE logo and the name of
-the Magazine Presidential Committee (MPC). It shows a world map with a numbered pin for each story; five
+Red, gold rule, the fonts of issmge.org, Newsreader for headings and Libre Franklin for text, a muted accent for each
+theme), with the ISSMGE logo and the name of the Magazine Presidential Committee (MPC). Fonts, icons (Lucide line icons
+in ISSMGE red) and flags are kept with the site (`assets/fonts/`, `assets/icons/`, `assets/flags/`, each with its
+licence), so the pages load nothing from Google Fonts or other servers. It shows a world map with a numbered pin for each story; five
 **highlights**, the first as a cover card (the story of the week); eight stories **around the world** (the best of each
 ISSMGE region in turn); **Research highlights** (three new papers); and the events coming up. Every issue stays in the
 archive (`geonews/archive.html`); each issue page links to the one before and after.
 
-Each story shows **where it happened** instead of a photo: a satellite view of the site (Sentinel-2 cloudless by EOX,
-free to use with the credit in the page footer) when the place is known exactly, otherwise a small map of the country
-with the place marked. A **key number** from the headline (for example 96 % or US$16.5 bn) is shown large. Small notes
+Each story shows **where it happened** instead of a photo: a satellite view of the site (Sentinel-2 cloudless 2020 by
+EOX IT Services, s2maps.eu, licensed CC BY-NC-SA 4.0: free for non-commercial use with the credit and licence named in
+the page footer; the pictures cut from it are shared under the same licence, see `data/geonews/img/LICENSE.txt`) when
+the place is known exactly, otherwise a small map of the country with the place marked. The satellite views are made when the pages are built (in GitHub Actions): the map tiles around
+the place are downloaded once, put together and cut to one picture per story, kept in `data/geonews/img/<week>/` and
+published with the pages; a story whose picture cannot be downloaded shows its country map. After the news, each issue
+has a **Case history**: one well-known geotechnical case, failure or success, with its lesson for practice and links to
+read more. A **key number** from the headline (for example 96 % or US$16.5 bn) is shown large. Small notes
 say when the news site is **in another language** (use the browser's Translate) and when it **shows many adverts**.
 The advert note is measured: each week `geonews.py` reads the home page of every news site in the issues once and
 counts the advertising systems on it (Google Ads, Taboola, Outbrain, Criteo and others; three or more = many). The
@@ -239,6 +246,45 @@ after every run, to a separate repository (`geonews: public_repo` in `config.yam
 whose GitHub Pages site is the address members use (`geonews: public_url`). Only the published issues, the archive,
 the style sheet and the pictures go there: no previews, no drafts, no links to the News Desk. It needs the Actions
 secret `GEONEWS_DEPLOY_TOKEN`: a fine-grained token with *Contents: read and write* on that repository only.
+
+**Changes after the review of November 2026** (agreed with the reviewer; all in place from week 47):
+1. **Fonts:** Newsreader for headings and Libre Franklin for text, the fonts of issmge.org, kept with the site
+   (`assets/fonts/`); nothing is loaded from Google Fonts. The e-mails name the same fonts, then Georgia and Arial.
+2. **Icons:** the emoji are replaced by Lucide line icons in ISSMGE red, kept with the site (`assets/icons/`).
+3. **Opening text:** "A new weekly service for ISSMGE members." under the title, and a new welcome paragraph.
+4. **Story dates:** each story shows the day it was published, next to its source.
+5. **E-mail layout:** more space and a thin line between stories, and underlined headlines, so readers see the links.
+6. **Flags:** small flag pictures kept with the site (`assets/flags/`), not loaded from flagcdn.com (flag emoji do not
+   show on Windows); the LinkedIn post keeps flag emoji, as it is plain text.
+7. **Publisher links:** many links of the scan go through Google News (`news.google.com/rss/articles/...`). The
+   publisher's own address is found with the `googlenewsdecoder` package for the stories of an issue (when the draft is
+   written and when the pages are built) and for the other stories on a draft's preview (when the pages are built).
+   The copy for the newsletter's own website (`--public-bundle`) decodes nothing and downloads no picture: it uses the
+   links and pictures the build before it saved.
+   Each link is decoded once and kept in `data/geonews/gnews_links.json`; the tool pauses after each link and, each
+   time it runs, decodes at most 80 links and for at most two minutes (the rest the next times). A link that cannot
+   be decoded keeps its Google News address, the log says so, and the preview shows "Editor: link still goes through
+   Google News"; it is tried again on another day, on three days at most (`data/geonews/gnews_failed.json`). Pages,
+   e-mails and the advert check use the publisher's address.
+8. **News of the week only:** the draft takes no story published more than a few days before the issue week
+   (`SCAN_LAG_DAYS` in `geonews.py`: the news of the weekend before is saved on Monday or Tuesday and belongs to the
+   issue) or after its Sunday, and nothing from encyclopedias and similar reference sites (Britannica, Wikipedia and
+   others, `REFERENCE_SITES`), as with the Vajont entry from Britannica in week 45. The preview of a draft lists them under
+   **Older or reference items (not used as news)**, and its **Please check** box names any such story still in a draft.
+9. **Case history:** one item per issue, after Around the world and before Research highlights, on the pages and in the
+   e-mails (and one line in the LinkedIn post), kept apart from the news. The cases come from a checked list of 50
+   well-known case histories from every ISSMGE region, `data/geonews/case_histories.yaml` (a draft list, checked
+   through web searches on 27 November 2026, to be confirmed by ISSMGE TC302 before items are published). The draft
+   takes a case whose anniversary falls in the issue week or the week after it, otherwise the next case not used
+   before, the regions in turn; a case is never used twice. It writes the case's id and a text from the list (where
+   people died, the victims first; then what happened; then "Lesson for practice: ..."), with its sources as "Read
+   more" links. The editor can change the text, or swap the case in the story editor (**Case history**) or in the
+   file (`case_history:`, by its id); the preview suggests three other cases (none that another issue, earlier or
+   later, has) and notes that the text is a draft to check; a draft whose case another issue also has is named in its
+   **Please check** box. Weeks 44 to 46 have no case history.
+10. **Satellite views kept with the site:** readers' browsers no longer load map tiles from EOX (see above). With the
+    fonts, icons, flags and publisher links, a Geo-News page asks no other server for anything; only the links readers
+    click lead elsewhere.
 
 A draft can also be written by hand: `python geonews.py --draft --week 2026-W44` (`--force` replaces the file).
 `data/geonews/sent.json` records the e-mails sent. Settings (name, number of stories, hashtags) are under `geonews:`
@@ -595,7 +641,7 @@ and delete it. If the website moves, set the Script property `SITE_URL` to its n
 | `events.py` | The events calendar: the Events page and its map (the list of cities is `CITY_POINTS`), the `.ics` feed and the weekly refresh (`python events.py --refresh`). |
 | `notify.py` | Alerts and the weekly summary: sends the e-mails (`--auto`, `--weekly`, `--test`) and builds `docs/weekly/`. |
 | `geonews.py` | Geo-News Weekly: the weekly draft (`--draft`, `--auto`), its e-mails and the pages in `docs/geonews/`. |
-| `data/geonews/` | The Geo-News issues (one file per week; the MPC editor edits and approves them), the advert check (`ads.json`) and the e-mails sent (`sent.json`). |
+| `data/geonews/` | The Geo-News issues (one file per week; the MPC editor edits and approves them), the advert check (`ads.json`), the e-mails sent (`sent.json`), the case histories (`case_histories.yaml`), the Google News links decoded (`gnews_links.json`) and those that could not be (`gnews_failed.json`), and the satellite pictures of the stories (`img/<week>/`). |
 | `sync_data.py` | The workflows' save step: puts a run's data on the newest version of the site and rebuilds it. |
 | `check_feeds.py` | Tests candidate feed addresses (run by the *Check feeds* workflow). |
 | `data/briefs/` | The issue briefs (one file per issue window; the Word files are built from them). |

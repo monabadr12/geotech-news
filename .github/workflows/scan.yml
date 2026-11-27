@@ -121,7 +121,9 @@ jobs:
             git commit -q -m "$msg"
             if git push; then exit 0; fi
             echo "The branch moved while saving; trying again ($attempt)."
-            git reset -q --soft HEAD~1
+            # not --soft: new files (a Geo-News draft, satellite pictures) must be untracked again, or the
+            # reset --hard in sync_data.py deletes them on the next attempt
+            git reset -q HEAD~1
           done
           exit 1
       - name: Publish Geo-News Weekly to its own website

@@ -4,3 +4,5 @@ PyYAML>=6.0
 anthropic>=2.3
 openpyxl>=3.1
 python-docx>=1.1
+googlenewsdecoder>=0.2
+Pillow>=10.0
