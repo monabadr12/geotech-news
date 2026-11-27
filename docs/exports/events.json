@@ -1,6 +1,6 @@
 {
  "updated": "2026-11-22T09:28:40+00:00",
- "built": "2026-11-26",
+ "built": "2026-11-27",
  "feed": "https://monabadr12.github.io/geotech-news/events.ics",
  "kinds": [
   "ISSMGE conference",
@@ -49,7 +49,7 @@
    "source": "scan",
    "found": "2026-10-25",
    "notes": "Starts today and may be in progress; the event page was not opened, so deadlines are unchecked.",
-   "status": "under way"
+   "status": "past"
   },
   {
    "id": "igs-academic-masterclass-2026",
@@ -70,7 +70,7 @@
    "source": "scan",
    "found": "2026-11-08",
    "notes": "Held in Burleigh Heads, Queensland; organiser name only as IGS series title.",
-   "status": "under way"
+   "status": "past"
   },
   {
    "id": "bga-ecg-soil-logging-2026",
@@ -133,7 +133,7 @@
    "source": "scan",
    "found": "2026-10-25",
    "notes": "Tagged ITA recognised event; only the start date is known, so check place, end date and deadlines.",
-   "status": "under way"
+   "status": "past"
   },
   {
    "id": "geotec-hanoi-2026",
@@ -154,7 +154,7 @@
    "source": "scan",
    "found": "2026-10-25",
    "notes": "Only the start date is known, so the end date is set equal to it; check end date, organiser and deadlines.",
-   "status": "under way"
+   "status": "past"
   },
   {
    "id": "56th-isrm-online-lecture-2026",
