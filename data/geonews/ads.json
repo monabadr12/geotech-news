@@ -1,10 +1,65 @@
 {
+ "ansalatina.com": {
+  "checked": "2026-11-27",
+  "many": false,
+  "systems": [
+   "Google Ads",
+   "MGID"
+  ]
+ },
+ "bioengineer.org": {
+  "checked": "2026-11-27",
+  "many": true,
+  "systems": [
+   "AdSense auto ads",
+   "Ezoic",
+   "Google Ads",
+   "Media.net"
+  ]
+ },
  "bnamericas.com": {
   "checked": "2026-11-06",
   "many": false,
   "systems": [
    "Google Ads"
   ]
+ },
+ "britannica.com": {
+  "checked": "2026-11-27",
+  "many": false,
+  "systems": []
+ },
+ "constructionbriefing.com": {
+  "checked": "2026-11-27",
+  "many": false,
+  "systems": [
+   "Google Ads"
+  ]
+ },
+ "dainikbhaskar.com": {
+  "checked": "2026-11-27",
+  "many": true,
+  "systems": [
+   "Google Ads",
+   "Prebid",
+   "PubMatic",
+   "Rubicon",
+   "Xandr"
+  ]
+ },
+ "elcomercio.pe": {
+  "checked": "2026-11-27",
+  "many": true,
+  "systems": [
+   "Google Ads",
+   "Prebid",
+   "Rubicon"
+  ]
+ },
+ "elsoldemexico.com.mx": {
+  "checked": "2026-11-27",
+  "many": false,
+  "systems": []
  },
  "eluniversal.com.mx": {
   "checked": "2026-11-06",
@@ -13,6 +68,24 @@
    "Amazon",
    "Google Ads",
    "Taboola"
+  ]
+ },
+ "eos.org": {
+  "checked": "2026-11-27",
+  "many": false,
+  "systems": [
+   "Google Ads"
+  ]
+ },
+ "gds.it": {
+  "checked": "2026-11-27",
+  "many": true,
+  "systems": [
+   "AdSense auto ads",
+   "Google Ads",
+   "MGID",
+   "Media.net",
+   "Outbrain"
   ]
  },
  "geplus.co.uk": {
@@ -34,6 +107,26 @@
    "Xandr"
   ]
  },
+ "ilmessaggero.it": {
+  "checked": "2026-11-27",
+  "many": true,
+  "systems": [
+   "Amazon",
+   "Criteo",
+   "Google Ads",
+   "Prebid",
+   "PubMatic",
+   "Rubicon",
+   "Xandr"
+  ]
+ },
+ "indexbox.io": {
+  "checked": "2026-11-27",
+  "many": false,
+  "systems": [
+   "Google Ads"
+  ]
+ },
  "japannews.yomiuri.co.jp": {
   "checked": "2026-11-06",
   "many": false,
@@ -48,6 +141,16 @@
    "Taboola"
   ]
  },
+ "lasillarota.com": {
+  "checked": "2026-11-27",
+  "many": true,
+  "systems": [
+   "AdSense auto ads",
+   "Amazon",
+   "Google Ads",
+   "MGID"
+  ]
+ },
  "life.ru": {
   "checked": "2026-11-06",
   "many": true,
@@ -57,13 +160,53 @@
    "Yandex"
   ]
  },
+ "marketscreener.com": {
+  "checked": "2026-11-27",
+  "many": false,
+  "systems": []
+ },
+ "news.yahoo.co.jp": {
+  "checked": "2026-11-27",
+  "many": false,
+  "systems": []
+ },
+ "offshore-energy.biz": {
+  "checked": "2026-11-27",
+  "many": false,
+  "systems": []
+ },
+ "omannews.gov.om": {
+  "checked": "",
+  "error": "SSLError",
+  "many": null,
+  "systems": []
+ },
  "phys.org": {
   "checked": "2026-11-06",
   "many": false,
   "systems": []
  },
+ "popularmechanics.com": {
+  "checked": "2026-11-27",
+  "many": false,
+  "systems": []
+ },
  "rainews.it": {
   "checked": "2026-11-06",
+  "many": false,
+  "systems": [
+   "Google Ads"
+  ]
+ },
+ "sandiegored.com": {
+  "checked": "2026-11-27",
+  "many": false,
+  "systems": [
+   "Google Ads"
+  ]
+ },
+ "scoop.co.nz": {
+  "checked": "2026-11-27",
   "many": false,
   "systems": [
    "Google Ads"
