@@ -1377,7 +1377,7 @@ def map_svg(issue, cls="wmap", label=True):
         hl = i <= len(issue["highlights"])
         fill = "#a6242e" if hl else "#b9962e"
         r = 72 if hl else 60
-        t = esc(title_of(it["s"]))
+        t = esc(it["title"] or title_of(it["s"]))   # the editor's headline, as on the story card
         pins.append(f"<a href='#s{i}' aria-label='Story {i}: {t}'><title>{i}. {t}</title>"
                     f"<circle cx='{x:.0f}' cy='{y:.0f}' r='{r}' fill='{fill}' stroke='#fff' stroke-width='12'/>"
                     + (f"<text x='{x:.0f}' y='{y + 26:.0f}' text-anchor='middle' font-size='{76 if hl else 64}' "
