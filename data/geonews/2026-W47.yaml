@@ -93,10 +93,10 @@ around_the_world:
     adverts: auto   # auto (checked each week), yes or no
     update: ""   # the week of the earlier story this one updates (e.g. 2026-W44); "" for a new story
   - story: 1ae09b4ed608c85e   # Death toll from mudslides in Nepal rises to 903 people (Nepal)
-    title: ""   # empty keeps the headline above
+    title: "Death toll from mudslides in Nepal rises"   # the figure of 903 could not be confirmed
     text: ""   # optional: one line
-    number: "903"   # the key number shown large; "" for none
-    number_label: "people killed in Nepal mudslides"
+    number: ""   # the key number shown large; "" for none
+    number_label: ""
     language: "Arabic"   # the news site's language
     lat: 28.4
     lon: 84.1
