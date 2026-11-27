@@ -29,6 +29,10 @@ longitude) and the language and web site of the outlet; the editor can change al
 Adverts: each week the home page of every outlet in the issues is read once (the result is kept for 30 days
 in data/geonews/ads.json) and the advertising systems on it are counted; an outlet with many is marked
 "This site may show many adverts". The editor can set adverts: yes or no for any story.
+Fonts, icons and flags are kept with the site, so a page asks no other server for them (no Google Fonts, no
+flagcdn.com): the fonts of issmge.org (Newsreader for headings, Libre Franklin for text) in assets/fonts/, Lucide
+line icons in assets/icons/ (put into the page as SVG) and the flag-icons flags in assets/flags/, each with its
+licence. The e-mails use no web fonts and no icons (Gmail and Outlook show neither).
 
 data/geonews/sent.json records the e-mails sent: {"draft": {week: time}, "approved": {week: time}}.
 """
@@ -72,11 +76,18 @@ KEY = re.compile(r"^\d{4}-W\d{2}$")
 DEFAULTS = {"name": "Geo-News Weekly", "highlights": 5, "around": 8, "research": 3, "events_days": 60,
             "events_max": 6, "hashtags": "#Geotechnics #GeotechnicalEngineering #ISSMGE #CivilEngineering",
             "linkedin_page": "", "editor": "",
-            "initiative": "This newsletter is published within the framework of the new ISSMGE President's Initiatives.",
+            "initiative": "A new weekly service for ISSMGE members.",
             "subscribe_form": "", "unsubscribe_form": "", "suggest_form": "", "public_url": ""}
-INTRO = ("Dear colleagues, here are the geotechnical stories from around the world that caught our eye last week. "
-         "We gather them from news sources in different languages, and the ISSMGE Magazine Presidential Committee (MPC) "
-         "checks every issue before it is published.")
+INTRO = ("Dear members, every week our profession is at work around the world, in foundations and tunnels, slopes and dams, "
+         "coastlines and cities. Here is a selection of that work, gathered from news sources in many languages and brought "
+         "to you by the ISSMGE Magazine Presidential Committee.")
+ICONS = site_builder.ASSETS / "icons"   # Lucide line icons (npm lucide-static 1.82.0, ISC licence in assets/icons/LICENSE)
+FLAGS = site_builder.ASSETS / "flags"   # flags, 4 x 3 (npm flag-icons 7.6.0, MIT licence in assets/flags/LICENSE)
+# the fonts of the e-mails: e-mail programs load no web fonts, so each name is followed by one every computer has
+MAIL_SERIF = "Newsreader,Georgia,serif"
+MAIL_SANS = '"Libre Franklin",Arial,sans-serif'
+
+
 def notify():
     import notify as n  # the e-mail channel, dates and event helpers of the weekly summary
     return n
@@ -102,6 +113,29 @@ def theme_color(theme):
 def flag(code):
     code = str(code or "").upper()
     return "".join(chr(0x1F1E6 + ord(c) - 65) for c in code) if re.match(r"^[A-Z]{2}$", code) else "🌍"
+
+
+_ICONS = {}
+
+
+def icon(name):
+    """A Lucide line icon (assets/icons/<name>.svg) put into the page as SVG: the height of the text, in ISSMGE red
+    (the colour of .ic in geonews.css), hidden from screen readers (the words beside it say what it means)."""
+    if name not in _ICONS:
+        try:
+            svg = (ICONS / f"{name}.svg").read_text(encoding="utf-8")
+        except OSError:
+            svg = ""
+        inner = re.search(r"<svg[^>]*>(.*)</svg>", svg, re.S)
+        _ICONS[name] = ("<svg class='ic' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' "
+                        "stroke-linecap='round' stroke-linejoin='round' aria-hidden='true' focusable='false'>"
+                        + " ".join(inner.group(1).split()).replace('"', "'") + "</svg>") if inner else ""
+    return _ICONS[name]
+
+
+def story_date(s):
+    """The day the story was published, as the scan stored it ('12 Nov 2026'; "" when unknown)."""
+    return site_builder.nice_date(notify().story_day(s))
 
 
 def title_of(s):
@@ -783,21 +817,26 @@ def map_svg(issue, cls="wmap", label=True):
 
 
 # ------------------------------------------------------------------ the page
-def flag_img(code):
-    """A small flag picture (flagcdn.com): flag emoji do not show on Windows computers."""
+def flag_img(code, root=""):
+    """A small flag picture, kept with the site (assets/flags/): flag emoji do not show on Windows computers.
+    root: the way from the page to geonews/ ("" or "../"); the globe icon when the country has no flag."""
     code = str(code or "").upper()
     code = {"UK": "GB", "EL": "GR"}.get(code, code)
-    if not re.match(r"^[A-Z]{2}$", code) or code in ("XX", "ZZ"):
-        return "🌍"
-    c = code.lower()
-    return (f"<img class='flag' src='https://flagcdn.com/20x15/{c}.png' "
-            f"srcset='https://flagcdn.com/40x30/{c}.png 2x' width='20' height='15' alt=''>")
+    if not re.match(r"^[A-Z]{2}$", code) or code in ("XX", "ZZ") or not (FLAGS / f"{code.lower()}.svg").exists():
+        return icon("earth")
+    return f"<img class='flag' src='{root}../assets/flags/{code.lower()}.svg' width='20' height='15' alt=''>"
 
 
-def where_text(s):
+def where_text(s, root=""):
     n = notify()
     place = n.country_name(s.get("country"))
-    return f"{flag_img(s.get('country'))} {esc(place)}" if place else "🌍 Global"
+    return f"{flag_img(s.get('country'), root)} {esc(place)}" if place else f"{icon('earth')} Global"
+
+
+def source_line(s):
+    """The outlet and the day it published the story: 'Tunnels & Tunnelling · 12 Nov 2026'."""
+    day = story_date(s)
+    return esc(s.get("source", "")) + (f" · <span class='dt'>{day}</span>" if day else "")
 
 
 def tag(s):
