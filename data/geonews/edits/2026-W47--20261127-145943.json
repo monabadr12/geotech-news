@@ -1,0 +1,135 @@
+{
+ "week": "2026-W47",
+ "status": "approved",
+ "intro": "Dear members, every week our profession is at work around the world, in foundations and tunnels, slopes and dams, coastlines and cities. Here is a selection of that work, gathered from news sources in many languages and brought to you by the ISSMGE Magazine Presidential Committee.",
+ "highlights": [
+  {
+   "story": "7369fe07bae5ddeb",
+   "title": "",
+   "text": "How do tunnel boring machines control ground settlement and groundwater pressure beneath a busy urban river crossing, and what monitoring confirms it?",
+   "number": "$16bn",
+   "number_label": "Hudson Tunnel Project total cost",
+   "satellite": false,
+   "update": ""
+  },
+  {
+   "story": "058e9d7b41e6887d",
+   "title": "",
+   "text": "How did a rock slope fail over 500 metres and dam a river, and what does the blockage imply for downstream flooding and remediation?",
+   "number": "500 m",
+   "number_label": "distance rocks fall, blocking river",
+   "satellite": false,
+   "update": ""
+  },
+  {
+   "story": "3a023df22d454d71",
+   "title": "Hachinohe port terminal about 20% restored nearly a year after the Aomori offshore earthquake; liquefaction works start in December",
+   "text": "How can liquefaction-suppression techniques be made effective on reclaimed port ground, and what did the earthquake reveal about its behaviour?",
+   "number": "about 20%",
+   "number_label": "restoration progress at Hachinohe port terminal",
+   "satellite": true,
+   "update": ""
+  },
+  {
+   "story": "e78cd2595be97159",
+   "title": "",
+   "text": "Can acoustic monitoring of submarine slope failures improve the design of cable routes and offshore foundations on susceptible seabeds?",
+   "number": "",
+   "number_label": "",
+   "satellite": false,
+   "update": ""
+  },
+  {
+   "story": "6d1b22f494647504",
+   "title": "BGS Common Ground Consultation: Help Shape National Geotechnical Data Service",
+   "text": "What a shared national geotechnical data service should store, and how data standards would affect reuse of site investigation records.",
+   "number": "",
+   "number_label": "",
+   "satellite": false,
+   "update": ""
+  }
+ ],
+ "around_the_world": [
+  {
+   "story": "11d6b3e75e70a476",
+   "title": "",
+   "text": "",
+   "number": "",
+   "number_label": "",
+   "satellite": false,
+   "update": ""
+  },
+  {
+   "story": "1ae09b4ed608c85e",
+   "title": "Death toll from mudslides in Nepal rises",
+   "text": "",
+   "number": "",
+   "number_label": "",
+   "satellite": false,
+   "update": ""
+  },
+  {
+   "story": "5bd4dd80acac54af",
+   "title": "",
+   "text": "",
+   "number": "",
+   "number_label": "",
+   "satellite": false,
+   "update": ""
+  },
+  {
+   "story": "15e57315644f9f9c",
+   "title": "",
+   "text": "",
+   "number": "",
+   "number_label": "",
+   "satellite": true,
+   "update": ""
+  },
+  {
+   "story": "6aa2b760b75e18bc",
+   "title": "",
+   "text": "",
+   "number": "",
+   "number_label": "",
+   "satellite": false,
+   "update": "2026-W44"
+  },
+  {
+   "story": "766f884f7b168463",
+   "title": "",
+   "text": "",
+   "number": "",
+   "number_label": "",
+   "satellite": false,
+   "update": ""
+  },
+  {
+   "story": "f872df19e404a3f4",
+   "title": "",
+   "text": "",
+   "number": "",
+   "number_label": "",
+   "satellite": false,
+   "update": ""
+  },
+  {
+   "story": "f109bc19da3d7e0c",
+   "title": "",
+   "text": "",
+   "number": "",
+   "number_label": "",
+   "satellite": false,
+   "update": ""
+  }
+ ],
+ "research": [
+  "97ae15ce4a6cd8bb",
+  "906ad45e13323217",
+  "2ec5db2441485856"
+ ],
+ "case_history": {
+  "case": "E1",
+  "text": "On 9 October 1963 about 1,900 to 2,000 people, most of them in Longarone, died when a landslide fell into the Vajont reservoir and sent a wave over the dam. About 400 of them were never found. The slide was an ancient landslide on the north flank of Monte Toc, whose sliding surface followed thin clay layers in the limestone. Filling and drawdown of the new reservoir raised water pressures at its toe, and its creep sped up until about 270 million m³ of rock slid into the reservoir. The dam itself stood. Lesson for practice: Recognise old landslides on reservoir slopes, and assess how filling and drawdown change their stability before and during impounding; slope monitoring is useful only if people act on what it shows."
+ }
+}
