@@ -289,6 +289,14 @@ secret `GEONEWS_DEPLOY_TOKEN`: a fine-grained token with *Contents: read and wri
 A draft can also be written by hand: `python geonews.py --draft --week 2026-W44` (`--force` replaces the file).
 `data/geonews/sent.json` records the e-mails sent. Settings (name, number of stories, hashtags) are under `geonews:`
 in `config.yaml`.
+Every issue page and Geo-News e-mail ends with the disclaimer agreed with the editor (`geonews: disclaimer`; `""` or `no` for none), not the LinkedIn post.
+Two map options, prepared for the ISSMGE Board's suggestions and off until the editor chooses: `geonews: map_colours`
+(`current`, the first look, or `stronger`: clearer land, borders and story colours on the world map and the story
+cards' country maps) and `geonews: map_regions` (`none`; `shade`: each of the six ISSMGE regions' land lightly tinted,
+with the region names and a legend; `outline`: the lines between the regions, with their names). Both also apply to
+the LinkedIn picture and to the issues already published. The region lines for `outline` are kept in
+`assets/regions.json`; after moving a country to another region under `map:` in `config.yaml`, run
+`python tools/make_regions.py` (it needs `pip install shapely`; `--check` says whether the file still matches).
 
 ### Research papers (Academia-to-Industry)
 Each scan also asks Crossref (free, no key) for papers newly registered in 25 journals, including *Géotechnique*,
@@ -651,8 +659,9 @@ and delete it. If the website moves, set the Script property `SITE_URL` to its n
 | `assistant/bridge.gs` | The AI assistant's connector, run in your Google account; it also sends the e-mails and keeps the shared planning sheet (see *AI assistant* and *Shared planning sheet*). |
 | `data/changelog.yaml` | Change log and open items shown in the Word report. |
 | `config.yaml` | All settings. |
-| `assets/` | Website style sheet, scripts, icons and the world map outlines (`world.json`). |
+| `assets/` | Website style sheet, scripts, icons, the world map outlines (`world.json`) and the lines between the ISSMGE regions (`regions.json`). |
 | `tools/make_world.py` | Rebuilds `assets/world.json` from Natural Earth (only needed to change the map's outlines). |
+| `tools/make_regions.py` | Rebuilds `assets/regions.json`, the lines between the ISSMGE regions on the Geo-News map (after a region change in `config.yaml`). |
 | `.github/workflows/` | The daily scan (`scan.yml`), the issue brief (`brief.yml`), the events calendar, weekly summary and missing headline translations on demand (`extras.yml`) and Check feeds (`check-feeds.yml`). |
 | `data/digests/` | **The permanent archive**, one file per day. |
 | `data/seen.json` | Links the scanner has already read in the last 45 days, so the same article is not picked up twice. It only prevents repeats: nothing is removed from the archive, and the digests in `data/digests/` are kept permanently. |

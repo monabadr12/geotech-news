@@ -24,6 +24,10 @@ features:
 
 changes:
   - date: 2026-11-27
+    title: Disclaimer at the bottom of every issue and e-mail
+    items:
+      - "Geo-News Weekly - every issue page (the published issues, the newest issue, the archive, the editor's preview and the view-only page) and every Geo-News e-mail (draft, published, and the reviewers' e-mails) now ends with the disclaimer agreed with the editor, in small text: Geo-News Weekly is a curated service for ISSMGE members that highlights developments of potential interest to the geotechnical community. Content is derived from external sources, which are responsible for their own publications. The inclusion of a news item, organisation, product, service, or opinion should not be interpreted as an endorsement by ISSMGE. It applies to all issues, including weeks 44 to 47; the LinkedIn post does not carry it. The text can be changed in config.yaml (geonews: disclaimer; empty or no for none)."
+  - date: 2026-11-27
     title: Geo-News Weekly after the reviewer's comments - case history, publisher links, news of the week only, everything kept with the site
     items:
       - "Fonts - Geo-News Weekly now uses the fonts of issmge.org, Newsreader for headings and Libre Franklin for text, kept with the site, so nothing is loaded from Google Fonts. The e-mails name the same fonts, then Georgia and Arial."

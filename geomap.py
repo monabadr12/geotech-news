@@ -16,6 +16,7 @@ import datetime as dt
 import json
 import math
 import os
+import re
 import sys
 
 import yaml
@@ -180,6 +181,25 @@ def region_table(cfg):
                 table[code] = region
         _tables[key] = table
     return _tables[key]
+
+
+# parts of a country that lie far from the rest of it (Natural Earth draws France with its overseas departments):
+# the region whose tint and borders they take on the Geo-News world map, by where the part starts (map units); ""
+# keeps the country's own region
+OVERSEAS = {"FR": lambda x, y: "South America" if x < -500 else "Africa" if y > 150 else ""}
+
+
+def country_parts(code, d, region):
+    """[(path, region)] of a country's outline on the world map: its parts overseas (OVERSEAS) apart, each in the
+    region it lies in; the whole outline in the country's region for every other country."""
+    rule = OVERSEAS.get(code)
+    if not rule:
+        return [(d, region)]
+    out = {}
+    for part in re.findall(r"M[^M]*", d):
+        x, y = (float(t) for t in re.findall(r"-?\d+(?:\.\d+)?", part)[:2])
+        out.setdefault(rule(x, y) or region, []).append(part)
+    return [("".join(parts), r) for r, parts in out.items()]
 
 
 def issmge_region(code, cfg):
